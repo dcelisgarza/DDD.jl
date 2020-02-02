@@ -1,8 +1,17 @@
 module DDD
 
-using CSV, DataFrames
+using CSV, DataFrames, LinearAlgebra
 
 import Base: +, -, *, /, ^, zero, size
+export loadCSV,
+       loadParams,
+       saveParams,
+       DislocationP,
+       DislocationNetwork,
+       makeSegment!,
+       dlnSegment,
+       dlnEdge,
+       dlnScrew
 
 include("CustomTypes.jl")
 include("Dislocation.jl")
@@ -12,6 +21,5 @@ include("CustomIntegration.jl")
 include("Input.jl")
 include("Output.jl")
 
-export loadParams, saveParams, DislocationNetwork
 
 end # module

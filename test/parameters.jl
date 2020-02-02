@@ -61,7 +61,7 @@ label[1:2:end] .= 5
 idx1 = getIndex(network, :label, ==, 5)
 data = getData(network, :coord, :coord, 3, ==, 0)
 # Implement the array conditions
-test = [1 2 3; -4 2 6;1 5 6;5 2 9]
+test = [1 2 3; -4 2 6; 1 5 6; 5 2 9]
 index = findall(x -> x .== 5, test)
 lindex = LinearIndices(test)[index]
 

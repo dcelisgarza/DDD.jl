@@ -279,63 +279,57 @@ function zero(::Type{DislocationNetwork})
     )
 end
 
-function getIndex(Network::DislocationNetwork, label::Real)
-    return findall(x -> x == label, Network.label)
+function getIndex(network::DislocationNetwork, label::Real)
+    return findall(x -> x == label, network.label)
 end
 
-"""
-TODO:
-
-Rewrite this to use getproperty(data<:Struct, fieldname::Symbol)
-"""
-# Overload this to do a spcific element in a vector.
 function getIndex(
-    Network::DislocationNetwork,
+    network::DislocationNetwork,
     fieldname::Symbol,
     condition::Function,
     val::Real,
 )
-    data = getproperty(Network, fieldname)
+    data = getproperty(network, fieldname)
     return findall(x -> condition.(x, val), data)
 end
 
 function getIndex(
-    Network::DislocationNetwork,
+    network::DislocationNetwork,
     fieldname::Symbol,
     idxComp::Integer, # index of fieldname to compare
     condition::Function,
     val::Real,
 )
-    data = getproperty(Network, fieldname)
+    data = getproperty(network, fieldname)
     # @assert ndims(data) > 1
     return findall(x -> condition.(x, val), data[:, idxComp])
 end
 
 function getData(
-    Network::DislocationNetwork,
+    network::DislocationNetwork,
     dataField::Symbol, # Field of data to be obtained.
     condField::Symbol, # Field to which the conditioned will be applied.
     idxComp::Integer, # index of condfield to compare
     condition::Function,
     val::Real,
 )
-    idx = getIndex(Network, condField, idxComp, condition, val)
-    data = getproperty(Network, dataField)
+    idx = getIndex(network, condField, idxComp, condition, val)
+    data = getproperty(network, dataField)
     return data[idx, :]
 end
 
 function getData(
-    Network::DislocationNetwork,
+    network::DislocationNetwork,
     dataField::Symbol, # Field of data to be obtained.
     condField::Symbol, # Field to which the conditioned will be applied.
     condition::Function,
     val::Real,
 )
-    idx = getIndex(Network, condField, condition, val)
-    data = getproperty(Network, dataField)
+    idx = getIndex(network, condField, condition, val)
+    data = getproperty(network, dataField)
     dims = ndims(data)
     if dims > 1
-        if ndims(getproperty(Network, condField)) > 1
+        if ndims(getproperty(network, condField)) > 1
             idx = Integer(floor(LinearIndices(data)[idx] ./ dims))
         end
         return data[idx, :]
@@ -344,9 +338,33 @@ function getData(
     end
 end
 
-function getCoord(Network::DislocationNetwork, label::Real)
-    return Network.coord[getIndex(Network, label), :]
+
+function getCoord(network::DislocationNetwork, label::Real)
+    return network.coord[getIndex(network, label), :]
 end
-function getCoord(Network::DislocationNetwork, index::Vector{Real})
-    return Network.coord[index, :]
+function getCoord(network::DislocationNetwork, index::Vector{Real})
+    return network.coord[index, :]
+end
+
+abstract type dlnSegment end
+struct dlnEdge end
+struct dlnScrew end
+struct dlnMixed end
+
+# Edge
+function makeSegment!(segType::dlnEdge, slipSys::Integer, df::DataFrame)
+    slipPlane = convert.(Float64, Vector(df[slipSys, 1:3]))
+    bVec = convert.(Float64, Vector(df[slipSys, 4:6]))
+
+    edgeSeg = cross(slipPlane, bVec)
+    edgeSeg ./= norm(edgeSeg)
+
+    return edgeSeg
+end
+
+# Screw
+function makeSegment!(segType::dlnScrew, slipSys::Integer, df::DataFrame)
+    screwSeg = convert.(Float64, Vector(df[slipSys, 4:6]))
+    screwSeg ./= norm(screwSeg)
+    return screwSeg
 end

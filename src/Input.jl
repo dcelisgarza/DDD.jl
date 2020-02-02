@@ -17,7 +17,7 @@ function loadCSV(
     return df
 end
 
-function cleanFieldDf(df, fieldname::Symbol, type::Type)
+function cleanFieldDf(df::DataFrame, fieldname::Symbol, type::Type)
     result = 0
     if length(df[!, :numSources]) > 1
         try
@@ -31,7 +31,7 @@ function cleanFieldDf(df, fieldname::Symbol, type::Type)
     return convert.(type, result)
 end
 
-function dlnLoadParams(df)
+function dlnLoadParams(df::DataFrame)
     numSources = cleanFieldDf(df, :numSources, Integer)
     slipSystems = cleanFieldDf(df, :slipSystems, Integer)
     distSource = cleanFieldDf(df, :distSource, Float64)
@@ -60,7 +60,7 @@ function dlnLoadParams(df)
     return dlnLoadParams
 end
 
-function matLoadParams(df)
+function matLoadParams(df::DataFrame)
     matParams = MaterialP(
         df[1, :μ],
         df[1, :μMag],
@@ -70,7 +70,7 @@ function matLoadParams(df)
     return matParams
 end
 
-function intLoadParams(df)
+function intLoadParams(df::DataFrame)
     intParams = IntegrationP(
         df[1, :dt],
         df[1, :tmin],
@@ -82,9 +82,7 @@ function intLoadParams(df)
     return intParams
 end
 
-function loadParams(
-    filename::AbstractString,
-)
+function loadParams(filename::AbstractString,)
     df = loadCSV(
         filename::AbstractString;
         header = 1,

@@ -27,7 +27,9 @@ function compStruct(arg1, arg2)
     names = fieldnames(typeof(arg1))
     for i in names
         result = getproperty(arg1, i) == getproperty(arg1, i)
-        if result == false return false end
+        if result == false
+            return false
+        end
     end
     return true
 end
