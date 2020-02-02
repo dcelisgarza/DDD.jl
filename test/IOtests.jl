@@ -3,14 +3,18 @@ using Test
 
 import DDD: compStruct
 
-# cd(@__DIR__)
+#cd(@__DIR__)
+
+# Filenames
 inFilename = "../inputs/simParams/sampleParams.csv"
 outFilename = "../outputs/simParams/sampleParams.csv"
 
+# Load parameters.
 dlnParams, matParams, intParams = loadParams(inFilename)
 saveParams(dlnParams, matParams, intParams, outFilename; delim = ',')
 dlnParams2, matParams2, intParams2 = loadParams(outFilename)
 
+# Test
 @testset "Compare Parameter Structures" begin
     @test compStruct(dlnParams, dlnParams2)
     @test compStruct(matParams, matParams2)
