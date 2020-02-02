@@ -243,13 +243,10 @@ mutable struct DislocationNetwork{
             bVec = zeros(typeof(bVec), numInit, 3)
             slipPlane = zeros(typeof(slipPlane), numInit, 3)
         else
-            @assert size(links,2) == 2
-            @assert size(bVec,2) == size(slipPlane,2) == size(coord,2) == 3
-            @assert size(links, 1) ==
-                    size(bVec, 1) ==
-                    size(slipPlane, 1) ==
-                    size(coord, 1) ==
-                    size(label, 1)
+            @assert size(links, 2) == 2
+            @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
+            @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1) ==
+                    size(coord, 1) == size(label, 1)
         end
         new{
             typeof(links),
@@ -311,7 +308,7 @@ function getIndex(
 )
     data = getproperty(Network, fieldname)
     # @assert ndims(data) > 1
-    return findall(x -> condition.(x, val), data[:,idxComp])
+    return findall(x -> condition.(x, val), data[:, idxComp])
 end
 
 function getData(
@@ -324,7 +321,7 @@ function getData(
 )
     idx = getIndex(Network, condField, idxComp, condition, val)
     data = getproperty(Network, dataField)
-    return data[idx,:]
+    return data[idx, :]
 end
 
 function getData(
@@ -339,7 +336,7 @@ function getData(
     dims = ndims(data)
     if dims > 1
         if ndims(getproperty(Network, condField)) > 1
-            idx = Integer(floor(LinearIndices(data)[idx]./dims))
+            idx = Integer(floor(LinearIndices(data)[idx] ./ dims))
         end
         return data[idx, :]
     else

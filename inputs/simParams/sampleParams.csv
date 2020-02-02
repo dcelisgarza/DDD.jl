@@ -21,7 +21,7 @@ distSource,817.61
 μMag,145000
 ν,0.28
 crystalStruct,bcc
-dt,1000000
+dt,1000000.
 tmin,0
 tmax,213333333333
 method,CustomTrapezoid

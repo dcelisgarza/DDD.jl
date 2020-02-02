@@ -17,10 +17,9 @@ function loadCSV(
     return df
 end
 
-
 function dlnLoadParams(df)
     numSources = 0
-    if length(df[!,:numSources]) > 1
+    if length(df[!, :numSources]) > 1
         try
             numSources = convert.(Integer, df[!, :numSources])
         catch e
@@ -31,7 +30,7 @@ function dlnLoadParams(df)
     end
 
     slipSystems = 0
-    if length(df[!,:slipSystems]) > 1
+    if length(df[!, :slipSystems]) > 1
         try
             slipSystems = convert.(Integer, df[!, :slipSystems])
         catch e
@@ -42,7 +41,7 @@ function dlnLoadParams(df)
     end
 
     distSource = 0
-    if length(df[!,:slipSystems]) > 1
+    if length(df[!, :slipSystems]) > 1
         try
             distSource = convert.(Float64, df[!, :distSource])
         catch e
@@ -80,8 +79,12 @@ function dlnLoadParams(df)
 end
 
 function matLoadParams(df)
-    matParams =
-        MaterialP(df[1, :μ], df[1, :μMag], df[1, :ν], df[1, :crystalStruct])
+    matParams = MaterialP(
+        df[1, :μ],
+        df[1, :μMag],
+        df[1, :ν],
+        df[1, :crystalStruct],
+    )
     return matParams
 end
 
@@ -101,7 +104,12 @@ function loadParams(
     filename::AbstractString,
     extension::AbstractString = ".csv",
 )
-    df = loadCSV(filename * "Params" * extension; header = 1, transpose = true, delim = ',')
+    df = loadCSV(
+        filename * "Params" * extension;
+        header = 1,
+        transpose = true,
+        delim = ',',
+    )
     dlnParams = dlnLoadParams(df)
     matParams = matLoadParams(df)
     intParams = intLoadParams(df)

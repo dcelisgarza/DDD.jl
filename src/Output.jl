@@ -30,5 +30,10 @@ function saveParams(
     pushToDataFrame!(df, matParams)
     pushToDataFrame!(df, intParams)
 
-    CSV.write(filename*"Params"*extension, df; delim = delim, writeheader = false)
+    CSV.write(
+        filename * "Params" * extension,
+        df;
+        delim = delim,
+        writeheader = false,
+    )
 end
