@@ -1,5 +1,5 @@
 coreRad,90.78
-coreRadMag,0
+coreRadMag,0.
 minSegLen,314.47
 maxSegLen,1572.33
 minArea,49444.25
@@ -9,9 +9,9 @@ remesh,true
 collision,true
 separation,true
 virtualRemesh,1
-edgeDrag,1
-screwDrag,2
-climbDrag,10000000000
+edgeDrag,1.
+screwDrag,2.
+climbDrag,10000000000.
 lineDrag,0
 mobility,Hmobbcc10rotation
 numSources,1

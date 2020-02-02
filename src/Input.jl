@@ -71,9 +71,6 @@ function dlnLoadParams(df)
         numSources,
         slipSystems,
         distSource,
-        # convert.(Integer, df[!, :numSources]),
-        # convert.(Integer, df[!, :slipSystems]),
-        # convert.(Float64, df[!, :distSource]),
     )
     return dlnLoadParams
 end
