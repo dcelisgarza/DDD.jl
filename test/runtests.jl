@@ -1,8 +1,8 @@
 using SafeTestsets
 
 @safetestset "IO" begin
-    include("ioTests.jl")
+    include("./ioTest.jl")
 end
 @safetestset "Generate dln" begin
-    include("genDlnTests.jl")
+    include("./genSegTest.jl")
 end
