@@ -1,5 +1,6 @@
 using DDD
 
+cd(@__DIR__)
 inFilename = "../inputs/simParams/sampleParams.csv"
 outFilename = "../outputs/simParams/sampleParams.csv"
 
