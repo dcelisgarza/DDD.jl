@@ -1,23 +1,4 @@
 """
-Author: Daniel Celis Garza
-Date: 2020/01/23
-
-Module for the dislocation parameters. Declares relevant functions and variables
-for DDD simulations.
-
-# Defines
-    DislocationP
-# Exports
-    DislocationP
-# Imports
-"""
-module DislocationBase
-# using ..CustomTypes
-
-import Base: zero
-export DislocationP, DislocationNetwork, getIndex, getCoord, getData
-
-"""
     DislocationP{
         T1<:Union{AbstractFloat,Vector{<:AbstractFloat}},
         T2<:Union{Integer,Vector{<:Integer}},
@@ -372,4 +353,3 @@ end
 function getCoord(Network::DislocationNetwork, index::Vector{Real})
     return Network.coord[index, :]
 end
-end # module DislocationParams

@@ -1,10 +1,3 @@
-module DdFemBase
-# using ..CustomTypes
-# using ..DislocationBase
-# using ..MaterialBase
-
-import Base: zero
-export CuboidMesh, init
 """
 Cuboid mesh structure. Incomplete.
 """
@@ -37,13 +30,9 @@ mutable struct CuboidMesh{T1<:AbstractVector{<:Real},T2<:AbstractMatrix{<:Real}}
         else
             new{typeof(elem),typeof(vertices)}(elem, vertices)
         end
-
-        # vertices[2:2:end,1] = elem[1]
-        # new{typeof(elem),typeof(vertices)}(elem, vertices, coord, label)
     end #constructor
 end #CuboidMesh
 
 function zero(::Type{CuboidMesh})
     return CuboidMesh(zeros(3))
 end
-end # module

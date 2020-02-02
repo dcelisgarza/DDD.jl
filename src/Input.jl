@@ -1,13 +1,3 @@
-module Input
-using CSV
-# using ..CustomTypes
-using ..DislocationBase
-using ..MaterialBase
-using ..CustomIntegration
-using ..DdFemBase
-
-export loadCSV, loadParams, genSourcesBCC
-
 function loadCSV(
     filename::AbstractString;
     header = 0,
@@ -159,5 +149,3 @@ function genSourcesBCC(
     return dlnNetwork
 
 end # function
-
-end # module

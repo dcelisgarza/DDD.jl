@@ -1,13 +1,3 @@
-module Output
-using CSV, DataFrames
-# using ..CustomTypes
-using ..DislocationBase
-using ..MaterialBase
-using ..CustomIntegration
-using ..DdFemBase
-
-export pushToDataFrame!, saveParams
-
 """
 Pushes data to a dataframe for saving later.
 """
@@ -42,5 +32,3 @@ function saveParams(
 
     CSV.write(filename*"Params"*extension, df; delim = delim, writeheader = false)
 end
-
-end # Output

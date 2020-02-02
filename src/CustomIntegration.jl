@@ -1,12 +1,5 @@
-module CustomIntegration
-# using ..CustomTypes
-# using ..DislocationBase
-# using ..MaterialBase
-# using ..DdFemBase
-
-import Base: zero
-export IntegrationP, CustomTrapezoid, init, integratorDDD
 struct integratorDDD end
+
 mutable struct IntegrationP{
     T1<:Real,
     T2<:Integer,
@@ -54,7 +47,5 @@ end
 #     Mesh::CuboidMesh,
 #     Integration::IntegrationP,
 # )
-# 
+#
 # end
-
-end # module

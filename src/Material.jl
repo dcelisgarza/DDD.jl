@@ -1,23 +1,4 @@
 """
-Author: Daniel Celis Garza
-Date: 2020/01/23
-
-Module for the material parameters. Declares relevant functions and variables
-for FE simulations.
-
-# Defines
-    MaterialP, CuboidMesh
-# Exports
-    MaterialP, CuboidMesh
-# Imports
-"""
-module MaterialBase
-# using ..CustomTypes
-
-import Base: zero
-export MaterialP
-
-"""
     MaterialP{
         T1<:Union{AbstractFloat,Vector{<:AbstractFloat}},
         T2<:Union{String,Vector{String}}
@@ -90,5 +71,3 @@ end # MaterialP
 function zero(::Type{MaterialP})
     return MaterialP(0.0, 0.0, 0.0, :empty)
 end
-
-end # module MaterialBase

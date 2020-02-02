@@ -1,12 +1,4 @@
-include("GlobalModule.jl")
-using CSV, DataFrames
-using .GlobalModule.CustomTypes
-using .GlobalModule.DislocationBase
-using .GlobalModule.MaterialBase
-using .GlobalModule.CustomIntegration
-using .GlobalModule.DdFemBase
-using .GlobalModule.Input
-using .GlobalModule.Output
+using DDD
 
 inFilename = "C:/Users/Daniel Celis Garza/.julia/dev/DDD/inputs/simParams/sample"
 outFilename = "C:/Users/Daniel Celis Garza/.julia/dev/DDD/outputs/simParams/sample"
