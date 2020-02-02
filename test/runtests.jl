@@ -1,3 +1,3 @@
 using SafeTestsets
 
-@safetestset "IO Test set" begin include("IOtests.jl") end
+@safetestset "IO Test set" begin include("ioTests.jl") end

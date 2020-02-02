@@ -17,39 +17,24 @@ function loadCSV(
     return df
 end
 
-function dlnLoadParams(df)
-    numSources = 0
+function cleanFieldDf(df, fieldname::Symbol, type::Type)
+    result = 0
     if length(df[!, :numSources]) > 1
         try
-            numSources = convert.(Integer, df[!, :numSources])
+            result = df[!, fieldname]
         catch e
-            numSources = eval(Meta.parse(df[1, :numSources]))
+            result = eval(Meta.parse(df[1, fieldname]))
         end
     else
-        numSources = convert(Integer, df[1, :numSources])
+        result = df[1, fieldname]
     end
+    return convert.(type, result)
+end
 
-    slipSystems = 0
-    if length(df[!, :slipSystems]) > 1
-        try
-            slipSystems = convert.(Integer, df[!, :slipSystems])
-        catch e
-            slipSystems = eval(Meta.parse(df[1, :slipSystems]))
-        end
-    else
-        slipSystems = convert(Integer, df[1, :slipSystems])
-    end
-
-    distSource = 0
-    if length(df[!, :slipSystems]) > 1
-        try
-            distSource = convert.(Float64, df[!, :distSource])
-        catch e
-            distSource = eval(Meta.parse(df[1, :distSource]))
-        end
-    else
-        distSource = convert(Float64, df[1, :distSource])
-    end
+function dlnLoadParams(df)
+    numSources = cleanFieldDf(df, :numSources, Integer)
+    slipSystems = cleanFieldDf(df, :slipSystems, Integer)
+    distSource = cleanFieldDf(df, :distSource, Float64)
 
     dlnLoadParams = DislocationP(
         df[1, :coreRad],
@@ -99,10 +84,9 @@ end
 
 function loadParams(
     filename::AbstractString,
-    extension::AbstractString = ".csv",
 )
     df = loadCSV(
-        filename * "Params" * extension;
+        filename::AbstractString;
         header = 1,
         transpose = true,
         delim = ',',
@@ -111,46 +95,4 @@ function loadParams(
     matParams = matLoadParams(df)
     intParams = intLoadParams(df)
     return dlnParams, matParams, intParams
-end # function
-
-function loadParams(
-    filename::AbstractString,
-    ::DislocationP,
-    extension::AbstractString = ".csv",
-)
-    df = loadCSV(filename * "DlnP" * extension; header = 1, transpose = true)
-    dlnParams = dlnLoadParams(df)
-    return dlnParams
-end # function
-
-function loadParams(
-    filename::AbstractString,
-    ::MaterialP,
-    extension::AbstractString = ".csv",
-)
-    df = loadCSV(filename * "MatP" * extension; header = 1, transpose = true)
-    matParams = matLoadParams(df)
-    return matParams
-end # function
-
-function loadParams(
-    filename::AbstractString,
-    ::IntegrationP,
-    extension::AbstractString = ".csv",
-)
-    df = loadCSV(filename * "IntP" * extension; header = 1, transpose = true)
-    intParams = IntegrationP(df)
-    return intParams
-end # function
-
-function genSourcesBCC(
-    dlnParams::DislocationP,
-    filename = "D:/Projects/DDD/data/slipSystems/bcc.csv",
-)
-    df = loadCSV(filename; header = 1, transpose = false)
-    dlnNetwork = zero(DislocationNetwork)
-
-
-    return dlnNetwork
-
 end # function
