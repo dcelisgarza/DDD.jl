@@ -7,20 +7,9 @@ dlnParams, matParams, intParams = loadParams(inFilename)
 saveParams(dlnParams, matParams, intParams, outFilename; delim = ',')
 dlnParams2, matParams2, intParams2 = loadParams(outFilename)
 
-
-function compare(arg1, arg2)
-    @assert typeof(arg1) == typeof(arg2)
-
-    names = fieldnames(typeof(arg1))
-    for i in names
-        result = getproperty(arg1, i) == getproperty(arg1, i)
-        if result == false return false end
-    end
-    return true
-end
-
+import DDD: compStruct
 @testset "DDD.jl" begin
-    @test compare(dlnParams, dlnParams2)
-    @test compare(matParams, matParams2)
-    @test compare(intParams, intParams2)
+    @test compStruct(dlnParams, dlnParams2)
+    @test compStruct(matParams, matParams2)
+    @test compStruct(intParams, intParams2)
 end
