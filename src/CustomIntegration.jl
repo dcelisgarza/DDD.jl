@@ -37,9 +37,9 @@ mutable struct IntegrationP{
     end
 end
 
-function zero(::Type{IntegrationP})
-    return IntegrationP(0.0, zeros(2), :empty)
-end
+# function zero(::Type{IntegrationP})
+#     return IntegrationP(0.0, zeros(2), :empty)
+# end
 
 # function CustomTrapezoid(
 #     Network::DislocationNetwork,

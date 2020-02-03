@@ -68,6 +68,6 @@ struct MaterialP{T1<:AbstractFloat,T2<:Union{String,Symbol}}
     end # constructor
 end # MaterialP
 
-function zero(::Type{MaterialP})
-    return MaterialP(0.0, 0.0, 0.0, :empty)
-end
+# function zero(::Type{MaterialP})
+#     return MaterialP(0.0, 0.0, 0.0, :empty)
+# end

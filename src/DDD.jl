@@ -2,7 +2,6 @@ module DDD
 
 using CSV, DataFrames, LinearAlgebra
 
-import Base: +, -, *, /, ^, zero, size
 export loadCSV,
        loadParams,
        saveParams,

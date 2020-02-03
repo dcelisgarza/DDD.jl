@@ -1,26 +1,3 @@
-"""
-Overloaded functions for strings.
-"""
-function size(::String)
-    return ()
-end
-
-"""
-Overloaded functions for symbols.
-"""
-function size(::Symbol)
-    return ()
-end
-
-macro makeType(type::Any, supertype::Any)
-    type = Symbol(type)
-    supertype = Symbol(supertype)
-    ex = quote
-        struct $type <: $supertype end
-    end
-    esc(ex)
-end
-
 function compStruct(arg1, arg2)
     @assert typeof(arg1) == typeof(arg2)
 
@@ -32,6 +9,15 @@ function compStruct(arg1, arg2)
         end
     end
     return true
+end
+
+macro makeType(type::Any, supertype::Any)
+    type = Symbol(type)
+    supertype = Symbol(supertype)
+    ex = quote
+        struct $type <: $supertype end
+    end
+    esc(ex)
 end
 
 macro string_as_varname_macro(s::AbstractString, v::Any)

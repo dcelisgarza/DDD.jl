@@ -33,6 +33,6 @@ mutable struct CuboidMesh{T1<:AbstractVector{<:Real},T2<:AbstractMatrix{<:Real}}
     end #constructor
 end #CuboidMesh
 
-function zero(::Type{CuboidMesh})
-    return CuboidMesh(zeros(3))
-end
+# function zero(::Type{CuboidMesh})
+#     return CuboidMesh(zeros(3))
+# end

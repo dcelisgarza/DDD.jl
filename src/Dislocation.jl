@@ -190,26 +190,27 @@ struct DislocationP{
         )
     end # constructor
 end # DislocationP
-function zero(::Type{DislocationP})
-    return DislocationP(
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0,
-        false,
-        false,
-        false,
-        false,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        :empty,
-    )
-end
+
+# function zero(::Type{DislocationP})
+#     return DislocationP(
+#         0.0,
+#         0.0,
+#         0.0,
+#         0.0,
+#         0.0,
+#         0.0,
+#         0,
+#         false,
+#         false,
+#         false,
+#         false,
+#         0.0,
+#         0.0,
+#         0.0,
+#         0.0,
+#         :empty,
+#     )
+# end
 
 mutable struct DislocationNetwork{
     T1<:AbstractArray{<:Integer},
@@ -266,18 +267,18 @@ mutable struct DislocationNetwork{
     end # Constructor
 end # DislocationNetwork
 
-function zero(::Type{DislocationNetwork})
-    DislocationNetwork(
-        zeros(Integer, 0, 2),
-        zeros(0, 3),
-        zeros(0, 3),
-        zeros(0, 3),
-        zeros(Integer, 0),
-        0,
-        0,
-        0,
-    )
-end
+# function zero(::Type{DislocationNetwork})
+#     DislocationNetwork(
+#         zeros(Integer, 0, 2),
+#         zeros(0, 3),
+#         zeros(0, 3),
+#         zeros(0, 3),
+#         zeros(Integer, 0),
+#         0,
+#         0,
+#         0,
+#     )
+# end
 
 function getIndex(network::DislocationNetwork, label::Real)
     return findall(x -> x == label, network.label)
@@ -301,7 +302,6 @@ function getIndex(
     val::Real,
 )
     data = getproperty(network, fieldname)
-    # @assert ndims(data) > 1
     return findall(x -> condition.(x, val), data[:, idxComp])
 end
 
