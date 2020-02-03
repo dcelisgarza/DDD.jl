@@ -20,8 +20,8 @@ normEdge = norm(edge)
 normScrew = norm(screw)
 
 @testset "Generate single segments" begin
-    @test isapprox(edgeDscrew, 0.0)
-    @test isapprox(edgeDbVec, 0.0)
+    @test isapprox(edgeDscrew, eps())
+    @test isapprox(edgeDbVec, eps())
     @test isapprox(edge, edgeTest)
     @test isapprox(normEdge, normScrew)
     @test isapprox(normEdge, 1.0)
