@@ -1,16 +1,17 @@
 using DDD
 using Test
 
+import DelimitedFiles: readdlm
 import LinearAlgebra: dot, cross, norm
 cd(@__DIR__)
 # Filenames
 inFilename = "../data/slipSystems/bcc.csv"
-df = loadCSV(inFilename; header = 1)
+data = readdlm(inFilename,',',Float64)
 
 slipSysInt = 5
-slipSystem = convert.(Float64, Vector(df[slipSysInt, :]))
-edge = makeSegment!(dlnEdge(), slipSysInt, df)
-screw = makeSegment!(dlnScrew(), slipSysInt, df)
+slipSystem = data[:,slipSysInt]
+edge = makeSegment(dlnEdge(), slipSysInt, data)
+screw = makeSegment(dlnScrew(), slipSysInt, data)
 
 @testset "Generate single segments" begin
     @test abs(dot(edge, screw)) < eps(Float64)
