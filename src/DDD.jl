@@ -1,16 +1,20 @@
 module DDD
 
-using CSV, DataFrames, LinearAlgebra
+using CSV, DataFrames, LinearAlgebra, DelimitedFiles
 
 export loadCSV,
        loadParams,
        saveParams,
        DislocationP,
        DislocationNetwork,
-       makeSegment!,
+       makeSegment,
        dlnSegment,
        dlnEdge,
-       dlnScrew
+       dlnScrew,
+       compStruct,
+       getIndex,
+       getCoord,
+       getData
 
 include("CustomTypes.jl")
 include("Dislocation.jl")

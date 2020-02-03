@@ -246,8 +246,8 @@ mutable struct DislocationNetwork{
         else
             @assert size(links, 2) == 2
             @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
-            @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1) ==
-                    size(coord, 1) == size(label, 1)
+            @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
+            @assert size(coord, 1) == size(label, 1)
         end
         new{
             typeof(links),
@@ -290,8 +290,9 @@ function getIndex(
     condition::Function,
     val::Real,
 )
-    data = getproperty(network, fieldname)
-    return findall(x -> condition.(x, val), data)
+    # Made the code more performant by replacing this assignment
+    # data = getproperty(network, fieldname)
+    return findall(x -> condition.(x, val), getproperty(network, fieldname))
 end
 
 function getIndex(
@@ -301,8 +302,12 @@ function getIndex(
     condition::Function,
     val::Real,
 )
-    data = getproperty(network, fieldname)
-    return findall(x -> condition.(x, val), data[:, idxComp])
+    # Made the code more performant by replacing this assignment
+    # data = getproperty(network, fieldname)
+    return findall(
+        x -> condition.(x, val),
+        getproperty(network, fieldname)[:, idxComp],
+    )
 end
 
 function getData(
@@ -313,48 +318,35 @@ function getData(
     condition::Function,
     val::Real,
 )
-    idx = getIndex(network, condField, idxComp, condition, val)
-    data = getproperty(network, dataField)
-    return data[idx, :]
+    # Made the code more performant by replacing these assignments.
+    # idx = getIndex(network, condField, idxComp, condition, val)
+    # data = getproperty(network, dataField)
+    return getproperty(network, dataField)[
+        getIndex(network, condField, idxComp, condition, val),
+        :,
+    ]
 end
 
-function getData(
-    network::DislocationNetwork,
-    dataField::Symbol, # Field of data to be obtained.
-    condField::Symbol, # Field to which the conditioned will be applied.
-    condition::Function,
-    val::Real,
-)
-    idx = getIndex(network, condField, condition, val)
-    data = getproperty(network, dataField)
-    dims = ndims(data)
-    if dims > 1
-        if ndims(getproperty(network, condField)) > 1
-            idx = Integer(floor(LinearIndices(data)[idx] ./ dims))
-        end
-        return data[idx, :]
-    else
-        return data[idx]
-    end
-end
-
-
-function getCoord(network::DislocationNetwork, label::Real)
+function getCoord(network::DislocationNetwork, label::Integer)
     return network.coord[getIndex(network, label), :]
 end
-function getCoord(network::DislocationNetwork, index::Vector{Real})
+function getCoord(network::DislocationNetwork, index::Vector{<:Integer})
     return network.coord[index, :]
 end
 
 abstract type dlnSegment end
-struct dlnEdge end
-struct dlnScrew end
-struct dlnMixed end
+struct dlnEdge <: dlnSegment end
+struct dlnScrew <: dlnSegment end
+struct dlnMixed <: dlnSegment end
 
 # Edge
-function makeSegment!(segType::dlnEdge, slipSys::Integer, df::DataFrame)
-    slipPlane = convert.(Float64, Vector(df[slipSys, 1:3]))
-    bVec = convert.(Float64, Vector(df[slipSys, 4:6]))
+function makeSegment(
+    segType::dlnEdge,
+    slipSys::Integer,
+    data::Matrix{<:Float64},
+)
+    @views slipPlane = data[1:3, slipSys]
+    @views bVec = data[4:6, slipSys]
 
     edgeSeg = cross(slipPlane, bVec)
     edgeSeg ./= norm(edgeSeg)
@@ -363,8 +355,12 @@ function makeSegment!(segType::dlnEdge, slipSys::Integer, df::DataFrame)
 end
 
 # Screw
-function makeSegment!(segType::dlnScrew, slipSys::Integer, df::DataFrame)
-    screwSeg = convert.(Float64, Vector(df[slipSys, 4:6]))
-    screwSeg ./= norm(screwSeg)
+function makeSegment(
+    segType::dlnScrew,
+    slipSys::Integer,
+    data::Matrix{<:Float64},
+)
+    @views bVec = data[4:6, slipSys]
+    screwSeg = bVec ./ norm(bVec)
     return screwSeg
 end

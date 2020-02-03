@@ -4,5 +4,8 @@ using SafeTestsets
     include("./ioTest.jl")
 end
 @safetestset "Generate dln" begin
-    include("./genSegTest.jl")
+    include("./dlnNetworkTest.jl")
+end
+@safetestset "Performant code" begin
+    include("performantCodeTest.jl")
 end

@@ -1,8 +1,6 @@
 using DDD
 using Test
 
-import DDD: compStruct
-
 cd(@__DIR__)
 # Filenames
 inFilename = "../inputs/simParams/sampleParams.csv"
