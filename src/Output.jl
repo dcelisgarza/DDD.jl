@@ -29,10 +29,5 @@ function saveParams(
     pushToDataFrame!(df, matParams)
     pushToDataFrame!(df, intParams)
 
-    CSV.write(
-        filename,
-        df;
-        delim = delim,
-        writeheader = false,
-    )
+    CSV.write(filename, df; delim = delim, writeheader = false)
 end
