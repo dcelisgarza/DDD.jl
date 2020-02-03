@@ -20,8 +20,7 @@ function saveParams(
     dlnParams::DislocationP,
     matParams::MaterialP,
     intParams::IntegrationP,
-    filename::AbstractString = "out",
-    extension::AbstractString = ".csv";
+    filename::AbstractString;
     delim::Char = ',',
 )
     df = DataFrame(var = Any[], val = Any[])
@@ -31,7 +30,7 @@ function saveParams(
     pushToDataFrame!(df, intParams)
 
     CSV.write(
-        filename * "Params" * extension,
+        filename,
         df;
         delim = delim,
         writeheader = false,
