@@ -67,7 +67,6 @@ idxCond(network, :bVec, 2, 14.; condition = ==)
 dataCond(network, :bVec, 2, 14.; condition = ==)
 
 
-reshape
 coordLbl(network, -2)
 coordIdx(network, 3)
 coordIdx(network, [1; 3; 5])
