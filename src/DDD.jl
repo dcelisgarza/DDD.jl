@@ -12,9 +12,11 @@ export loadCSV,
        dlnEdge,
        dlnScrew,
        compStruct,
-       getIndex,
-       getCoord,
-       getData
+       idxLabel,
+       idxCond,
+       dataCond,
+       coordLbl,
+       coordIdx
 
 include("CustomTypes.jl")
 include("Dislocation.jl")

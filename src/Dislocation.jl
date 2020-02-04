@@ -213,10 +213,10 @@ end # DislocationP
 # end
 
 mutable struct DislocationNetwork{
-    T1<:AbstractArray{<:Integer},
-    T2<:AbstractArray{<:Real},
-    T3<:AbstractArray{<:Real},
-    T4<:AbstractVector{<:Integer},
+    T1<:Matrix{<:Integer},
+    T2<:Matrix{<:Real},
+    T3<:Matrix{<:Real},
+    T4<:Vector{<:Integer},
     T5<:Integer,
 }
     links::T1 # Links.
@@ -280,57 +280,103 @@ end # DislocationNetwork
 #     )
 # end
 
-function getIndex(network::DislocationNetwork, label::Real)
-    return findall(x -> x == label, network.label)
+function idxLabel(
+    network::DislocationNetwork,
+    label::Integer;
+    condition::Function = ==,
+)
+    return findall(x -> condition(x, label), network.label)
 end
 
-function getIndex(
+function idxCond(
     network::DislocationNetwork,
     fieldname::Symbol,
-    condition::Function,
-    val::Real,
+    val::Real;
+    condition::Function = ==,
 )
-    # Made the code more performant by replacing this assignment
-    # data = getproperty(network, fieldname)
-    return findall(x -> condition.(x, val), getproperty(network, fieldname))
+    data = getproperty(network, fieldname)
+    return findall(x -> condition(x, val), data)
 end
 
-function getIndex(
+function idxCond(
     network::DislocationNetwork,
     fieldname::Symbol,
     idxComp::Integer, # index of fieldname to compare
-    condition::Function,
-    val::Real,
+    val::Real;
+    condition::Function = ==,
 )
     # Made the code more performant by replacing this assignment
-    # data = getproperty(network, fieldname)
-    return findall(
-        x -> condition.(x, val),
-        getproperty(network, fieldname)[:, idxComp],
-    )
+    data = getproperty(network, fieldname)
+    return findall(x -> condition(x, val), data[:, idxComp])
 end
 
-function getData(
+function dataCond(
+    network::DislocationNetwork,
+    dataField::Symbol, # Field of data to be obtained.
+    idxComp::Integer, # index of condfield to compare
+    val::Real;
+    condition::Function = ==,
+)
+    # Made the code more performant by replacing these assignments.
+    data = getproperty(network, dataField)
+    idx = idxCond(data[:,idxComp], val; condition = condition)
+    return data[idx,:]#data[idx, idxComp]
+end
+
+
+
+
+
+function idxCond(
+    data::AbstractArray{<:Real},
+    val::Real;
+    condition::Function = ==,
+)
+    return findall(x -> condition(x, val), data)
+end
+
+
+
+
+function dataCond(
+    network::DislocationNetwork,
+    dataField::Symbol, # Field of data to be obtained.
+    val::Real;
+    condition::Function = ==,
+)
+    # Made the code more performant by replacing these assignments.
+    data = getproperty(network, dataField)
+    idx = idxCond(data, val; condition = condition)
+    return data[idx]
+end
+
+
+function dataCond(
     network::DislocationNetwork,
     dataField::Symbol, # Field of data to be obtained.
     condField::Symbol, # Field to which the conditioned will be applied.
     idxComp::Integer, # index of condfield to compare
-    condition::Function,
-    val::Real,
+    val::Real;
+    condition::Function = ==,
 )
+    data = getproperty(network, dataField)
+    cond = getproperty(network, condField)
+    @assert size(data, 1) == size(confield, 1) "Number of rows of both fields must be equal."
     # Made the code more performant by replacing these assignments.
-    # idx = getIndex(network, condField, idxComp, condition, val)
-    # data = getproperty(network, dataField)
-    return getproperty(network, dataField)[
-        getIndex(network, condField, idxComp, condition, val),
-        :,
-    ]
+    idx = idxCond(condfield[:, idxComp], val; condition = condition)
+    return data[idx, :]
 end
 
-function getCoord(network::DislocationNetwork, label::Integer)
-    return network.coord[getIndex(network, label), :]
+
+function coordLbl(network::DislocationNetwork, label::Integer)
+    idx = idxLabel(network, label)
+    return network.coord[idx, :]
 end
-function getCoord(network::DislocationNetwork, index::Vector{<:Integer})
+
+function coordIdx(
+    network::DislocationNetwork,
+    index::Union{Integer,Vector{<:Integer}},
+)
     return network.coord[index, :]
 end
 
