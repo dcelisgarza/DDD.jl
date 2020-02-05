@@ -17,19 +17,19 @@ makeSegment(dlnScrew(), slipSysInt, slipSystems)
 @trace(makeSegment(dlnEdge(), slipSysInt, slipSystems), modules = [DDD])
 
 # Dislocation
-numNode = 5
+numNode = 6
 numSeg = 7
 links = zeros(Integer, numSeg, 2)
 bVec = zeros(numSeg, 3)
 slipPlane = zeros(numSeg, 3)
 coord = zeros(numNode, 3)
-label = zeros(Integer, numNode)
+label = zeros(nodeType, numNode)
 lenLinks = size(links, 1)
 [links[i, :] = convert.(Float64, [i, i + lenLinks]) for i = 1:lenLinks]
 [bVec[i, :] = convert.(Float64, [i, i + lenLinks, i + 2 * lenLinks]) for i = 1:lenLinks]
 [slipPlane[i, :] = -convert.(Float64, [i, i + lenLinks, i + 2 * lenLinks]) for i = 1:lenLinks]
 lenLabel = length(label)
-[label[i] = -i for i = 1:lenLabel]
+[label[i] = nodeType(i-2) for i = 1:lenLabel]
 [coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel]) for i = 1:length(label)]
 network = DislocationNetwork(
     links,
@@ -53,10 +53,9 @@ network = DislocationNetwork(
     DislocationNetwork(links, bVec, slipPlane, coord, label, numNode, numSeg),
     modules = [DDD],
 )
-
 # Indexing
-idxLabel(network, 5)
-idxCond(network, :label, -3; condition = >=)
+idxLabel(network, -2)
+idxCond(network, :label, 2; condition = >=)
 idx = idxCond(network, :bVec, 10; condition = >=)
 lidx = LinearIndices(bVec)[idx]
 LinearIndices(idx)
@@ -67,7 +66,7 @@ idxCond(network, :bVec, 2, 14.; condition = ==)
 dataCond(network, :bVec, 2, 14.; condition = ==)
 
 
-coordLbl(network, -2)
+coordLbl(network, -1)
 coordIdx(network, 3)
 coordIdx(network, [1; 3; 5])
 
@@ -77,7 +76,7 @@ coordIdx(network, [1; 3; 5])
 
 
 
-dataCond(network, :links, :bVec, 2, 1; condition = ==)
+dataCond(network, :links, :bVec, 2, 10; condition = ==)
 
 @benchmark idxLabel(network, 5)
 @benchmark idxCond(network, :label, -3; condition = >=)

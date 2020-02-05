@@ -212,11 +212,28 @@ end # DislocationP
 #     )
 # end
 
+@enum nodeType begin
+    undef = -1
+    intMob = 0
+    intFix = 1
+    srfMob = 2
+    srfFix = 3
+    ext = 4
+end
+
+isequal(x::Real, y::nodeType) = isequal(x,Int(y))
+isless(x::Real,y::nodeType) = isless(x,Int(y))
+isless(x::nodeType,y::Real) = isless(Int(x),y)
+==(x::nodeType, y::Real) = isequal(Int(x), y)
+
+
+zero(::Type{nodeType}) = undef
+
 mutable struct DislocationNetwork{
     T1<:Matrix{<:Integer},
     T2<:Matrix{<:Real},
     T3<:Matrix{<:Real},
-    T4<:Vector{<:Integer},
+    T4<:Vector{nodeType},
     T5<:Integer,
 }
     links::T1 # Links.
@@ -361,7 +378,7 @@ function dataCond(
 )
     data = getproperty(network, dataField)
     cond = getproperty(network, condField)
-    @assert size(data, 1) == size(confield, 1) "Number of rows of both fields must be equal."
+    @assert size(data, 1) == size(cond, 1) "Number of rows of both fields must be equal."
     # Made the code more performant by replacing these assignments.
     idx = idxCond(condfield[:, idxComp], val; condition = condition)
     return data[idx, :]

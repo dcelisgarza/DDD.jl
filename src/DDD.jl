@@ -1,6 +1,15 @@
 module DDD
 
 using CSV, DataFrames, LinearAlgebra, DelimitedFiles
+import Base: zero, isequal isless
+
+include("CustomTypes.jl")
+include("Dislocation.jl")
+include("Material.jl")
+include("DdFem.jl")
+include("CustomIntegration.jl")
+include("Input.jl")
+include("Output.jl")
 
 export loadCSV,
        loadParams,
@@ -16,14 +25,7 @@ export loadCSV,
        idxCond,
        dataCond,
        coordLbl,
-       coordIdx
-
-include("CustomTypes.jl")
-include("Dislocation.jl")
-include("Material.jl")
-include("DdFem.jl")
-include("CustomIntegration.jl")
-include("Input.jl")
-include("Output.jl")
+       coordIdx,
+       nodeType
 
 end # module
