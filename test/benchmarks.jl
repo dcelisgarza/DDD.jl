@@ -17,6 +17,7 @@ makeSegment(dlnScrew(), slipSysInt, slipSystems)
 @trace(makeSegment(dlnEdge(), slipSysInt, slipSystems), modules = [DDD])
 
 # Dislocation
+
 numNode = 6
 numSeg = 7
 links = zeros(Integer, numSeg, 2)

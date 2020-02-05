@@ -221,12 +221,11 @@ end # DislocationP
     ext = 4
 end
 
-isequal(x::Real, y::nodeType) = isequal(x,Int(y))
-isless(x::Real,y::nodeType) = isless(x,Int(y))
-isless(x::nodeType,y::Real) = isless(Int(x),y)
-==(x::nodeType, y::Real) = isequal(Int(x), y)
-
-
+isequal(x::Real, y::nodeType) = isequal(x, Integer(y))
+isless(x::Real, y::nodeType) = isless(x, Integer(y))
+isless(x::nodeType, y::Real) = isless(Integer(x), y)
+==(x::nodeType, y::Real) = isequal(Integer(x), y)
+convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
 zero(::Type{nodeType}) = undef
 
 mutable struct DislocationNetwork{
@@ -336,8 +335,8 @@ function dataCond(
 )
     # Made the code more performant by replacing these assignments.
     data = getproperty(network, dataField)
-    idx = idxCond(data[:,idxComp], val; condition = condition)
-    return data[idx,:]#data[idx, idxComp]
+    idx = idxCond(data[:, idxComp], val; condition = condition)
+    return data[idx, :]#data[idx, idxComp]
 end
 
 
@@ -352,9 +351,6 @@ function idxCond(
     return findall(x -> condition(x, val), data)
 end
 
-
-
-
 function dataCond(
     network::DislocationNetwork,
     dataField::Symbol, # Field of data to be obtained.
@@ -366,7 +362,6 @@ function dataCond(
     idx = idxCond(data, val; condition = condition)
     return data[idx]
 end
-
 
 function dataCond(
     network::DislocationNetwork,
@@ -380,10 +375,9 @@ function dataCond(
     cond = getproperty(network, condField)
     @assert size(data, 1) == size(cond, 1) "Number of rows of both fields must be equal."
     # Made the code more performant by replacing these assignments.
-    idx = idxCond(condfield[:, idxComp], val; condition = condition)
+    idx = idxCond(cond[:, idxComp], val; condition = condition)
     return data[idx, :]
 end
-
 
 function coordLbl(network::DislocationNetwork, label::Integer)
     idx = idxLabel(network, label)
