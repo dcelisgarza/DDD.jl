@@ -30,7 +30,7 @@ lenLinks = size(links, 1)
 [bVec[i, :] = convert.(Float64, [i, i + lenLinks, i + 2 * lenLinks]) for i = 1:lenLinks]
 [slipPlane[i, :] = -convert.(Float64, [i, i + lenLinks, i + 2 * lenLinks]) for i = 1:lenLinks]
 lenLabel = length(label)
-[label[i] = nodeType(i-2) for i = 1:lenLabel]
+[label[i] = i - 2 for i = 1:lenLabel]
 [coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel]) for i = 1:length(label)]
 network = DislocationNetwork(
     links,
@@ -63,8 +63,8 @@ LinearIndices(idx)
 lidx[1:7:end]
 LinearIndices(bVec)[lidx]
 dataCond(network, :bVec, 10; condition = >=)
-idxCond(network, :bVec, 2, 14.; condition = ==)
-dataCond(network, :bVec, 2, 14.; condition = ==)
+idxCond(network, :bVec, 2, 14.0; condition = ==)
+dataCond(network, :bVec, 2, 14.0; condition = ==)
 
 
 coordLbl(network, -1)

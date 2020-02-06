@@ -1,7 +1,7 @@
 module DDD
 
 using CSV, DataFrames, LinearAlgebra, DelimitedFiles
-import Base: zero, isequal, isless, convert
+import Base: zero, isequal, isless, convert, ==
 
 include("CustomTypes.jl")
 include("Dislocation.jl")
