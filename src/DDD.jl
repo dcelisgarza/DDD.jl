@@ -4,28 +4,23 @@ using CSV, DataFrames, LinearAlgebra, DelimitedFiles
 import Base: zero, isequal, isless, convert, ==
 
 include("CustomTypes.jl")
-include("Dislocation.jl")
-include("Material.jl")
-include("DdFem.jl")
-include("CustomIntegration.jl")
-include("Input.jl")
-include("Output.jl")
+export compStruct
 
-export loadCSV,
-       loadParams,
-       saveParams,
-       DislocationP,
-       DislocationNetwork,
-       makeSegment,
-       dlnSegment,
-       dlnEdge,
-       dlnScrew,
-       compStruct,
-       idxLabel,
-       idxCond,
-       dataCond,
-       coordLbl,
-       coordIdx,
-       nodeType
+include("DislocationBase.jl")
+export DislocationP, DislocationNetwork, nodeType
+export coordLbl, coordIdx, idxLabel, idxCond, dataCond
+export dlnSegment, dlnEdge, dlnScrew, makeSegment
+
+include("Material.jl")
+
+include("DdFem.jl")
+
+include("CustomIntegration.jl")
+
+include("Input.jl")
+export loadCSV, loadParams
+
+include("Output.jl")
+export saveParams
 
 end # module

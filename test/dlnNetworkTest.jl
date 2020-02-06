@@ -67,6 +67,21 @@ end
         rnd;
         condition = cnd,
     ) == slipPlane[findall(x -> cnd(x, rnd), slipPlane)]
+    rnd = rand(-1:1)
+    cnd = rand([==, >=, <=, <, >, !==])
+    @test dataCond(
+        network,
+        :slipPlane,
+        :bVec,
+        rnd;
+        condition = cnd,
+    ) == slipPlane[findall(x -> cnd(x, rnd), bVec)]
+    rnd = rand(1:numNode)
+    cnd = rand([==, >=, <=, <, >, !==])
+    @test dataCond(network, :coord, :label, rnd; condition = cnd) == coord[
+        findall(x -> cnd(x, rnd), label),
+        :,
+    ]
     col = rand(1:3)
     cnd = rand([==, >=, <=, <, >, !==])
     @test idxCond(network, :bVec, col, rnd; condition = cnd) == findall(
