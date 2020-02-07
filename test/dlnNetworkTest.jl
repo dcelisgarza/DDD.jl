@@ -48,7 +48,10 @@ end
         numNode,
         numSeg,
     )
+    @test isequal(network.label[1], -1)
     @test isequal(-1, network.label[1])
+    @test -1 == network.label[1]
+    @test -2.0 < network.label[1]
     rnd = rand(-1:numNode)
     @test idxLabel(network, rnd) == findall(x -> x == rnd, label)
     @test coordLbl(network, rnd) == coord[findall(x -> x == rnd, label), :]
@@ -102,4 +105,13 @@ end
     @test coordIdx(network, rnd) == coord[rnd, :]
     rnd = rand(1:numNode, numNode)
     @test coordIdx(network, rnd) == coord[rnd, :]
+end
+
+@testset "Geometry" begin
+    @test isapprox(intAngle(3), π/3)
+    @test isapprox(intAngle(4), π/2)
+    @test isapprox(intAngle(6), 2π/3)
+    @test isapprox(extAngle(3), 2π/3)
+    @test isapprox(extAngle(4), π/2)
+    @test isapprox(extAngle(6), π/3)
 end
