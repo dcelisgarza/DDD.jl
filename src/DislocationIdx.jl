@@ -38,25 +38,17 @@ end
 """
 Related functions: `dataCond`
 ```
-idxCond(data::Union{AbstractArray{<:Real},Vector{<:nodeType}}, val::Real;
-        condition::Function = ==)
+idxCond(data::Union{AbstractArray{<:Real},Vector{<:nodeType}}, val::Real; condition::Function = ==)
 ```
 Find index/indices of data that meet the condition(data, val).
 ```
-idxCond(network::DislocationNetwork, fieldname::Symbol, val::Real;
-        condition::Function = ==)
+idxCond(network::DislocationNetwork, fieldname::Symbol, val::Real; condition::Function = ==)
 ```
-Find index/indices of node whose `fieldname`, `(:links, :bVec, :slipPlane,
-:coord, :label, :numNode, :numSeg)`` meets `condition(fieldname, val)`. If
-`fieldName` is multidimensional it will return `CartesianIndex`.
+Find index/indices of node whose `fieldname`, `(:links, :bVec, :slipPlane, :coord, :label, :numNode, :numSeg)`, meets `condition(fieldname, val)`. If `fieldName` is multidimensional it will return `CartesianIndex`.
 ```
-idxCond(network::DislocationNetwork, fieldname::Symbol, idxComp::Integer,
-        val::Real; condition::Function = ==)
+idxCond(network::DislocationNetwork, fieldname::Symbol, idxComp::Integer, val::Real; condition::Function = ==)
 ```
-Find index/indices of node whose `fieldname`, `(:links, :bVec, :slipPlane,
-:coord, :label, :numNode, :numSeg)` meets
-`condition(fieldname[:, idxComp], val)`. It errors if the fieldname provided
-does not have a column `idxComp`.
+Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxComp], val)`. It errors if the fieldname provided does not have a column `idxComp`.
 """
 function idxCond(
     data::Union{AbstractArray{<:Real},Vector{<:nodeType}},
@@ -88,32 +80,21 @@ end
 """
 Related functions: `idxCond`
 ```
-dataCond(network::DislocationNetwork, dataField::Symbol, val::Real;
-    condition::Function = ==)
+dataCond(network::DislocationNetwork, dataField::Symbol, val::Real; condition::Function = ==)
 ```
-Get the data whose `dataField`, `(:links, :bVec, :slipPlane, :coord, :label,
-:numNode, :numSeg)` meets the `condition(dataField, val)``. If `dataField` is
-multidimensional it will use `CartesianIndex` to find it.
+Get the data whose `dataField`, `(:links, :bVec, :slipPlane, :coord, :label, :numNode, :numSeg)`, meets the `condition(dataField, val)`. If `dataField` is multidimensional it will use `CartesianIndex` to find it.
 ```
-dataCond(network::DislocationNetwork, dataField::Symbol, idxComp::Integer,
-        val::Real; condition::Function = ==)
+dataCond(network::DislocationNetwork, dataField::Symbol, idxComp::Integer, val::Real; condition::Function = ==)
 ```
-Get the data whose `dataField`, meets the `condition(dataField[:,idxComp], val)``. It errors
-if the fieldname provided does not have a column `idxComp`.
+Get the data whose `dataField`, meets the `condition(dataField[:,idxComp], val)`. It errors if the fieldname provided does not have a column `idxComp`.
 ```
-dataCond(network::DislocationNetwork, dataField::Symbol, condField::Symbol,
-        val::Real; condition::Function = ==)
+dataCond(network::DislocationNetwork, dataField::Symbol, condField::Symbol, val::Real; condition::Function = ==)
 ```
-Get the data from `dataField` that corresponds to the `condField`
-(from the same pool as `dataField`) that meets the `condition(condField, val)`.
-If `condField` is multidimensional it will use `CartesianIndex` in its search.
-`dataField` and `condField` must have the same number of rows.
+Get the data from `dataField` that corresponds to the `condField` (from the same pool as `dataField`) that meets the `condition(condField, val)`. If `condField` is multidimensional it will use `CartesianIndex` in its search. `dataField` and `condField` must have the same number of rows.
 ```
-dataCond(network::DislocationNetwork, dataField::Symbol, condField::Symbol
-        idxComp::Integer, val::Real; condition::Function = ==)
+dataCond(network::DislocationNetwork, dataField::Symbol, condField::Symbol idxComp::Integer, val::Real; condition::Function = ==)
 ```
-Get the data from `dataField` that corresponds to the `condField` that meets
-the `condition(condField[:, idxComp], val)`.
+Get the data from `dataField` that corresponds to the `condField` that meets the `condition(condField[:, idxComp], val)`. `dataField` and `condField` must have the same number of rows.
 """
 function dataCond(
     network::DislocationNetwork,

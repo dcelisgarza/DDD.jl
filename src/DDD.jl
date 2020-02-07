@@ -18,7 +18,7 @@ include("DdFem.jl")
 include("CustomIntegration.jl")
 
 include("Input.jl")
-export loadCSV, loadParams
+export loadCSV, loadParams, cleanFieldDf
 
 include("Output.jl")
 export saveParams

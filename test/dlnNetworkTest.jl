@@ -24,6 +24,7 @@ cd(@__DIR__)
 end
 
 @testset "Dislocation indexing functions" begin
+    cnd = [==, >=, <=, <, >, !==]
     numNode = 10
     numSeg = 20
     links = zeros(Integer, numSeg, 2)
@@ -47,6 +48,7 @@ end
         numNode,
         numSeg,
     )
+    @test isequal(-1, network.label[1])
     rnd = rand(-1:numNode)
     @test idxLabel(network, rnd) == findall(x -> x == rnd, label)
     @test coordLbl(network, rnd) == coord[findall(x -> x == rnd, label), :]
@@ -55,44 +57,47 @@ end
         label,
     )
     rnd = rand(1:numSeg)
-    cnd = rand([==, >=, <=, <, >, !==])
-    @test idxCond(network, :bVec, rnd; condition = cnd) == findall(
-        x -> cnd(x, rnd),
+    @test idxCond(network, :bVec, rnd; condition = cnd[1]) == findall(
+        x -> cnd[1](x, rnd),
         bVec,
     )
-    cnd = rand([==, >=, <=, <, >, !==])
     @test dataCond(
         network,
         :slipPlane,
         rnd;
-        condition = cnd,
-    ) == slipPlane[findall(x -> cnd(x, rnd), slipPlane)]
+        condition = cnd[2],
+    ) == slipPlane[findall(x -> cnd[2](x, rnd), slipPlane)]
     rnd = rand(-1:1)
-    cnd = rand([==, >=, <=, <, >, !==])
     @test dataCond(
         network,
         :slipPlane,
         :bVec,
         rnd;
-        condition = cnd,
-    ) == slipPlane[findall(x -> cnd(x, rnd), bVec)]
+        condition = cnd[3],
+    ) == slipPlane[findall(x -> cnd[3](x, rnd), bVec)]
     rnd = rand(1:numNode)
-    cnd = rand([==, >=, <=, <, >, !==])
-    @test dataCond(network, :coord, :label, rnd; condition = cnd) == coord[
-        findall(x -> cnd(x, rnd), label),
+    @test dataCond(network, :coord, :label, rnd; condition = cnd[4]) == coord[
+        findall(x -> cnd[4](x, rnd), label),
         :,
     ]
     col = rand(1:3)
-    cnd = rand([==, >=, <=, <, >, !==])
-    @test idxCond(network, :bVec, col, rnd; condition = cnd) == findall(
-        x -> cnd(x, rnd),
+    @test idxCond(network, :bVec, col, rnd; condition = cnd[5]) == findall(
+        x -> cnd[5](x, rnd),
         bVec[:, col],
     )
-    cnd = rand([==, >=, <=, <, >, !==])
-    @test dataCond(network, :bVec, col, rnd; condition = cnd) == bVec[
-        findall(x -> cnd(x, rnd), bVec[:, col]),
+    @test dataCond(network, :bVec, col, rnd; condition = cnd[6]) == bVec[
+        findall(x -> cnd[6](x, rnd), bVec[:, col]),
         :,
     ]
+    rnd = rand(-1:1)
+    @test dataCond(
+        network,
+        :slipPlane,
+        :bVec,
+        col,
+        rnd;
+        condition = cnd[1],
+    ) == slipPlane[findall(x -> cnd[1](x, rnd), bVec[:, col]), :]
     rnd = rand(1:numNode)
     @test coordIdx(network, rnd) == coord[rnd, :]
     rnd = rand(1:numNode, numNode)

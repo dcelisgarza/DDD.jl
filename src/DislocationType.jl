@@ -221,9 +221,11 @@ end # DislocationP
     ext = 4
 end
 isequal(x::Real, y::nodeType) = isequal(x, Integer(y))
+isequal(x::nodeType, y::Real) = isequal(Integer(x), y)
 isless(x::Real, y::nodeType) = isless(x, Integer(y))
 isless(x::nodeType, y::Real) = isless(Integer(x), y)
 ==(x::nodeType, y::Real) = isequal(Integer(x), y)
+==(x::Real, y::nodeType) = isequal(x, Integer(y))
 convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
 zero(::Type{nodeType}) = undef
 
@@ -249,21 +251,11 @@ mutable struct DislocationNetwork{
         label,
         numNode = 0,
         numSeg = 0,
-        blank::Bool = false,
-        numInit::Integer = 0,
     )
-        if blank
-            numNode = 0
-            numSeg = 0
-            links = zeros(typeof(links), numInit)
-            bVec = zeros(typeof(bVec), numInit, 3)
-            slipPlane = zeros(typeof(slipPlane), numInit, 3)
-        else
-            @assert size(links, 2) == 2
-            @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
-            @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
-            @assert size(coord, 1) == size(label, 1)
-        end
+        @assert size(links, 2) == 2
+        @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
+        @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
+        @assert size(coord, 1) == size(label, 1)
         new{
             typeof(links),
             typeof(bVec),
