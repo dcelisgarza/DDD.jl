@@ -22,9 +22,9 @@ function makeSegment(
 )
     @views slipPlane = slipSystems[1:3, slipSys]
     @views bVec = slipSystems[4:6, slipSys]
-    seg[:, 1] = cross(slipPlane, bVec)
-    seg[:, 1] ./= norm(seg[:, 1])
-    return seg[:, 1]
+    edgeSeg = cross(slipPlane, bVec)
+    edgeSeg ./= norm(edgeSeg)
+    return edgeSeg
 end
 function makeSegment(
     segType::dlnScrew,
@@ -32,8 +32,8 @@ function makeSegment(
     slipSystems::Matrix{<:Real},
 )
     @views bVec = slipSystems[4:6, slipSys]
-    seg[:, 2] = bVec ./ norm(bVec)
-    return seg[:, 2]
+    screwSeg = bVec ./ norm(bVec)
+    return screwSeg
 end
 
 function makeLoop!(
