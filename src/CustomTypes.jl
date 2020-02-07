@@ -24,3 +24,11 @@ macro string_as_varname_macro(s::AbstractString, v::Any)
     s = Symbol(s)
     esc(:($s = $v))
 end
+
+function intAngle(numSides::Integer)
+    return (numSides-2) * π / numSides
+end
+
+function extAngle(numSides::Integer)
+    return π - intAngle(numSides)
+end
