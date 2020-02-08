@@ -9,7 +9,7 @@ cd(@__DIR__)
     inFilename = "../data/slipSystems/bcc.csv"
     data = readdlm(inFilename, ',', Float64)
     slipSysInt = 5
-    slipSystem = data[:, slipSysInt]
+    slipSystem = data[slipSysInt, :]
     edge = makeSegment(dlnEdge(), slipSysInt, data)
     screw = makeSegment(dlnScrew(), slipSysInt, data)
     @test abs(dot(edge, screw)) < eps(Float64)
@@ -108,10 +108,10 @@ end
 end
 
 @testset "Geometry" begin
-    @test isapprox(intAngle(3), π/3)
-    @test isapprox(intAngle(4), π/2)
-    @test isapprox(intAngle(6), 2π/3)
-    @test isapprox(extAngle(3), 2π/3)
-    @test isapprox(extAngle(4), π/2)
-    @test isapprox(extAngle(6), π/3)
+    @test isapprox(intAngle(3), π / 3)
+    @test isapprox(intAngle(4), π / 2)
+    @test isapprox(intAngle(6), 2π / 3)
+    @test isapprox(extAngle(3), 2π / 3)
+    @test isapprox(extAngle(4), π / 2)
+    @test isapprox(extAngle(6), π / 3)
 end

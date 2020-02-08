@@ -7,4 +7,15 @@
 [![Codecov](https://codecov.io/gh/dcelisgarza/DDD.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/dcelisgarza/DDD.jl)
 [![Coveralls](https://coveralls.io/repos/github/dcelisgarza/DDD.jl/badge.svg?branch=master)](https://coveralls.io/github/dcelisgarza/DDD.jl?branch=master)
 
-New generation Discrete Dislocation Dynamics code.
+New generation of 3D Discrete Dislocation Dynamics codes.
+
+Dislocation dynamics is a complex field with an enormous barrier to entry. The aim of this project is to create a codebase that is:
+
+- Easy to use.
+- Easy to maintain.
+- Easy to develop for.
+- Modular.
+- Idiot proof.
+- Well documented and tested.
+- Performant.
+- Easily parallelisable.

@@ -20,8 +20,8 @@ function makeSegment(
     slipSys::Integer,
     slipSystems::Matrix{<:Real},
 )
-    @views slipPlane = slipSystems[1:3, slipSys]
-    @views bVec = slipSystems[4:6, slipSys]
+    @views slipPlane = slipSystems[slipSys, 1:3]
+    @views bVec = slipSystems[slipSys, 4:6]
     edgeSeg = cross(slipPlane, bVec)
     edgeSeg ./= norm(edgeSeg)
     return edgeSeg
@@ -31,7 +31,7 @@ function makeSegment(
     slipSys::Integer,
     slipSystems::Matrix{<:Real},
 )
-    @views bVec = slipSystems[4:6, slipSys]
+    @views bVec = slipSystems[slipSys, 4:6]
     screwSeg = bVec ./ norm(bVec)
     return screwSeg
 end
@@ -62,8 +62,8 @@ function makeLoop!(
     local emptyLabel::Bool = isempty(nodeLabels)
     local numNodesTotal::Integer = 0
 
-    coord = @view network.coord[:, :]
-    label = @view network.label[:]
+    coord = network.coord
+    label = network.label
 
     if !emptyLabel
         @assert length(nodeLabels) == numNodes * numSlipSystem * sum(numSources)
@@ -89,10 +89,11 @@ function makeLoop!(
                 label[idxj+nodeSide] = nodeLabels[idxj+nodeSide]
                 coord[idxj+2*nodeSide, :] -= seg[:, 1]
                 label[idxj+2*nodeSide] = nodeLabels[idxj+2*nodeSide]
-                try
+                if j == nodeSide
+                    break
+                else
                     coord[idxj+3*nodeSide, :] -= seg[:, 2]
                     label[idxj+3*nodeSide] = nodeLabels[idxj+3*nodeSide]
-                catch e
                 end
             end
         numNodesTotal += nodeSide*4
