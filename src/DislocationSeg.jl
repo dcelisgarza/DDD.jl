@@ -41,14 +41,16 @@ function makeLoop!(
     network::DislocationNetwork,
     dlnParams::DislocationP,
     slipSystems::Matrix{<:Real},
+    nodeLabels::Vector{nodeType} = nodeType[],
     nodeSide::Integer = 2, # Nodes per side
 )
 
-    paramSlipSys = dlnParams.slipSystems
+    numSources = @view dlnParams.numSources[:]
+    paramSlipSys = @view dlnParams.slipSystems[:]
     numNodes = 4 * nodeSide
     numSlipSystem = length(paramSlipSys)
     numSlipSystem == 0 ? numSlipSystem = 1 : nothing
-    lenNumSources = length(dlnParams.numSources)
+    lenNumSources = length(numSources)
     lenNumSources == 0 ? numSlipSystem = 1 : nothing
     @assert numSlipSystem == lenNumSources
     if size(network.coord, 1) == 0 || size(network.label, 1) == 0
@@ -57,23 +59,43 @@ function makeLoop!(
     end
 
     local seg = zeros(3, 2)
+    local emptyLabel::Bool = isempty(nodeLabels)
 
     coord = @view network.coord[:, :]
+    label = @view network.label[:]
+
+    if !emptyLabel
+        @assert length(nodeLabels) == numNodes * numSlipSystem
+    else
+        nodeLabels = [1; 0; 1; 1; 1; 0; 1; 1]
+        [hcat(nodeLabels, [1; 0; 1; 1; 1; 0; 1; 1]) for i = 1:numSlipSystem-1]
+    end
     for i = 1:numSlipSystem
         seg[:, 1] = makeSegment(dlnEdge(), paramSlipSys[i], slipSystems)
         seg[:, 2] = makeSegment(dlnScrew(), paramSlipSys[i], slipSystems)
 
-        idxi = (paramSlipSys[i] - 1) * numNodes
-        coord[1+idxi, :] -= seg[:, 1] + seg[:, 2]
+        idx = 1 + (i - 1) * numNodes # * 1 + (i - 1) * numNodesTotal
+        # for k = 1:numSources[i]
+        #idxk = (k-1)*nodeSide*4
+        #idx += idxk
+        coord[idx, :] -= seg[:, 1] + seg[:, 2]
+        label[idx] = nodeLabels[idx]
         for j = 1:nodeSide
-            coord[j + 1 + idxi, :] += seg[:, 1]
-            coord[j + 1 + idxi + nodeSide, :] += seg[:, 2]
-            coord[j + 1 + idxi + 2 * nodeSide, :] -= seg[:, 1]
+            idxj = j + idx
+            coord[idxj, :] += seg[:, 1]
+            label[idxj] = nodeLabels[idxj]
+            coord[idxj+nodeSide, :] += seg[:, 2]
+            label[idxj+nodeSide] = nodeLabels[idxj+nodeSide]
+            coord[idxj+2*nodeSide, :] -= seg[:, 1]
+            label[idxj+2*nodeSide] = nodeLabels[idxj+2*nodeSide]
             try
-                coord[j + 1 + idxi + 3 * nodeSide, :] -= seg[:, 2]
+                coord[idxj+3*nodeSide, :] -= seg[:, 2]
+                label[idxj+3*nodeSide] = nodeLabels[idxj+3*nodeSide]
             catch e
             end
         end
+        #numNodesTotal += nodeSide*4
+        #end
     end
 
     return network
