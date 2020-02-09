@@ -45,12 +45,12 @@ function arbRot3D(
     θ::Real,
 )
     #https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions
+    isapprox(norm(uvw), 1.0) ? nothing : uvw ./= norm(uvw)
+
     local costheta = cos(θ)
     local onemcostheta = 1 - costheta
     local sintheta = sin(θ)
     local xyzDOTuvw = dot(xyz, uvw)
-
-    isapprox(norm(uvw), 1.0) ? nothing : uvw ./= norm(uvw)
 
     return [
         (abc[1] * (uvw[2]^2 + uvw[3]^2) -
