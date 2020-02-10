@@ -16,7 +16,7 @@ network = DislocationNetwork(
 
 slipsys = "../data/slipSystems/bcc.csv"
 slipSystems = readdlm(slipsys, ',')
-network = makeLoop!(loopPrism(), network, dlnParams, slipSystems)
+makeLoop!(loopPrism(), network, dlnParams, slipSystems)
 
 using Plots
 plotlyjs()
@@ -29,3 +29,5 @@ plot(x, y, z, zcolor=reverse(z), m=(10, 0.8, :blues, Plots.stroke(0)), leg=false
 plot!(zeros(n), zeros(n), 1:n, w=10)
 
 plot(network.coord[:,1],network.coord[:,2],network.coord[:,3],m=3,l=3)
+using Statistics
+abs(mean(network.coord)) < eps(Float64)

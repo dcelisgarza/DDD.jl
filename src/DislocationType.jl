@@ -229,15 +229,6 @@ isless(x::nodeType, y::Real) = isless(Integer(x), y)
 convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
 zero(::Type{nodeType}) = -1
 
-function vcat(network::DislocationNetwork, n::Integer)
-    network.links = [network.links; zeros(Integer, n, 2)]
-    network.bVec = [network.bVec; zeros(n, 3)]
-    network.slipPlane = [network.slipPlane; zeros(n, 3)]
-    network.coord = [network.coord; zeros(n, 3)]
-    network.label = [network.label; zeros(nodeType, n)]
-    return network
-end
-
 mutable struct DislocationNetwork{
     T1<:Matrix{<:Integer},
     T2<:Matrix{<:Real},
@@ -282,6 +273,15 @@ mutable struct DislocationNetwork{
         )
     end # Constructor
 end # DislocationNetwork
+
+function vcat(network::DislocationNetwork, n::Integer)
+    network.links = [network.links; zeros(Integer, n, 2)]
+    network.bVec = [network.bVec; zeros(n, 3)]
+    network.slipPlane = [network.slipPlane; zeros(n, 3)]
+    network.coord = [network.coord; zeros(n, 3)]
+    network.label = [network.label; zeros(nodeType, n)]
+    return network
+end
 
 # function zero(::Type{DislocationNetwork})
 #     DislocationNetwork(
