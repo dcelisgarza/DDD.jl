@@ -18,46 +18,14 @@ slipsys = "../data/slipSystems/bcc.csv"
 slipSystems = readdlm(slipsys, ',')
 network = makeLoop!(loopPrism(), network, dlnParams, slipSystems)
 
-# intAngle(6) / π * 180
-#
-# using BenchmarkTools, Traceur
-#
-# function travA(A::Matrix{<:Float64})
-#     # A[:,1] .= 1
-#     # A[:,2] .= 2
-#     # A[:,3] .= 3
-#     for j = 1:size(A,2)
-#         for i = 1:size(A,1)
-#             result = A[i,j]
-#         end
-#         # A[i,1] = 1
-#         # A[i,2] = 2
-#         # A[i,3] = 3
-#     end
-# end
-#
-#
-# function travB(B::Matrix{<:Float64})
-#     # B[1,:] .= 1
-#     # B[2,:] .= 2
-#     # B[3,:] .= 3
-#     for i = 1:size(B,2)
-#         for j = 1:size(B,1)
-#             result = B[j,i]
-#         end
-#         # B[:,i] = 1:3
-#         # B[2,i] = 2
-#         # B[3,i] = 3
-#     end
-# end
-#
-# A = rand(1000000,3)
-# B = rand(3,1000000)
-# @benchmark travA(A)
-# @benchmark travB(B)
-#
-#
-# idx = rand(1:size(A,1), 10000)
-# @benchmark A[idx,:]
-# @benchmark B[:,idx]
-# @benchmark B[:,idx]
+using Plots
+plotlyjs()
+n = 100
+ts = range(0, stop=8π, length=n)
+x = ts .* map(cos, ts)
+y = (0.1ts) .* map(sin, ts)
+z = 1:n
+plot(x, y, z, zcolor=reverse(z), m=(10, 0.8, :blues, Plots.stroke(0)), leg=false, cbar=true, w=5)
+plot!(zeros(n), zeros(n), 1:n, w=10)
+
+plot(network.coord[:,1],network.coord[:,2],network.coord[:,3],m=3,l=3)
