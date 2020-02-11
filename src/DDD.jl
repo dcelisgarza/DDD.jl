@@ -17,7 +17,9 @@ export AbstractDlnSegment,
        loopShear,
        loopMixed,
        makeSegment,
-       makeLoop!
+       makeLoop!,
+       moveLoop,
+       scaleCoord
 
 include("Material.jl")
 
