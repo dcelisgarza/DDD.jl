@@ -1,7 +1,7 @@
 module DDD
 
-using CSV, DataFrames, LinearAlgebra, DelimitedFiles
-import Base: zero, isequal, isless, convert, ==, vcat
+using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots
+import Base: zero, isequal, isless, convert, ==
 
 include("CustomTypes.jl")
 export compStruct, intAngle, extAngle
@@ -17,9 +17,7 @@ export AbstractDlnSegment,
        loopShear,
        loopMixed,
        makeSegment,
-       makeLoop!,
-       moveLoop,
-       scaleCoord
+       makeLoop!
 
 include("Material.jl")
 
@@ -32,5 +30,8 @@ export loadCSV, loadParams, cleanFieldDf
 
 include("Output.jl")
 export saveParams
+
+include("Plotting.jl")
+export plotNodes
 
 end # module

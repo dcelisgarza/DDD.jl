@@ -51,6 +51,13 @@ idxCond(network::DislocationNetwork, fieldname::Symbol, idxComp::Integer, val::R
 Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxComp], val)`. It errors if the fieldname provided does not have a column `idxComp`.
 """
 function idxCond(
+    network::DislocationNetwork,
+    fieldname::Symbol;
+    condition::Function,
+)
+    return findall(x -> condition(x), getproperty(network, fieldname))
+end
+function idxCond(
     data::Union{AbstractArray{<:Real},Vector{<:nodeType}},
     val::Real;
     condition::Function = ==,
@@ -127,7 +134,8 @@ function dataCond(
     data = getproperty(network, dataField)
     cond = getproperty(network, condField)
     @assert size(data, 1) == size(cond, 1) "Number of rows of both fields must be equal."
-    idx = idxCond(cond, val; condition = condition)
+    idx = findall(x -> condition(x, val), cond)
+    # idx = idxCond(cond, val; condition = condition)
     if ndims(cond) > 1
         return data[idx]
     else

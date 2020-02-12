@@ -7,6 +7,8 @@ abstract type AbstractDlnLoop end
 struct loopPrism <: AbstractDlnLoop end
 struct loopShear <: AbstractDlnLoop end
 struct loopDln <: AbstractDlnLoop end
+struct loopJog <: AbstractDlnLoop end
+struct loopKink <: AbstractDlnLoop end
 
 """
 ```
@@ -18,31 +20,37 @@ Make single dislocation segment of the given type `dlnEdge` or `dlnScrew` from t
 function makeSegment(
     segType::dlnEdge,
     slipSys::Integer,
-    slipSystems::Matrix{<:Real},
-)
-    @views slipPlane = slipSystems[slipSys, 1:3]
-    @views bVec = slipSystems[slipSys, 4:6]
-    edgeSeg = cross(slipPlane, bVec)
+    slipSystems::AbstractArray{<:Real,N},
+    crossProd::Bool = true,
+) where {N}
+    slipPlane = slipSystems[slipSys, 1:3]
+    if crossProd
+        bVec = slipSystems[slipSys, 4:6]
+        edgeSeg = cross(slipPlane, bVec)
+    else
+        edgeSeg = slipPlane
+    end
     edgeSeg ./= norm(edgeSeg)
     return edgeSeg
 end
+
 function makeSegment(
     segType::dlnScrew,
     slipSys::Integer,
-    slipSystems::Matrix{<:Real},
-)
-    @views bVec = slipSystems[slipSys, 4:6]
+    slipSystems::AbstractArray{<:Real,N},
+) where {N}
+    bVec = slipSystems[slipSys, 4:6]
     screwSeg = bVec ./ norm(bVec)
     return screwSeg
 end
 
 function limits!(
-    lims::Matrix{<:Real},
-    segLen::Real=1,
-    range::AbstractArray{<:Real} = Float64[-1 -1 -1; 1 1 1].*segLen,
-    scale::AbstractArray{<:Real} = Float64[1 1 1; 1 1 1].*segLen,
+    lims::AbstractArray{<:Real,N1},
+    segLen::Real = 1,
+    range::AbstractArray{<:Real,N2} = Float64[-1 -1 -1; 1 1 1] .* segLen,
+    scale::AbstractArray{<:Real,N2} = Float64[1 1 1; 1 1 1] .* segLen,
     buffer::Real = 1.5,
-)
+) where {N1,N2}
     for i = 1:size(lims, 2)
         for j = 1:size(lims, 1)
             lims[j, i] = range[j, i] * scale[j, i] + buffer * segLen
@@ -51,42 +59,40 @@ function limits!(
     return lims
 end
 
-function scaleCoord(coord::AbstractArray{<:Real}, factor::Real)
+function scalePoints(coord::AbstractArray{<:Real,N}, factor::Real) where {N}
     return coord .*= factor
 end
 
-function moveCoord(
-    coord::AbstractArray{<:Real},
-    disp::AbstractVector{<:Real},
-    lims::AbstractArray{<:Real},
-)
+function translatePoints(
+    coord::AbstractArray{<:Real,N1},
+    disp::AbstractArray{<:Real,N2},
+    lims::AbstractArray{<:Real,N1},
+) where {N1,N2}
     for i = 1:size(coord, 2)
         for j = 1:size(coord, 1)
-            coord[j,i] += lims[1,i] + (lims[2,i] - lims[1,i])*disp[i]
+            coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
         end
     end
     return coord
 end
 
 function makeLoop!(
-    loopType::loopPrism, # Loop type
+    loopType::Union{loopPrism,loopShear}, # Loop type
     network::DislocationNetwork,
     dlnParams::DislocationP,
-    slipSystems::AbstractArray{<:Real},
-    range::AbstractArray{<:Real} = Float64[-1 -1 -1; 1 1 1],
-    scale::AbstractArray{<:Real} = Float64[1 1 1; 1 1 1],
+    slipSystems::AbstractArray{<:Real,N1},
+    range::AbstractArray{<:Real,N2} = Float64[-1 -1 -1; 1 1 1],
+    scale::AbstractArray{<:Real,N2} = Float64[1 1 1; 1 1 1],
     buffer::Real = 1.5,
     nodeLabels::Vector{nodeType} = nodeType[1; 0; 1; 1; 1; 0; 1; 1],
     nodeSide::Integer = 2; # Nodes per side
-    dist::Function = f(x...) = Float64[0; 0; 0],
-)
+    dist::Function = f(x) = zeros(x, 3),
+) where {N1,N2}
 
     # Aliases/views for dlnParams.
     numSources = dlnParams.numSources
     paramSlipSys = dlnParams.slipSystems
     distSource = dlnParams.distSource
-
-
 
     # Constants
     numNodes = 4 * nodeSide
@@ -125,8 +131,18 @@ function makeLoop!(
     # Loop through slip systems.
     for i = 1:numSlipSystem
         # Make edge and screw segments.
-        seg[:, 1] = makeSegment(dlnEdge(), paramSlipSys[i], slipSystems)
-        seg[:, 2] = makeSegment(dlnScrew(), paramSlipSys[i], slipSystems)
+        if typeof(loopType) == loopShear
+            seg[:, 1] = makeSegment(dlnEdge(), paramSlipSys[i], slipSystems)
+            seg[:, 2] = makeSegment(dlnScrew(), paramSlipSys[i], slipSystems)
+        elseif typeof(loopType) == loopPrism
+            seg[:, 1] = makeSegment(dlnEdge(), paramSlipSys[i], slipSystems)
+            seg[:, 2] = makeSegment(
+                dlnEdge(),
+                paramSlipSys[i],
+                slipSystems,
+                false,
+            )
+        end
         # Set limits for dislocations.
         limits!(lims, distSource[i], range, scale, buffer)
         # Set starting index for this slip system.
@@ -172,15 +188,16 @@ function makeLoop!(
             )+3*nodeSide]
 
             # Scale loop.
-            coord[idx:idx+1+3 * nodeSide, :] .= scaleCoord(
+            coord[idx:idx+1+3 * nodeSide, :] .= scalePoints(
                 coord[idx:idx+1+3 * nodeSide, :],
                 distSource[i],
             )
 
             # Move loop.
-            coord[idx:idx+1+3 * nodeSide, :] .= moveCoord(
+            coord[idx:idx+1+3 * nodeSide, :] .= translatePoints(
                 coord[idx:idx+1+3 * nodeSide, :],
-                distribution[idxDist, :], lims
+                distribution[idxDist, :],
+                lims,
             )
 
 

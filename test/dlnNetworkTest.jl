@@ -24,7 +24,7 @@ cd(@__DIR__)
 end
 
 @testset "Dislocation indexing functions" begin
-    cnd = [==, >=, <=, <, >, !==]
+    cnd = [==, >=, <=, <, >, !=]
     numNode = 10
     numSeg = 20
     links = zeros(Integer, numSeg, 2)
