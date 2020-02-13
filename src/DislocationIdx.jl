@@ -134,8 +134,7 @@ function dataCond(
     data = getproperty(network, dataField)
     cond = getproperty(network, condField)
     @assert size(data, 1) == size(cond, 1) "Number of rows of both fields must be equal."
-    idx = findall(x -> condition(x, val), cond)
-    # idx = idxCond(cond, val; condition = condition)
+    idx = idxCond(cond, val; condition = condition)
     if ndims(cond) > 1
         return data[idx]
     else
