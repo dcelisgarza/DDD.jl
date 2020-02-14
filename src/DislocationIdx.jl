@@ -38,6 +38,10 @@ end
 """
 Related functions: `dataCond`
 ```
+idxCond(network::DislocationNetwork, fieldname::Symbol, args...; condition::Function)
+```
+Find index/indices whose `fieldname` meets the `condition(fieldname, args...)` where condition can be any function that uses `fieldname` and `args` to make a comparison.
+```
 idxCond(data::Union{AbstractArray{<:Real},Vector{<:nodeType}}, val::Real; condition::Function = ==)
 ```
 Find index/indices of data that meet the condition(data, val).
@@ -52,10 +56,11 @@ Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxCo
 """
 function idxCond(
     network::DislocationNetwork,
-    fieldname::Symbol;
+    fieldname::Symbol,
+    args...;
     condition::Function,
 )
-    return findall(x -> condition(x), getproperty(network, fieldname))
+    return findall(x -> condition(x, args...), getproperty(network, fieldname))
 end
 function idxCond(
     data::Union{AbstractArray{<:Real},Vector{<:nodeType}},

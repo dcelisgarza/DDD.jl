@@ -1,108 +1,310 @@
 """
-    DislocationP{
-        T1<:Union{AbstractFloat,Vector{<:AbstractFloat}},
-        T2<:Union{Integer,Vector{<:Integer}},
-        T3<:Union{Bool,Vector{Bool}},
-        T4<:Union{String,Vector{String},Symbol,Vector{Symbol}},
-    }(
-        coreRad::T1
-        coreRadMag::T1
-        minSegLen::T1
-        maxSegLen::T1
-minArea::T1
-        maxArea::T1
-        maxConnect::T2
-        remesh::T3
-        collision::T3
-        separation::T3
-        virtualRemesh::T3
-        edgeDrag::T1
-        screwDrag::T1
-        climbDrag::T1
-        lineDrag::T1
-        mobility::T4
-    )
-
-This structure defines dislocation parameters. Allows for the defnumInition of multiple materials in a single invocation by giving the arguments as Vectors (1D arrays) of the relevant type.
-
-# Arguments
-
-## Size
 ```
-coreRad     # Core radius.
-coreRadMag # Magnitude of core Radius.
+@enum nodeType begin
+    undef = -1
+    intMob = 0
+    intFix = 1
+    srfMob = 2
+    srfFix = 3
+    ext = 4
+end
 ```
-## Connectivity
+Enumerated type for dislocation nodes.
+"""
+@enum nodeType begin
+    undef = -1
+    intMob = 0
+    intFix = 1
+    srfMob = 2
+    srfFix = 3
+    ext = 4
+end
+"""
+Overloaded functions for dislocation `nodeType`.
+"""
+isequal(x::Real, y::nodeType) = isequal(x, Integer(y))
+isequal(x::nodeType, y::Real) = isequal(Integer(x), y)
+isless(x::Real, y::nodeType) = isless(x, Integer(y))
+isless(x::nodeType, y::Real) = isless(Integer(x), y)
+==(x::nodeType, y::Real) = isequal(Integer(x), y)
+==(x::Real, y::nodeType) = isequal(x, Integer(y))
+convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
+zero(::Type{nodeType}) = -1
+"""
 ```
-minSegLen      # Minimum line length.
-maxSegLen      # Maximum line length.
-minArea        # Minimum area for remeshing.
-maxArea        # Maximum area for remeshing.
-maxConnect # Maximum number of connections to a node.
-remesh          # Flag for remeshing.
-collision       # Flag for collision handling.
-separation      # Flag for separation handling.
-virtualRemesh  # Flag for virtual remeshing.
+abstract type AbstractDlnSeg end
+struct dlnEdge <: AbstractDlnSeg end
+struct dlnScrew <: AbstractDlnSeg end
+struct dlnMixed <: AbstractDlnSeg end
 ```
-## Mobility
+Edge types.
+"""
+abstract type AbstractDlnSeg end
+struct dlnEdge <: AbstractDlnSeg end
+struct dlnEdgeN <: AbstractDlnSeg end
+struct dlnScrew <: AbstractDlnSeg end
+struct dlnMixed <: AbstractDlnSeg end
+"""
 ```
-edgeDrag      # Drag coefficient edge dislocation.
-screwDrag     # Drag coefficient screw dislocation.
-climbDrag     # Drag coefficient climb.
-lineDrag      # Drag coefficient line.
-mobility    # Mobility law.
-```
-
-# Examples
-
-## Correct Declaration
-
-### Single material
-
-```jldoctest
-julia> sample_dislocation = DislocationP(0.5, 1e5, 5., 6., 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-DislocationP{Float64,Int64,Bool,String}(0.5, 100000.0, 5.0, 6.0, 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-```
-
-### Multiple (two) materials
-
-```jldoctest
-julia> sample_dislocation = DislocationP([0.5, 0.6], [1e5, 1e4], [5., 3.], [6., 8.], [50.3, 48.], [75.3, 73.] , [4, 6], [true, false], [true, true], [false, true], [false,false], [1.0,2], [2.0,5], [3.0,6], [4.0,10], ["bcc","hcp"])
-DislocationP{Array{Float64,1},Array{Int64,1},Array{Bool,1},Array{String,1}}([0.5, 0.6], [100000.0, 10000.0], [5.0, 3.0], [6.0, 8.0], [50.3, 48.0], [75.3, 73.0], [4, 6], Bool[1, 0], Bool[1, 1], Bool[0, 1], Bool[0, 0], [1.0, 2.0], [2.0, 5.0], [3.0, 6.0], [4.0, 10.0], ["bcc", "hcp"])
-```
-
-## Incorrect declaration
-
-```jldoctest
-julia> sample_dislocation = DislocationP(0.5, 1e5, 5e-2, 6., 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-ERROR: AssertionError: coreRad < minSegLen
-
-julia> sample_dislocation = DislocationP(0.5, 1e5, 5., 3., 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-ERROR: AssertionError: minSegLen < maxSegLen
-
-julia> dislocation = DislocationP(0.5, 1e5, 5., 6., 500.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-ERROR: AssertionError: minArea < maxArea
-
-julia> sample_dislocation = DislocationP([0.5, 0.3], 1e5, 5., 6., 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-ERROR: AssertionError: size(coreRad) == size(coreRadMag) == size(minSegLen) == size(maxSegLen) == size(minArea) == size(maxArea) == size(maxConnect) == size(remesh) == size(collision) == size(separation) == size(virtualRemesh) == size(edgeDrag) == size(screwDrag) == size(climbDrag) == size(lineDrag) == n_mob
-
-julia> sample_dislocation = DislocationP([0.5, 0.6], [1e5, 1e4], [5., 3e-1], [6., 8.], [50.3, 48.], [75.3, 73.] , [4, 6], [true, false], [true, true], [false, true], [false,false], [1.0,2], [2.0,5], [3.0,6], [4.0,10], ["bcc","hcp"])
-ERROR: AssertionError: coreRad[2] < minSegLen[2]
-```
-
-## Immutability
-
-```jldoctest
-julia> sample_dislocation = DislocationP(0.5, 1e5, 5., 6., 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-DislocationP{Float64,Int64,Bool,String}(0.5, 100000.0, 5.0, 6.0, 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-
-julia> sample_dislocation.coreRad = 0.3
-ERROR: setfield! immutable struct of type DislocationP cannot be changed
-
-julia> sample_dislocation = DislocationP(0.3, 1e5, 5., 6., 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
-DislocationP{Float64,Int64,Bool,String}(0.3, 100000.0, 5.0, 6.0, 50.3, 75.3, 4, true, true, true, true, 1.0, 2.0, 3.0, 4.0, "bcc")
 ```
 """
+function makeSegment(
+    type::AbstractDlnSeg,
+    slipPlane::Vector{T},
+    bVec::Vector{T},
+) where {T<:Real}
+    if typeof(type) == dlnEdge
+        seg = cross(slipPlane, bVec)
+    elseif typeof(type) == dlnEdgeN
+        seg = slipPlane
+    elseif typeof(type) == dlnScrew
+        seg = bVec
+    else
+        error("makeSegment: mixed dislocation segment undefined")
+    end
+    return seg ./= norm(seg)
+end
+"""
+```
+@enum loopSides begin
+    four = 4
+    six = 6
+end
+```
+Type for number of sides for idealised loops.
+"""
+@enum loopSides begin
+    four = 4
+    six = 6
+end
+"""
+Overloaded functions for `loopSides`.
+"""
+isequal(x::Real, y::loopSides) = isequal(x, Integer(y))
+isequal(x::loopSides, y::Real) = isequal(Integer(x), y)
+isless(x::Real, y::loopSides) = isless(x, Integer(y))
+isless(x::loopSides, y::Real) = isless(Integer(x), y)
+==(x::loopSides, y::Real) = isequal(Integer(x), y)
+==(x::Real, y::loopSides) = isequal(x, Integer(y))
+convert(::Type{loopSides}, x::Real) = loopSides(Integer(x))
+*(x::loopSides, y::Real) = *(Int(x), y)
+/(x::loopSides, y::Int64) = /(Int(x), y)
+
+"""
+```
+abstract type AbstractDlnStr end
+struct loopPrism <: AbstractDlnStr end
+struct loopShear <: AbstractDlnStr end
+struct loopDln <: AbstractDlnStr end
+struct loopJog <: AbstractDlnStr end
+struct loopKink <: AbstractDlnStr end
+```
+Idealised dislocation structure types.
+"""
+abstract type AbstractDlnStr end
+struct loopPrism <: AbstractDlnStr end
+struct loopShear <: AbstractDlnStr end
+struct loopDln <: AbstractDlnStr end
+struct loopJog <: AbstractDlnStr end
+struct loopKink <: AbstractDlnStr end
+"""
+```
+```
+Idealised dislocation loop.
+"""
+mutable struct DislocationLoop{
+    T1<:AbstractArray{<:AbstractDlnSeg,N} where {N},
+    T2<:loopSides,
+    T3<:Integer,
+    T4<:Matrix{<:Integer},
+    T5<:AbstractArray{<:Real,N} where {N},
+    T6<:Vector{<:nodeType},
+}
+    segType::T1
+    numSides::T2
+    nodeSide::T3
+    links::T4
+    slipPlane::T5
+    bVec::T5
+    coord::T5
+    label::T6
+    function DislocationLoop(
+        segType,
+        numSides,
+        nodeSide,
+        slipplane,
+        bvec,
+        label,
+    )
+        nodeTotal = numSides * nodeSide
+        numSegType = length(segType)
+        @assert length(label) == nodeTotal
+        @assert numSegType == numSides / 2 == size(bvec, 1) ==
+                size(slipplane, 1)
+        links = zeros(Integer, nodeTotal, 2)
+        coord = zeros(nodeTotal, 3)
+        seg = zeros(numSegType, 3)
+        slipPlane = zeros(0, 3)
+        bVec = zeros(0, 3)
+        for i = 1:numSegType
+            seg[i, :] = makeSegment(segType[i], slipplane[i, :], bvec[i, :])
+        end
+        if numSides == 4
+            # First node.
+            coord[1, :] -= seg[1, :] + seg[2, :]
+            slipPlane = [slipPlane; slipplane[2, :]']
+            bVec = [bVec; bvec[2, :]']
+            for k = 1:nodeSide
+                coord[1+k, :] = coord[k, :] + seg[1, :]
+                slipPlane = [slipPlane; slipplane[1, :]']
+                bVec = [bVec; bvec[1, :]']
+            end
+            for k = 1:nodeSide
+                coord[1 + k + nodeSide, :] = coord[k+nodeSide, :] + seg[2, :]
+                slipPlane = [slipPlane; slipplane[2, :]']
+                bVec = [bVec; bvec[2, :]']
+            end
+            for k = 1:nodeSide
+                coord[1 + k + 2 * nodeSide, :] = coord[k+2*nodeSide, :] -
+                                                 seg[1, :]
+                slipPlane = [slipPlane; slipplane[1, :]']
+                bVec = [bVec; bvec[1, :]']
+            end
+            # Last node
+            coord[2+3*nodeSide, :] = coord[1+3*nodeSide, :] - seg[2, :]
+            slipPlane = [slipPlane; slipplane[2, :]']
+            bVec = [bVec; bvec[2, :]']
+        elseif numSides == 6
+            # First node.
+            coord[1, :] -= seg[1, :] + seg[2, :] + seg[3, :]
+            slipPlane = [slipPlane; slipplane[3, :]']
+            bVec = [bVec; bvec[3, :]']
+            for k = 1:nodeSide
+                coord[1+k, :] = coord[k, :] + seg[1, :]
+                slipPlane = [slipPlane; slipplane[1, :]']
+                bVec = [bVec; bvec[1, :]']
+            end
+            for k = 1:nodeSide
+                coord[1 + k + nodeSide, :] = coord[k+nodeSide, :] + seg[2, :]
+                slipPlane = [slipPlane; slipplane[2, :]']
+                bVec = [bVec; bvec[2, :]']
+            end
+            for k = 1:nodeSide
+                coord[1 + k + 2 * nodeSide, :] = coord[k+2*nodeSide, :] +
+                                                 seg[3, :]
+                slipPlane = [slipPlane; slipplane[3, :]']
+                bVec = [bVec; bvec[3, :]']
+            end
+            for k = 1:nodeSide
+                coord[1 + k + 3 * nodeSide, :] = coord[k+3*nodeSide, :] -
+                                                 seg[1, :]
+                slipPlane = [slipPlane; slipplane[1, :]']
+                bVec = [bVec; bvec[1, :]']
+            end
+            for k = 1:nodeSide
+                coord[1 + k + 4 * nodeSide, :] = coord[k+4*nodeSide, :] -
+                                                 seg[2, :]
+                slipPlane = [slipPlane; slipplane[2, :]']
+                bVec = [bVec; bvec[2, :]']
+            end
+            for k = 1:nodeSide-1
+                coord[1 + k + 5 * nodeSide, :] = coord[k+5*nodeSide, :] -
+                                                 seg[3, :]
+                slipPlane = [slipPlane; slipplane[3, :]']
+                bVec = [bVec; bvec[3, :]']
+            end
+        end
+        # Links
+        for j = 1:nodeTotal-1
+            links[j, :] = [j; 1 + j]
+        end
+        links[nodeTotal, :] = [nodeTotal; 1]
+
+        new{
+            typeof(segType),
+            typeof(numSides),
+            typeof(nodeSide),
+            typeof(links),
+            typeof(slipPlane),
+            typeof(label),
+        }(
+            segType,
+            numSides,
+            nodeSide,
+            links,
+            slipPlane,
+            bVec,
+            coord,
+            label,
+        )
+
+
+    end
+end
+
+
+
+
+
+mutable struct DislocationNetwork{
+    T1<:Matrix{<:Integer},
+    T2<:Matrix{<:Real},
+    T3<:Matrix{<:Real},
+    T4<:Vector{nodeType},
+    T5<:Integer,
+}
+    links::T1 # Links.
+    slipPlane::T2 # Slip planes.
+    bVec::T2 # Burgers vectors.
+    coord::T3 # Node coordinates.
+    label::T4 # Node labels.
+    numNode::T5 # Number of dislocations.
+    numSeg::T5 # Number of segments.
+    function DislocationNetwork(
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        numNode = 0,
+        numSeg = 0,
+    )
+        @assert size(links, 2) == 2
+        @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
+        @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
+        @assert size(coord, 1) == size(label, 1)
+        new{
+            typeof(links),
+            typeof(bVec),
+            typeof(coord),
+            typeof(label),
+            typeof(numNode),
+        }(
+            links,
+            slipPlane,
+            bVec,
+            coord,
+            label,
+            numNode,
+            numSeg,
+        )
+    end # Constructor
+end # DislocationNetwork
+
+function vcat(network::DislocationNetwork, n::Integer)
+    network.links = [network.links; zeros(Integer, n, 2)]
+    network.slipPlane = [network.slipPlane; zeros(n, 3)]
+    network.bVec = [network.bVec; zeros(n, 3)]
+    network.coord = [network.coord; zeros(n, 3)]
+    network.label = [network.label; zeros(nodeType, n)]
+    return network
+end
+
+
+
+
+
+
 struct DislocationP{
     T1<:AbstractFloat,
     T2<:Integer,
@@ -190,108 +392,3 @@ struct DislocationP{
         )
     end # constructor
 end # DislocationP
-
-# function zero(::Type{DislocationP})
-#     return DislocationP(
-#         0.0,
-#         0.0,
-#         0.0,
-#         0.0,
-#         0.0,
-#         0.0,
-#         0,
-#         false,
-#         false,
-#         false,
-#         false,
-#         0.0,
-#         0.0,
-#         0.0,
-#         0.0,
-#         :empty,
-#     )
-# end
-
-@enum nodeType begin
-    undef = -1
-    intMob = 0
-    intFix = 1
-    srfMob = 2
-    srfFix = 3
-    ext = 4
-end
-isequal(x::Real, y::nodeType) = isequal(x, Integer(y))
-isequal(x::nodeType, y::Real) = isequal(Integer(x), y)
-isless(x::Real, y::nodeType) = isless(x, Integer(y))
-isless(x::nodeType, y::Real) = isless(Integer(x), y)
-==(x::nodeType, y::Real) = isequal(Integer(x), y)
-==(x::Real, y::nodeType) = isequal(x, Integer(y))
-convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
-zero(::Type{nodeType}) = -1
-
-mutable struct DislocationNetwork{
-    T1<:Matrix{<:Integer},
-    T2<:Matrix{<:Real},
-    T3<:Matrix{<:Real},
-    T4<:Vector{nodeType},
-    T5<:Integer,
-}
-    links::T1 # Links.
-    bVec::T2 # Burgers vectors.
-    slipPlane::T2 # Slip planes.
-    coord::T3 # Node coordinates.
-    label::T4 # Node labels.
-    numNode::T5 # Number of dislocations.
-    numSeg::T5 # Number of segments.
-    function DislocationNetwork(
-        links,
-        bVec,
-        slipPlane,
-        coord,
-        label,
-        numNode = 0,
-        numSeg = 0,
-    )
-        @assert size(links, 2) == 2
-        @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
-        @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
-        @assert size(coord, 1) == size(label, 1)
-        new{
-            typeof(links),
-            typeof(bVec),
-            typeof(coord),
-            typeof(label),
-            typeof(numNode),
-        }(
-            links,
-            bVec,
-            slipPlane,
-            coord,
-            label,
-            numNode,
-            numSeg,
-        )
-    end # Constructor
-end # DislocationNetwork
-
-function vcat(network::DislocationNetwork, n::Integer)
-    network.links = [network.links; zeros(Integer, n, 2)]
-    network.bVec = [network.bVec; zeros(n, 3)]
-    network.slipPlane = [network.slipPlane; zeros(n, 3)]
-    network.coord = [network.coord; zeros(n, 3)]
-    network.label = [network.label; zeros(nodeType, n)]
-    return network
-end
-
-# function zero(::Type{DislocationNetwork})
-#     DislocationNetwork(
-#         zeros(Integer, 0, 2),
-#         zeros(0, 3),
-#         zeros(0, 3),
-#         zeros(0, 3),
-#         zeros(Integer, 0),
-#         0,
-#         0,
-#         0,
-#     )
-# end

@@ -1,23 +1,25 @@
 module DDD
 
 using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots
-import Base: zero, isequal, isless, convert, ==
+import Base: zero, isequal, isless, convert, ==, *, /
 
 include("CustomTypes.jl")
 export compStruct, intAngle, extAngle
 
 include("DislocationBase.jl")
-export DislocationP, DislocationNetwork, nodeType
+export DislocationP, DislocationNetwork, nodeType, loopSides
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond
 export AbstractDlnSegment,
        dlnEdge,
+       dlnEdgeN,
        dlnScrew,
-       AbstractDlnLoop,
+       AbstractDlnStr,
        loopPrism,
        loopShear,
        loopMixed,
        makeSegment,
-       makeLoop!
+       makeLoop!,
+       DislocationLoop
 
 include("Material.jl")
 

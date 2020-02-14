@@ -41,8 +41,8 @@ end
     [coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel]) for i = 1:length(label)]
     network = DislocationNetwork(
         links,
-        bVec,
         slipPlane,
+        bVec,
         coord,
         label,
         numNode,

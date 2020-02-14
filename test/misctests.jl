@@ -64,3 +64,48 @@ plotNodes(
 
 using Statistics, LinearAlgebra
 abs(mean(network.coord)) < eps(Float64) * maximum(abs.(network.coord[:, :]))
+
+
+network = DislocationNetwork(
+    zeros(Integer, 8, 2),
+    zeros(8, 3),
+    zeros(8, 3),
+    zeros(8, 3),
+    zeros(nodeType, 8),
+    0,
+    0,
+)
+rang = Float64[0 0 0; 0 0 0]
+scale = Float64[1 1 1; 1 1 1]
+makeLoop!(loopShear(), network, dlnParams, slipSystems, rang, scale, 0.0)
+
+loop = DislocationLoop(
+    [dlnEdge(), dlnScrew()],
+    loopSides(4),
+    2,
+    [slipSystems[1, 1:3]'; slipSystems[1, 1:3]'],
+    [slipSystems[1, 4:6]'; slipSystems[1, 4:6]'],
+    nodeType[1; 0; 1; 1; 1; 0; 1; 1],
+)
+loop.coord .*= dlnParams.distSource
+
+
+
+loop2 = DislocationLoop(
+    [dlnEdge(), dlnEdgeN(), dlnEdge()],
+    loopSides(6),
+    3,
+    [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
+    [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
+    nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
+)
+
+
+plotNodes(
+    loop2,
+    m = 1,
+    l = 3,
+    linecolor = :red,
+    markercolor = :red,
+    legend = false,
+)

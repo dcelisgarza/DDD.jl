@@ -1,15 +1,3 @@
-abstract type AbstractDlnSegment end
-struct dlnEdge <: AbstractDlnSegment end
-struct dlnScrew <: AbstractDlnSegment end
-struct dlnMixed <: AbstractDlnSegment end
-
-abstract type AbstractDlnLoop end
-struct loopPrism <: AbstractDlnLoop end
-struct loopShear <: AbstractDlnLoop end
-struct loopDln <: AbstractDlnLoop end
-struct loopJog <: AbstractDlnLoop end
-struct loopKink <: AbstractDlnLoop end
-
 """
 ```
 makeSegment(segType::dlnEdge, slipSys::Integer, data::Matrix{<:Real})
@@ -21,11 +9,11 @@ function makeSegment(
     segType::dlnEdge,
     slipSys::Integer,
     slipSystems::AbstractArray{<:Real,N},
-    crossProd::Bool = true,
+    crossProd::Bool = true
 ) where {N}
     slipPlane = slipSystems[slipSys, 1:3]
+    bVec = slipSystems[slipSys, 4:6]
     if crossProd
-        bVec = slipSystems[slipSys, 4:6]
         edgeSeg = cross(slipPlane, bVec)
     else
         edgeSeg = slipPlane
@@ -33,6 +21,8 @@ function makeSegment(
     edgeSeg ./= norm(edgeSeg)
     return edgeSeg
 end
+
+
 
 function makeSegment(
     segType::dlnScrew,
@@ -227,13 +217,3 @@ function makeLoop!(
     network.numSeg += numNodesTotal
     return network
 end
-
-# DislocationNetwork(links, bVec, slipPlane, coord, label, numNode = 0,
-#     numSeg = 0,
-# )
-
-# DislocationP(coreRad, coreRadMag, minSegLen, maxSegLen, minArea, maxArea,
-#     maxConnect, remesh, collision, separation, virtualRemesh, edgeDrag,
-#     screwDrag, climbDrag, lineDrag, mobility, numSources = 0,
-#     slipSystems = 0, distSource = 0.0,
-# )
