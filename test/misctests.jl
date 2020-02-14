@@ -79,33 +79,112 @@ rang = Float64[0 0 0; 0 0 0]
 scale = Float64[1 1 1; 1 1 1]
 makeLoop!(loopShear(), network, dlnParams, slipSystems, rang, scale, 0.0)
 
-loop = DislocationLoop(
+fig = plot()
+testSlip = Float64[ 1 1 1 -1  1 0;
+                    1 1 1 -1  0 1;
+                    1 1 1  0 -1 1]
+shearLoop = DislocationLoop(
     [dlnEdge(), dlnScrew()],
     loopSides(4),
     2,
-    [slipSystems[1, 1:3]'; slipSystems[1, 1:3]'],
-    [slipSystems[1, 4:6]'; slipSystems[1, 4:6]'],
+    [testSlip[1, 1:3]'; testSlip[1, 1:3]'],
+    [testSlip[1, 4:6]'; testSlip[1, 4:6]'],
     nodeType[1; 0; 1; 1; 1; 0; 1; 1],
 )
-loop.coord .*= dlnParams.distSource
+plotNodes!(
+    fig,
+    shearLoop,
+    m = 1,
+    l = 3,
+    linecolor = :red,
+    markercolor = :red,
+    legend = false,
+)
+prismaticLoop = DislocationLoop(
+    [dlnEdge(), dlnEdgeN()],
+    loopSides(4),
+    2,
+    [testSlip[1, 1:3]'; testSlip[1, 1:3]'],
+    [testSlip[1, 4:6]'; testSlip[1, 4:6]'],
+    nodeType[1; 0; 1; 1; 1; 0; 1; 1],
+)
+plotNodes!(
+    fig,
+    prismaticLoop,
+    m = 1,
+    l = 3,
+    linecolor = :orange,
+    markercolor = :orange,
+    legend = false,
+)
+prismaticLoop61 = DislocationLoop(
+    [dlnEdge(), dlnEdge(), dlnEdge()],
+    loopSides(6),
+    3,
+    testSlip[:,1:3],
+    testSlip[:,4:6],
+    nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
+)
+plotNodes!(
+    fig,
+    prismaticLoop61,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+)
 
-
-
-loop2 = DislocationLoop(
-    [dlnEdge(), dlnEdgeN(), dlnEdge()],
+prismaticLoop62 = DislocationLoop(
+    [dlnEdgeN(), dlnEdge(), dlnEdge()],
     loopSides(6),
     3,
     [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
     [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
     nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
 )
-
-
-plotNodes(
-    loop2,
+plotNodes!(
+    fig,
+    prismaticLoop62,
     m = 1,
     l = 3,
-    linecolor = :red,
-    markercolor = :red,
+    linecolor = :indigo,
+    markercolor = :indigo,
+    legend = false,
+)
+
+prismaticLoop62 = DislocationLoop(
+    [dlnEdgeN(), dlnEdgeN(), dlnEdge()],
+    loopSides(6),
+    3,
+    [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
+    [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
+    nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
+)
+plotNodes!(
+    fig,
+    prismaticLoop62,
+    m = 1,
+    l = 3,
+    linecolor = :purple,
+    markercolor = :purple,
+    legend = false,
+)
+
+prismaticLoop63 = DislocationLoop(
+    [dlnEdgeN(), dlnEdgeN(), dlnEdgeN()],
+    loopSides(6),
+    3,
+    [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
+    [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
+    nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
+)
+plotNodes!(
+    fig,
+    prismaticLoop63,
+    m = 1,
+    l = 3,
+    linecolor = :cyan,
+    markercolor = :cyan,
     legend = false,
 )

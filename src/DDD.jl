@@ -34,6 +34,6 @@ include("Output.jl")
 export saveParams
 
 include("Plotting.jl")
-export plotNodes
+export plotNodes, plotNodes!
 
 end # module
