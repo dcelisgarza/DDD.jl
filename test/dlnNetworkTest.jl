@@ -8,7 +8,7 @@ cd(@__DIR__)
 @testset "Generate single segments" begin
     inFilename = "../data/slipSystems/bcc.csv"
     data = readdlm(inFilename, ',', Float64)
-    slipSysInt = 5
+    slipSysInt = 1
     slipSystem = data[slipSysInt, :]
     edge = makeSegment(dlnEdge(), slipSysInt, data)
     screw = makeSegment(dlnScrew(), slipSysInt, data)

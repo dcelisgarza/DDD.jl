@@ -17,24 +17,24 @@ function loadCSV(
     return df
 end
 
-function cleanFieldDf(df::DataFrame, fieldname::Symbol, type::Type)
-    result = 0
-    if length(df[!, :numSources]) > 1
-        try
-            result = df[!, fieldname]
-        catch e
-            result = eval(Meta.parse(df[1, fieldname]))
-        end
-    else
-        result = df[1, fieldname]
-    end
-    return convert.(type, result)
-end
+# function cleanFieldDf(df::DataFrame, fieldname::Symbol, type::Type)
+#     result = 0
+#     if length(df[!, :numSources]) > 1
+#         try
+#             result = df[!, fieldname]
+#         catch e
+#             result = eval(Meta.parse(df[1, fieldname]))
+#         end
+#     else
+#         result = df[1, fieldname]
+#     end
+#     return convert.(type, result)
+# end
 
 function dlnLoadParams(df::DataFrame)
-    numSources = cleanFieldDf(df, :numSources, Integer)
-    slipSystems = cleanFieldDf(df, :slipSystems, Integer)
-    distSource = cleanFieldDf(df, :distSource, Float64)
+    # numSources = cleanFieldDf(df, :numSources, Integer)
+    # slipSystems = cleanFieldDf(df, :slipSystems, Integer)
+    # distSource = cleanFieldDf(df, :distSource, Float64)
 
     dlnLoadParams = DislocationP(
         df[1, :coreRad],
@@ -53,9 +53,6 @@ function dlnLoadParams(df::DataFrame)
         df[1, :climbDrag],
         df[1, :lineDrag],
         df[1, :mobility],
-        numSources,
-        slipSystems,
-        distSource,
     )
     return dlnLoadParams
 end

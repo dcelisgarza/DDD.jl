@@ -14,9 +14,6 @@ screwDrag,2.0
 climbDrag,1.0e10
 lineDrag,0.0
 mobility,Hmobbcc10rotation
-numSources,1
-slipSystems,1
-distSource,817.61
 μ,1.0
 μMag,145000.0
 ν,0.28

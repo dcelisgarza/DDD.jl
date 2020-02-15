@@ -18,13 +18,13 @@ dlnParams2, matParams2, intParams2 = loadParams(outFilename)
     @test compStruct(intParams, intParams2)
 end
 
-@testset "Clean DataFrame" begin
-    df = DataFrame(numSources = Any[], fieldName = Any[])
-    push!(df, ([1, 2], [2, 4]))
-    @test cleanFieldDf(df, :fieldName, Integer) == [2; 4]
-
-    df = DataFrame(numSources = Any[], fieldName = Any[])
-    push!(df, (1, 2))
-    push!(df, (2, 4))
-    @test cleanFieldDf(df, :fieldName, Integer) == [2; 4]
-end
+# @testset "Clean DataFrame" begin
+#     df = DataFrame(numSources = Any[], fieldName = Any[])
+#     push!(df, ([1, 2], [2, 4]))
+#     @test cleanFieldDf(df, :fieldName, Integer) == [2; 4]
+#
+#     df = DataFrame(numSources = Any[], fieldName = Any[])
+#     push!(df, (1, 2))
+#     push!(df, (2, 4))
+#     @test cleanFieldDf(df, :fieldName, Integer) == [2; 4]
+# end
