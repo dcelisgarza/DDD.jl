@@ -54,7 +54,7 @@ isless(x::loopSides, y::Real) = isless(Integer(x), y)
 ==(x::Real, y::loopSides) = isequal(x, Integer(y))
 convert(::Type{loopSides}, x::Real) = loopSides(Integer(x))
 *(x::loopSides, y::Real) = *(Int(x), y)
-/(x::loopSides, y::Int64) = /(Int(x), y)
+/(x::loopSides, y::Integer) = /(Int(x), y)
 """
 ```
 abstract type AbstractDlnSeg end
