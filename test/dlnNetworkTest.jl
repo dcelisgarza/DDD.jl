@@ -10,8 +10,8 @@ cd(@__DIR__)
     data = readdlm(inFilename, ',', Float64)
     slipSysInt = 1
     slipSystem = data[slipSysInt, :]
-    edge = makeSegment(dlnEdge(), slipSysInt, data)
-    screw = makeSegment(dlnScrew(), slipSysInt, data)
+    edge = makeSegment(segEdge(), slipSysInt, data)
+    screw = makeSegment(segScrew(), slipSysInt, data)
     @test abs(dot(edge, screw)) < eps(Float64)
     @test abs(dot(edge, slipSystem[4:6])) < eps(Float64)
     @test isapprox(

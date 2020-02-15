@@ -92,7 +92,7 @@ testSlip = Float64[
 shearLoop = DislocationLoop(
     loopSides(4),
     2,
-    [dlnEdge(), dlnScrew()],
+    [segEdge(), segScrew()],
     [1.0, 1],
     [testSlip[1, 1:3]'; testSlip[1, 1:3]'],
     [testSlip[1, 4:6]'; testSlip[1, 4:6]'],
@@ -111,7 +111,7 @@ plotNodes!(
 prismaticLoop = DislocationLoop(
     loopSides(4),
     2,
-    [dlnEdge(), dlnEdgeN()],
+    [segEdge(), segEdgeN()],
     [1.0, 1.0],
     [testSlip[1, 1:3]'; testSlip[1, 1:3]'],
     [testSlip[1, 4:6]'; testSlip[1, 4:6]'],
@@ -130,7 +130,7 @@ plotNodes!(
 prismaticLoop61 = DislocationLoop(
     loopSides(6),
     3,
-    [dlnEdge(), dlnEdge(), dlnEdge()],
+    [segEdge(), segEdge(), segEdge()],
     [1.0, 1, 5],
     testSlip[:, 1:3],
     testSlip[:, 4:6],
@@ -150,7 +150,7 @@ plotNodes!(
 prismaticLoop62 = DislocationLoop(
     loopSides(6),
     3,
-    [dlnEdgeN(), dlnScrew(), dlnEdge()],
+    [segEdgeN(), segScrew(), segEdge()],
     [1.0, 1, 1],
     [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
     [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
@@ -170,7 +170,7 @@ plotNodes!(
 prismaticLoop62 = DislocationLoop(
     loopSides(6),
     3,
-    [dlnEdgeN(), dlnEdgeN(), dlnEdge()],
+    [segEdgeN(), segEdgeN(), segEdge()],
     [1.0, 1, 1],
     [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
     [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
@@ -188,16 +188,17 @@ plotNodes!(
 )
 
 using DataFrames
+
 slipsys = "../data/slipSystems/bcc.csv"
 slipSystems = readdlm(slipsys, ',')
 df = loadCSV("../inputs/dln/sampleDln.csv"; header = 1, transpose = true)
 difLoops = nrow(df)
 loops = zeros(DislocationLoop, difLoops)
 dict = Dict(
-    "dlnEdge" => dlnEdge(),
-    "dlnEdgeN" => dlnEdgeN(),
-    "dlnScrew" => dlnScrew(),
-    "dlnMixed" => dlnMixed(),
+    "segEdge" => segEdge(),
+    "segEdgeN" => segEdgeN(),
+    "segScrew" => segScrew(),
+    "segMixed" => segMixed(),
 )
 for i = 1:difLoops
     st = split.(df[i, :segType], ";")
@@ -206,7 +207,6 @@ for i = 1:difLoops
     segLen = parse.(Float64, sl)
     ss = split.(df[i, :slipSystem], ";")
     slipSystem = parse.(Int, ss)
-
     lbl = split.(df[i,:label],";")
     label = convert.(nodeType,parse.(Int, lbl))
     loops[i] = DislocationLoop(

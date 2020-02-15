@@ -1,12 +1,12 @@
 """
 ```
-makeSegment(segType::dlnEdge, slipSys::Integer, data::Matrix{<:Real})
-makeSegment(segType::dlnScrew, slipSys::Integer, data::Matrix{<:Real})
+makeSegment(segType::segEdge, slipSys::Integer, data::Matrix{<:Real})
+makeSegment(segType::segScrew, slipSys::Integer, data::Matrix{<:Real})
 ```
-Make single dislocation segment of the given type `dlnEdge` or `dlnScrew` from the slip system corresponding to `slipSystems[:, slipSys]`.
+Make single dislocation segment of the given type `segEdge` or `segScrew` from the slip system corresponding to `slipSystems[:, slipSys]`.
 """
 function makeSegment(
-    segType::dlnEdge,
+    segType::segEdge,
     slipSys::Integer,
     slipSystems::AbstractArray{<:Real,N},
     crossProd::Bool = true
@@ -25,7 +25,7 @@ end
 
 
 function makeSegment(
-    segType::dlnScrew,
+    segType::segScrew,
     slipSys::Integer,
     slipSystems::AbstractArray{<:Real,N},
 ) where {N}
@@ -122,12 +122,12 @@ function makeLoop!(
     for i = 1:numSlipSystem
         # Make edge and screw segments.
         if typeof(loopType) == loopShear
-            seg[:, 1] = makeSegment(dlnEdge(), paramSlipSys[i], slipSystems)
-            seg[:, 2] = makeSegment(dlnScrew(), paramSlipSys[i], slipSystems)
+            seg[:, 1] = makeSegment(segEdge(), paramSlipSys[i], slipSystems)
+            seg[:, 2] = makeSegment(segScrew(), paramSlipSys[i], slipSystems)
         elseif typeof(loopType) == loopPrism
-            seg[:, 1] = makeSegment(dlnEdge(), paramSlipSys[i], slipSystems)
+            seg[:, 1] = makeSegment(segEdge(), paramSlipSys[i], slipSystems)
             seg[:, 2] = makeSegment(
-                dlnEdge(),
+                segEdge(),
                 paramSlipSys[i],
                 slipSystems,
                 false,

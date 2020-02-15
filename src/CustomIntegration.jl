@@ -1,9 +1,7 @@
-struct integratorDDD end
-
 mutable struct IntegrationP{
     T1<:Real,
     T2<:Integer,
-    T3<:Union{<:integratorDDD,Function,AbstractString,Symbol},
+    T3<:AbstractIntegrator,
 }
     dt::T1
     tmin::T1

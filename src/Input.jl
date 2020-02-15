@@ -17,25 +17,47 @@ function loadCSV(
     return df
 end
 
-# function cleanFieldDf(df::DataFrame, fieldname::Symbol, type::Type)
-#     result = 0
-#     if length(df[!, :numSources]) > 1
-#         try
-#             result = df[!, fieldname]
-#         catch e
-#             result = eval(Meta.parse(df[1, fieldname]))
-#         end
-#     else
-#         result = df[1, fieldname]
-#     end
-#     return convert.(type, result)
-# end
+function loadInitDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
+    nRow = nrow(df)
+    sources = zeros(DislocationLoop, difLoops)
+    segTypes = Dict(
+        "segEdge()" => segEdge(),
+        "segEdgeN()" => segEdgeN(),
+        "segScrew()" => segScrew(),
+        "segMixed()" => segMixed(),
+        "segNone()" => segNone(),
+        "DDD.segEdge()" => segEdge(),
+        "DDD.segEdgeN()" => segEdgeN(),
+        "DDD.segScrew()" => segScrew(),
+        "DDD.segMixed()" => segMixed(),
+        "DDD.segNone()" => segNone(),
+    )
+    for i = 1:nRow
+        st = split.(df[i, :segType], ";")
+        segType = [dict[st[i]] for i = 1:length(st)]
+        sl = split.(df[i, :segLen], ";")
+        segLen = parse.(Float64, sl)
+        ss = split.(df[i, :slipSystem], ";")
+        slipSystem = parse.(Int, ss)
+        lbl = split.(df[i,:label],";")
+        label = convert.(nodeType,parse.(Int, lbl))
+        sources[i] = DislocationLoop(
+            loopSides(df[i, :numSides]),
+            df[i, :nodeSide],
+            segType,
+            segLen,
+            slipSystems[slipSystem, 1:3],
+            slipSystems[slipSystem, 4:6],
+            label,
+            df[i,:numLoops]
+        )
+    end
+    return sources
+end
 
 function dlnLoadParams(df::DataFrame)
-    # numSources = cleanFieldDf(df, :numSources, Integer)
-    # slipSystems = cleanFieldDf(df, :slipSystems, Integer)
-    # distSource = cleanFieldDf(df, :distSource, Float64)
-
+    mobDict = Dict("mobBCC()" => mobBCC(), "mobFCC()" => mobFCC(), "mobHCP()" => mobHCP(),
+    "DDD.mobBCC()" => mobBCC(), "DDD.mobFCC()" => mobFCC(), "DDD.mobHCP()" => mobHCP())
     dlnLoadParams = DislocationP(
         df[1, :coreRad],
         df[1, :coreRadMag],
@@ -52,27 +74,31 @@ function dlnLoadParams(df::DataFrame)
         df[1, :screwDrag],
         df[1, :climbDrag],
         df[1, :lineDrag],
-        df[1, :mobility],
+        mobDict[df[1, :mobility]],
     )
     return dlnLoadParams
 end
 
 function matLoadParams(df::DataFrame)
+    strucDict = Dict("BCC()" => BCC(), "FCC()" => FCC(), "HCP()" => HCP(),
+    "DDD.BCC()" => BCC(), "DDD.FCC()" => FCC(), "DDD.HCP()" => HCP())
     matParams = MaterialP(
         df[1, :μ],
         df[1, :μMag],
         df[1, :ν],
-        df[1, :crystalStruct],
+        strucDict[df[1, :crystalStruct]],
     )
     return matParams
 end
 
 function intLoadParams(df::DataFrame)
+    integDict = Dict("CustomTrapezoid()" => CustomTrapezoid(),
+    "DDD.CustomTrapezoid()" => CustomTrapezoid())
     intParams = IntegrationP(
         df[1, :dt],
         df[1, :tmin],
         df[1, :tmax],
-        df[1, :method],
+        integDict[df[1, :method]],
         df[1, :abstol],
         df[1, :reltol],
     )

@@ -6,7 +6,6 @@ function pushToDataFrame!(
     data::Union{DislocationP,MaterialP,IntegrationP},
 )
     fieldNames = fieldnames(typeof(data))
-    # lenFieldNames = length(fieldNames)
     for i in eachindex(fieldNames)
         push!(df, (fieldNames[i], getproperty(data, fieldNames[i])))
     end

@@ -54,7 +54,7 @@ julia> sample_material = MaterialP(0.7, 1e5, 0.28, "bcc")
 MaterialP{Float64,String}(0.7, 100000.0, 0.28, "bcc")
 ```
 """
-struct MaterialP{T1<:AbstractFloat,T2<:Union{String,Symbol}}
+struct MaterialP{T1<:Real,T2<:AbstractMaterial}
     μ::T1
     μMag::T1
     ν::T1

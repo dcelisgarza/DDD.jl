@@ -8,13 +8,13 @@ cd(@__DIR__)
 inFilename = "../data/slipSystems/bcc.csv"
 slipSystems = readdlm(inFilename, ',', Float64)
 slipSysInt = 5
-makeSegment(dlnEdge(), slipSysInt, slipSystems)
-makeSegment(dlnScrew(), slipSysInt, slipSystems)
+makeSegment(segEdge(), slipSysInt, slipSystems)
+makeSegment(segScrew(), slipSysInt, slipSystems)
 
-@benchmark makeSegment(dlnEdge(), slipSysInt, slipSystems)
-@benchmark makeSegment(dlnScrew(), slipSysInt, slipSystems)
-@trace(makeSegment(dlnEdge(), slipSysInt, slipSystems), modules = [DDD])
-@trace(makeSegment(dlnEdge(), slipSysInt, slipSystems), modules = [DDD])
+@benchmark makeSegment(segEdge(), slipSysInt, slipSystems)
+@benchmark makeSegment(segScrew(), slipSysInt, slipSystems)
+@trace(makeSegment(segEdge(), slipSysInt, slipSystems), modules = [DDD])
+@trace(makeSegment(segEdge(), slipSysInt, slipSystems), modules = [DDD])
 
 # Dislocation
 

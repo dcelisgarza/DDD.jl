@@ -1,53 +1,5 @@
 """
 ```
-@enum nodeType begin
-    undef = -1
-    intMob = 0
-    intFix = 1
-    srfMob = 2
-    srfFix = 3
-    ext = 4
-end
-```
-Enumerated type for dislocation nodes.
-"""
-@enum nodeType begin
-    undef = -1
-    intMob = 0
-    intFix = 1
-    srfMob = 2
-    srfFix = 3
-    ext = 4
-end
-"""
-Overloaded functions for dislocation `nodeType`.
-"""
-isequal(x::Real, y::nodeType) = isequal(x, Integer(y))
-isequal(x::nodeType, y::Real) = isequal(Integer(x), y)
-isless(x::Real, y::nodeType) = isless(x, Integer(y))
-isless(x::nodeType, y::Real) = isless(Integer(x), y)
-==(x::nodeType, y::Real) = isequal(Integer(x), y)
-==(x::Real, y::nodeType) = isequal(x, Integer(y))
-convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
-zero(::Type{nodeType}) = -1
-"""
-```
-abstract type AbstractDlnSeg end
-struct dlnEdge <: AbstractDlnSeg end
-struct dlnScrew <: AbstractDlnSeg end
-struct dlnMixed <: AbstractDlnSeg end
-```
-Edge types.
-"""
-abstract type AbstractDlnSeg end
-struct dlnNone <: AbstractDlnSeg end
-struct dlnEdge <: AbstractDlnSeg end
-struct dlnEdgeN <: AbstractDlnSeg end
-struct dlnScrew <: AbstractDlnSeg end
-struct dlnMixed <: AbstractDlnSeg end
-length(::T) where {T<:AbstractDlnSeg} = 0
-"""
-```
 ```
 """
 function makeSegment(
@@ -55,80 +7,33 @@ function makeSegment(
     slipPlane::Vector{T},
     bVec::Vector{T},
 ) where {T<:Real}
-    if typeof(type) == dlnEdge
+    if typeof(type) == segEdge
         seg = cross(slipPlane, bVec)
-    elseif typeof(type) == dlnEdgeN
+    elseif typeof(type) == segEdgeN
         seg = slipPlane
-    elseif typeof(type) == dlnScrew
+    elseif typeof(type) == segScrew
         seg = bVec
-    elseif typeof(type) == dlnMixed
+    elseif typeof(type) == segMixed
         error("makeSegment: mixed dislocation segment undefined")
-    elseif typeof(type) == dlnNone
+    elseif typeof(type) == segNone
         return [0.0; 0.0; 0.0]
     end
     return seg ./= norm(seg)
 end
 """
 ```
-@enum loopSides begin
-    four = 4
-    six = 6
-end
-```
-Type for number of sides for idealised loops.
-"""
-@enum loopSides begin
-    none = 0
-    four = 4
-    six = 6
-end
-"""
-Overloaded functions for `loopSides`.
-"""
-isequal(x::Real, y::loopSides) = isequal(x, Integer(y))
-isequal(x::loopSides, y::Real) = isequal(Integer(x), y)
-isless(x::Real, y::loopSides) = isless(x, Integer(y))
-isless(x::loopSides, y::Real) = isless(Integer(x), y)
-==(x::loopSides, y::Real) = isequal(Integer(x), y)
-==(x::Real, y::loopSides) = isequal(x, Integer(y))
-convert(::Type{loopSides}, x::Real) = loopSides(Integer(x))
-*(x::loopSides, y::Real) = *(Int(x), y)
-/(x::loopSides, y::Int64) = /(Int(x), y)
-
-"""
-```
-abstract type AbstractDlnStr end
-struct loopPrism <: AbstractDlnStr end
-struct loopShear <: AbstractDlnStr end
-struct loopDln <: AbstractDlnStr end
-struct loopJog <: AbstractDlnStr end
-struct loopKink <: AbstractDlnStr end
-```
-Idealised dislocation structure types.
-"""
-abstract type AbstractDlnStr end
-struct loopPrism <: AbstractDlnStr end
-struct loopShear <: AbstractDlnStr end
-struct loopDln <: AbstractDlnStr end
-struct loopJog <: AbstractDlnStr end
-struct loopKink <: AbstractDlnStr end
-"""
-```
 ```
 Idealised dislocation loop.
 """
-mutable struct DislocationLoop{
+struct DislocationLoop{
     T1<:loopSides,
     T2<:Integer,
     T3<:Union{
         T8 where {T8<:AbstractDlnSeg},
         AbstractArray{<:AbstractDlnSeg,N} where {N},
     },
-    T4<:Union{
-        T9 where {T9<:AbstractFloat},
-        AbstractArray{<:AbstractFloat,N} where {N},
-    },
-    T5<:Matrix{<:Integer},
+    T4<:Union{T9 where {T9<:Real},AbstractArray{<:Real,N} where {N}},
+    T5<:AbstractArray{<:Integer,N} where {N},
     T6<:AbstractArray{<:Real,N} where {N},
     T7<:Vector{<:nodeType},
 }
@@ -150,7 +55,7 @@ mutable struct DislocationLoop{
         slipplane,
         bvec,
         label,
-        numLoops
+        numLoops,
     )
         nodeTotal = numSides * nodeSide
         numSegType = length(segType)
@@ -184,7 +89,7 @@ mutable struct DislocationLoop{
                 bVec,
                 coord,
                 label,
-                numLoops
+                numLoops,
             )
             return
         end
@@ -288,7 +193,7 @@ mutable struct DislocationLoop{
             bVec,
             coord,
             label,
-            numLoops
+            numLoops,
         )
 
 
@@ -299,7 +204,7 @@ function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopSides(4),
         1,
-        [dlnNone(), dlnNone()],
+        [segNone(), segNone()],
         [0.0, 0.0],
         zeros(2, 3),
         zeros(2, 3),
@@ -308,19 +213,18 @@ function zero(::Type{DislocationLoop})
     )
 end
 mutable struct DislocationNetwork{
-    T1<:Matrix{<:Integer},
-    T2<:Matrix{<:Real},
-    T3<:Matrix{<:Real},
-    T4<:Vector{nodeType},
-    T5<:Integer,
+    T1<:AbstractArray{<:Integer,N} where {N},
+    T2<:AbstractArray{<:Real,N} where {N},
+    T3<:Vector{nodeType},
+    T4<:Integer,
 }
     links::T1 # Links.
     slipPlane::T2 # Slip planes.
     bVec::T2 # Burgers vectors.
-    coord::T3 # Node coordinates.
-    label::T4 # Node labels.
-    numNode::T5 # Number of dislocations.
-    numSeg::T5 # Number of segments.
+    coord::T2 # Node coordinates.
+    label::T3 # Node labels.
+    numNode::T4 # Number of dislocations.
+    numSeg::T4 # Number of segments.
     function DislocationNetwork(
         links,
         slipPlane,
@@ -334,13 +238,7 @@ mutable struct DislocationNetwork{
         @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
         @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
         @assert size(coord, 1) == size(label, 1)
-        new{
-            typeof(links),
-            typeof(bVec),
-            typeof(coord),
-            typeof(label),
-            typeof(numNode),
-        }(
+        new{typeof(links),typeof(bVec),typeof(label),typeof(numNode)}(
             links,
             slipPlane,
             bVec,
@@ -366,12 +264,7 @@ end
 
 
 
-struct DislocationP{
-    T1<:AbstractFloat,
-    T2<:Integer,
-    T3<:Bool,
-    T4<:Union{String,Symbol},
-}
+struct DislocationP{T1<:Real,T2<:Integer,T3<:Bool,T4<:AbstractMobility}
     # Size.
     coreRad::T1 # Core radius.
     coreRadMag::T1 # Magnitude of core Radius.
@@ -391,7 +284,6 @@ struct DislocationP{
     climbDrag::T1 # Drag coefficient climb.
     lineDrag::T1 # Drag coefficient line.
     mobility::T4 # Mobility law.
-    # Sources
     # Fool-proof constructor.
     function DislocationP(
         coreRad,

@@ -1,6 +1,6 @@
 numSides,4,6
 nodeSide,2,2
-segType,dlnEdge;dlnEdgeN,dlnEdge;dlnEdge;dlnEdge
+segType,dlnEdge();dlnEdgeN(),dlnEdge();dlnEdge();dlnEdge()
 segLen,1;1,1;1;1
 slipSystem,1;2,1;2;3
 label,1;0;1;1;1;0;1;1,1;0;1;0;1;0;1;0;1;0;1;0
