@@ -33,137 +33,114 @@ struct DislocationLoop{
         AbstractArray{<:AbstractDlnSeg,N} where {N},
     },
     T4<:Union{T9 where {T9<:Real},AbstractArray{<:Real,N} where {N}},
-    T5<:AbstractArray{<:Integer,N} where {N},
-    T6<:AbstractArray{<:Real,N} where {N},
-    T7<:Vector{<:nodeType},
+    T5<:Union{Integer,AbstractArray{<:Integer,N} where {N}},
+    T6<:AbstractArray{<:Integer,N} where {N},
+    T7<:AbstractArray{<:Real,N} where {N},
+    T8<:Vector{<:nodeType},
 }
     numSides::T1
     nodeSide::T2
     segType::T3
     segLen::T4
-    links::T5
-    slipPlane::T6
-    bVec::T6
-    coord::T6
-    label::T7
+    slipSystem::T5
+    links::T6
+    slipPlane::T7
+    bVec::T7
+    coord::T7
+    label::T8
     numLoops::T2
     function DislocationLoop(
         numSides,
         nodeSide,
         segType,
         segLen,
-        slipplane,
-        bvec,
+        slipSystem,
+        _slipPlane,
+        _bVec,
         label,
         numLoops,
     )
         nodeTotal = numSides * nodeSide
         numSegType = length(segType)
-        if nodeTotal > 0
-            @assert length(label) == nodeTotal
-            @assert numSegType == length(segLen) == numSides / 2 ==
-                    size(bvec, 1) == size(slipplane, 1)
-        end
+        @assert length(label) == nodeTotal
+        @assert numSegType == length(segLen) == numSides / 2 ==
+                size(_bVec, 1) == size(_slipPlane, 1) == length(slipSystem)
         links = zeros(Integer, nodeTotal, 2)
         coord = zeros(nodeTotal, 3)
         seg = zeros(numSegType, 3)
         slipPlane = zeros(0, 3)
         bVec = zeros(0, 3)
 
-        if nodeTotal == 0
-            new{
-                typeof(numSides),
-                typeof(nodeSide),
-                typeof(segType),
-                typeof(segLen),
-                typeof(links),
-                typeof(slipPlane),
-                typeof(label),
-            }(
-                numSides,
-                nodeSide,
-                segType,
-                segLen,
-                links,
-                slipPlane,
-                bVec,
-                coord,
-                label,
-                numLoops,
-            )
-            return
-        end
-
         for i = 1:numSegType
-            seg[i, :] = makeSegment(segType[i], slipplane[i, :], bvec[i, :]) *
+            seg[i, :] = makeSegment(segType[i], _slipPlane[i, :], _bVec[i, :]) *
                         segLen[i]
         end
         if numSides == 4
             # First node.
             coord[1, :] -= seg[1, :] + seg[2, :]
-            slipPlane = [slipPlane; slipplane[2, :]']
-            bVec = [bVec; bvec[2, :]']
+            slipPlane = [slipPlane; _slipPlane[2, :]']
+            bVec = [bVec; _bVec[2, :]']
             for k = 1:nodeSide
                 coord[1+k, :] = coord[k, :] + seg[1, :]
-                slipPlane = [slipPlane; slipplane[1, :]']
-                bVec = [bVec; bvec[1, :]']
+                slipPlane = [slipPlane; _slipPlane[1, :]']
+                bVec = [bVec; _bVec[1, :]']
             end
             for k = 1:nodeSide
                 coord[1 + k + nodeSide, :] = coord[k+nodeSide, :] + seg[2, :]
-                slipPlane = [slipPlane; slipplane[2, :]']
-                bVec = [bVec; bvec[2, :]']
+                slipPlane = [slipPlane; _slipPlane[2, :]']
+                bVec = [bVec; _bVec[2, :]']
             end
             for k = 1:nodeSide
                 coord[1 + k + 2 * nodeSide, :] = coord[k+2*nodeSide, :] -
                                                  seg[1, :]
-                slipPlane = [slipPlane; slipplane[1, :]']
-                bVec = [bVec; bvec[1, :]']
+                slipPlane = [slipPlane; _slipPlane[1, :]']
+                bVec = [bVec; _bVec[1, :]']
             end
             if nodeSide > 1
                 # Last node
                 coord[2+3*nodeSide, :] = coord[1+3*nodeSide, :] - seg[2, :]
-                slipPlane = [slipPlane; slipplane[2, :]']
-                bVec = [bVec; bvec[2, :]']
+                slipPlane = [slipPlane; _slipPlane[2, :]']
+                bVec = [bVec; _bVec[2, :]']
             end
         elseif numSides == 6
             # First node.
             coord[1, :] -= seg[1, :] + seg[2, :] + seg[3, :]
-            slipPlane = [slipPlane; slipplane[3, :]']
-            bVec = [bVec; bvec[3, :]']
+            slipPlane = [slipPlane; _slipPlane[3, :]']
+            bVec = [bVec; _bVec[3, :]']
             for k = 1:nodeSide
                 coord[1+k, :] = coord[k, :] + seg[1, :]
-                slipPlane = [slipPlane; slipplane[1, :]']
-                bVec = [bVec; bvec[1, :]']
+                slipPlane = [slipPlane; _slipPlane[1, :]']
+                bVec = [bVec; _bVec[1, :]']
             end
             for k = 1:nodeSide
                 coord[1 + k + nodeSide, :] = coord[k+nodeSide, :] + seg[2, :]
-                slipPlane = [slipPlane; slipplane[2, :]']
-                bVec = [bVec; bvec[2, :]']
+                slipPlane = [slipPlane; _slipPlane[2, :]']
+                bVec = [bVec; _bVec[2, :]']
             end
             for k = 1:nodeSide
                 coord[1 + k + 2 * nodeSide, :] = coord[k+2*nodeSide, :] +
                                                  seg[3, :]
-                slipPlane = [slipPlane; slipplane[3, :]']
-                bVec = [bVec; bvec[3, :]']
+                slipPlane = [slipPlane; _slipPlane[3, :]']
+                bVec = [bVec; _bVec[3, :]']
             end
             for k = 1:nodeSide
                 coord[1 + k + 3 * nodeSide, :] = coord[k+3*nodeSide, :] -
                                                  seg[1, :]
-                slipPlane = [slipPlane; slipplane[1, :]']
-                bVec = [bVec; bvec[1, :]']
+                slipPlane = [slipPlane; _slipPlane[1, :]']
+                bVec = [bVec; _bVec[1, :]']
             end
             for k = 1:nodeSide
                 coord[1 + k + 4 * nodeSide, :] = coord[k+4*nodeSide, :] -
                                                  seg[2, :]
-                slipPlane = [slipPlane; slipplane[2, :]']
-                bVec = [bVec; bvec[2, :]']
+                slipPlane = [slipPlane; _slipPlane[2, :]']
+                bVec = [bVec; _bVec[2, :]']
             end
             if nodeSide > 1
                 for k = 1:nodeSide-1
                     coord[1 + k + 5 * nodeSide, :] = coord[k+5*nodeSide, :] -
                                                      seg[3, :]
-                    slipPlane = [slipPlane; slipplane[3, :]']
-                    bVec = [bVec; bvec[3, :]']
+                    slipPlane = [slipPlane; _slipPlane[3, :]']
+                    bVec = [bVec; _bVec[3, :]']
                 end
             end
         else
@@ -180,6 +157,7 @@ struct DislocationLoop{
             typeof(nodeSide),
             typeof(segType),
             typeof(segLen),
+            typeof(slipSystem),
             typeof(links),
             typeof(slipPlane),
             typeof(label),
@@ -188,6 +166,7 @@ struct DislocationLoop{
             nodeSide,
             segType,
             segLen,
+            slipSystem,
             links,
             slipPlane,
             bVec,
@@ -195,8 +174,6 @@ struct DislocationLoop{
             label,
             numLoops,
         )
-
-
     end
 end
 
@@ -206,6 +183,7 @@ function zero(::Type{DislocationLoop})
         1,
         [segNone(), segNone()],
         [0.0, 0.0],
+        zeros(Integer, 2),
         zeros(2, 3),
         zeros(2, 3),
         zeros(nodeType, 4),

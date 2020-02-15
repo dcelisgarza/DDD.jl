@@ -3,6 +3,7 @@ using Test
 
 import DelimitedFiles: readdlm
 import LinearAlgebra: dot, cross, norm
+import Statistics: mean
 cd(@__DIR__)
 
 @testset "Generate single segments" begin
@@ -107,11 +108,13 @@ end
     @test coordIdx(network, rnd) == coord[rnd, :]
 end
 
-@testset "Geometry" begin
-    @test isapprox(intAngle(3), π / 3)
-    @test isapprox(intAngle(4), π / 2)
-    @test isapprox(intAngle(6), 2π / 3)
-    @test isapprox(extAngle(3), 2π / 3)
-    @test isapprox(extAngle(4), π / 2)
-    @test isapprox(extAngle(6), π / 3)
+@testset "Loop generation" begin
+    slipfile = "../data/slipSystems/bcc.csv"
+    loopfile = "../inputs/dln/sampleDln.csv"
+    slipSystems = readdlm(slipfile, ',')
+    df = loadCSV(loopfile; header = 1, transpose = true)
+    loops = loadDln(df, slipSystems)
+    for i in eachindex(loops)
+        @test mean(loops[i].coord) < maximum(abs.(loops[i].coord))*eps(Float64)
+    end
 end

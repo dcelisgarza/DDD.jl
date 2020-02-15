@@ -9,7 +9,7 @@ function makeSegment(
     segType::segEdge,
     slipSys::Integer,
     slipSystems::AbstractArray{<:Real,N},
-    crossProd::Bool = true
+    crossProd::Bool = true,
 ) where {N}
     slipPlane = slipSystems[slipSys, 1:3]
     bVec = slipSystems[slipSys, 4:6]

@@ -80,9 +80,6 @@ slipSystems = readdlm(slipsys, ',')
 # makeLoop!(loopShear(), network, dlnParams, slipSystems, rang, scale, 0.0)
 zeroloop = zeros(DislocationLoop, 2)
 
-
-
-
 fig = plot()
 testSlip = Float64[
     1 1 1 -1 1 0
@@ -187,39 +184,24 @@ plotNodes!(
     legend = false,
 )
 
-using DataFrames
+using DataFrames, Statistics
+
+
+
+
+
+
 
 slipsys = "../data/slipSystems/bcc.csv"
 slipSystems = readdlm(slipsys, ',')
-df = loadCSV("../inputs/dln/sampleDln.csv"; header = 1, transpose = true)
-difLoops = nrow(df)
-loops = zeros(DislocationLoop, difLoops)
-dict = Dict(
-    "segEdge" => segEdge(),
-    "segEdgeN" => segEdgeN(),
-    "segScrew" => segScrew(),
-    "segMixed" => segMixed(),
-)
-for i = 1:difLoops
-    st = split.(df[i, :segType], ";")
-    segType = [dict[st[i]] for i = 1:length(st)]
-    sl = split.(df[i, :segLen], ";")
-    segLen = parse.(Float64, sl)
-    ss = split.(df[i, :slipSystem], ";")
-    slipSystem = parse.(Int, ss)
-    lbl = split.(df[i,:label],";")
-    label = convert.(nodeType,parse.(Int, lbl))
-    loops[i] = DislocationLoop(
-        loopSides(df[i, :numSides]),
-        df[i, :nodeSide],
-        segType,
-        segLen,
-        slipSystems[slipSystem, 1:3],
-        slipSystems[slipSystem, 4:6],
-        label,
-        df[i,:numLoops]
-    )
-end
+filename = "../inputs/dln/sampleDln.csv"
+df = loadCSV(filename; header = 1, transpose = true)
+loops = loadDln(df, slipSystems)
+mean(loops[1].coord, dims = 1)
+
+
+
+
 fig = plot()
 plotNodes!(
     fig,
@@ -240,11 +222,11 @@ plotNodes!(
     legend = false,
 )
 
-label = convert.(nodeType,label)
+label = convert.(nodeType, label)
 
 ss = split.(df[1, :slipSystem], ";")
 ss = parse.(Int, ss)
-slipSystems[ss,1:3]
+slipSystems[ss, 1:3]
 
 stype = split.(df[1, :segType], ";")
 

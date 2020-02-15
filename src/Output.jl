@@ -11,7 +11,6 @@ function pushToDataFrame!(
     end
     return df
 end # pushToDataFrame
-
 """
 Saves simulation parameters.
 """

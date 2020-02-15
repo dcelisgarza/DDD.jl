@@ -4,12 +4,12 @@ showtypetree(T, level=0)
 ```
 Show type tree.
 """
-function showtypetree(T, level=0)
-     println("\t" ^ level, T)
-     for t in subtypes(T)
-         showtypetree(t, level+1)
+function showtypetree(T, level = 0)
+    println("\t"^level, T)
+    for t in subtypes(T)
+        showtypetree(t, level + 1)
     end
- end
+end
 """
 ```
 compStruct(arg1, arg2)

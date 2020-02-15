@@ -40,7 +40,6 @@ end
 Type for number of sides for idealised loops.
 """
 @enum loopSides begin
-    none = 0
     four = 4
     six = 6
 end
@@ -101,9 +100,9 @@ struct HCP <:AbstractMaterial end
 Crystal structures.
 """
 abstract type AbstractMaterial end
-struct BCC <:AbstractMaterial end
-struct FCC <:AbstractMaterial end
-struct HCP <:AbstractMaterial end
+struct BCC <: AbstractMaterial end
+struct FCC <: AbstractMaterial end
+struct HCP <: AbstractMaterial end
 """
 ```
 abstract type AbstractMobility end
@@ -114,9 +113,9 @@ struct HCP <:AbstractMobility end
 Mobility functions.
 """
 abstract type AbstractMobility end
-struct mobBCC <:AbstractMobility end
-struct mobFCC <:AbstractMobility end
-struct mobHCP <:AbstractMobility end
+struct mobBCC <: AbstractMobility end
+struct mobFCC <: AbstractMobility end
+struct mobHCP <: AbstractMobility end
 """
 ```
 abstract type AbstractIntegrator end
@@ -125,4 +124,4 @@ struct CustomTrapezoid <:AbstractIntegrator end
 Integrator types.
 """
 abstract type AbstractIntegrator end
-struct CustomTrapezoid <:AbstractIntegrator end
+struct CustomTrapezoid <: AbstractIntegrator end

@@ -1,6 +1,6 @@
 module DDD
 
-using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots
+using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots, Statistics
 import Base: zero, isequal, isless, convert, ==, *, /, length
 
 include("Misc.jl")
@@ -42,7 +42,7 @@ include("DdFem.jl")
 include("CustomIntegration.jl")
 
 include("Input.jl")
-export loadCSV, loadParams, cleanFieldDf
+export loadCSV, loadParams, loadDln
 
 include("Output.jl")
 export saveParams
