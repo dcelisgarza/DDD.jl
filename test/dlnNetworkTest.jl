@@ -115,6 +115,7 @@ end
     df = loadCSV(loopfile; header = 1, transpose = true)
     loops = loadDln(df, slipSystems)
     for i in eachindex(loops)
-        @test mean(loops[i].coord) < maximum(abs.(loops[i].coord))*eps(Float64)
+        @test mean(loops[i].coord) < maximum(abs.(loops[i].coord)) *
+                                     eps(Float64)
     end
 end

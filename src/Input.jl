@@ -17,12 +17,15 @@ function loadCSV(
     return df
 end
 
-function loadDln(
-    df::DataFrame,
-    slipSystems::AbstractArray{<:Real,N} where {N},
-)
+function loadSlipSys(filename::AbstractString, delim = ',')
+    slipSystems = readdlm(filename, delim)
+    return slipSystems
+end
+
+function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
     nRow = nrow(df)
     sources = zeros(DislocationLoop, nRow)
+    span = zeros(2, 3)
     segTypes = Dict(
         "segEdge()" => segEdge(),
         "segEdgeN()" => segEdgeN(),
@@ -35,6 +38,16 @@ function loadDln(
         "DDD.segMixed()" => segMixed(),
         "DDD.segNone()" => segNone(),
     )
+    dist = Dict(
+        "Zeros()" => Zeros(),
+        "Rand()" => Rand(),
+        "Randn()" => Randn(),
+        "Regular()" => Regular(),
+        "DDD.Zeros()" => Zeros(),
+        "DDD.Rand()" => Rand(),
+        "DDD.Randn()" => Randn(),
+        "DDD.Regular()" => Regular(),
+    )
     for i = 1:nRow
         st = split.(df[i, :segType], ";")
         segType = [segTypes[st[i]] for i = 1:length(st)]
@@ -44,16 +57,23 @@ function loadDln(
         slipSystem = parse.(Int, ss)
         lbl = split.(df[i, :label], ";")
         label = convert.(nodeType, parse.(Int, lbl))
+        spanmin = split.(df[i, :spanmin], ";")
+        spanmax = split.(df[i, :spanmax], ";")
+        span[1, :] .= parse.(Float64, spanmin)
+        span[2, :] .= parse.(Float64, spanmax)
         sources[i] = DislocationLoop(
             loopSides(df[i, :numSides]),
             df[i, :nodeSide],
+            df[i, :numLoops],
             segType,
             segLen,
             slipSystem,
             slipSystems[slipSystem, 1:3],
             slipSystems[slipSystem, 4:6],
             label,
-            df[i, :numLoops],
+            df[i, :buffer],
+            span,
+            dist[df[1, :dist]],
         )
     end
     return sources
@@ -123,9 +143,19 @@ function intLoadParams(df::DataFrame)
     return intParams
 end
 
-function loadParams(filename::AbstractString,)
+function loadParams(
+    fileParams::AbstractString,
+    fileSlipSys::AbstractString,
+    fileDln::AbstractString,
+)
     df = loadCSV(
-        filename::AbstractString;
+        fileParams::AbstractString;
+        header = 1,
+        transpose = true,
+        delim = ',',
+    )
+    df2 = loadCSV(
+        fileDln::AbstractString;
         header = 1,
         transpose = true,
         delim = ',',
@@ -133,5 +163,7 @@ function loadParams(filename::AbstractString,)
     dlnParams = dlnLoadParams(df)
     matParams = matLoadParams(df)
     intParams = intLoadParams(df)
-    return dlnParams, matParams, intParams
+    slipSystems = loadSlipSys(fileSlipSys)
+    sources = loadDln(df2, slipSystems)
+    return dlnParams, matParams, intParams, slipSystems, sources
 end # function

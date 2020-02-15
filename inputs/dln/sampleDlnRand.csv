@@ -1,11 +1,11 @@
 numSides,4,6,4,6
 nodeSide,2,2,2,2
-numLoops,1,1,1,1
+numLoops,12,19,23,17
 segType,segEdge();segEdgeN(),segEdge();segEdge();segEdge(),segEdge();segScrew(),segEdge();segScrew();segEdge()
 segLen,1;1,1;1;1,1;1,1;1;1
 slipSystem,1;2,1;2;3,1;1,4;5;6
 label,1;0;1;1;1;0;1;1,1;0;1;0;1;0;1;0;1;0;1;0,1;0;1;1;1;0;1;1,1;0;1;0;1;0;1;0;1;0;1;0
 buffer,0.,0.,0.,0.
-spanmin,0;0;0,0;0;0,0;0;0,0;0;0
-spanmax,0;0;0,0;0;0,0;0;0,0;0;0
-dist,Zeros(),Zeros(),Zeros(),Zeros()
+spanmin,-10;-10;-10,-10;-10;-10,-10;-10;-10,-10;-10;-10
+spanmax,10;10;10,10;10;10,10;10;10,10;10;10
+dist,Rand(),Rand(),Rand(),Rand()

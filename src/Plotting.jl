@@ -40,7 +40,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...)
         """
     end
-    return display()
+    return fig
 end
 
 function plotNodes(loop::DislocationLoop, args...; kw...)

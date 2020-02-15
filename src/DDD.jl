@@ -19,6 +19,11 @@ export nodeType,
        loopPrism,
        loopShear,
        loopMixed,
+       AbstractDistribution,
+       Zeros,
+       Rand,
+       Randn,
+       Regular,
        AbstractMaterial,
        BCC,
        FCC,
@@ -31,9 +36,9 @@ export nodeType,
        CustomTrapezoid
 
 include("DislocationBase.jl")
-export DislocationP, DislocationNetwork
+export DislocationP, DislocationNetwork, malloc
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond
-export makeSegment, makeLoop!, DislocationLoop
+export makeSegment, makeLoop!, DislocationLoop, makeNetwork!, loopDistribution
 
 include("Material.jl")
 

@@ -92,6 +92,21 @@ struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
 """
 ```
+abstract type AbstractDistribution end
+struct Zeros <: AbstractDistribution end
+struct Rand <: AbstractDistribution end
+struct Randn <: AbstractDistribution end
+struct Regular <: AbstractDistribution end
+```
+Distributions for dislocation sources.
+"""
+abstract type AbstractDistribution end
+struct Zeros <: AbstractDistribution end
+struct Rand <: AbstractDistribution end
+struct Randn <: AbstractDistribution end
+struct Regular <: AbstractDistribution end
+"""
+```
 abstract type AbstractMaterial end
 struct BCC <:AbstractMaterial end
 struct FCC <:AbstractMaterial end

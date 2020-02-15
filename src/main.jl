@@ -1,8 +1,16 @@
 using DDD
 
 cd(@__DIR__)
-inFilename = "../inputs/simParams/sampleParams.csv"
-outFilename = "../outputs/simParams/sampleParams.csv"
+inFileParams = "../inputs/simParams/sampleParams.csv"
+inFileSlipSys = "../data/slipSystems/bcc.csv"
+inFileDln = "../inputs/dln/sampleDln.csv"
 
-dlnParams, matParams, intParams = loadParams(inFilename)
-saveParams(dlnParams, matParams, intParams, outFilename; delim = ',')
+outFileParams = "../outputs/simParams/sampleParams.csv"
+
+
+dlnParams, matParams, intParams, slipSystems, sources = loadParams(
+    inFileParams,
+    inFileSlipSys,
+    inFileDln,
+)
+saveParams(dlnParams, matParams, intParams, outFileParams; delim = ',')
