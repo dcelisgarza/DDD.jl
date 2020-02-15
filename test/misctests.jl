@@ -78,7 +78,7 @@ slipSystems = readdlm(slipsys, ',')
 # rang = Float64[0 0 0; 0 0 0]
 # scale = Float64[1 1 1; 1 1 1]
 # makeLoop!(loopShear(), network, dlnParams, slipSystems, rang, scale, 0.0)
-zeroloop = zeros(DislocationLoop,2)
+zeroloop = zeros(DislocationLoop, 2)
 
 
 
@@ -93,10 +93,11 @@ shearLoop = DislocationLoop(
     loopSides(4),
     2,
     [dlnEdge(), dlnScrew()],
-    [1.,1],
+    [1.0, 1],
     [testSlip[1, 1:3]'; testSlip[1, 1:3]'],
     [testSlip[1, 4:6]'; testSlip[1, 4:6]'],
     nodeType[1; 0; 1; 1; 1; 0; 1; 1],
+    1,
 )
 plotNodes!(
     fig,
@@ -111,10 +112,11 @@ prismaticLoop = DislocationLoop(
     loopSides(4),
     2,
     [dlnEdge(), dlnEdgeN()],
-    [1.,1],
+    [1.0, 1.0],
     [testSlip[1, 1:3]'; testSlip[1, 1:3]'],
     [testSlip[1, 4:6]'; testSlip[1, 4:6]'],
     nodeType[1; 0; 1; 1; 1; 0; 1; 1],
+    1,
 )
 plotNodes!(
     fig,
@@ -129,10 +131,11 @@ prismaticLoop61 = DislocationLoop(
     loopSides(6),
     3,
     [dlnEdge(), dlnEdge(), dlnEdge()],
-    [1.,1,1],
+    [1.0, 1, 5],
     testSlip[:, 1:3],
     testSlip[:, 4:6],
     nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
+    1,
 )
 plotNodes!(
     fig,
@@ -147,11 +150,12 @@ plotNodes!(
 prismaticLoop62 = DislocationLoop(
     loopSides(6),
     3,
-    [dlnEdgeN(), dlnEdge(), dlnEdge()],
-    [1.,1,1],
+    [dlnEdgeN(), dlnScrew(), dlnEdge()],
+    [1.0, 1, 1],
     [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
     [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
     nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
+    1,
 )
 plotNodes!(
     fig,
@@ -167,10 +171,11 @@ prismaticLoop62 = DislocationLoop(
     loopSides(6),
     3,
     [dlnEdgeN(), dlnEdgeN(), dlnEdge()],
-    [1.,1,1],
+    [1.0, 1, 1],
     [slipSystems[1, 1:3]'; slipSystems[2, 1:3]'; slipSystems[3, 1:3]'],
     [slipSystems[1, 4:6]'; slipSystems[2, 4:6]'; slipSystems[3, 4:6]'],
     nodeType[1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0],
+    1,
 )
 plotNodes!(
     fig,
@@ -181,10 +186,66 @@ plotNodes!(
     markercolor = :purple,
     legend = false,
 )
-import Base: parse
+
+using DataFrames
+slipsys = "../data/slipSystems/bcc.csv"
+slipSystems = readdlm(slipsys, ',')
 df = loadCSV("../inputs/dln/sampleDln.csv"; header = 1, transpose = true)
-val = split.(df[1,:slipSystem],";")
-parse.(Int,val)
-val = split.(df[1,:segType],";")
-dict = Dict("dlnEdge" => dlnEdge(), "dlnEdgeN" => dlnEdgeN(), "dlnScrew" => dlnScrew(), "dlnMixed" => dlnMixed())
-val = df[1,:segLen]
+difLoops = nrow(df)
+loops = zeros(DislocationLoop, difLoops)
+dict = Dict(
+    "dlnEdge" => dlnEdge(),
+    "dlnEdgeN" => dlnEdgeN(),
+    "dlnScrew" => dlnScrew(),
+    "dlnMixed" => dlnMixed(),
+)
+for i = 1:difLoops
+    st = split.(df[i, :segType], ";")
+    segType = [dict[st[i]] for i = 1:length(st)]
+    sl = split.(df[i, :segLen], ";")
+    segLen = parse.(Float64, sl)
+    ss = split.(df[i, :slipSystem], ";")
+    slipSystem = parse.(Int, ss)
+
+    lbl = split.(df[i,:label],";")
+    label = convert.(nodeType,parse.(Int, lbl))
+    loops[i] = DislocationLoop(
+        loopSides(df[i, :numSides]),
+        df[i, :nodeSide],
+        segType,
+        segLen,
+        slipSystems[slipSystem, 1:3],
+        slipSystems[slipSystem, 4:6],
+        label,
+        df[i,:numLoops]
+    )
+end
+fig = plot()
+plotNodes!(
+    fig,
+    loops[1],
+    m = 1,
+    l = 3,
+    linecolor = :black,
+    markercolor = :black,
+    legend = false,
+)
+plotNodes!(
+    fig,
+    loops[2],
+    m = 1,
+    l = 3,
+    linecolor = :red,
+    markercolor = :red,
+    legend = false,
+)
+
+label = convert.(nodeType,label)
+
+ss = split.(df[1, :slipSystem], ";")
+ss = parse.(Int, ss)
+slipSystems[ss,1:3]
+
+stype = split.(df[1, :segType], ";")
+
+stype = [dict[stype[i]] for i = 1:length(stype)]

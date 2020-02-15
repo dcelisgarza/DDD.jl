@@ -141,6 +141,7 @@ mutable struct DislocationLoop{
     bVec::T6
     coord::T6
     label::T7
+    numLoops::T2
     function DislocationLoop(
         numSides,
         nodeSide,
@@ -149,6 +150,7 @@ mutable struct DislocationLoop{
         slipplane,
         bvec,
         label,
+        numLoops
     )
         nodeTotal = numSides * nodeSide
         numSegType = length(segType)
@@ -182,6 +184,7 @@ mutable struct DislocationLoop{
                 bVec,
                 coord,
                 label,
+                numLoops
             )
             return
         end
@@ -285,6 +288,7 @@ mutable struct DislocationLoop{
             bVec,
             coord,
             label,
+            numLoops
         )
 
 
@@ -300,6 +304,7 @@ function zero(::Type{DislocationLoop})
         zeros(2, 3),
         zeros(2, 3),
         zeros(nodeType, 4),
+        0,
     )
 end
 mutable struct DislocationNetwork{
