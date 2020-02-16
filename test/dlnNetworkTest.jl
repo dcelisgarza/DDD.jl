@@ -60,6 +60,7 @@ end
     rnd = rand(-1:numNode)
     @test idxLabel(network, rnd) == findall(x -> x == rnd, label)
     @test coordLbl(network, rnd) == coord[findall(x -> x == rnd, label), :]
+    @test idxCond(network, :label, inclusiveComparison, 0, 1) == [2; 3; 8; 9]
     @test idxCond(network, :label, rnd; condition = <=) == findall(
         x -> x <= rnd,
         label,
@@ -125,32 +126,26 @@ end
     end
     # Populate a dislocation network with the loops.
     # Test one branch of memory allocation.
-    network = DislocationNetwork(
-        zeros(Int64, 0, 2),
-        zeros(0, 3),
-        zeros(0, 3),
-        zeros(0, 3),
-        zeros(nodeType, 0),
-        0,
-        0,
-    )
+    network = zero(DislocationNetwork)
     makeNetwork!(network, loops[1])
-    @test network.numNode == loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
+    @test network.numNode == loops[1].numSides * loops[1].nodeSide *
+                             loops[1].numLoops
     # Test other branch of memory allocation.
     network = DislocationNetwork(
         zeros(Int64, 15, 2),
-        zeros(15, 3),
-        zeros(15, 3),
-        zeros(15, 3),
+        zeros(Float64, 15, 3),
+        zeros(Float64, 15, 3),
+        zeros(Float64, 15, 3),
         zeros(nodeType, 15),
-        0,
-        0,
+        convert(Int64, 0),
+        convert(Int64, 0),
     )
     makeNetwork!(network, loops)
     function sumNodes(loops)
         totalNodes = 0
         for i in eachindex(loops)
-            totalNodes += loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
+            totalNodes += loops[i].numSides * loops[i].nodeSide *
+                          loops[i].numLoops
         end
         return totalNodes
     end
@@ -158,17 +153,19 @@ end
     totalNodes = sumNodes(loops)
     @test totalNodes == network.numNode == network.numSeg ==
           size(network.links, 1) == size(network.slipPlane, 1) ==
-          size(network.bVec, 1) == size(network.coord, 1) == size(network.label, 1)
+          size(network.bVec, 1) == size(network.coord, 1) ==
+          size(network.label, 1)
     # Check that the first loop was transfered correctly.
     nodeLoop = loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
-    @test network.links[1:nodeLoop,:] == loops[1].links
+    @test network.links[1:nodeLoop, :] == loops[1].links
     @test network.slipPlane[1:nodeLoop, :] == loops[1].slipPlane
     @test network.bVec[1:nodeLoop, :] == loops[1].bVec
     @test network.coord[1:nodeLoop, :] == loops[1].coord
     @test network.label[1:nodeLoop] == loops[1].label
     # Check that the last loop was transfered correctly.
     nodeLoop = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
-    @test network.links[1+end-nodeLoop:end,:] == loops[end].links .+ (totalNodes - nodeLoop)
+    @test network.links[1+end-nodeLoop:end, :] == loops[end].links .+
+                                                  (totalNodes - nodeLoop)
     @test network.slipPlane[1+end-nodeLoop:end, :] == loops[end].slipPlane
     @test network.bVec[1+end-nodeLoop:end, :] == loops[end].bVec
     @test network.coord[1+end-nodeLoop:end, :] == loops[end].coord
@@ -178,12 +175,12 @@ end
     seed!(1234)
     randArr = loopDistribution(Rand(), n)
     seed!(1234)
-    test = rand(n,3)
+    test = rand(n, 3)
     @test randArr == test
     seed!(1234)
     randArr = loopDistribution(Randn(), n)
     seed!(1234)
-    test = randn(n,3)
+    test = randn(n, 3)
     @test randArr == test
     @test_throws ErrorException loopDistribution(Regular(), n)
 end

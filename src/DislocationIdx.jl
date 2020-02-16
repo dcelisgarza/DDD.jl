@@ -57,8 +57,8 @@ Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxCo
 function idxCond(
     network::DislocationNetwork,
     fieldname::Symbol,
-    args...;
     condition::Function,
+    args...,
 )
     return findall(x -> condition(x, args...), getproperty(network, fieldname))
 end

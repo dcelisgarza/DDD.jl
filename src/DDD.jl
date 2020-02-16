@@ -4,7 +4,7 @@ using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots, Statistics
 import Base: zero, isequal, isless, convert, ==, *, /, length, getindex
 
 include("Misc.jl")
-export compStruct, intAngle, extAngle, rot3D
+export inclusiveComparison, compStruct, intAngle, extAngle, rot3D
 
 include("PrimitiveTypes.jl")
 export nodeType,

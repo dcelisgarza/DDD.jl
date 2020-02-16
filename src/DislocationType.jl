@@ -295,6 +295,16 @@ mutable struct DislocationNetwork{
     end # Constructor
 end # DislocationNetwork
 
+zero(::Type{DislocationNetwork}) = DislocationNetwork(
+    zeros(Int64, 0, 2),
+    zeros(Float64, 0, 3),
+    zeros(Float64, 0, 3),
+    zeros(Float64, 0, 3),
+    zeros(nodeType, 0),
+    convert(Int64, 0),
+    convert(Int64, 0),
+)
+
 function malloc(network::DislocationNetwork, n::Int64)
     network.links = [network.links; zeros(Int64, n, 2)]
     network.slipPlane = [network.slipPlane; zeros(n, 3)]
