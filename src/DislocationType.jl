@@ -1,6 +1,6 @@
 """
 ```
-makeSegment(type::AbstractDlnSeg, slipPlane::Vector{T}, bVec::Vector{T}) where {T<:Real}
+makeSegment(type::AbstractDlnSeg, slipPlane::Vector{T}, bVec::Vector{T}) where {T<:Float64}
 ```
 Make segment depending on the segment type. The type is known at compile type so the compiler will delete unecessary branches.
 """
@@ -8,7 +8,7 @@ function makeSegment(
     type::segEdge,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Real}
+) where {T<:Float64}
     edge = cross(slipPlane, bVec)
     return edge ./ norm(edge)
 end
@@ -16,39 +16,39 @@ function makeSegment(
     type::segEdgeN,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Real}
+) where {T<:Float64}
     return slipPlane ./ norm(slipPlane)
 end
 function makeSegment(
     type::segScrew,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Real}
-    return bVec ./ norm(slipPlane)
+) where {T<:Float64}
+    return bVec ./ norm(bVec)
 end
 function makeSegment(
     type::segNone,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Real}
+) where {T<:Float64}
     return [0.0; 0.0; 0.0]
 end
 """
 ```
 DislocationLoop{
     T1<:loopSides,
-    T2<:Integer,
+    T2<:Int64,
     T3<:Union{
         T where {T<:AbstractDlnSeg},
         AbstractArray{<:AbstractDlnSeg,N} where {N},
     },
-    T4<:Union{T where {T<:Real},AbstractArray{<:Real,N} where {N}},
-    T5<:Union{Integer,AbstractArray{<:Integer,N} where {N}},
-    T6<:AbstractArray{<:Integer,N} where {N},
-    T7<:AbstractArray{<:Real,N} where {N},
+    T4<:Union{T where {T<:Float64},AbstractArray{<:Float64,N} where {N}},
+    T5<:Union{Int64,AbstractArray{<:Int64,N} where {N}},
+    T6<:AbstractArray{<:Int64,N} where {N},
+    T7<:AbstractArray{<:Float64,N} where {N},
     T8<:Vector{<:nodeType},
-    T9<:Real,
-    T10<:AbstractArray{<:Real,N} where {N},
+    T9<:Float64,
+    T10<:AbstractArray{<:Float64,N} where {N},
 }
     numSides::T1
     nodeSide::T2
@@ -68,18 +68,18 @@ Idealised dislocation loop to be used as sources.
 """
 struct DislocationLoop{
     T1<:loopSides,
-    T2<:Integer,
+    T2<:Int64,
     T3<:Union{
         T where {T<:AbstractDlnSeg},
         AbstractArray{<:AbstractDlnSeg,N} where {N},
     },
-    T4<:Union{T where {T<:Real},AbstractArray{<:Real,N} where {N}},
-    T5<:Union{Integer,AbstractArray{<:Integer,N} where {N}},
-    T6<:AbstractArray{<:Integer,N} where {N},
-    T7<:AbstractArray{<:Real,N} where {N},
+    T4<:Union{T where {T<:Float64},AbstractArray{<:Float64,N} where {N}},
+    T5<:Union{Int64,AbstractArray{<:Int64,N} where {N}},
+    T6<:AbstractArray{<:Int64,N} where {N},
+    T7<:AbstractArray{<:Float64,N} where {N},
     T8<:Vector{<:nodeType},
-    T9<:Real,
-    T10<:AbstractArray{<:Real,N} where {N},
+    T9<:Float64,
+    T10<:AbstractArray{<:Float64,N} where {N},
     T11<:AbstractDistribution,
 }
     numSides::T1
@@ -115,7 +115,7 @@ struct DislocationLoop{
         @assert length(label) == nodeTotal
         @assert numSegType == length(segLen) == numSides / 2 ==
                 size(_bVec, 1) == size(_slipPlane, 1) == length(slipSystem)
-        links = zeros(Integer, nodeTotal, 2)
+        links = zeros(Int64, nodeTotal, 2)
         coord = zeros(nodeTotal, 3)
         seg = zeros(numSegType, 3)
         slipPlane = zeros(0, 3)
@@ -240,20 +240,20 @@ function zero(::Type{DislocationLoop})
         0,
         [segNone(), segNone()],
         [0.0, 0.0],
-        zeros(Integer, 2),
+        zeros(Int64, 2),
         zeros(2, 3),
         zeros(2, 3),
         zeros(nodeType, 4),
-        0,
+        0.,
         zeros(2, 3),
         Zeros(),
     )
 end
 mutable struct DislocationNetwork{
-    T1<:AbstractArray{<:Integer,N} where {N},
-    T2<:AbstractArray{<:Real,N} where {N},
+    T1<:AbstractArray{<:Int64,N} where {N},
+    T2<:AbstractArray{<:Float64,N} where {N},
     T3<:Vector{nodeType},
-    T4<:Integer,
+    T4<:Int64,
 }
     links::T1 # Links.
     slipPlane::T2 # Slip planes.
@@ -287,8 +287,8 @@ mutable struct DislocationNetwork{
     end # Constructor
 end # DislocationNetwork
 
-function malloc(network::DislocationNetwork, n::Integer)
-    network.links = [network.links; zeros(Integer, n, 2)]
+function malloc(network::DislocationNetwork, n::Int64)
+    network.links = [network.links; zeros(Int64, n, 2)]
     network.slipPlane = [network.slipPlane; zeros(n, 3)]
     network.bVec = [network.bVec; zeros(n, 3)]
     network.coord = [network.coord; zeros(n, 3)]
@@ -296,7 +296,7 @@ function malloc(network::DislocationNetwork, n::Integer)
     return network
 end
 
-struct DislocationP{T1<:Real,T2<:Integer,T3<:Bool,T4<:AbstractMobility}
+struct DislocationP{T1<:Float64,T2<:Int64,T3<:Bool,T4<:AbstractMobility}
     # Size.
     coreRad::T1 # Core radius.
     coreRadMag::T1 # Magnitude of core Radius.

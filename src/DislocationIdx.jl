@@ -24,15 +24,15 @@ function coordLbl(network::DislocationNetwork, label::Integer)
 end
 """
 ```
-coordIdx(network::DislocationNetwork, index::Union{Integer,Vector{<:Integer})
+coordIdx(network::DislocationNetwork, index::Union{Integer,AbstractArray{<:Integer, N}) where {N}
 ```
 Get coordinates for the node(s) that with the `index` or vector of indices
 provided.
 """
 function coordIdx(
     network::DislocationNetwork,
-    index::Union{Integer,Vector{<:Integer}},
-)
+    index::Union{Integer,AbstractArray{<:Integer,N}},
+) where {N}
     return network.coord[index, :]
 end
 """
@@ -42,7 +42,7 @@ idxCond(network::DislocationNetwork, fieldname::Symbol, args...; condition::Func
 ```
 Find index/indices whose `fieldname` meets the `condition(fieldname, args...)` where condition can be any function that uses `fieldname` and `args` to make a comparison.
 ```
-idxCond(data::Union{AbstractArray{<:Real},Vector{<:nodeType}}, val::Real; condition::Function = ==)
+idxCond(data::Union{AbstractArray{<:Real,N1}, AbstractArray{<:nodeType, {N2}}}, val::Real; condition::Function = ==) where {N1,N2}
 ```
 Find index/indices of data that meet the condition(data, val).
 ```
@@ -63,10 +63,10 @@ function idxCond(
     return findall(x -> condition(x, args...), getproperty(network, fieldname))
 end
 function idxCond(
-    data::Union{AbstractArray{<:Real},Vector{<:nodeType}},
+    data::Union{AbstractArray{<:Real,N1},AbstractArray{<:nodeType,N2}},
     val::Real;
     condition::Function = ==,
-)
+) where {N1,N2}
     return findall(x -> condition(x, val), data)
 end
 function idxCond(

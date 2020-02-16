@@ -54,33 +54,33 @@ macro string_as_varname_macro(s::AbstractString, v::Any)
 end
 """
 ```
-intAngle(n::Integer)
+intAngle(n::Int64)
 ```
 Calculates the interior angle of a regular polygon with `n` sides.
 """
-function intAngle(n::Integer)
+function intAngle(n::Int64)
     return (n - 2) * π / n
 end
 """
 ```
-extAngle(n::Integer)
+extAngle(n::Int64)
 ```
 Calculates the exterior angle of a regular polygon with `n` sides.
 """
-function extAngle(n::Integer)
+function extAngle(n::Int64)
     return π - intAngle(n)
 end
 """
 ```
-rot3D(xyz::Vector{<:Real}, uvw::Vector{Real}, abc::Vector{<:Real}, θ::Real)
+rot3D(xyz::Vector{<:Float64}, uvw::Vector{Float64}, abc::Vector{<:Float64}, θ::Float64)
 ```
 Rotate point `xyz` about the line with direction vector `uvw` that crosses the point `abc` by the angle `θ`.
 """
 function rot3D(
-    xyz::AbstractVector{<:Real},
-    uvw::AbstractVector{<:Real},
-    abc::AbstractVector{<:Real},
-    θ::Real,
+    xyz::AbstractVector{<:Float64},
+    uvw::AbstractVector{<:Float64},
+    abc::AbstractVector{<:Float64},
+    θ::Float64,
 )
     #https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions
     isapprox(norm(uvw), 1.0) ? nothing : uvw ./= norm(uvw)

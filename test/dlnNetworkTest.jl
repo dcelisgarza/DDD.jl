@@ -10,15 +10,19 @@ cd(@__DIR__)
     inFilename = "../data/slipSystems/bcc.csv"
     data = readdlm(inFilename, ',', Float64)
     slipSysInt = 1
-    slipSystem = data[slipSysInt, :]
-    edge = makeSegment(segEdge(), slipSysInt, data)
-    screw = makeSegment(segScrew(), slipSysInt, data)
+    slipPlane = data[slipSysInt, 1:3]
+    bVec = data[slipSysInt, 4:6]
+    edge = makeSegment(segEdge(), slipPlane, bVec)
+    edgeN = makeSegment(segEdgeN(), slipPlane, bVec)
+    screw = makeSegment(segScrew(), slipPlane, bVec)
     @test abs(dot(edge, screw)) < eps(Float64)
-    @test abs(dot(edge, slipSystem[4:6])) < eps(Float64)
+    @test abs(dot(edgeN, screw)) < eps(Float64)
+    @test abs(dot(edge, bVec)) < eps(Float64)
+    @test abs(dot(edgeN, bVec)) < eps(Float64)
     @test isapprox(
         edge,
-        cross(slipSystem[1:3], slipSystem[4:6]) ./
-        norm(cross(slipSystem[1:3], slipSystem[4:6])),
+        cross(slipPlane, bVec) ./
+        norm(cross(slipPlane, bVec)),
     )
     @test isapprox(norm(edge), norm(screw))
     @test isapprox(norm(edge), 1.0)
@@ -28,9 +32,9 @@ end
     cnd = [==, >=, <=, <, >, !=]
     numNode = 10
     numSeg = 20
-    links = zeros(Integer, numSeg, 2)
-    bVec = zeros(Integer, numSeg, 3)
-    slipPlane = zeros(Integer, numSeg, 3)
+    links = zeros(Int64, numSeg, 2)
+    bVec = zeros(Float64, numSeg, 3)
+    slipPlane = zeros(Float64, numSeg, 3)
     coord = zeros(numNode, 3)
     label = zeros(nodeType, numNode)
     lenLinks = size(links, 1)

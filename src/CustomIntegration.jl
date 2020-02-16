@@ -1,4 +1,4 @@
-mutable struct IntegrationP{T1<:Real,T2<:Integer,T3<:AbstractIntegrator}
+mutable struct IntegrationP{T1<:Float64,T2<:Int64,T3<:AbstractIntegrator}
     dt::T1
     tmin::T1
     tmax::T1

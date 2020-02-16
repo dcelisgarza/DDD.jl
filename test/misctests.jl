@@ -13,7 +13,7 @@ dlnParams, matParams, intParams, slipSystems, loops = loadParams(
     source,
 )
 network = DislocationNetwork(
-    zeros(Integer, 40, 2),
+    zeros(Int64, 40, 2),
     zeros(40, 3),
     zeros(40, 3),
     zeros(40, 3),

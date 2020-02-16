@@ -54,9 +54,9 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
         sl = split.(df[i, :segLen], ";")
         segLen = parse.(Float64, sl)
         ss = split.(df[i, :slipSystem], ";")
-        slipSystem = parse.(Int, ss)
+        slipSystem = parse.(Int64, ss)
         lbl = split.(df[i, :label], ";")
-        label = convert.(nodeType, parse.(Int, lbl))
+        label = convert.(nodeType, parse.(Int64, lbl))
         spanmin = split.(df[i, :spanmin], ";")
         spanmax = split.(df[i, :spanmax], ";")
         span[1, :] .= parse.(Float64, spanmin)
@@ -71,7 +71,7 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
             slipSystems[slipSystem, 1:3],
             slipSystems[slipSystem, 4:6],
             label,
-            df[i, :buffer],
+            convert(Float64,df[i, :buffer]),
             span,
             dist[df[1, :dist]],
         )
@@ -95,7 +95,7 @@ function dlnLoadParams(df::DataFrame)
         df[1, :maxSegLen],
         df[1, :minArea],
         df[1, :maxArea],
-        convert(Integer, df[1, :maxConnect]),
+        convert(Int64, df[1, :maxConnect]),
         df[1, :remesh],
         df[1, :collision],
         df[1, :separation],

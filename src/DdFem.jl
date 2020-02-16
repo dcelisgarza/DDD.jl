@@ -1,7 +1,10 @@
 """
 Cuboid mesh structure. Incomplete.
 """
-mutable struct CuboidMesh{T1<:AbstractVector{<:Real},T2<:AbstractMatrix{<:Real}}
+mutable struct CuboidMesh{
+    T1<:AbstractArray{<:Float64,N} where {N},
+    T2<:AbstractArray{<:Float64,N} where {N},
+}
     elem::T1
     vertices::T2
     coord::T2
