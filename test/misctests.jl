@@ -1,6 +1,6 @@
 using DDD
 using Test, Plots
-
+using BenchmarkTools
 import DelimitedFiles: readdlm
 plotlyjs()
 cd(@__DIR__)
@@ -13,11 +13,11 @@ dlnParams, matParams, intParams, slipSystems, loops = loadParams(
     source,
 )
 network = DislocationNetwork(
-    zeros(Int64, 40, 2),
-    zeros(40, 3),
-    zeros(40, 3),
-    zeros(40, 3),
-    zeros(nodeType, 40),
+    zeros(Int64, 712, 2),
+    zeros(712, 3),
+    zeros(712, 3),
+    zeros(712, 3),
+    zeros(nodeType, 712),
     0,
     0,
 )

@@ -43,7 +43,7 @@ function makeNetwork!(
     sources::Union{DislocationLoop,AbstractVector{<:DislocationLoop}},
 )
     local nodeTotal::Integer = 0
-    local lims = zeros(2, 3)
+    local lims = zeros(Float64, 2, 3)
     # Allocate memory.
     for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
@@ -57,9 +57,10 @@ function makeNetwork!(
     end
 
     nodeTotal = 0
+    initIdx = findfirst(x -> x == -1, network.label)
     for i = 1:length(sources)
         # Indices.
-        idx = 1 + nodeTotal
+        idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
         numLoops = sources[i].numLoops
         numNodes = numLoops * nodesLoop
@@ -75,7 +76,7 @@ function makeNetwork!(
             idxf = idxi + nodesLoop - 1
             # Prepare to distribute sources.
             network.links[idxi:idxf, :] = sources[i].links[1:nodesLoop, :] .+
-                                          nodeTotal
+                                          (nodeTotal + initIdx - 1)
             network.slipPlane[idxi:idxf, :] .= sources[i].slipPlane[
                 1:nodesLoop,
                 :,
