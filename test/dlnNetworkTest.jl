@@ -4,6 +4,7 @@ using Test
 import DelimitedFiles: readdlm
 import LinearAlgebra: dot, cross, norm
 import Statistics: mean
+import Random: seed!
 cd(@__DIR__)
 
 @testset "Generate single segments" begin
@@ -123,6 +124,19 @@ end
                                      eps(Float64)
     end
     # Populate a dislocation network with the loops.
+    # Test one branch of memory allocation.
+    network = DislocationNetwork(
+        zeros(Int64, 0, 2),
+        zeros(0, 3),
+        zeros(0, 3),
+        zeros(0, 3),
+        zeros(nodeType, 0),
+        0,
+        0,
+    )
+    makeNetwork!(network, loops[1])
+    @test network.numNode == loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
+    # Test other branch of memory allocation.
     network = DislocationNetwork(
         zeros(Int64, 15, 2),
         zeros(15, 3),
@@ -159,4 +173,31 @@ end
     @test network.bVec[1+end-nodeLoop:end, :] == loops[end].bVec
     @test network.coord[1+end-nodeLoop:end, :] == loops[end].coord
     @test network.label[1+end-nodeLoop:end] == loops[end].label
+    # Test distributions.
+    n = 5
+    seed!(1234)
+    randArr = loopDistribution(Rand(), n)
+    seed!(1234)
+    test = rand(n,3)
+    @test randArr == test
+    seed!(1234)
+    randArr = loopDistribution(Randn(), n)
+    seed!(1234)
+    test = randn(n,3)
+    @test randArr == test
+    @test_throws ErrorException loopDistribution(Regular(), n)
+end
+
+@testset "Overloaded type functions" begin
+    @test isequal(4, loopSides(4))
+    @test isequal(loopSides(4), 4)
+    @test isless(5, loopSides(6))
+    @test isless(loopSides(6), 5) == false
+    @test ==(4, loopSides(4))
+    @test ==(loopSides(6), 7) == false
+    @test convert(loopSides, 6) == loopSides(6)
+    @test *(loopSides(4), 3) == 12
+    @test /(loopSides(6), 6) == 1
+    var = segEdge()
+    @test length(var) == 1
 end
