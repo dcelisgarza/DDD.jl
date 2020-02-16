@@ -1,12 +1,12 @@
-mutable struct IntegrationP{T1<:Float64,T2<:Int64,T3<:AbstractIntegrator}
+mutable struct IntegrationP{T1<:Float64,T2<:AbstractIntegrator,T3<:Int64}
     dt::T1
     tmin::T1
     tmax::T1
-    method::T3
+    method::T2
     abstol::T1
     reltol::T1
     time::T1
-    step::T2
+    step::T3
 
     function IntegrationP(
         dt,
@@ -16,9 +16,9 @@ mutable struct IntegrationP{T1<:Float64,T2<:Int64,T3<:AbstractIntegrator}
         abstol = 1e-6,
         reltol = 1e-6,
         time = 0.0,
-        step::Int64 = 0,
+        step = 0,
     )
-        new{typeof(dt),typeof(step),typeof(method)}(
+        new{typeof(dt),typeof(method),typeof(step)}(
             dt,
             tmin,
             tmax,

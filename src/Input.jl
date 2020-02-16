@@ -139,6 +139,8 @@ function intLoadParams(df::DataFrame)
         integDict[df[1, :method]],
         convert(Float64, df[1, :abstol]),
         convert(Float64, df[1, :reltol]),
+        convert(Float64, df[1, :time]),
+        convert(Int64, df[1, :step]),
     )
     return intParams
 end

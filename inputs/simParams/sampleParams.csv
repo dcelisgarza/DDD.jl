@@ -24,3 +24,5 @@ tmax,213333333333.
 method,CustomTrapezoid()
 abstol,0
 reltol,0
+time,0
+step,0
