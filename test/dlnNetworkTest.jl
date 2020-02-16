@@ -21,8 +21,7 @@ cd(@__DIR__)
     @test abs(dot(edgeN, bVec)) < eps(Float64)
     @test isapprox(
         edge,
-        cross(slipPlane, bVec) ./
-        norm(cross(slipPlane, bVec)),
+        cross(slipPlane, bVec) ./ norm(cross(slipPlane, bVec)),
     )
     @test isapprox(norm(edge), norm(screw))
     @test isapprox(norm(edge), 1.0)
@@ -118,8 +117,46 @@ end
     slipSystems = readdlm(slipfile, ',')
     df = loadCSV(loopfile; header = 1, transpose = true)
     loops = loadDln(df, slipSystems)
+    # Check that the midpoint of the loops is at (0,0,0)
     for i in eachindex(loops)
         @test mean(loops[i].coord) < maximum(abs.(loops[i].coord)) *
                                      eps(Float64)
     end
+    # Populate a dislocation network with the loops.
+    network = DislocationNetwork(
+        zeros(Int64, 15, 2),
+        zeros(15, 3),
+        zeros(15, 3),
+        zeros(15, 3),
+        zeros(nodeType, 15),
+        0,
+        0,
+    )
+    makeNetwork!(network, loops)
+    function sumNodes(loops)
+        totalNodes = 0
+        for i in eachindex(loops)
+            totalNodes += loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
+        end
+        return totalNodes
+    end
+    # Check that the memory was allocated correctly. Only need to check the first and last, they are transfered sequentially so if both pass, the rest have to have been transfered correctly.
+    totalNodes = sumNodes(loops)
+    @test totalNodes == network.numNode == network.numSeg ==
+          size(network.links, 1) == size(network.slipPlane, 1) ==
+          size(network.bVec, 1) == size(network.coord, 1) == size(network.label, 1)
+    # Check that the first loop was transfered correctly.
+    nodeLoop = loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
+    @test network.links[1:nodeLoop,:] == loops[1].links
+    @test network.slipPlane[1:nodeLoop, :] == loops[1].slipPlane
+    @test network.bVec[1:nodeLoop, :] == loops[1].bVec
+    @test network.coord[1:nodeLoop, :] == loops[1].coord
+    @test network.label[1:nodeLoop] == loops[1].label
+    # Check that the last loop was transfered correctly.
+    nodeLoop = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
+    @test network.links[1+end-nodeLoop:end,:] == loops[end].links .+ (totalNodes - nodeLoop)
+    @test network.slipPlane[1+end-nodeLoop:end, :] == loops[end].slipPlane
+    @test network.bVec[1+end-nodeLoop:end, :] == loops[end].bVec
+    @test network.coord[1+end-nodeLoop:end, :] == loops[end].coord
+    @test network.label[1+end-nodeLoop:end] == loops[end].label
 end
