@@ -54,7 +54,7 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
         sl = split.(df[i, :segLen], ";")
         segLen = parse.(Float64, sl)
         ss = split.(df[i, :slipSystem], ";")
-        slipSystem = parse.(Int64, ss)
+        _slipSystem = parse.(Int64, ss)
         lbl = split.(df[i, :label], ";")
         label = convert.(nodeType, parse.(Int64, lbl))
         spanmin = split.(df[i, :spanmin], ";")
@@ -63,15 +63,15 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
         span[2, :] .= parse.(Float64, spanmax)
         sources[i] = DislocationLoop(
             loopSides(df[i, :numSides]),
-            df[i, :nodeSide],
-            df[i, :numLoops],
+            convert(Int64, df[i, :nodeSide]),
+            convert(Int64, df[i, :numLoops]),
             segType,
             segLen,
-            slipSystem,
-            slipSystems[slipSystem, 1:3],
-            slipSystems[slipSystem, 4:6],
+            _slipSystem,
+            slipSystems[_slipSystem, 1:3],
+            slipSystems[_slipSystem, 4:6],
             label,
-            convert(Float64,df[i, :buffer]),
+            convert(Float64, df[i, :buffer]),
             span,
             dist[df[1, :dist]],
         )
@@ -89,21 +89,21 @@ function dlnLoadParams(df::DataFrame)
         "DDD.mobHCP()" => mobHCP(),
     )
     dlnLoadParams = DislocationP(
-        df[1, :coreRad],
-        df[1, :coreRadMag],
-        df[1, :minSegLen],
-        df[1, :maxSegLen],
-        df[1, :minArea],
-        df[1, :maxArea],
+        convert(Float64, df[1, :coreRad]),
+        convert(Float64, df[1, :coreRadMag]),
+        convert(Float64, df[1, :minSegLen]),
+        convert(Float64, df[1, :maxSegLen]),
+        convert(Float64, df[1, :minArea]),
+        convert(Float64, df[1, :maxArea]),
         convert(Int64, df[1, :maxConnect]),
         df[1, :remesh],
         df[1, :collision],
         df[1, :separation],
         df[1, :virtualRemesh],
-        df[1, :edgeDrag],
-        df[1, :screwDrag],
-        df[1, :climbDrag],
-        df[1, :lineDrag],
+        convert(Float64, df[1, :edgeDrag]),
+        convert(Float64, df[1, :screwDrag]),
+        convert(Float64, df[1, :climbDrag]),
+        convert(Float64, df[1, :lineDrag]),
         mobDict[df[1, :mobility]],
     )
     return dlnLoadParams
@@ -119,9 +119,9 @@ function matLoadParams(df::DataFrame)
         "DDD.HCP()" => HCP(),
     )
     matParams = MaterialP(
-        df[1, :μ],
-        df[1, :μMag],
-        df[1, :ν],
+        convert(Float64, df[1, :μ]),
+        convert(Float64, df[1, :μMag]),
+        convert(Float64, df[1, :ν]),
         strucDict[df[1, :crystalStruct]],
     )
     return matParams
@@ -133,12 +133,12 @@ function intLoadParams(df::DataFrame)
         "DDD.CustomTrapezoid()" => CustomTrapezoid(),
     )
     intParams = IntegrationP(
-        df[1, :dt],
-        df[1, :tmin],
-        df[1, :tmax],
+        convert(Float64, df[1, :dt]),
+        convert(Float64, df[1, :tmin]),
+        convert(Float64, df[1, :tmax]),
         integDict[df[1, :method]],
-        df[1, :abstol],
-        df[1, :reltol],
+        convert(Float64, df[1, :abstol]),
+        convert(Float64, df[1, :reltol]),
     )
     return intParams
 end

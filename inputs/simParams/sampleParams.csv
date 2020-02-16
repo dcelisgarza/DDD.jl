@@ -18,9 +18,9 @@ mobility,mobBCC()
 μMag,145000
 ν,0.28
 crystalStruct,BCC()
-dt,1000000.
-tmin,0
-tmax,213333333333
+dt,1000000.0
+tmin,0.0
+tmax,213333333333.
 method,CustomTrapezoid()
 abstol,0
 reltol,0
