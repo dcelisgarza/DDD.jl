@@ -196,11 +196,11 @@ struct DislocationLoop{
                     bVec = [bVec; _bVec[3, :]']
                 end
             end
-        """
-        # Room for expansion in case we can generate loops with more sides.
-        else
-            error("more sides for a source loop are undefined")
-        """
+            """
+            # Room for expansion in case we can generate loops with more sides.
+            else
+                error("more sides for a source loop are undefined")
+            """
         end
         # Links
         for j = 1:nodeTotal-1
@@ -244,15 +244,15 @@ getindex(x::DislocationLoop, i::Integer) = x
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopSides(4),
-        1,
-        0,
+        convert(Int64, 1),
+        convert(Int64, 0),
         [segNone(), segNone()],
-        [0.0, 0.0],
+        zeros(Float64, 2),
         zeros(Int64, 2),
-        zeros(2, 3),
-        zeros(2, 3),
+        zeros(Float64, 2, 3),
+        zeros(Float64, 2, 3),
         zeros(nodeType, 4),
-        0.,
+        convert(Float64, 0),
         zeros(2, 3),
         Zeros(),
     )
