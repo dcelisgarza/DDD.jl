@@ -45,7 +45,7 @@ function makeNetwork!(
     local nodeTotal::Integer = 0
     local lims = zeros(Float64, 2, 3)
     # Allocate memory.
-    for i =1:length(sources)
+    for i = 1:length(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
     available = findfirst(x -> x == -1, network.label)

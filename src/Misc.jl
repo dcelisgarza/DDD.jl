@@ -4,7 +4,7 @@ inclusiveComparison(data, args...)
 ```
 Compare data to a tuple, return `true` if it is equal to any arg, `false` if it is not equal to any.
 """
-function inclusiveComparison(data, args...) :: Bool
+function inclusiveComparison(data, args...)::Bool
     for i = 1:length(args)
         if data == args[i]
             return true

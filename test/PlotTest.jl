@@ -26,21 +26,10 @@ cd(@__DIR__)
     totalNodes = sumNodes(loops)
     # Modifying current plot.
     fig = plot()
-    plotNodes!(
-        fig,
-        network,
-        m = 1,
-        l = 3,
-        legend = false,
-    )
+    plotNodes!(fig, network, m = 1, l = 3, legend = false)
     @test fig.n == totalNodes
     # Creating new plot.
-    fig2 = plotNodes(
-        network,
-        m = 1,
-        l = 3,
-        legend = false,
-    )
+    fig2 = plotNodes(network, m = 1, l = 3, legend = false)
     @test fig2.n == totalNodes
 
     function plotLoops(fig, loops)

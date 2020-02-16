@@ -197,4 +197,9 @@ end
     @test /(loopSides(6), 6) == 1
     var = segEdge()
     @test length(var) == 1
+    @test zero(nodeType) == -1
+    loop = zero(DislocationLoop)
+    @test length(loop) == 1
+    @test loop[1] == loop
+    @test_throws BoundsError loop[2]
 end

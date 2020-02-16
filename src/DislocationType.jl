@@ -125,9 +125,9 @@ struct DislocationLoop{
             seg[i, :] = makeSegment(segType[i], _slipPlane[i, :], _bVec[i, :]) *
                         segLen[i]
         end
-        """
-        This if statement is ripe for refactoring but I need properly to think about it because it doesn't seem trivial.
-        """
+        # """
+        # This if statement is ripe for refactoring but I need properly to think about it because it doesn't seem trivial.
+        # """
         if numSides == 4
             # First node.
             coord[1, :] -= seg[1, :] + seg[2, :]
@@ -196,11 +196,11 @@ struct DislocationLoop{
                     bVec = [bVec; _bVec[3, :]']
                 end
             end
-            """
-            # Room for expansion in case we can generate loops with more sides.
-            else
-                error("more sides for a source loop are undefined")
-            """
+            # """
+            # # Room for expansion in case we can generate loops with more sides.
+            # else
+            #     error("more sides for a source loop are undefined")
+            # """
         end
         # Links
         for j = 1:nodeTotal-1
@@ -239,7 +239,7 @@ struct DislocationLoop{
     end
 end
 length(::DislocationLoop) = 1
-getindex(x::DislocationLoop, i::Integer) = x
+getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
 
 function zero(::Type{DislocationLoop})
     DislocationLoop(
