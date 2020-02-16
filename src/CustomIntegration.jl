@@ -16,7 +16,7 @@ mutable struct IntegrationP{T1<:Float64,T2<:Int64,T3<:AbstractIntegrator}
         abstol = 1e-6,
         reltol = 1e-6,
         time = 0.0,
-        step = 0,
+        step::Int64 = 0,
     )
         new{typeof(dt),typeof(step),typeof(method)}(
             dt,

@@ -61,9 +61,6 @@ struct MaterialP{T1<:Float64,T2<:AbstractMaterial}
     crystalStruct::T2
 
     function MaterialP(μ, μMag, ν, crystalStruct)
-        if typeof(crystalStruct) == Symbol
-            @eval crystalStruct = $crystalStruct
-        end
         new{typeof(μ),typeof(crystalStruct)}(μ, μMag, ν, crystalStruct)
     end # constructor
 end # MaterialP
