@@ -50,8 +50,8 @@ end
         bVec,
         coord,
         label,
-        numNode,
-        numSeg,
+        convert(Int64, numNode),
+        convert(Int64, numSeg),
     )
     @test isequal(network.label[1], -1)
     @test isequal(-1, network.label[1])

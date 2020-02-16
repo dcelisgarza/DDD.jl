@@ -9,6 +9,9 @@ end
 @safetestset "Misc tests" begin
     include("./MiscTest.jl")
 end
+@safetestset "Plotting" begin
+    include("PlotTest.jl")
+end
 # @safetestset "Performant code" begin
 #     include("performantCodeTest.jl")
 # end

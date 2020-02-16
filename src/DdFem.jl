@@ -1,6 +1,5 @@
 """
-Cuboid mesh structure. Incomplete.
-"""
+# Cuboid mesh structure. Incomplete.
 mutable struct CuboidMesh{
     T1<:AbstractArray{<:Float64,N} where {N},
     T2<:AbstractArray{<:Float64,N} where {N},
@@ -35,7 +34,4 @@ mutable struct CuboidMesh{
         end
     end #constructor
 end #CuboidMesh
-
-# function zero(::Type{CuboidMesh})
-#     return CuboidMesh(zeros(3))
-# end
+"""
