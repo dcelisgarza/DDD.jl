@@ -18,14 +18,13 @@ function loadCSV(
 end
 
 function loadSlipSys(filename::AbstractString, delim = ',')
-    slipSystems = readdlm(filename, delim)
-    return slipSystems
+    return readdlm(filename, delim)
 end
 
 function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
     nRow = nrow(df)
     sources = zeros(DislocationLoop, nRow)
-    span = zeros(2, 3)
+    span = zeros(Float64, 2, 3)
     segTypes = Dict(
         "segEdge()" => segEdge(),
         "segEdgeN()" => segEdgeN(),
