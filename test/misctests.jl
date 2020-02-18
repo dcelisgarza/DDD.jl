@@ -12,31 +12,31 @@ dlnParams, matParams, intParams, slipSystems, loops = loadParams(
     slipsys,
     source,
 )
-# network = DislocationNetwork(
-#     zeros(Int64, 712, 2),
-#     zeros(712, 3),
-#     zeros(712, 3),
-#     zeros(712, 3),
-#     zeros(nodeType, 712),
-#     0,
-#     0,
-# )
-# makeNetwork!(network, loops)
-# fig = plot()
-# plotNodes!(
-#     fig,
-#     network,
-#     m = 1,
-#     l = 3,
-#     linecolor = :black,
-#     markercolor = :black,
-#     legend = false,
-# )
+network = DislocationNetwork(
+    zeros(Int64, 712, 2),
+    zeros(712, 3),
+    zeros(712, 3),
+    zeros(712, 3),
+    zeros(nodeType, 712),
+    0,
+    0,
+)
+makeNetwork!(network, loops)
+fig = plot()
+plotNodes!(
+    fig,
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :black,
+    markercolor = :black,
+    legend = false,
+)
 
 fig = plot()
 plot(loops[1].coord[:,1], loops[1].coord[:,2], loops[1].coord[:,3], m=3, l=3)
 using Statistics
-mean(loops[1].coord)
+mean(loops[1].coord, dims=1)
 plotNodes!(
     fig,
     loops[1],

@@ -219,14 +219,11 @@ function makeLoop(
     bVec = zeros(0, 3)
 
     seg = makeSegment(segType[1], _slipPlane, _bVec) .* segLen[1]
-    # println(seg,_slipPlane)
     θ = extAngle(numSides)
-    # println(θ*180/π)
     rseg = zeros(3)
     for i = 1:numSides
         idx = (i-1)*nodeSide
         rseg = rot3D(seg, _slipPlane, zeros(3), θ*(i-1))
-        println(θ*(i-1)*180/π, rseg)
         for j = 1:nodeSide
             if i==j==1
                 coord[1,:] = zeros(3)
@@ -236,7 +233,6 @@ function makeLoop(
             end
             if idx+j <= nodeTotal
                 coord[idx+j, :] += coord[idx+j-1, :] + rseg
-                # println(rseg)
                 slipPlane = [slipPlane; _slipPlane']
                 bVec = [bVec; _bVec']
             end
