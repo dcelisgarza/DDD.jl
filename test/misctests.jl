@@ -36,7 +36,7 @@ plotNodes!(
 fig = plot()
 plot(loops[1].coord[:,1], loops[1].coord[:,2], loops[1].coord[:,3], m=3, l=3)
 using Statistics
-mean(loops[1].coord, dims=1)
+mean(loops[2].coord, dims=1)
 plotNodes!(
     fig,
     loops[1],
