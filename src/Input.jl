@@ -62,11 +62,11 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
         segType = [segTypes[st[i]] for i = 1:length(st)]
         sl = split.(df[i, :segLen], ";")
         segLen = parse.(Float64, sl)
+        _slipSystem = df[i, :slipSystem]
         try
             ss = split.(df[i, :slipSystem], ";")
             _slipSystem = parse.(Int64, ss)
         catch err
-            _slipSystem = df[i, :slipSystem]
         end
         lbl = split.(df[i, :label], ";")
         label = convert.(nodeType, parse.(Int64, lbl))
