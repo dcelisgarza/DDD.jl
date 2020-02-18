@@ -25,6 +25,16 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
     nRow = nrow(df)
     sources = zeros(DislocationLoop, nRow)
     span = zeros(Float64, 2, 3)
+    dlnTypes = Dict(
+        "loopPrism()" => loopPrism(),
+        "loopShear()" => loopShear(),
+        "loopMixed()" => loopMixed(),
+        "loopDln()" => loopDln(),
+        "DDD.loopPrism()" => loopPrism(),
+        "DDD.loopShear()" => loopShear(),
+        "DDD.loopMixed()" => loopMixed(),
+        "DDD.loopDln()" => loopDln(),
+    )
     segTypes = Dict(
         "segEdge()" => segEdge(),
         "segEdgeN()" => segEdgeN(),
@@ -61,6 +71,7 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
         span[1, :] .= parse.(Float64, spanmin)
         span[2, :] .= parse.(Float64, spanmax)
         sources[i] = DislocationLoop(
+            dlnTypes[df[i, :loopType]],
             loopSides(df[i, :numSides]),
             convert(Int64, df[i, :nodeSide]),
             convert(Int64, df[i, :numLoops]),

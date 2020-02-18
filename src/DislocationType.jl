@@ -67,6 +67,7 @@ DislocationLoop{
 Idealised dislocation loop to be used as sources.
 """
 function makeLoop(
+    loopType::loopDln,
     numSides,
     nodeSide,
     numLoops,
@@ -195,6 +196,7 @@ end
 
 
 struct DislocationLoop{
+    T0<:AbstractDlnStr,
     T1<:loopSides,
     T2<:Int64,
     T3<:Union{
@@ -210,6 +212,7 @@ struct DislocationLoop{
     T10<:AbstractArray{<:Float64,N} where {N},
     T11<:AbstractDistribution,
 }
+    loopType::T0
     numSides::T1
     nodeSide::T2
     numLoops::T2
@@ -225,6 +228,7 @@ struct DislocationLoop{
     range::T10
     dist::T11
     function DislocationLoop(
+        loopType,
         numSides,
         nodeSide,
         numLoops,
@@ -253,6 +257,7 @@ struct DislocationLoop{
         buffer,
         range,
         dist, = makeLoop(
+            loopType,
             numSides,
             nodeSide,
             numLoops,
@@ -268,6 +273,7 @@ struct DislocationLoop{
         )
 
         new{
+            typeof(loopType),
             typeof(numSides),
             typeof(nodeSide),
             typeof(segType),
@@ -280,6 +286,7 @@ struct DislocationLoop{
             typeof(range),
             typeof(dist),
         }(
+            loopType,
             numSides,
             nodeSide,
             numLoops,
@@ -301,6 +308,7 @@ length(::DislocationLoop) = 1
 getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
 function zero(::Type{DislocationLoop})
     DislocationLoop(
+        loopDln(),
         loopSides(4),
         convert(Int64, 1),
         convert(Int64, 0),

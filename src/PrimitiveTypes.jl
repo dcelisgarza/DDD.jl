@@ -87,6 +87,7 @@ Idealised dislocation structure types. Unsure of how to use them.
 abstract type AbstractDlnStr end
 struct loopPrism <: AbstractDlnStr end
 struct loopShear <: AbstractDlnStr end
+struct loopMixed <: AbstractDlnStr end
 struct loopDln <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
