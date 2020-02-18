@@ -84,7 +84,7 @@ function makeLoop(
     nodeTotal = numSides * nodeSide
     numSegType = length(segType)
     @assert length(label) == nodeTotal
-    @assert numSegType == length(segLen) == numSides / 2 == size(_bVec, 1) ==
+    @assert numSegType == numSides / 2 == size(_bVec, 1) ==
             size(_slipPlane, 1) == length(slipSystem)
     links = zeros(Int64, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
@@ -191,13 +191,83 @@ function makeLoop(
         dist
 end
 
+function makeLoop(
+    loopType::loopPrism,
+    numSides,
+    nodeSide,
+    numLoops,
+    segType,
+    segLen,
+    slipSystem,
+    _slipPlane,
+    _bVec,
+    label,
+    buffer,
+    range,
+    dist,
+)
+    nodeTotal = numSides * nodeSide
+    @assert length(label) == nodeTotal
+    @assert size(segType,1) == 1
+    # @assert size(segLen,1) == size(segType,1) == 1
+    # == size(_slipPlane, 1) ==
+            # size(_bVec, 1) == 1
 
+    links = zeros(Int64, nodeTotal, 2)
+    coord = zeros(nodeTotal, 3)
+    slipPlane = zeros(0, 3)
+    bVec = zeros(0, 3)
 
+    seg = makeSegment(segType[1], _slipPlane, _bVec) .* segLen[1]
+    # println(seg,_slipPlane)
+    θ = extAngle(numSides)
+    # println(θ*180/π)
+    rseg = zeros(3)
+    for i = 1:numSides
+        idx = (i-1)*nodeSide
+        rseg = rot3D(seg, _slipPlane, zeros(3), θ*(i-1))
+        println(θ*(i-1)*180/π, rseg)
+        for j = 1:nodeSide
+            if i==j==1
+                coord[1,:] = zeros(3)
+                slipPlane = [slipPlane; _slipPlane']
+                bVec = [bVec; _bVec']
+                continue
+            end
+            if idx+j <= nodeTotal
+                coord[idx+j, :] += coord[idx+j-1, :] + rseg
+                # println(rseg)
+                slipPlane = [slipPlane; _slipPlane']
+                bVec = [bVec; _bVec']
+            end
+        end
+    end
+    coord .-= mean(coord,dims=1)
 
+    # Links
+    for j = 1:nodeTotal-1
+        links[j, :] = [j; 1 + j]
+    end
+    links[nodeTotal, :] = [nodeTotal; 1]
+
+    return numSides,
+        nodeSide,
+        numLoops,
+        segType,
+        segLen,
+        slipSystem,
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        buffer,
+        range,
+        dist
+end
 
 struct DislocationLoop{
-    T0<:AbstractDlnStr,
-    T1<:loopSides,
+    T1<:AbstractDlnStr,
     T2<:Int64,
     T3<:Union{
         T where {T<:AbstractDlnSeg},
@@ -212,8 +282,8 @@ struct DislocationLoop{
     T10<:AbstractArray{<:Float64,N} where {N},
     T11<:AbstractDistribution,
 }
-    loopType::T0
-    numSides::T1
+    loopType::T1
+    numSides::T2
     nodeSide::T2
     numLoops::T2
     segType::T3
@@ -275,7 +345,6 @@ struct DislocationLoop{
         new{
             typeof(loopType),
             typeof(numSides),
-            typeof(nodeSide),
             typeof(segType),
             typeof(segLen),
             typeof(slipSystem),
@@ -309,7 +378,7 @@ getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopDln(),
-        loopSides(4),
+        4,
         convert(Int64, 1),
         convert(Int64, 0),
         [segNone(), segNone()],

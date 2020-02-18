@@ -32,31 +32,6 @@ convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
 zero(::Type{nodeType}) = -1
 """
 ```
-@enum loopSides begin
-    four = 4
-    six = 6
-end
-```
-Type for number of sides for idealised loops.
-"""
-@enum loopSides begin
-    four = 4
-    six = 6
-end
-"""
-Overloaded functions for `loopSides`.
-"""
-isequal(x::Real, y::loopSides) = isequal(x, Integer(y))
-isequal(x::loopSides, y::Real) = isequal(Integer(x), y)
-isless(x::Real, y::loopSides) = isless(x, Integer(y))
-isless(x::loopSides, y::Real) = isless(Integer(x), y)
-==(x::loopSides, y::Real) = isequal(Integer(x), y)
-==(x::Real, y::loopSides) = isequal(x, Integer(y))
-convert(::Type{loopSides}, x::Real) = loopSides(Integer(x))
-*(x::loopSides, y::Real) = *(Int(x), y)
-/(x::loopSides, y::Integer) = /(Int(x), y)
-"""
-```
 abstract type AbstractDlnSeg end
 struct segNone <: AbstractDlnSeg end
 struct segEdge <: AbstractDlnSeg end

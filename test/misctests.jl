@@ -6,7 +6,7 @@ plotlyjs()
 cd(@__DIR__)
 params = "../inputs/simParams/sampleParams.csv"
 slipsys = "../data/slipSystems/bcc.csv"
-source = "../inputs/dln/sampleDlnRand.csv"
+source = "../inputs/dln/samplePrismatic.csv"
 dlnParams, matParams, intParams, slipSystems, loops = loadParams(
     params,
     slipsys,
@@ -34,6 +34,9 @@ dlnParams, matParams, intParams, slipSystems, loops = loadParams(
 # )
 
 fig = plot()
+plot(loops[1].coord[:,1], loops[1].coord[:,2], loops[1].coord[:,3], m=3, l=3)
+using Statistics
+mean(loops[1].coord)
 plotNodes!(
     fig,
     loops[1],

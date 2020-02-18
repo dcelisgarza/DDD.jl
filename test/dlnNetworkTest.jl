@@ -186,15 +186,6 @@ end
 end
 
 @testset "Overloaded type functions" begin
-    @test isequal(4, loopSides(4))
-    @test isequal(loopSides(4), 4)
-    @test isless(5, loopSides(6))
-    @test isless(loopSides(6), 5) == false
-    @test ==(4, loopSides(4))
-    @test ==(loopSides(6), 7) == false
-    @test convert(loopSides, 6) == loopSides(6)
-    @test *(loopSides(4), 3) == 12
-    @test /(loopSides(6), 6) == 1
     var = segEdge()
     @test length(var) == 1
     @test zero(nodeType) == -1

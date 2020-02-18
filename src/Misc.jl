@@ -87,30 +87,30 @@ function rot3D(
     #https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions
     isapprox(norm(uvw), 1.0) ? nothing : uvw ./= norm(uvw)
 
-    local costheta = cos(θ)
-    local onemcostheta = 1 - costheta
+    local cosθ = cos(θ)
+    local onemcosθ = 1 - cosθ
     local sintheta = sin(θ)
     local xyzDOTuvw = dot(xyz, uvw)
 
     return [
         (abc[1] * (uvw[2]^2 + uvw[3]^2) -
          uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)) *
-        onemcostheta +
-        xyz[1] * costheta +
+        onemcosθ +
+        xyz[1] * cosθ +
         sintheta * (-abc[3] * uvw[2] + abc[2] * uvw[3] - uvw[3] * xyz[2] +
          uvw[2] * xyz[3])
 
         (abc[2] * (uvw[1]^2 + uvw[3]^2) -
          uvw[2] * (abc[1] * uvw[1] + abc[3] * uvw[3] - xyzDOTuvw)) *
-        onemcostheta +
-        xyz[2] * costheta +
+        onemcosθ +
+        xyz[2] * cosθ +
         sintheta *
         (abc[3] * uvw[1] - abc[1] * uvw[3] + uvw[3] * xyz[1] - uvw[1] * xyz[3])
 
         (abc[3] * (uvw[1]^2 + uvw[2]^2) -
          uvw[3] * (abc[1] * uvw[1] + abc[2] * uvw[2] - xyzDOTuvw)) *
-        onemcostheta +
-        xyz[3] * costheta +
+        onemcosθ +
+        xyz[3] * cosθ +
         sintheta * (-abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] +
          uvw[1] * xyz[2])
     ]
