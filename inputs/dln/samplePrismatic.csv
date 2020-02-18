@@ -2,7 +2,7 @@ loopType,loopPrism()
 numSides,11
 nodeSide,2
 numLoops,1
-segType,segEdge()
+segType,segScrew()
 segLen,1;1;1;1;1;1;1;1;1;1;1;1
 slipSystem,1
 label,1;0;1;0;1;0;1;0;1;0;1;1;0;1;0;1;0;1;0;1;0;1

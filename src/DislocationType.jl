@@ -218,7 +218,80 @@ function makeLoop(
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
 
-    seg = makeSegment(segType[1], _slipPlane, _bVec) .* segLen[1]
+    seg = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[1]
+    θ = extAngle(numSides)
+    rseg = zeros(3)
+    for i = 1:numSides
+        idx = (i-1)*nodeSide
+        rseg = rot3D(seg, _bVec, zeros(3), θ*(i-1))
+        for j = 1:nodeSide
+            if i==j==1
+                coord[1,:] = zeros(3)
+                slipPlane = [slipPlane; _slipPlane']
+                bVec = [bVec; _bVec']
+                continue
+            end
+            if idx+j <= nodeTotal
+                coord[idx+j, :] += coord[idx+j-1, :] + rseg
+                slipPlane = [slipPlane; _slipPlane']
+                bVec = [bVec; _bVec']
+            end
+        end
+    end
+    coord .-= mean(coord,dims=1)
+
+    # Links
+    for j = 1:nodeTotal-1
+        links[j, :] = [j; 1 + j]
+    end
+    links[nodeTotal, :] = [nodeTotal; 1]
+
+    return numSides,
+        nodeSide,
+        numLoops,
+        segType,
+        segLen,
+        slipSystem,
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        buffer,
+        range,
+        dist
+end
+
+
+
+function makeLoop(
+    loopType::loopShear,
+    numSides,
+    nodeSide,
+    numLoops,
+    segType,
+    segLen,
+    slipSystem,
+    _slipPlane,
+    _bVec,
+    label,
+    buffer,
+    range,
+    dist,
+)
+    nodeTotal = numSides * nodeSide
+    @assert length(label) == nodeTotal
+    @assert size(segType,1) == 1
+    # @assert size(segLen,1) == size(segType,1) == 1
+    # == size(_slipPlane, 1) ==
+            # size(_bVec, 1) == 1
+
+    links = zeros(Int64, nodeTotal, 2)
+    coord = zeros(nodeTotal, 3)
+    slipPlane = zeros(0, 3)
+    bVec = zeros(0, 3)
+
+    seg = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[1]
     θ = extAngle(numSides)
     rseg = zeros(3)
     for i = 1:numSides
