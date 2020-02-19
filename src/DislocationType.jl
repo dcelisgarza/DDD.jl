@@ -450,6 +450,7 @@ struct DislocationLoop{
 end
 length(::DislocationLoop) = 1
 getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
+eachindex(x::DislocationLoop) = getindex(x, 1)
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopDln(),

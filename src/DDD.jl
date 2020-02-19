@@ -1,7 +1,7 @@
 module DDD
 
 using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots, Statistics
-import Base: zero, isequal, isless, convert, ==, *, /, length, getindex
+import Base: zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex
 
 include("Misc.jl")
 export inclusiveComparison, compStruct, intAngle, extAngle, rot3D

@@ -4,7 +4,7 @@ function limits!(
     range::AbstractArray{<:Float64,N2},
     buffer::Float64,
 ) where {N1,N2}
-    for i = 1:size(lims, 2)
+    @inbounds @simd for i = 1:size(lims, 2)
         for j = 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
         end
@@ -17,7 +17,7 @@ function translatePoints(
     lims::AbstractArray{<:Float64,N1},
     disp::AbstractArray{<:Float64,N2},
 ) where {N1,N2}
-    for i = 1:size(coord, 2)
+    @inbounds @simd for i = 1:size(coord, 2)
         for j = 1:size(coord, 1)
             coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
         end
@@ -45,8 +45,8 @@ function makeNetwork!(
     local nodeTotal::Integer = 0
     local lims = zeros(Float64, 2, 3)
     # Allocate memory.
-    for i = 1:length(sources)
-        nodeTotal += sources[i].numLoops * length(sources[i].label)
+    for i = 1 : length(sources)
+        @inbounds nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
     available = findfirst(x -> x == -1, network.label)
     if available == nothing
@@ -59,7 +59,7 @@ function makeNetwork!(
     nodeTotal = 0
     initIdx = findfirst(x -> x == -1, network.label)
     initIdx == nothing ? initIdx = 0 : nothing
-    for i = 1:length(sources)
+    @inbounds for i = 1 : length(sources)
         # Indices.
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
@@ -108,7 +108,7 @@ function makeConnect(network::DislocationNetwork, dlnParams::DislocationP)
     lenLabel = length(label)
     connectivity = zeros(Int64, lenLabel, 1 + 2 * maxConnect)
     linksConnect = zeros(Int64, length(links), 2)
-    for i in eachindex(iLnk)
+    @inbounds for i in eachindex(iLnk)
         idx = iLnk[i] # Index of links that contain non zero links.
         # links[idx, :] yields the nodes involved in the link
         n1 = links[idx, 1] # Node 1, it is the row of the coord matrix
