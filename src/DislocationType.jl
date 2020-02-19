@@ -207,23 +207,27 @@ function makeLoop(
     dist,
 )
     nodeTotal = numSides * nodeSide
+    lSegLen = length(segLen)
     @assert length(label) == nodeTotal
     @assert size(segType,1) == 1
-    # @assert size(segLen,1) == size(segType,1) == 1
-    # == size(_slipPlane, 1) ==
-            # size(_bVec, 1) == 1
+    @assert mod(numSides,2) == 0
+    @assert lSegLen == Int(numSides/2)
 
     links = zeros(Int64, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
-
-    seg = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[1]
+    seg = zeros(lSegLen,3)
+    for i in eachindex(segLen)
+        seg[i,:] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
+    end
     θ = extAngle(numSides)
     rseg = zeros(3)
+    aux = 0
+    cntr = 0
     for i = 1:numSides
         idx = (i-1)*nodeSide
-        rseg = rot3D(seg, _bVec, zeros(3), θ*(i-1))
+        rseg = rot3D(seg[mod(i-1,lSegLen)+1,:], _bVec, zeros(3), θ*(i-1))
         for j = 1:nodeSide
             if i==j==1
                 coord[1,:] = zeros(3)
@@ -280,23 +284,25 @@ function makeLoop(
     dist,
 )
     nodeTotal = numSides * nodeSide
+    lSegLen = length(segLen)
     @assert length(label) == nodeTotal
     @assert size(segType,1) == 1
-    # @assert size(segLen,1) == size(segType,1) == 1
-    # == size(_slipPlane, 1) ==
-            # size(_bVec, 1) == 1
+    @assert mod(numSides,2) == 0
+    @assert lSegLen == Int(numSides/2)
 
     links = zeros(Int64, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
-
-    seg = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[1]
+    seg = zeros(lSegLen,3)
+    for i in eachindex(segLen)
+        seg[i,:] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
+    end
     θ = extAngle(numSides)
     rseg = zeros(3)
     for i = 1:numSides
         idx = (i-1)*nodeSide
-        rseg = rot3D(seg, _slipPlane, zeros(3), θ*(i-1))
+        rseg = rot3D(seg[mod(i-1,lSegLen)+1,:], _slipPlane, zeros(3), θ*(i-1))
         for j = 1:nodeSide
             if i==j==1
                 coord[1,:] = zeros(3)

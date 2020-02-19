@@ -13,11 +13,11 @@ dlnParams, matParams, intParams, slipSystems, loops = loadParams(
     source,
 )
 network = DislocationNetwork(
-    zeros(Int64, 712, 2),
-    zeros(712, 3),
-    zeros(712, 3),
-    zeros(712, 3),
-    zeros(nodeType, 712),
+    zeros(Int64, 0, 2),
+    zeros(0, 3),
+    zeros(0, 3),
+    zeros(0, 3),
+    zeros(nodeType, 0),
     0,
     0,
 )
@@ -36,7 +36,7 @@ plotNodes!(
 fig = plot()
 plot(loops[1].coord[:,1], loops[1].coord[:,2], loops[1].coord[:,3], m=3, l=3)
 using Statistics
-mean(loops[2].coord, dims=1)
+mean(loops[1].coord, dims=1)
 plotNodes!(
     fig,
     loops[1],
@@ -73,3 +73,32 @@ plotNodes!(
     markercolor = :orange,
     legend = false,
 )
+
+loop = DislocationLoop(
+    loopDln(),
+    4,
+    convert(Int64, 1),
+    convert(Int64, 1),
+    [segNone(), segNone()],
+    zeros(Float64, 2),
+    zeros(Int64, 2),
+    zeros(Float64, 2, 3),
+    zeros(Float64, 2, 3),
+    zeros(nodeType, 4),
+    convert(Float64, 0),
+    zeros(2, 3),
+    Zeros(),
+)
+
+
+network = DislocationNetwork(
+    zeros(Int64, 0, 2),
+    zeros(0, 3),
+    zeros(0, 3),
+    zeros(0, 3),
+    zeros(nodeType, 0),
+    0,
+    0,
+)
+makeNetwork!(network, loop)
+connectivity, linksConnect = makeConnect(network, dlnParams)
