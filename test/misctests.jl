@@ -89,8 +89,6 @@ loop = DislocationLoop(
     zeros(2, 3),
     Zeros(),
 )
-
-
 network = DislocationNetwork(
     zeros(Int64, 0, 2),
     zeros(0, 3),

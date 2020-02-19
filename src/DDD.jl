@@ -39,7 +39,12 @@ export nodeType,
 include("DislocationBase.jl")
 export DislocationP, DislocationNetwork, malloc
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond
-export makeSegment, makeLoop!, DislocationLoop, makeNetwork!, loopDistribution, makeConnect
+export makeSegment,
+       makeLoop!,
+       DislocationLoop,
+       makeNetwork!,
+       loopDistribution,
+       makeConnect
 
 include("Material.jl")
 

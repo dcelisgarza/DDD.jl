@@ -104,7 +104,6 @@ function makeConnect(network::DislocationNetwork, dlnParams::DislocationP)
     links = network.links
     label = network.label
     maxConnect = dlnParams.maxConnect
-    iLbl = findall(x -> x != -1, label) # Indices of defined nodes.
     iLnk = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
     lenLabel = length(label)
     connectivity = zeros(Int64, lenLabel, 1 + 2 * maxConnect)
