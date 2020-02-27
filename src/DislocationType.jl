@@ -190,9 +190,41 @@ function makeLoop(
         range,
         dist
 end
+#=
+T1<:AbstractDlnStr,
+T2<:Int64,
+T3<:Union{
+    T where {T<:AbstractDlnSeg},
+    AbstractArray{<:AbstractDlnSeg,N} where {N},
+},
+T4<:Union{T where {T<:Float64},AbstractArray{<:Float64,N} where {N}},
+T5<:Union{Int64,AbstractArray{<:Int64,N} where {N}},
+T6<:AbstractArray{<:Int64,N} where {N},
+T7<:AbstractArray{<:Float64,N} where {N},
+T8<:Vector{<:nodeType},
+T9<:Float64,
+T10<:AbstractArray{<:Float64,N} where {N},
+T11<:AbstractDistribution,
+}
+loopType::T1
+numSides::T2
+nodeSide::T2
+numLoops::T2
+segType::T3
+segLen::T4
+slipSystem::T5
+links::T6
+slipPlane::T7
+bVec::T7
+coord::T7
+label::T8
+buffer::T9
+range::T10
+dist::T11
+=#
 
 function makeLoop(
-    loopType::loopPrism,
+    loopType::T,
     numSides,
     nodeSide,
     numLoops,
@@ -205,119 +237,58 @@ function makeLoop(
     buffer,
     range,
     dist,
-)
+) where {T<:AbstractDlnStr}
+
     nodeTotal = numSides * nodeSide
     lSegLen = length(segLen)
     @assert length(label) == nodeTotal
-    @assert size(segType,1) == 1
-    @assert mod(numSides,2) == 0
-    @assert lSegLen == Int(numSides/2)
+    @assert size(segType, 1) == 1
+    @assert mod(numSides, 2) == 0
+    @assert lSegLen == Int(numSides / 2)
+
+    _slipPlane = _slipPlane./norm(_slipPlane)
+    _bVec = _bVec./norm(_bVec)
+
+    rotAxis = zeros(eltype(_slipPlane), 3)
+    if typeof(loopType) == loopShear
+        rotAxis = _slipPlane
+    elseif typeof(loopType) == loopPrism
+        rotAxis = _bVec
+    end
 
     links = zeros(Int64, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
-    seg = zeros(lSegLen,3)
+    seg = zeros(lSegLen, 3)
     for i in eachindex(segLen)
-        seg[i,:] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
+        seg[i, :] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
     θ = extAngle(numSides)
     rseg = zeros(3)
-    aux = 0
-    cntr = 0
     for i = 1:numSides
-        idx = (i-1)*nodeSide
-        rseg = rot3D(seg[mod(i-1,lSegLen)+1,:], _bVec, zeros(3), θ*(i-1))
+        idx = (i - 1) * nodeSide
+        rseg = rot3D(
+            seg[mod(i - 1, lSegLen)+1, :],
+            rotAxis,
+            zeros(3),
+            θ * (i - 1),
+        )
         for j = 1:nodeSide
-            if i==j==1
-                coord[1,:] = zeros(3)
+            if i == j == 1
+                coord[1, :] = zeros(3)
                 slipPlane = [slipPlane; _slipPlane']
                 bVec = [bVec; _bVec']
                 continue
             end
-            if idx+j <= nodeTotal
+            if idx + j <= nodeTotal
                 coord[idx+j, :] += coord[idx+j-1, :] + rseg
                 slipPlane = [slipPlane; _slipPlane']
                 bVec = [bVec; _bVec']
             end
         end
     end
-    coord .-= mean(coord,dims=1)
-
-    # Links
-    for j = 1:nodeTotal-1
-        links[j, :] = [j; 1 + j]
-    end
-    links[nodeTotal, :] = [nodeTotal; 1]
-
-    return numSides,
-        nodeSide,
-        numLoops,
-        segType,
-        segLen,
-        slipSystem,
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        buffer,
-        range,
-        dist
-end
-
-
-
-function makeLoop(
-    loopType::loopShear,
-    numSides,
-    nodeSide,
-    numLoops,
-    segType,
-    segLen,
-    slipSystem,
-    _slipPlane,
-    _bVec,
-    label,
-    buffer,
-    range,
-    dist,
-)
-    nodeTotal = numSides * nodeSide
-    lSegLen = length(segLen)
-    @assert length(label) == nodeTotal
-    @assert size(segType,1) == 1
-    @assert mod(numSides,2) == 0
-    @assert lSegLen == Int(numSides/2)
-
-    links = zeros(Int64, nodeTotal, 2)
-    coord = zeros(nodeTotal, 3)
-    slipPlane = zeros(0, 3)
-    bVec = zeros(0, 3)
-    seg = zeros(lSegLen,3)
-    for i in eachindex(segLen)
-        seg[i,:] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
-    end
-    θ = extAngle(numSides)
-    rseg = zeros(3)
-    for i = 1:numSides
-        idx = (i-1)*nodeSide
-        rseg = rot3D(seg[mod(i-1,lSegLen)+1,:], _slipPlane, zeros(3), θ*(i-1))
-        for j = 1:nodeSide
-            if i==j==1
-                coord[1,:] = zeros(3)
-                slipPlane = [slipPlane; _slipPlane']
-                bVec = [bVec; _bVec']
-                continue
-            end
-            if idx+j <= nodeTotal
-                coord[idx+j, :] += coord[idx+j-1, :] + rseg
-                slipPlane = [slipPlane; _slipPlane']
-                bVec = [bVec; _bVec']
-            end
-        end
-    end
-    coord .-= mean(coord,dims=1)
+    coord .-= mean(coord, dims = 1)
 
     # Links
     for j = 1:nodeTotal-1
@@ -454,7 +425,7 @@ eachindex(x::DislocationLoop) = getindex(x, 1)
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopDln(),
-        4,
+        convert(Int64, 4),
         convert(Int64, 1),
         convert(Int64, 0),
         [segNone(), segNone()],
@@ -474,6 +445,7 @@ mutable struct DislocationNetwork{
     T2<:AbstractArray{<:Float64,N} where {N},
     T3<:Vector{nodeType},
     T4<:Int64,
+    T5<:Integer,
 }
     links::T1 # Links.
     slipPlane::T2 # Slip planes.
@@ -482,6 +454,9 @@ mutable struct DislocationNetwork{
     label::T3 # Node labels.
     numNode::T4 # Number of dislocations.
     numSeg::T4 # Number of segments.
+    maxConnect::T5
+    connectivity::T1
+    linksConnect::T1
     function DislocationNetwork(
         links,
         slipPlane,
@@ -490,12 +465,13 @@ mutable struct DislocationNetwork{
         label,
         numNode = 0,
         numSeg = 0,
+        maxConnect = 4,
     )
         @assert size(links, 2) == 2
         @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
         @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
         @assert size(coord, 1) == size(label, 1)
-        new{typeof(links),typeof(bVec),typeof(label),typeof(numNode)}(
+        new{typeof(links),typeof(bVec),typeof(label),typeof(numNode),typeof(maxConnect)}(
             links,
             slipPlane,
             bVec,
@@ -503,6 +479,7 @@ mutable struct DislocationNetwork{
             label,
             numNode,
             numSeg,
+            maxConnect,
         )
     end # Constructor
 end # DislocationNetwork

@@ -53,7 +53,7 @@ include("DdFem.jl")
 include("CustomIntegration.jl")
 
 include("Input.jl")
-export loadCSV, loadParams, loadDln
+export loadCSV, loadParams, loadDln, loadSlipSys
 
 include("Output.jl")
 export saveParams

@@ -14,6 +14,8 @@ dlnParams, matParams, intParams, slipSystems, loops = loadParams(
 )
 
 
+
+
 network = DislocationNetwork(
     zeros(Int64, 0, 2),
     zeros(0, 3),
@@ -101,4 +103,4 @@ network = DislocationNetwork(
     0,
 )
 makeNetwork!(network, loop)
-connectivity, linksConnect = makeConnect(network, dlnParams)
+# connectivity, linksConnect = makeConnect(network, dlnParams)
