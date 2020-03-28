@@ -20,6 +20,8 @@ network = DislocationNetwork(
 )
 makeNetwork!(network, loops)
 
+network2 = makeNetwork(loops)
+
 fig = plot()
 plotNodes!(
     fig,
@@ -96,3 +98,33 @@ plotNodesMakie(network; markersize = 0.6, linewidth = 3)
 
 fig = Scene()
 plotNodesMakie!(fig, network; markersize = 0.6, linewidth = 3)
+
+
+# dlnSegTypes = subtypes(AbstractDlnSeg)
+function makeTypeDict(valType::DataType)
+    subTypes = subtypes(valType)
+    dict = Dict{String, Any}()
+
+    for i in eachindex(subTypes)
+        push!(dict, string(subTypes[i]()) => eval(subTypes[i]()))
+    end
+
+    return dict
+end
+
+
+dict = makeTypeDict(AbstractDlnSeg)
+test = subtypes(AbstractDlnSeg)
+push!(dict, string(test[1]()) => eval(test[1]()))
+
+
+dlnTypes = Dict(
+    "loopPrism()" => loopPrism(),
+    "loopShear()" => loopShear(),
+    "loopMixed()" => loopMixed(),
+    "loopDln()" => loopDln(),
+    "DDD.loopPrism()" => loopPrism(),
+    "DDD.loopShear()" => loopShear(),
+    "DDD.loopMixed()" => loopMixed(),
+    "DDD.loopDln()" => loopDln(),
+)

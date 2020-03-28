@@ -34,6 +34,36 @@ function makeSegment(
     return [0.0; 0.0; 0.0]
 end
 
+"""
+```
+makeLoop(
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segType::T3,
+    segLen::T4,
+    slipSystem::T2,
+    _slipPlane::T5,
+    _bVec::T5,
+    label::T6,
+    buffer::T7,
+    range::T5,
+    dist::T8,
+) where {
+    T1 <: loopDln,
+    T2 <: Int64,
+    T3 <: segNone,
+    T4 <: Float64,
+    T5 <: AbstractArray{<:Float64, N} where {N},
+    T6 <: Vector{nodeType},
+    T7 <: Float64,
+    T8 <: AbstractDistribution,
+}
+```
+
+Constructor function for zero loop.
+"""
 function makeLoop(
     loopType::T1,
     numSides::T2,
@@ -58,6 +88,7 @@ function makeLoop(
     T7 <: Float64,
     T8 <: AbstractDistribution,
 }
+
     nodeTotal = 0
     numSegType = length(segType)
     links = zeros(Int64, nodeTotal, 2)
@@ -82,6 +113,39 @@ function makeLoop(
     dist
 end
 
+"""
+```
+makeLoop(
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segType::T3,
+    segLen::T4,
+    slipSystem::T2,
+    _slipPlane::T5,
+    _bVec::T5,
+    label::T6,
+    buffer::T7,
+    range::T8,
+    dist::T9,
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int64,
+    T3 <: Union{
+        T where {T <: AbstractDlnSeg},
+        AbstractArray{<:AbstractDlnSeg, N} where {N},
+    },
+    T4 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T5 <: AbstractArray{<:Float64, N} where {N},
+    T6 <: Vector{nodeType},
+    T7 <: Float64,
+    T8 <: AbstractArray{<:Float64, N} where {N},
+    T9 <: AbstractDistribution,
+}
+```
+Constructor function for a loop.
+"""
 function makeLoop(
     loopType::T1,
     numSides::T2,
@@ -136,6 +200,7 @@ function makeLoop(
     for i in eachindex(segLen)
         seg[i, :] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
+
     θ = extAngle(numSides)
     rseg = zeros(3)
     for i = 1:numSides
@@ -184,7 +249,9 @@ function makeLoop(
     dist
 end
 
-struct DislocationLoop{
+"""
+```
+DislocationLoop{
     T1 <: AbstractDlnStr,
     T2 <: Int64,
     T3 <: Union{
@@ -214,6 +281,41 @@ struct DislocationLoop{
     buffer::T9
     range::T7
     dist::T10
+```
+Dislocation loop structure.
+"""
+struct DislocationLoop{
+    T1 <: AbstractDlnStr,
+    T2 <: Int64,
+    T3 <: Union{
+        T where {T <: AbstractDlnSeg},
+        AbstractArray{<:AbstractDlnSeg, N} where {N},
+    },
+    T4 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T5 <: Union{Int64, AbstractArray{<:Int64, N} where {N}},
+    T6 <: AbstractArray{<:Int64, N} where {N},
+    T7 <: AbstractArray{<:Float64, N} where {N},
+    T8 <: Vector{<:nodeType},
+    T9 <: Float64,
+    T10 <: AbstractDistribution,
+}
+
+    loopType::T1
+    numSides::T2
+    nodeSide::T2
+    numLoops::T2
+    segType::T3
+    segLen::T4
+    slipSystem::T5
+    links::T6
+    slipPlane::T7
+    bVec::T7
+    coord::T7
+    label::T8
+    buffer::T9
+    range::T7
+    dist::T10
+
     function DislocationLoop(
         loopType,
         numSides,
@@ -310,6 +412,28 @@ function zero(::Type{DislocationLoop})
     )
 end
 
+"""
+```
+DislocationNetwork{
+    T1 <: AbstractArray{<:Int64, N} where {N},
+    T2 <: AbstractArray{<:Float64, N} where {N},
+    T3 <: Vector{nodeType},
+    T4 <: Int64,
+    T5 <: Integer,
+}
+    links::T1 # Links.
+    slipPlane::T2 # Slip planes.
+    bVec::T2 # Burgers vectors.
+    coord::T2 # Node coordinates.
+    label::T3 # Node labels.
+    numNode::T4 # Number of dislocations.
+    numSeg::T4 # Number of segments.
+    maxConnect::T5
+    connectivity::T1
+    linksConnect::T1
+```
+Dislocation Network structure.
+"""
 mutable struct DislocationNetwork{
     T1 <: AbstractArray{<:Int64, N} where {N},
     T2 <: AbstractArray{<:Float64, N} where {N},
@@ -327,6 +451,7 @@ mutable struct DislocationNetwork{
     maxConnect::T5
     connectivity::T1
     linksConnect::T1
+
     function DislocationNetwork(
         links,
         slipPlane,
@@ -337,10 +462,12 @@ mutable struct DislocationNetwork{
         numSeg = 0,
         maxConnect = 4,
     )
+
         @assert size(links, 2) == 2
         @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
         @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
         @assert size(coord, 1) == size(label, 1)
+
         new{
             typeof(links),
             typeof(bVec),
@@ -379,6 +506,36 @@ function malloc(network::DislocationNetwork, n::Int64)
     return network
 end
 
+"""
+```
+struct DislocationP{
+    T1 <: Float64,
+    T2 <: Int64,
+    T3 <: Bool,
+    T4 <: AbstractMobility,
+}
+    # Size.
+    coreRad::T1 # Core radius.
+    coreRadMag::T1 # Magnitude of core Radius.
+    # Connectivity.
+    minSegLen::T1 # Minimum line length.
+    maxSegLen::T1 # Maximum line length.
+    minArea::T1 # Minimum area for remeshing.
+    maxArea::T1 # Maximum area for remeshing.
+    maxConnect::T2 # Maximum number of connections to a node.
+    remesh::T3 # Flag for remeshing.
+    collision::T3 # Flag for collision handling.
+    separation::T3 # Flag for separation handling.
+    virtualRemesh::T3 # Flag for virtual remeshing.
+    # Mobility.
+    edgeDrag::T1 # Drag coefficient edge dislocation.
+    screwDrag::T1 # Drag coefficient screw dislocation.
+    climbDrag::T1 # Drag coefficient climb.
+    lineDrag::T1 # Drag coefficient line.
+    mobility::T4 # Mobility law.
+```
+Dislocation parameters structure.
+"""
 struct DislocationP{
     T1 <: Float64,
     T2 <: Int64,
@@ -405,6 +562,7 @@ struct DislocationP{
     lineDrag::T1 # Drag coefficient line.
     mobility::T4 # Mobility law.
     # Fool-proof constructor.
+
     function DislocationP(
         coreRad,
         coreRadMag,
@@ -423,9 +581,11 @@ struct DislocationP{
         lineDrag,
         mobility,
     )
+
         coreRad == minSegLen == maxSegLen == 0 ? nothing :
         @assert coreRad < minSegLen < maxSegLen
         minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
+
         new{
             typeof(coreRad),
             typeof(maxConnect),

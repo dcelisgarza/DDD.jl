@@ -1,17 +1,17 @@
 module DDD
 
-using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots, Statistics
+using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots, Statistics, InteractiveUtils
 import Base:
     zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex
 
 include("Misc.jl")
-export inclusiveComparison, compStruct, intAngle, extAngle, rot3D
+export inclusiveComparison, compStruct, intAngle, extAngle, rot3D, makeTypeDict
 
 include("PrimitiveTypes.jl")
 export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
 export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
 export AbstractDistribution, Zeros, Rand, Randn, Regular
-export AbstractMaterial, BCC, FCC, HCP
+export AbstractCrystalStruct, BCC, FCC, HCP
 export AbstractMobility, mobBCC, mobFCC, mobHCP
 export AbstractIntegrator, CustomTrapezoid
 
@@ -19,7 +19,12 @@ include("DislocationBase.jl")
 export DislocationP, DislocationNetwork, malloc
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond
 export makeSegment,
-    makeLoop, DislocationLoop, makeNetwork!, loopDistribution, makeConnect
+    makeLoop,
+    DislocationLoop,
+    makeNetwork,
+    makeNetwork!,
+    loopDistribution,
+    makeConnect
 
 include("Material.jl")
 

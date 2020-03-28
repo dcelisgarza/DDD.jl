@@ -22,41 +22,14 @@ function loadSlipSys(filename::AbstractString, delim = ',')
 end
 
 function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
+
     nRow = nrow(df)
     sources = zeros(DislocationLoop, nRow)
     span = zeros(Float64, 2, 3)
-    dlnTypes = Dict(
-        "loopPrism()" => loopPrism(),
-        "loopShear()" => loopShear(),
-        "loopMixed()" => loopMixed(),
-        "loopDln()" => loopDln(),
-        "DDD.loopPrism()" => loopPrism(),
-        "DDD.loopShear()" => loopShear(),
-        "DDD.loopMixed()" => loopMixed(),
-        "DDD.loopDln()" => loopDln(),
-    )
-    segTypes = Dict(
-        "segEdge()" => segEdge(),
-        "segEdgeN()" => segEdgeN(),
-        "segScrew()" => segScrew(),
-        "segMixed()" => segMixed(),
-        "segNone()" => segNone(),
-        "DDD.segEdge()" => segEdge(),
-        "DDD.segEdgeN()" => segEdgeN(),
-        "DDD.segScrew()" => segScrew(),
-        "DDD.segMixed()" => segMixed(),
-        "DDD.segNone()" => segNone(),
-    )
-    dist = Dict(
-        "Zeros()" => Zeros(),
-        "Rand()" => Rand(),
-        "Randn()" => Randn(),
-        "Regular()" => Regular(),
-        "DDD.Zeros()" => Zeros(),
-        "DDD.Rand()" => Rand(),
-        "DDD.Randn()" => Randn(),
-        "DDD.Regular()" => Regular(),
-    )
+    segTypes = makeTypeDict(AbstractDlnSeg)
+    dlnTypes = makeTypeDict(AbstractDlnStr)
+    dist = makeTypeDict(AbstractDistribution)
+
     for i = 1:nRow
         st = split.(df[i, :segType], ";")
         segType = [segTypes[st[i]] for i = 1:length(st)]
@@ -94,14 +67,8 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
 end
 
 function dlnLoadParams(df::DataFrame)
-    mobDict = Dict(
-        "mobBCC()" => mobBCC(),
-        "mobFCC()" => mobFCC(),
-        "mobHCP()" => mobHCP(),
-        "DDD.mobBCC()" => mobBCC(),
-        "DDD.mobFCC()" => mobFCC(),
-        "DDD.mobHCP()" => mobHCP(),
-    )
+
+    mobDict = makeTypeDict(AbstractMobility)
     dlnLoadParams = DislocationP(
         convert(Float64, df[1, :coreRad]),
         convert(Float64, df[1, :coreRadMag]),
@@ -124,14 +91,8 @@ function dlnLoadParams(df::DataFrame)
 end
 
 function matLoadParams(df::DataFrame)
-    strucDict = Dict(
-        "BCC()" => BCC(),
-        "FCC()" => FCC(),
-        "HCP()" => HCP(),
-        "DDD.BCC()" => BCC(),
-        "DDD.FCC()" => FCC(),
-        "DDD.HCP()" => HCP(),
-    )
+
+    strucDict = makeTypeDict(AbstractCrystalStruct)
     matParams = MaterialP(
         convert(Float64, df[1, :μ]),
         convert(Float64, df[1, :μMag]),

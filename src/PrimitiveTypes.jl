@@ -83,17 +83,17 @@ struct Randn <: AbstractDistribution end
 struct Regular <: AbstractDistribution end
 """
 ```
-abstract type AbstractMaterial end
-struct BCC <:AbstractMaterial end
-struct FCC <:AbstractMaterial end
-struct HCP <:AbstractMaterial end
+abstract type AbstractCrystalStruct end
+struct BCC <:AbstractCrystalStruct end
+struct FCC <:AbstractCrystalStruct end
+struct HCP <:AbstractCrystalStruct end
 ```
 Crystal structures.
 """
-abstract type AbstractMaterial end
-struct BCC <: AbstractMaterial end
-struct FCC <: AbstractMaterial end
-struct HCP <: AbstractMaterial end
+abstract type AbstractCrystalStruct end
+struct BCC <: AbstractCrystalStruct end
+struct FCC <: AbstractCrystalStruct end
+struct HCP <: AbstractCrystalStruct end
 """
 ```
 abstract type AbstractMobility end

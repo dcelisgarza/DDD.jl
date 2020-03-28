@@ -1,3 +1,20 @@
+function makeTypeDict(valType::DataType)
+    subTypes = subtypes(valType)
+    dict = Dict{String, Any}()
+
+    for subType in subTypes
+        strSubType = string(subType)*"()"
+        push!(dict, strSubType => eval(subType()))
+        if strSubType[1:4] == "DDD."
+            push!(dict, strSubType[5:end] => eval(subType()))
+        else
+            push!(dict, "DDD."*strSubType => eval(subType()))
+        end
+    end
+
+    return dict
+end
+
 """
 ```
 inclusiveComparison(data, args...)

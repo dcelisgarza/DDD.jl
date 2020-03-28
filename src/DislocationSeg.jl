@@ -131,3 +131,69 @@ function makeNetwork!(
         makeConnect(network.links, network.label, maxConnect)
     return network
 end
+
+function makeNetwork(
+    sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
+    maxConnect::Integer = 4,
+    memBuffer::Integer = 10,
+)
+    local nodeTotal::Integer = 0
+    local lims = zeros(Float64, 2, 3)
+    # Allocate memory.
+    for i = 1:length(sources)
+        @inbounds nodeTotal += sources[i].numLoops * length(sources[i].label)
+    end
+
+    local nodeBuffer::Integer = nodeTotal * memBuffer
+    
+    network = DislocationNetwork(
+        zeros(Int64, nodeBuffer, 2),
+        zeros(nodeBuffer, 3),
+        zeros(nodeBuffer, 3),
+        zeros(nodeBuffer, 3),
+        zeros(nodeType, nodeBuffer),
+        nodeTotal,
+        nodeTotal,
+    )
+
+    nodeTotal = 0
+    initIdx = findfirst(x -> x == -1, network.label)
+    initIdx == nothing ? initIdx = 0 : nothing
+    @inbounds for i = 1:length(sources)
+        # Indices.
+        idx = initIdx + nodeTotal
+        nodesLoop = length(sources[i].label)
+        numLoops = sources[i].numLoops
+        numNodes = numLoops * nodesLoop
+        disp = loopDistribution(sources[i].dist, numLoops)
+        limits!(
+            lims,
+            mean(sources[i].segLen),
+            sources[i].range,
+            sources[i].buffer,
+        )
+        for j = 1:numLoops
+            idxi = idx + (j - 1) * nodesLoop
+            idxf = idxi + nodesLoop - 1
+            # Prepare to distribute sources.
+            network.links[idxi:idxf, :] =
+                sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
+            network.slipPlane[idxi:idxf, :] .=
+                sources[i].slipPlane[1:nodesLoop, :]
+            network.bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
+            network.coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
+            # Move loop.
+            network.coord[idxi:idxf, :] .= translatePoints(
+                sources[i].coord[1:nodesLoop, :],
+                lims,
+                disp[j, :],
+            )
+            network.label[idxi:idxf, :] .= sources[i].label[1:nodesLoop, :]
+            nodeTotal += nodesLoop
+        end
+    end
+
+    network.connectivity, network.linksConnect =
+        makeConnect(network.links, network.label, maxConnect)
+    return network
+end
