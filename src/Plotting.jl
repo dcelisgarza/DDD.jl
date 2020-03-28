@@ -13,10 +13,10 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
             kw...,
         )
         # quiver needs to be implemented in Plots.jl but we can use python.
-        """
+        #=
         lVec = coord[n2, :] - coord[n1, :]
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...)
-        """
+        =#
     end
     return fig
 end
