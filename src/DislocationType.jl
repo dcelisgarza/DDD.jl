@@ -26,14 +26,6 @@ function makeSegment(
 ) where {T <: Float64}
     return bVec ./ norm(bVec)
 end
-function makeSegment(
-    type::segNone,
-    slipPlane::Vector{T},
-    bVec::Vector{T},
-) where {T <: Float64}
-    return [0.0; 0.0; 0.0]
-end
-
 """
 ```
 makeLoop(
@@ -197,13 +189,13 @@ function makeLoop(
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
     seg = zeros(lSegLen, 3)
-    for i in eachindex(segLen)
+    @inbounds for i in eachindex(segLen)
         seg[i, :] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
 
     θ = extAngle(numSides)
     rseg = zeros(3)
-    for i = 1:numSides
+    @inbounds for i = 1:numSides
         idx = (i - 1) * nodeSide
         rseg = rot3D(
             seg[mod(i - 1, lSegLen) + 1, :],
@@ -228,7 +220,7 @@ function makeLoop(
     coord .-= mean(coord, dims = 1)
 
     # Links
-    for j = 1:(nodeTotal - 1)
+    @inbounds for j = 1:(nodeTotal - 1)
         links[j, :] = [j; 1 + j]
     end
     links[nodeTotal, :] = [nodeTotal; 1]
@@ -393,7 +385,7 @@ struct DislocationLoop{
 end
 length(::DislocationLoop) = 1
 getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
-eachindex(x::DislocationLoop) = getindex(x, 1)
+eachindex(x::DislocationLoop) = 1
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopDln(),

@@ -1,7 +1,6 @@
 function makeTypeDict(valType::DataType)
     subTypes = subtypes(valType)
     dict = Dict{String, Any}()
-
     for subType in subTypes
         strSubType = string(subType) * "()"
         push!(dict, strSubType => eval(subType()))
@@ -11,7 +10,6 @@ function makeTypeDict(valType::DataType)
             push!(dict, "DDD." * strSubType => eval(subType()))
         end
     end
-
     return dict
 end
 
@@ -22,7 +20,7 @@ inclusiveComparison(data, args...)
 Compare data to a tuple, return `true` if it is equal to any arg, `false` if it is not equal to any.
 """
 function inclusiveComparison(data, args...)::Bool
-    for i = 1:length(args)
+    for i in eachindex(args)
         if data == args[i]
             return true
         end
@@ -37,7 +35,6 @@ Compares structures to see if they are equal.
 """
 function compStruct(arg1, arg2)
     @assert typeof(arg1) == typeof(arg2)
-
     names = fieldnames(typeof(arg1))
     for i in names
         result = getproperty(arg1, i) == getproperty(arg2, i)

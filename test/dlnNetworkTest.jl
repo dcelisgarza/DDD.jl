@@ -149,6 +149,25 @@ end
     @test network.bVec[(1 + end - nodeLoop):end, :] == loops[end].bVec
     @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
     @test network.label[(1 + end - nodeLoop):end] == loops[end].label
+    network2 = DislocationNetwork(
+        zeros(Int64, 1, 2),
+        zeros(1, 3),
+        zeros(1, 3),
+        zeros(1, 3),
+        zeros(nodeType, 1),
+        0,
+        0,
+    )
+    makeNetwork!(network2, loops)
+    @test compStruct(network, network2)
+    network3 = makeNetwork(loops)
+    @test network.links == network3.links[1:totalNodes, :]
+    @test network.slipPlane == network3.slipPlane[1:totalNodes, :]
+    @test network.bVec == network3.bVec[1:totalNodes, :]
+    @test network.coord == network3.coord[1:totalNodes, :]
+    @test network.label == network3.label[1:totalNodes]
+    @test network.numNode == network3.numNode
+    @test network.numSeg == network3.numSeg
     # Test distributions.
     n = 5
     seed!(1234)

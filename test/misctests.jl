@@ -5,11 +5,22 @@ gr()
 cd(@__DIR__)
 params = "../inputs/simParams/sampleParams.csv"
 slipsys = "../data/slipSystems/bcc.csv"
-source = "../inputs/dln/samplePrismaticShear.csv"
+source = "../inputs/dln/sampleDln.csv"#"../inputs/dln/samplePrismaticShear.csv"
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
 
 network = DislocationNetwork(
+    zeros(Int64, 3, 2),
+    zeros(3, 3),
+    zeros(3, 3),
+    zeros(3, 3),
+    zeros(nodeType, 3),
+    0,
+    0,
+)
+makeNetwork!(network, loops)
+
+network2 = DislocationNetwork(
     zeros(Int64, 0, 2),
     zeros(0, 3),
     zeros(0, 3),
@@ -18,7 +29,8 @@ network = DislocationNetwork(
     0,
     0,
 )
-makeNetwork!(network, loops)
+makeNetwork!(network2, loops)
+compStruct(network, network2)
 
 network2 = makeNetwork(loops)
 

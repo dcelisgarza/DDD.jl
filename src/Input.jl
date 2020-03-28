@@ -11,7 +11,7 @@ function loadCSV(
         transpose = transpose,
         delim = delim,
     )
-    for i in names(df)
+    @inbounds for i in names(df)
         ismissing(df[1, i]) ? df[1, i] = 0 : nothing
     end
     return df
@@ -22,7 +22,6 @@ function loadSlipSys(filename::AbstractString, delim = ',')
 end
 
 function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
-
     nRow = nrow(df)
     sources = zeros(DislocationLoop, nRow)
     span = zeros(Float64, 2, 3)
@@ -30,7 +29,7 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
     dlnTypes = makeTypeDict(AbstractDlnStr)
     dist = makeTypeDict(AbstractDistribution)
 
-    for i = 1:nRow
+    @inbounds for i = 1:nRow
         st = split.(df[i, :segType], ";")
         segType = [segTypes[st[i]] for i = 1:length(st)]
         sl = split.(df[i, :segLen], ";")
@@ -67,7 +66,6 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
 end
 
 function dlnLoadParams(df::DataFrame)
-
     mobDict = makeTypeDict(AbstractMobility)
     dlnLoadParams = DislocationP(
         convert(Float64, df[1, :coreRad]),
@@ -91,7 +89,6 @@ function dlnLoadParams(df::DataFrame)
 end
 
 function matLoadParams(df::DataFrame)
-
     strucDict = makeTypeDict(AbstractCrystalStruct)
     matParams = MaterialP(
         convert(Float64, df[1, :μ]),
