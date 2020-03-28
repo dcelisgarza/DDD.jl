@@ -1,6 +1,12 @@
 module DDD
 
-using CSV, DataFrames, LinearAlgebra, DelimitedFiles, Plots, Statistics, InteractiveUtils
+using CSV,
+    DataFrames,
+    LinearAlgebra,
+    DelimitedFiles,
+    Plots,
+    Statistics,
+    InteractiveUtils
 import Base:
     zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex
 

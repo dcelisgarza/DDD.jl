@@ -3,12 +3,12 @@ function makeTypeDict(valType::DataType)
     dict = Dict{String, Any}()
 
     for subType in subTypes
-        strSubType = string(subType)*"()"
+        strSubType = string(subType) * "()"
         push!(dict, strSubType => eval(subType()))
         if strSubType[1:4] == "DDD."
             push!(dict, strSubType[5:end] => eval(subType()))
         else
-            push!(dict, "DDD."*strSubType => eval(subType()))
+            push!(dict, "DDD." * strSubType => eval(subType()))
         end
     end
 
