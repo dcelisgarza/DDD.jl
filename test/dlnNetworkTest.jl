@@ -155,8 +155,8 @@ end
         zeros(1, 3),
         zeros(1, 3),
         zeros(nodeType, 1),
-        0,
-        0,
+        convert(Int64, 0),
+        convert(Int64, 0),
     )
     makeNetwork!(network2, loops)
     @test compStruct(network, network2)
@@ -191,4 +191,5 @@ end
     @test length(loop) == 1
     @test loop[1] == loop
     @test_throws BoundsError loop[2]
+    @test eachindex(loop[1]) == 1
 end
