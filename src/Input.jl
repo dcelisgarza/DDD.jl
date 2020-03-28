@@ -21,7 +21,7 @@ function loadSlipSys(filename::AbstractString, delim = ',')
     return readdlm(filename, delim)
 end
 
-function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real,N} where {N})
+function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
     nRow = nrow(df)
     sources = zeros(DislocationLoop, nRow)
     span = zeros(Float64, 2, 3)

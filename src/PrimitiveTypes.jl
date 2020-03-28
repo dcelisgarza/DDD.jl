@@ -47,7 +47,7 @@ struct segEdge <: AbstractDlnSeg end
 struct segEdgeN <: AbstractDlnSeg end
 struct segScrew <: AbstractDlnSeg end
 struct segMixed <: AbstractDlnSeg end
-length(::T) where {T<:AbstractDlnSeg} = 1
+length(::T) where {T <: AbstractDlnSeg} = 1
 """
 ```
 abstract type AbstractDlnStr end

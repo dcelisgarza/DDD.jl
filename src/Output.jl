@@ -3,7 +3,7 @@ Pushes data to a dataframe for saving later.
 """
 function pushToDataFrame!(
     df::DataFrame,
-    data::Union{DislocationP,MaterialP,IntegrationP},
+    data::Union{DislocationP, MaterialP, IntegrationP},
 )
     fieldNames = fieldnames(typeof(data))
     for i in eachindex(fieldNames)

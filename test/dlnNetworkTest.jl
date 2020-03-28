@@ -20,10 +20,7 @@ cd(@__DIR__)
     @test abs(dot(edgeN, screw)) < eps(Float64)
     @test abs(dot(edge, bVec)) < eps(Float64)
     @test abs(dot(edgeN, bVec)) < eps(Float64)
-    @test isapprox(
-        edge,
-        cross(slipPlane, bVec) ./ norm(cross(slipPlane, bVec)),
-    )
+    @test isapprox(edge, cross(slipPlane, bVec) ./ norm(cross(slipPlane, bVec)))
     @test isapprox(norm(edge), norm(screw))
     @test isapprox(norm(edge), 1.0)
 end
@@ -42,8 +39,11 @@ end
     [bVec[i, :] = [i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
     [slipPlane[i, :] = -[i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
     lenLabel = length(label)
-    [label[i+1] = mod(i, 6) - 1 for i = 0:lenLabel-1]
-    [coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel]) for i = 1:length(label)]
+    [label[i + 1] = mod(i, 6) - 1 for i = 0:(lenLabel - 1)]
+    [
+        coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel])
+        for i = 1:length(label)
+    ]
     network = DislocationNetwork(
         links,
         slipPlane,
@@ -61,52 +61,27 @@ end
     @test idxLabel(network, rnd) == findall(x -> x == rnd, label)
     @test coordLbl(network, rnd) == coord[findall(x -> x == rnd, label), :]
     @test idxCond(network, :label, inclusiveComparison, 0, 1) == [2; 3; 8; 9]
-    @test idxCond(network, :label, rnd; condition = <=) == findall(
-        x -> x <= rnd,
-        label,
-    )
+    @test idxCond(network, :label, rnd; condition = <=) ==
+          findall(x -> x <= rnd, label)
     rnd = rand(1:numSeg)
-    @test idxCond(network, :bVec, rnd; condition = cnd[1]) == findall(
-        x -> cnd[1](x, rnd),
-        bVec,
-    )
-    @test dataCond(
-        network,
-        :slipPlane,
-        rnd;
-        condition = cnd[2],
-    ) == slipPlane[findall(x -> cnd[2](x, rnd), slipPlane)]
+    @test idxCond(network, :bVec, rnd; condition = cnd[1]) ==
+          findall(x -> cnd[1](x, rnd), bVec)
+    @test dataCond(network, :slipPlane, rnd; condition = cnd[2]) ==
+          slipPlane[findall(x -> cnd[2](x, rnd), slipPlane)]
     rnd = rand(-1:1)
-    @test dataCond(
-        network,
-        :slipPlane,
-        :bVec,
-        rnd;
-        condition = cnd[3],
-    ) == slipPlane[findall(x -> cnd[3](x, rnd), bVec)]
+    @test dataCond(network, :slipPlane, :bVec, rnd; condition = cnd[3]) ==
+          slipPlane[findall(x -> cnd[3](x, rnd), bVec)]
     rnd = rand(1:numNode)
-    @test dataCond(network, :coord, :label, rnd; condition = cnd[4]) == coord[
-        findall(x -> cnd[4](x, rnd), label),
-        :,
-    ]
+    @test dataCond(network, :coord, :label, rnd; condition = cnd[4]) ==
+          coord[findall(x -> cnd[4](x, rnd), label), :]
     col = rand(1:3)
-    @test idxCond(network, :bVec, col, rnd; condition = cnd[5]) == findall(
-        x -> cnd[5](x, rnd),
-        bVec[:, col],
-    )
-    @test dataCond(network, :bVec, col, rnd; condition = cnd[6]) == bVec[
-        findall(x -> cnd[6](x, rnd), bVec[:, col]),
-        :,
-    ]
+    @test idxCond(network, :bVec, col, rnd; condition = cnd[5]) ==
+          findall(x -> cnd[5](x, rnd), bVec[:, col])
+    @test dataCond(network, :bVec, col, rnd; condition = cnd[6]) ==
+          bVec[findall(x -> cnd[6](x, rnd), bVec[:, col]), :]
     rnd = rand(-1:1)
-    @test dataCond(
-        network,
-        :slipPlane,
-        :bVec,
-        col,
-        rnd;
-        condition = cnd[1],
-    ) == slipPlane[findall(x -> cnd[1](x, rnd), bVec[:, col]), :]
+    @test dataCond(network, :slipPlane, :bVec, col, rnd; condition = cnd[1]) ==
+          slipPlane[findall(x -> cnd[1](x, rnd), bVec[:, col]), :]
     rnd = rand(1:numNode)
     @test coordIdx(network, rnd) == coord[rnd, :]
     rnd = rand(1:numNode, numNode)
@@ -121,22 +96,22 @@ end
     loops = loadDln(df, slipSystems)
     # Check that the midpoint of the loops is at (0,0,0)
     for i in eachindex(loops)
-        @test mean(loops[i].coord) < maximum(abs.(loops[i].coord)) *
-                                     eps(Float64)
+        @test mean(loops[i].coord) <
+              maximum(abs.(loops[i].coord)) * eps(Float64)
     end
     # Populate a dislocation network with the loops.
     # Test one branch of memory allocation.
     network = zero(DislocationNetwork)
     makeNetwork!(network, loops[1])
-    @test network.numNode == loops[1].numSides * loops[1].nodeSide *
-                             loops[1].numLoops
+    @test network.numNode ==
+          loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
     # Test other branch of memory allocation.
     network = DislocationNetwork(
-        zeros(Int64, 15, 2),
-        zeros(Float64, 15, 3),
-        zeros(Float64, 15, 3),
-        zeros(Float64, 15, 3),
-        zeros(nodeType, 15),
+        zeros(Int64, 0, 2),
+        zeros(Float64, 0, 3),
+        zeros(Float64, 0, 3),
+        zeros(Float64, 0, 3),
+        zeros(nodeType, 0),
         convert(Int64, 0),
         convert(Int64, 0),
     )
@@ -144,16 +119,20 @@ end
     function sumNodes(loops)
         totalNodes = 0
         for i in eachindex(loops)
-            totalNodes += loops[i].numSides * loops[i].nodeSide *
-                          loops[i].numLoops
+            totalNodes +=
+                loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
         end
         return totalNodes
     end
     # Check that the memory was allocated correctly. Only need to check the first and last, they are transfered sequentially so if both pass, the rest have to have been transfered correctly.
     totalNodes = sumNodes(loops)
-    @test totalNodes == network.numNode == network.numSeg ==
-          size(network.links, 1) == size(network.slipPlane, 1) ==
-          size(network.bVec, 1) == size(network.coord, 1) ==
+    @test totalNodes ==
+          network.numNode ==
+          network.numSeg ==
+          size(network.links, 1) ==
+          size(network.slipPlane, 1) ==
+          size(network.bVec, 1) ==
+          size(network.coord, 1) ==
           size(network.label, 1)
     # Check that the first loop was transfered correctly.
     nodeLoop = loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
@@ -164,12 +143,12 @@ end
     @test network.label[1:nodeLoop] == loops[1].label
     # Check that the last loop was transfered correctly.
     nodeLoop = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
-    @test network.links[1+end-nodeLoop:end, :] == loops[end].links .+
-                                                  (totalNodes - nodeLoop)
-    @test network.slipPlane[1+end-nodeLoop:end, :] == loops[end].slipPlane
-    @test network.bVec[1+end-nodeLoop:end, :] == loops[end].bVec
-    @test network.coord[1+end-nodeLoop:end, :] == loops[end].coord
-    @test network.label[1+end-nodeLoop:end] == loops[end].label
+    @test network.links[(1 + end - nodeLoop):end, :] ==
+          loops[end].links .+ (totalNodes - nodeLoop)
+    @test network.slipPlane[(1 + end - nodeLoop):end, :] == loops[end].slipPlane
+    @test network.bVec[(1 + end - nodeLoop):end, :] == loops[end].bVec
+    @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
+    @test network.label[(1 + end - nodeLoop):end] == loops[end].label
     # Test distributions.
     n = 5
     seed!(1234)

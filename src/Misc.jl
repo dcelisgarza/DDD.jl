@@ -93,25 +93,30 @@ function rot3D(
     local xyzDOTuvw = dot(xyz, uvw)
 
     return [
-        (abc[1] * (uvw[2]^2 + uvw[3]^2) -
-         uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)) *
-        onemcosθ +
+        (
+            abc[1] * (uvw[2]^2 + uvw[3]^2) -
+            uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)
+        ) * onemcosθ +
         xyz[1] * cosθ +
-        sintheta * (-abc[3] * uvw[2] + abc[2] * uvw[3] - uvw[3] * xyz[2] +
-         uvw[2] * xyz[3])
-
-        (abc[2] * (uvw[1]^2 + uvw[3]^2) -
-         uvw[2] * (abc[1] * uvw[1] + abc[3] * uvw[3] - xyzDOTuvw)) *
-        onemcosθ +
+        sintheta * (
+            -abc[3] * uvw[2] + abc[2] * uvw[3] - uvw[3] * xyz[2] +
+            uvw[2] * xyz[3]
+        )
+        (
+            abc[2] * (uvw[1]^2 + uvw[3]^2) -
+            uvw[2] * (abc[1] * uvw[1] + abc[3] * uvw[3] - xyzDOTuvw)
+        ) * onemcosθ +
         xyz[2] * cosθ +
         sintheta *
         (abc[3] * uvw[1] - abc[1] * uvw[3] + uvw[3] * xyz[1] - uvw[1] * xyz[3])
-
-        (abc[3] * (uvw[1]^2 + uvw[2]^2) -
-         uvw[3] * (abc[1] * uvw[1] + abc[2] * uvw[2] - xyzDOTuvw)) *
-        onemcosθ +
+        (
+            abc[3] * (uvw[1]^2 + uvw[2]^2) -
+            uvw[3] * (abc[1] * uvw[1] + abc[2] * uvw[2] - xyzDOTuvw)
+        ) * onemcosθ +
         xyz[3] * cosθ +
-        sintheta * (-abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] +
-         uvw[1] * xyz[2])
+        sintheta * (
+            -abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] +
+            uvw[1] * xyz[2]
+        )
     ]
 end

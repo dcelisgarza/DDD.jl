@@ -8,7 +8,7 @@ function makeSegment(
     type::segEdge,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Float64}
+) where {T <: Float64}
     edge = cross(slipPlane, bVec)
     return edge ./ norm(edge)
 end
@@ -16,238 +16,110 @@ function makeSegment(
     type::segEdgeN,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Float64}
+) where {T <: Float64}
     return slipPlane ./ norm(slipPlane)
 end
 function makeSegment(
     type::segScrew,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Float64}
+) where {T <: Float64}
     return bVec ./ norm(bVec)
 end
 function makeSegment(
     type::segNone,
     slipPlane::Vector{T},
     bVec::Vector{T},
-) where {T<:Float64}
+) where {T <: Float64}
     return [0.0; 0.0; 0.0]
 end
-"""
-```
-DislocationLoop{
-    T1<:loopSides,
-    T2<:Int64,
-    T3<:Union{
-        T where {T<:AbstractDlnSeg},
-        AbstractArray{<:AbstractDlnSeg,N} where {N},
-    },
-    T4<:Union{T where {T<:Float64},AbstractArray{<:Float64,N} where {N}},
-    T5<:Union{Int64,AbstractArray{<:Int64,N} where {N}},
-    T6<:AbstractArray{<:Int64,N} where {N},
-    T7<:AbstractArray{<:Float64,N} where {N},
-    T8<:Vector{<:nodeType},
-    T9<:Float64,
-    T10<:AbstractArray{<:Float64,N} where {N},
-}
-    numSides::T1
-    nodeSide::T2
-    segType::T3
-    segLen::T4
-    slipSystem::T5
-    links::T6
-    slipPlane::T7
-    bVec::T7
-    coord::T7
-    label::T8
-    numLoops::T2
-    buffer::T9
-    range::T10
-```
-Idealised dislocation loop to be used as sources.
-"""
+
 function makeLoop(
-    loopType::loopDln,
-    numSides,
-    nodeSide,
-    numLoops,
-    segType,
-    segLen,
-    slipSystem,
-    _slipPlane,
-    _bVec,
-    label,
-    buffer,
-    range,
-    dist,
-)
-    nodeTotal = numSides * nodeSide
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segType::T3,
+    segLen::T4,
+    slipSystem::T2,
+    _slipPlane::T5,
+    _bVec::T5,
+    label::T6,
+    buffer::T7,
+    range::T5,
+    dist::T8,
+) where {
+    T1 <: loopDln,
+    T2 <: Int64,
+    T3 <: segNone,
+    T4 <: Float64,
+    T5 <: AbstractArray{<:Float64, N} where {N},
+    T6 <: Vector{nodeType},
+    T7 <: Float64,
+    T8 <: AbstractDistribution,
+}
+    nodeTotal = 0
     numSegType = length(segType)
-    @assert length(label) == nodeTotal
-    @assert numSegType == numSides / 2 == size(_bVec, 1) ==
-            size(_slipPlane, 1) == length(slipSystem)
     links = zeros(Int64, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
     seg = zeros(numSegType, 3)
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
 
-    for i = 1:numSegType
-        seg[i, :] = makeSegment(segType[i], _slipPlane[i, :], _bVec[i, :]) *
-                    segLen[i]
-    end
-    # """
-    # This if statement is ripe for refactoring but I need properly to think about it because it doesn't seem trivial.
-    # """
-    if numSides == 4
-        # First node.
-        coord[1, :] -= seg[1, :] + seg[2, :]
-        slipPlane = [slipPlane; _slipPlane[2, :]']
-        bVec = [bVec; _bVec[2, :]']
-        for k = 1:nodeSide
-            coord[1+k, :] = coord[k, :] + seg[1, :]
-            slipPlane = [slipPlane; _slipPlane[1, :]']
-            bVec = [bVec; _bVec[1, :]']
-        end
-        for k = 1:nodeSide
-            coord[1 + k + nodeSide, :] = coord[k+nodeSide, :] + seg[2, :]
-            slipPlane = [slipPlane; _slipPlane[2, :]']
-            bVec = [bVec; _bVec[2, :]']
-        end
-        for k = 1:nodeSide
-            coord[1 + k + 2 * nodeSide, :] = coord[k+2*nodeSide, :] - seg[1, :]
-            slipPlane = [slipPlane; _slipPlane[1, :]']
-            bVec = [bVec; _bVec[1, :]']
-        end
-        if nodeSide > 1
-            # Last node
-            coord[2+3*nodeSide, :] = coord[1+3*nodeSide, :] - seg[2, :]
-            slipPlane = [slipPlane; _slipPlane[2, :]']
-            bVec = [bVec; _bVec[2, :]']
-        end
-    elseif numSides == 6
-        # First node.
-        coord[1, :] -= seg[1, :] + seg[2, :] + seg[3, :]
-        slipPlane = [slipPlane; _slipPlane[3, :]']
-        bVec = [bVec; _bVec[3, :]']
-        for k = 1:nodeSide
-            coord[1+k, :] = coord[k, :] + seg[1, :]
-            slipPlane = [slipPlane; _slipPlane[1, :]']
-            bVec = [bVec; _bVec[1, :]']
-        end
-        for k = 1:nodeSide
-            coord[1 + k + nodeSide, :] = coord[k+nodeSide, :] + seg[2, :]
-            slipPlane = [slipPlane; _slipPlane[2, :]']
-            bVec = [bVec; _bVec[2, :]']
-        end
-        for k = 1:nodeSide
-            coord[1 + k + 2 * nodeSide, :] = coord[k+2*nodeSide, :] + seg[3, :]
-            slipPlane = [slipPlane; _slipPlane[3, :]']
-            bVec = [bVec; _bVec[3, :]']
-        end
-        for k = 1:nodeSide
-            coord[1 + k + 3 * nodeSide, :] = coord[k+3*nodeSide, :] - seg[1, :]
-            slipPlane = [slipPlane; _slipPlane[1, :]']
-            bVec = [bVec; _bVec[1, :]']
-        end
-        for k = 1:nodeSide
-            coord[1 + k + 4 * nodeSide, :] = coord[k+4*nodeSide, :] - seg[2, :]
-            slipPlane = [slipPlane; _slipPlane[2, :]']
-            bVec = [bVec; _bVec[2, :]']
-        end
-        if nodeSide > 1
-            for k = 1:nodeSide-1
-                coord[1 + k + 5 * nodeSide, :] = coord[k+5*nodeSide, :] -
-                                                 seg[3, :]
-                slipPlane = [slipPlane; _slipPlane[3, :]']
-                bVec = [bVec; _bVec[3, :]']
-            end
-        end
-        # """
-        # # Room for expansion in case we can generate loops with more sides.
-        # else
-        #     error("more sides for a source loop are undefined")
-        # """
-    end
-    # Links
-    for j = 1:nodeTotal-1
-        links[j, :] = [j; 1 + j]
-    end
-    links[nodeTotal, :] = [nodeTotal; 1]
-
     return numSides,
-        nodeSide,
-        numLoops,
-        segType,
-        segLen,
-        slipSystem,
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        buffer,
-        range,
-        dist
-end
-#=
-T1<:AbstractDlnStr,
-T2<:Int64,
-T3<:Union{
-    T where {T<:AbstractDlnSeg},
-    AbstractArray{<:AbstractDlnSeg,N} where {N},
-},
-T4<:Union{T where {T<:Float64},AbstractArray{<:Float64,N} where {N}},
-T5<:Union{Int64,AbstractArray{<:Int64,N} where {N}},
-T6<:AbstractArray{<:Int64,N} where {N},
-T7<:AbstractArray{<:Float64,N} where {N},
-T8<:Vector{<:nodeType},
-T9<:Float64,
-T10<:AbstractArray{<:Float64,N} where {N},
-T11<:AbstractDistribution,
-}
-loopType::T1
-numSides::T2
-nodeSide::T2
-numLoops::T2
-segType::T3
-segLen::T4
-slipSystem::T5
-links::T6
-slipPlane::T7
-bVec::T7
-coord::T7
-label::T8
-buffer::T9
-range::T10
-dist::T11
-=#
-
-function makeLoop(
-    loopType::T,
-    numSides,
     nodeSide,
     numLoops,
     segType,
     segLen,
     slipSystem,
-    _slipPlane,
-    _bVec,
+    links,
+    slipPlane,
+    bVec,
+    coord,
     label,
     buffer,
     range,
-    dist,
-) where {T<:AbstractDlnStr}
+    dist
+end
+
+function makeLoop(
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segType::T3,
+    segLen::T4,
+    slipSystem::T2,
+    _slipPlane::T5,
+    _bVec::T5,
+    label::T6,
+    buffer::T7,
+    range::T8,
+    dist::T9,
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int64,
+    T3 <: Union{
+        T where {T <: AbstractDlnSeg},
+        AbstractArray{<:AbstractDlnSeg, N} where {N},
+    },
+    T4 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T5 <: AbstractArray{<:Float64, N} where {N},
+    T6 <: Vector{nodeType},
+    T7 <: Float64,
+    T8 <: AbstractArray{<:Float64, N} where {N},
+    T9 <: AbstractDistribution,
+}
 
     nodeTotal = numSides * nodeSide
     lSegLen = length(segLen)
     @assert length(label) == nodeTotal
-    @assert size(segType, 1) == 1
+    @assert length(segType) == 1
     @assert mod(numSides, 2) == 0
     @assert lSegLen == Int(numSides / 2)
 
-    _slipPlane = _slipPlane./norm(_slipPlane)
-    _bVec = _bVec./norm(_bVec)
+    _slipPlane = _slipPlane ./ norm(_slipPlane)
+    _bVec = _bVec ./ norm(_bVec)
 
     rotAxis = zeros(eltype(_slipPlane), 3)
     if typeof(loopType) == loopShear
@@ -269,7 +141,7 @@ function makeLoop(
     for i = 1:numSides
         idx = (i - 1) * nodeSide
         rseg = rot3D(
-            seg[mod(i - 1, lSegLen)+1, :],
+            seg[mod(i - 1, lSegLen) + 1, :],
             rotAxis,
             zeros(3),
             θ * (i - 1),
@@ -282,7 +154,7 @@ function makeLoop(
                 continue
             end
             if idx + j <= nodeTotal
-                coord[idx+j, :] += coord[idx+j-1, :] + rseg
+                coord[idx + j, :] += coord[idx + j - 1, :] + rseg
                 slipPlane = [slipPlane; _slipPlane']
                 bVec = [bVec; _bVec']
             end
@@ -291,42 +163,41 @@ function makeLoop(
     coord .-= mean(coord, dims = 1)
 
     # Links
-    for j = 1:nodeTotal-1
+    for j = 1:(nodeTotal - 1)
         links[j, :] = [j; 1 + j]
     end
     links[nodeTotal, :] = [nodeTotal; 1]
 
     return numSides,
-        nodeSide,
-        numLoops,
-        segType,
-        segLen,
-        slipSystem,
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        buffer,
-        range,
-        dist
+    nodeSide,
+    numLoops,
+    segType,
+    segLen,
+    slipSystem,
+    links,
+    slipPlane,
+    bVec,
+    coord,
+    label,
+    buffer,
+    range,
+    dist
 end
 
 struct DislocationLoop{
-    T1<:AbstractDlnStr,
-    T2<:Int64,
-    T3<:Union{
-        T where {T<:AbstractDlnSeg},
-        AbstractArray{<:AbstractDlnSeg,N} where {N},
+    T1 <: AbstractDlnStr,
+    T2 <: Int64,
+    T3 <: Union{
+        T where {T <: AbstractDlnSeg},
+        AbstractArray{<:AbstractDlnSeg, N} where {N},
     },
-    T4<:Union{T where {T<:Float64},AbstractArray{<:Float64,N} where {N}},
-    T5<:Union{Int64,AbstractArray{<:Int64,N} where {N}},
-    T6<:AbstractArray{<:Int64,N} where {N},
-    T7<:AbstractArray{<:Float64,N} where {N},
-    T8<:Vector{<:nodeType},
-    T9<:Float64,
-    T10<:AbstractArray{<:Float64,N} where {N},
-    T11<:AbstractDistribution,
+    T4 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T5 <: Union{Int64, AbstractArray{<:Int64, N} where {N}},
+    T6 <: AbstractArray{<:Int64, N} where {N},
+    T7 <: AbstractArray{<:Float64, N} where {N},
+    T8 <: Vector{<:nodeType},
+    T9 <: Float64,
+    T10 <: AbstractDistribution,
 }
     loopType::T1
     numSides::T2
@@ -341,8 +212,8 @@ struct DislocationLoop{
     coord::T7
     label::T8
     buffer::T9
-    range::T10
-    dist::T11
+    range::T7
+    dist::T10
     function DislocationLoop(
         loopType,
         numSides,
@@ -398,7 +269,6 @@ struct DislocationLoop{
             typeof(slipPlane),
             typeof(label),
             typeof(buffer),
-            typeof(range),
             typeof(dist),
         }(
             loopType,
@@ -425,27 +295,27 @@ eachindex(x::DislocationLoop) = getindex(x, 1)
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopDln(),
-        convert(Int64, 4),
-        convert(Int64, 1),
         convert(Int64, 0),
-        [segNone(), segNone()],
-        zeros(Float64, 2),
-        zeros(Int64, 2),
-        zeros(Float64, 2, 3),
-        zeros(Float64, 2, 3),
-        zeros(nodeType, 4),
+        convert(Int64, 0),
+        convert(Int64, 0),
+        segNone(),
         convert(Float64, 0),
-        zeros(2, 3),
+        convert(Int64, 0),
+        zeros(Float64, 0, 3),
+        zeros(Float64, 0, 3),
+        zeros(nodeType, 0),
+        convert(Float64, 0),
+        zeros(0, 3),
         Zeros(),
     )
 end
 
 mutable struct DislocationNetwork{
-    T1<:AbstractArray{<:Int64,N} where {N},
-    T2<:AbstractArray{<:Float64,N} where {N},
-    T3<:Vector{nodeType},
-    T4<:Int64,
-    T5<:Integer,
+    T1 <: AbstractArray{<:Int64, N} where {N},
+    T2 <: AbstractArray{<:Float64, N} where {N},
+    T3 <: Vector{nodeType},
+    T4 <: Int64,
+    T5 <: Integer,
 }
     links::T1 # Links.
     slipPlane::T2 # Slip planes.
@@ -471,7 +341,13 @@ mutable struct DislocationNetwork{
         @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
         @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
         @assert size(coord, 1) == size(label, 1)
-        new{typeof(links),typeof(bVec),typeof(label),typeof(numNode),typeof(maxConnect)}(
+        new{
+            typeof(links),
+            typeof(bVec),
+            typeof(label),
+            typeof(numNode),
+            typeof(maxConnect),
+        }(
             links,
             slipPlane,
             bVec,
@@ -503,7 +379,12 @@ function malloc(network::DislocationNetwork, n::Int64)
     return network
 end
 
-struct DislocationP{T1<:Float64,T2<:Int64,T3<:Bool,T4<:AbstractMobility}
+struct DislocationP{
+    T1 <: Float64,
+    T2 <: Int64,
+    T3 <: Bool,
+    T4 <: AbstractMobility,
+}
     # Size.
     coreRad::T1 # Core radius.
     coreRadMag::T1 # Magnitude of core Radius.

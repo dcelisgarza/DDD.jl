@@ -31,7 +31,7 @@ provided.
 """
 function coordIdx(
     network::DislocationNetwork,
-    index::Union{Integer,AbstractArray{<:Integer,N}},
+    index::Union{Integer, AbstractArray{<:Integer, N}},
 ) where {N}
     return network.coord[index, :]
 end
@@ -63,10 +63,10 @@ function idxCond(
     return findall(x -> condition(x, args...), getproperty(network, fieldname))
 end
 function idxCond(
-    data::Union{AbstractArray{<:Real,N1},AbstractArray{<:nodeType,N2}},
+    data::Union{AbstractArray{<:Real, N1}, AbstractArray{<:nodeType, N2}},
     val::Real;
     condition::Function = ==,
-) where {N1,N2}
+) where {N1, N2}
     return findall(x -> condition(x, val), data)
 end
 function idxCond(

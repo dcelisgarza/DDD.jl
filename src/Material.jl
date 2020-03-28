@@ -54,14 +54,14 @@ julia> sample_material = MaterialP(0.7, 1e5, 0.28, "bcc")
 MaterialP{Float64,String}(0.7, 100000.0, 0.28, "bcc")
 ```
 """
-struct MaterialP{T1<:Float64,T2<:AbstractMaterial}
+struct MaterialP{T1 <: Float64, T2 <: AbstractMaterial}
     μ::T1
     μMag::T1
     ν::T1
     crystalStruct::T2
 
     function MaterialP(μ, μMag, ν, crystalStruct)
-        new{typeof(μ),typeof(crystalStruct)}(μ, μMag, ν, crystalStruct)
+        new{typeof(μ), typeof(crystalStruct)}(μ, μMag, ν, crystalStruct)
     end # constructor
 end # MaterialP
 

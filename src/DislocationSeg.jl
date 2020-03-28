@@ -1,9 +1,9 @@
 function limits!(
-    lims::AbstractArray{<:Float64,N1},
+    lims::AbstractArray{<:Float64, N1},
     segLen::Float64,
-    range::AbstractArray{<:Float64,N2},
+    range::AbstractArray{<:Float64, N2},
     buffer::Float64,
-) where {N1,N2}
+) where {N1, N2}
     @inbounds @simd for i = 1:size(lims, 2)
         for j = 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
@@ -13,10 +13,10 @@ function limits!(
 end
 
 function translatePoints(
-    coord::AbstractArray{<:Float64,N1},
-    lims::AbstractArray{<:Float64,N1},
-    disp::AbstractArray{<:Float64,N2},
-) where {N1,N2}
+    coord::AbstractArray{<:Float64, N1},
+    lims::AbstractArray{<:Float64, N1},
+    disp::AbstractArray{<:Float64, N2},
+) where {N1, N2}
     @inbounds @simd for i = 1:size(coord, 2)
         for j = 1:size(coord, 1)
             coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
@@ -39,7 +39,7 @@ function loopDistribution(dist::Regular, n::Integer, args...)
 end
 
 function makeConnect(
-    links::AbstractArray{Int64,N},
+    links::AbstractArray{Int64, N},
     label::Vector{nodeType},
     maxConnect::Integer = 4,
 ) where {N}
@@ -59,8 +59,8 @@ function makeConnect(
         tmp1 = 2 * connectivity[n1, 1]
         tmp2 = 2 * connectivity[n2, 1]
 
-        connectivity[n1, tmp1:tmp1+1] = [idx, 1] # idx = linkID, 1 = first node in link with linkID
-        connectivity[n2, tmp2:tmp2+1] = [idx, 2] # idx = linkID, 2 = second node in link with linkID
+        connectivity[n1, tmp1:(tmp1 + 1)] = [idx, 1] # idx = linkID, 1 = first node in link with linkID
+        connectivity[n2, tmp2:(tmp2 + 1)] = [idx, 2] # idx = linkID, 2 = second node in link with linkID
 
         linksConnect[idx, 1] = connectivity[n1, 1]
         linksConnect[idx, 2] = connectivity[n2, 1]
@@ -70,7 +70,7 @@ end
 
 function makeNetwork!(
     network::DislocationNetwork,
-    sources::Union{DislocationLoop,AbstractVector{<:DislocationLoop}},
+    sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
     maxConnect::Integer = 4,
 )
     local nodeTotal::Integer = 0
@@ -107,12 +107,10 @@ function makeNetwork!(
             idxi = idx + (j - 1) * nodesLoop
             idxf = idxi + nodesLoop - 1
             # Prepare to distribute sources.
-            network.links[idxi:idxf, :] = sources[i].links[1:nodesLoop, :] .+
-                                          (nodeTotal + initIdx - 1)
-            network.slipPlane[idxi:idxf, :] .= sources[i].slipPlane[
-                1:nodesLoop,
-                :,
-            ]
+            network.links[idxi:idxf, :] =
+                sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
+            network.slipPlane[idxi:idxf, :] .=
+                sources[i].slipPlane[1:nodesLoop, :]
             network.bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
             network.coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
             # Move loop.
@@ -129,10 +127,7 @@ function makeNetwork!(
     network.numNode += nodeTotal
     network.numSeg += nodeTotal
 
-    network.connectivity, network.linksConnect = makeConnect(
-        network.links,
-        network.label,
-        maxConnect,
-    )
+    network.connectivity, network.linksConnect =
+        makeConnect(network.links, network.label, maxConnect)
     return network
 end

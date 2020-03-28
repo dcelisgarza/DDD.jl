@@ -1,4 +1,8 @@
-mutable struct IntegrationP{T1<:Float64,T2<:AbstractIntegrator,T3<:Int64}
+mutable struct IntegrationP{
+    T1 <: Float64,
+    T2 <: AbstractIntegrator,
+    T3 <: Int64,
+}
     dt::T1
     tmin::T1
     tmax::T1
@@ -18,7 +22,7 @@ mutable struct IntegrationP{T1<:Float64,T2<:AbstractIntegrator,T3<:Int64}
         time = 0.0,
         step = 0,
     )
-        new{typeof(dt),typeof(method),typeof(step)}(
+        new{typeof(dt), typeof(method), typeof(step)}(
             dt,
             tmin,
             tmax,
