@@ -201,6 +201,7 @@ function makeNetwork(
     maxConnect::Integer = 4,
     memBuffer::Integer = 10,
     args...;
+    checkConsistency::Bool = false,
     kw...,
 )
     nodeTotal::Integer = 0
@@ -261,6 +262,9 @@ function makeNetwork(
 
     network.connectivity, network.linksConnect =
         makeConnect(network.links, network.label, maxConnect)
+
+    checkConsistency ? checkNetwork(network) : nothing
+
     return network
 end
 
@@ -284,6 +288,7 @@ function makeNetwork!(
     sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
     maxConnect::Integer = 4,
     args...;
+    checkConsistency::Bool = false,
     kw...,
 )
     nodeTotal::Integer = 0
@@ -342,6 +347,9 @@ function makeNetwork!(
 
     network.connectivity, network.linksConnect =
         makeConnect(network.links, network.label, maxConnect)
+
+    checkConsistency ? checkNetwork(network) : nothing
+
     return network
 end
 
