@@ -185,12 +185,13 @@ end
 ```
 makeNetwork(
     sources::Union{
-                DislocationLoop,
-                AbstractVector{<:DislocationLoop}
-            }, # Dislocation structures.
+            DislocationLoop,
+            AbstractVector{<:DislocationLoop}
+        }, # Dislocation structures.
     maxConnect::Integer = 4,
     memBuffer::Integer = 10, # Buffer for memory allocation. The code will allocate the total number of nodes times `memBuffer` to reduce dynamic memory allocation during runtime.
     args...;
+    checkConsistency::Bool = false, # Check the consistency of the network.
     kw...,
 )
 ```
@@ -273,11 +274,12 @@ end
 makeNetwork!(
     network::DislocationNetwork,
     sources::Union{
-                DislocationLoop,
-                AbstractVector{<:DislocationLoop}
-            },
+        DislocationLoop,
+        AbstractVector{<:DislocationLoop}
+    },
     maxConnect::Integer = 4,
     args...;
+    checkConsistency::Bool = false,
     kw...,
 )
 ```
