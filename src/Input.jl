@@ -32,6 +32,7 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
     @inbounds for i = 1:nRow
         st = split.(df[i, :segType], ";")
         segType = [segTypes[st[i]] for i = 1:length(st)]
+        length(segType) == 1 ? segType = segType[1] : nothing
         sl = split.(df[i, :segLen], ";")
         segLen = parse.(Float64, sl)
         _slipSystem = df[i, :slipSystem]

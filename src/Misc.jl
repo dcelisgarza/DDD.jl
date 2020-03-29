@@ -101,10 +101,10 @@ function rot3D(
     #https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions
     isapprox(norm(uvw), 1.0) ? nothing : uvw ./= norm(uvw)
 
-    local cosθ = cos(θ)
-    local onemcosθ = 1 - cosθ
-    local sintheta = sin(θ)
-    local xyzDOTuvw = dot(xyz, uvw)
+    cosθ = cos(θ)
+    onemcosθ = 1 - cosθ
+    sintheta = sin(θ)
+    xyzDOTuvw = dot(xyz, uvw)
 
     return [
         (

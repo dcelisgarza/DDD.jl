@@ -8,7 +8,7 @@ using CSV,
     Statistics,
     InteractiveUtils
 import Base:
-    zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex
+    zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex, push!
 
 include("Misc.jl")
 export inclusiveComparison, compStruct, intAngle, extAngle, rot3D, makeTypeDict
@@ -22,7 +22,7 @@ export AbstractMobility, mobBCC, mobFCC, mobHCP
 export AbstractIntegrator, CustomTrapezoid
 
 include("DislocationBase.jl")
-export DislocationP, DislocationNetwork, malloc
+export DislocationP, DislocationNetwork
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond
 export makeSegment,
     makeLoop,

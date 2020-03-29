@@ -47,6 +47,34 @@ struct segEdge <: AbstractDlnSeg end
 struct segEdgeN <: AbstractDlnSeg end
 struct segScrew <: AbstractDlnSeg end
 struct segMixed <: AbstractDlnSeg end
+"""
+```
+makeSegment(type::AbstractDlnSeg, slipPlane::Vector{T}, bVec::Vector{T}) where {T<:Float64}
+```
+Make segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
+"""
+function makeSegment(
+    type::segEdge,
+    slipPlane::Vector{T},
+    bVec::Vector{T},
+) where {T <: Float64}
+    edge = cross(slipPlane, bVec)
+    return edge ./ norm(edge)
+end
+function makeSegment(
+    type::segEdgeN,
+    slipPlane::Vector{T},
+    bVec::Vector{T},
+) where {T <: Float64}
+    return slipPlane ./ norm(slipPlane)
+end
+function makeSegment(
+    type::segScrew,
+    slipPlane::Vector{T},
+    bVec::Vector{T},
+) where {T <: Float64}
+    return bVec ./ norm(bVec)
+end
 length(::T) where {T <: AbstractDlnSeg} = 1
 """
 ```
@@ -57,7 +85,7 @@ struct loopDln <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
 ```
-Idealised dislocation structure types. Unsure of how to use them.
+Idealised dislocation structure types.
 """
 abstract type AbstractDlnStr end
 struct loopPrism <: AbstractDlnStr end
