@@ -1,11 +1,8 @@
 using DDD
-using Test, Plots
-import DelimitedFiles: readdlm
-gr()
 cd(@__DIR__)
 params = "../inputs/simParams/sampleParams.csv"
 slipsys = "../data/slipSystems/bcc.csv"
-source = "../inputs/dln/sampleDln.csv"#"../inputs/dln/samplePrismaticShear.csv"
+source = "../inputs/dln/samplePrismaticShear.csv"
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
 
@@ -19,6 +16,18 @@ network = DislocationNetwork(
     0,
 )
 makeNetwork!(network, loops)
+checkNetwork(network)
+
+
+
+
+
+
+
+
+
+
+
 
 network2 = DislocationNetwork(
     zeros(Int64, 0, 2),
@@ -34,6 +43,8 @@ compStruct(network, network2)
 
 network2 = makeNetwork(loops)
 
+using Test, Plots
+gr()
 fig = plot()
 plotNodes!(
     fig,

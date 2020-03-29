@@ -30,7 +30,8 @@ export makeSegment,
     makeNetwork,
     makeNetwork!,
     loopDistribution,
-    makeConnect
+    makeConnect,
+    checkNetwork
 
 include("Material.jl")
 

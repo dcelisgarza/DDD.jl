@@ -181,6 +181,7 @@ end
     test = randn(n, 3)
     @test randArr == test
     @test_throws ErrorException loopDistribution(Regular(), n)
+    @test checkNetwork(network)
 end
 
 @testset "Overloaded type functions" begin
