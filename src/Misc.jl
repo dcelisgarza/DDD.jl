@@ -88,7 +88,8 @@ function extAngle(n::Int64)
 end
 """
 ```
-rot3D(xyz::Vector{<:Float64}, uvw::Vector{Float64}, abc::Vector{<:Float64}, θ::Float64)
+rot3D(xyz::Vector{<:Float64}, uvw::Vector{Float64}, abc::Vector{<:Float64},
+    θ::Float64)
 ```
 Rotate point `xyz` about the line with direction vector `uvw` that crosses the point `abc` by the angle `θ`.
 """

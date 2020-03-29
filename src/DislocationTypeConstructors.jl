@@ -195,7 +195,7 @@ makeNetwork(
     kw...,
 )
 ```
-Constructor for [`DislocationNetwork`](@ref), see for in-place version [`makeNetwork!`](@ref).
+Constructor for [`DislocationNetwork`](@ref), see [`makeNetwork!`](@ref) for in-place version.
 """
 function makeNetwork(
     sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
@@ -407,7 +407,7 @@ function translatePoints(
     disp::AbstractArray{<:Float64, N2},
 ) where {N1, N2}
 ```
-Translate dislocation node coordinates `coord` inside the spatial bounds of `lims` (calculated in [`limits!`](@ref)) according to the displacement `disp` (calculated in [`loopDistribution`](@ref)). Used to distribute sources inside a domain in [`makeNetwork`](@ref) and [makeNetwork!](@ref).
+Translate dislocation node coordinates `coord` inside the spatial bounds of `lims` (calculated in [`limits!`](@ref)) according to the displacement `disp` (calculated in [`loopDistribution`](@ref)). Used to distribute sources inside a domain in [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
 """
 function translatePoints(
     coord::AbstractArray{<:Float64, N1},

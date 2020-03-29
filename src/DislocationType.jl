@@ -137,7 +137,7 @@ DislocationLoop{
     range::T7
     dist::T10
 ```
-Dislocation loop structure generated via the constructor [`makeLoop`](@ref), see its documentation for further details.
+Dislocation loop structure generated via the constructor [`makeLoop`](@ref).
 """
 struct DislocationLoop{
     T1 <: AbstractDlnStr,
@@ -267,7 +267,7 @@ DislocationNetwork{
     connectivity::T1
     linksConnect::T1
 ```
-Dislocation Network structure. See [`DislocationLoop`](@ref), [`makeNetwork`](@ref), [`makeNetwork!`](@ref) for further details.
+Dislocation Network structure. See [`DislocationLoop`](@ref), [`makeNetwork`](@ref) and [`makeNetwork!`](@ref) for further details.
 """
 mutable struct DislocationNetwork{
     T1 <: AbstractArray{<:Int64, N} where {N},
