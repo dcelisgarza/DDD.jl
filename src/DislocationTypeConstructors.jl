@@ -480,7 +480,7 @@ function checkNetwork(network::DislocationNetwork)
 
     bVec = network.bVec
     bSum = zeros(Float64, 3)
-    for i in idx
+    @inbounds for i in idx
         iLinkBuffer = zeros(Int64, 0)
         col = connectivity[i, 1]
 

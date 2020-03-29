@@ -19,3 +19,22 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 - Well documented and tested.
 - Performant.
 - Easily parallelisable.
+
+## Current TODO:
+- [ ] Generate docs
+- [ ] Optimise
+- [ ] Specialised integrator
+  - [ ] Perhaps later make use of [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for their stepping and event handling routines.
+- [ ] Calculate segment-segment interactions.
+- [ ] Mobility laws
+  - [ ] BCC
+  - [ ] FCC
+- [ ] Topology operations
+  - [ ] Split
+  - [ ] Merge
+- [ ] Couple to FEM, perhaps use a package from [JuliaFEM](http://www.juliafem.org/).
+  - [ ] Boundary conditions
+    - [ ] Neuman
+    - [ ] Dirichlet
+  - [ ] Displacements
+  - [ ] Tractions
