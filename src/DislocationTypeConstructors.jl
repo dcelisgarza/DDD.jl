@@ -223,6 +223,7 @@ function makeNetwork(
         nodeTotal,
         nodeTotal,
     )
+    network.maxConnect = maxConnect
 
     nodeTotal = 0
     initIdx = findfirst(x -> x == -1, network.label)
@@ -261,8 +262,7 @@ function makeNetwork(
         end
     end
 
-    network.connectivity, network.linksConnect =
-        makeConnect(network.links, network.label, maxConnect)
+    makeConnect!(network)
 
     checkConsistency ? checkNetwork(network) : nothing
 
@@ -295,6 +295,7 @@ function makeNetwork!(
 )
     nodeTotal::Integer = 0
     lims = zeros(Float64, 2, 3)
+    network.maxConnect = maxConnect
     # Allocate memory.
     @inbounds for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
@@ -347,8 +348,7 @@ function makeNetwork!(
     network.numNode += nodeTotal
     network.numSeg += nodeTotal
 
-    network.connectivity, network.linksConnect =
-        makeConnect(network.links, network.label, maxConnect)
+    makeConnect!(network)
 
     checkConsistency ? checkNetwork(network) : nothing
 
@@ -424,43 +424,41 @@ end
 
 """
 ```
-makeConnect(
-    links::AbstractArray{Int64, N},
-    label::Vector{nodeType},
-    maxConnect::Integer,
-) where {N}
+makeConnect!(network::DislocationNetwork)
 ```
-Returns tuple of matrices `connectivity` and `linksConnect`. `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. It also contains the segments in which it's involved. `linksConnect` is the running total of the number of other nodes each node is connected to, will probably be deleted in the future. This is called from [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
+Creates `connectivity` and `linksConnect` matrices in-place. `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. It also contains the segments in which it's involved. `linksConnect` is the running total of the number of other nodes each node is connected to, will probably be deleted in the future. This is called from [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
 """
-function makeConnect(
-    links::AbstractArray{Int64, N},
-    label::Vector{nodeType},
-    maxConnect::Integer,
-) where {N}
+function makeConnect!(network::DislocationNetwork)
+    links = network.links
+    maxConnect = network.maxConnect
 
     iLnk = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
-    lenLabel = length(label)
-    connectivity = zeros(Int64, lenLabel, 1 + 2 * maxConnect)
-    linksConnect = zeros(Int64, size(links, 1), 2)
-    @inbounds for i in eachindex(iLnk)
-        idx = iLnk[i] # Index of links that contain non zero links.
+    lenLinks = size(links, 1)
+    connectivity = zeros(Int64, lenLinks, 1 + 2 * maxConnect)
+    linksConnect = zeros(Int64, lenLinks, 2)
+    @inbounds for i in iLnk
         # links[idx, :] yields the nodes involved in the link
-        n1 = links[idx, 1] # Node 1, it is the row of the coord matrix
-        n2 = links[idx, 2] # Node 2
+        n1 = links[i, 1] # Node 1, it is the row of the coord matrix
+        n2 = links[i, 2] # Node 2
 
-        connectivity[n1, 1] += 1 # Number of other nodes node n1 is connected to.
-        connectivity[n2, 1] += 1 # Number of other nodes node n2 is connected to.
+        connectivity[n1, 1] += 1 # Num of other nodes node n1 is connected to.
+        connectivity[n2, 1] += 1 # Num of other nodes node n2 is connected to.
 
         tmp1 = 2 * connectivity[n1, 1]
         tmp2 = 2 * connectivity[n2, 1]
 
-        connectivity[n1, tmp1:(tmp1 + 1)] = [idx, 1] # idx = linkID, 1 = first node in link with linkID
-        connectivity[n2, tmp2:(tmp2 + 1)] = [idx, 2] # idx = linkID, 2 = second node in link with linkID
+        # i = linkID. 1, 2 are the first and second nodes in link with linkID
+        connectivity[n1, tmp1:(tmp1 + 1)] = [i, 1]
+        connectivity[n2, tmp2:(tmp2 + 1)] = [i, 2]
 
-        linksConnect[idx, 1] = connectivity[n1, 1]
-        linksConnect[idx, 2] = connectivity[n2, 1]
+        linksConnect[i, 1] = connectivity[n1, 1]
+        linksConnect[i, 2] = connectivity[n2, 1]
     end
-    return connectivity, linksConnect
+
+    network.connectivity = connectivity
+    network.linksConnect = linksConnect
+
+    return network
 end
 
 """
@@ -553,7 +551,6 @@ neighbours = $(neighbours)") :
             connectivity[links[i, 1], 2 * linksConnect[i, 1]]
             connectivity[links[i, 2], 2 * linksConnect[i, 2]]
         ]
-        println(i)
         i != check[1] | i != check[2] ? error("Inconsistent link.
         links[$(i), :] = $(links[i,:])
         linksConnect[$(i),:] = $(linksConnect[i,:])
