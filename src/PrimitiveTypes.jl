@@ -19,9 +19,6 @@ Enumerated type for dislocation nodes.
     srfFix = 3
     ext = 4
 end
-"""
-Overloaded functions for dislocation `nodeType`.
-"""
 isequal(x::Real, y::nodeType) = isequal(x, Integer(y))
 isequal(x::nodeType, y::Real) = isequal(Integer(x), y)
 isless(x::Real, y::nodeType) = isless(x, Integer(y))
@@ -49,7 +46,8 @@ struct segScrew <: AbstractDlnSeg end
 struct segMixed <: AbstractDlnSeg end
 """
 ```
-makeSegment(type::AbstractDlnSeg, slipPlane::Vector{T}, bVec::Vector{T}) where {T<:Float64}
+makeSegment(type::AbstractDlnSeg, slipPlane::Vector{T}, bVec::Vector{T})
+    where {T<:Float64}
 ```
 Make segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
