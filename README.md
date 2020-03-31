@@ -21,7 +21,8 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 - Easily parallelisable.
 
 ## Current TODO:
-- [ ] Generate docs
+- [x] Generate docs
+  - [ ] Upload docs
 - [ ] Optimise
 - [ ] Specialised integrator
   - [ ] Perhaps later make use of [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for their stepping and event handling routines.

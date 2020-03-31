@@ -262,6 +262,7 @@ function makeNetwork(
         end
     end
 
+    getSegmentIdx!(network)
     makeConnect!(network)
 
     checkConsistency ? checkNetwork(network) : nothing
@@ -344,10 +345,9 @@ function makeNetwork!(
             nodeTotal += nodesLoop
         end
     end
-
     network.numNode += nodeTotal
-    network.numSeg += nodeTotal
 
+    getSegmentIdx!(network)
     makeConnect!(network)
 
     checkConsistency ? checkNetwork(network) : nothing
@@ -432,11 +432,11 @@ function makeConnect!(network::DislocationNetwork)
     links = network.links
     maxConnect = network.maxConnect
 
-    iLnk = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
+    idx = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
     lenLinks = size(links, 1)
     connectivity = zeros(Int64, lenLinks, 1 + 2 * maxConnect)
     linksConnect = zeros(Int64, lenLinks, 2)
-    @inbounds for i in iLnk
+    @inbounds for i in idx
         # links[idx, :] yields the nodes involved in the link
         n1 = links[i, 1] # Node 1, it is the row of the coord matrix
         n2 = links[i, 2] # Node 2
@@ -560,4 +560,26 @@ neighbours = $(neighbours)") :
     end
 
     return true
+end
+
+function getSegmentIdx!(network::DislocationNetwork)
+    links = network.links
+    label = network.label
+    segIdx = zeros(Int64, size(links, 1), 3)
+    idx = findall(x -> x != -1, label)
+    numSeg::Integer = 0
+    for i in idx
+        n1 = links[i, 1]
+        n2 = links[i, 2]
+        if label[n1] == 4 || label[n2] == 4
+            continue
+        end
+        numSeg += 1
+        segIdx[numSeg, :] = [i, n1, n2]
+    end
+
+    network.numSeg = numSeg
+    network.segIdx = segIdx
+
+    return network
 end

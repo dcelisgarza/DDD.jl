@@ -36,13 +36,15 @@ Compares structures to see if they are equal.
 function compStruct(arg1, arg2)
     @assert typeof(arg1) == typeof(arg2)
     names = fieldnames(typeof(arg1))
+    flag::Bool = true
     for i in names
         result = getproperty(arg1, i) == getproperty(arg2, i)
         if result == false
-            return false
+            flag = false
+            println("Structures differ in field: $(i).")
         end
     end
-    return true
+    return flag
 end
 """
 ```

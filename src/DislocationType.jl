@@ -266,6 +266,7 @@ DislocationNetwork{
     maxConnect::T5 = 4  # Maximum connectivity of nodes.
     connectivity::T1
     linksConnect::T1
+    segIdx::T1          # segIdx[:,1] is the segment index. Used to find the bVec and slipPlane of a real segment. segIdx[:,2:3] are the indices of the nodes involved in a given link, used to find their coordinates.
 ```
 Dislocation Network structure. See [`DislocationLoop`](@ref), [`makeNetwork`](@ref) and [`makeNetwork!`](@ref) for further details.
 """
@@ -274,7 +275,6 @@ mutable struct DislocationNetwork{
     T2 <: AbstractArray{<:Float64, N} where {N},
     T3 <: Vector{nodeType},
     T4 <: Int64,
-    T5 <: Integer,
 }
     links::T1
     slipPlane::T2
@@ -283,9 +283,10 @@ mutable struct DislocationNetwork{
     label::T3
     numNode::T4
     numSeg::T4
-    maxConnect::T5
+    maxConnect::T4
     connectivity::T1
     linksConnect::T1
+    segIdx::T1
 
     function DislocationNetwork(
         links,
@@ -308,7 +309,6 @@ mutable struct DislocationNetwork{
             typeof(bVec),
             typeof(label),
             typeof(numNode),
-            typeof(maxConnect),
         }(
             links,
             slipPlane,

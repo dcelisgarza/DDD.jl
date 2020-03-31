@@ -31,7 +31,8 @@ export makeSegment,
     makeNetwork!,
     loopDistribution,
     makeConnect,
-    checkNetwork
+    checkNetwork,
+    getSegmentIdx!
 
 include("Material.jl")
 

@@ -16,32 +16,9 @@ network = DislocationNetwork(
     0,
 )
 makeNetwork!(network, loops)
-checkNetwork(network)
-
-
-
-
-
-
-
-
-
-
-
-
-network2 = DislocationNetwork(
-    zeros(Int64, 0, 2),
-    zeros(0, 3),
-    zeros(0, 3),
-    zeros(0, 3),
-    zeros(nodeType, 0),
-    0,
-    0,
-)
-makeNetwork!(network2, loops)
+network2 = makeNetwork(loops,4,1)
 compStruct(network, network2)
 
-network2 = makeNetwork(loops)
 
 using Test, Plots
 gr()
@@ -122,7 +99,6 @@ plotNodesMakie(network; markersize = 0.6, linewidth = 3)
 fig = Scene()
 plotNodesMakie!(fig, network; markersize = 0.6, linewidth = 3)
 
-
 # dlnSegTypes = subtypes(AbstractDlnSeg)
 function makeTypeDict(valType::DataType)
     subTypes = subtypes(valType)
@@ -135,11 +111,9 @@ function makeTypeDict(valType::DataType)
     return dict
 end
 
-
 dict = makeTypeDict(AbstractDlnSeg)
 test = subtypes(AbstractDlnSeg)
 push!(dict, string(test[1]()) => eval(test[1]()))
-
 
 dlnTypes = Dict(
     "loopPrism()" => loopPrism(),
