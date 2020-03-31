@@ -19,7 +19,7 @@ export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
 export AbstractDistribution, Zeros, Rand, Randn, Regular
 export AbstractCrystalStruct, BCC, FCC, HCP
 export AbstractMobility, mobBCC, mobFCC, mobHCP
-export AbstractIntegrator, CustomTrapezoid
+export AbstractIntegrator, CustomTrapezoid, AbstractMesh
 
 include("DislocationBase.jl")
 export DislocationP, DislocationNetwork
@@ -37,6 +37,7 @@ export makeSegment,
 include("Material.jl")
 
 include("DdFem.jl")
+export DislocationFEM, RegularCuboidMesh
 
 include("CustomIntegration.jl")
 

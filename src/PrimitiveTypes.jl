@@ -110,9 +110,9 @@ struct Regular <: AbstractDistribution end
 """
 ```
 abstract type AbstractCrystalStruct end
-struct BCC <:AbstractCrystalStruct end
-struct FCC <:AbstractCrystalStruct end
-struct HCP <:AbstractCrystalStruct end
+struct BCC <: AbstractCrystalStruct end
+struct FCC <: AbstractCrystalStruct end
+struct HCP <: AbstractCrystalStruct end
 ```
 Crystal structures.
 """
@@ -123,9 +123,9 @@ struct HCP <: AbstractCrystalStruct end
 """
 ```
 abstract type AbstractMobility end
-struct BCC <:AbstractMobility end
-struct FCC <:AbstractMobility end
-struct HCP <:AbstractMobility end
+struct BCC <: AbstractMobility end
+struct FCC <: AbstractMobility end
+struct HCP <: AbstractMobility end
 ```
 Mobility functions.
 """
@@ -142,3 +142,10 @@ Integrator types.
 """
 abstract type AbstractIntegrator end
 struct CustomTrapezoid <: AbstractIntegrator end
+"""
+```
+abstract type AbstractMesh end
+```
+Abstract mesh type.
+"""
+abstract type AbstractMesh end

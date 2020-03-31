@@ -571,9 +571,7 @@ function getSegmentIdx!(network::DislocationNetwork)
     for i in idx
         n1 = links[i, 1]
         n2 = links[i, 2]
-        if label[n1] == 4 || label[n2] == 4
-            continue
-        end
+        (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1
         segIdx[numSeg, :] = [i, n1, n2]
     end
