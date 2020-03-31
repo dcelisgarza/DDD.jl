@@ -36,9 +36,6 @@ export makeSegment,
 
 include("Material.jl")
 
-include("DdFem.jl")
-export DislocationFEM, RegularCuboidMesh
-
 include("CustomIntegration.jl")
 
 include("Input.jl")

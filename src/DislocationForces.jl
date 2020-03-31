@@ -15,6 +15,7 @@ function pkForce(
 """
 function hatStress(
     mesh::RegularCuboidMesh,
+    dlnFEM::DislocationFEM,
     x0::AbstractArray{<:Float64, N} where {N},
 )
 
@@ -28,6 +29,7 @@ function hatStress(
     C = mesh.stiffTensor
     label = mesh.label
     coord = mesh.coord
+    Uhat = dlnFEM.Û
 
     # Find element index closest to the coordinate.
     i = ceil(x0[:, 1] / w)
@@ -78,11 +80,13 @@ function hatStress(
         dNds2 = zeros(8, nPoints)
         dNds3 = zeros(8, nPoints)
         B = zeros(6, 24, nPoints)
+        U = zeros(24, nPoints)
     else
         dNds1 = zeros(8)
         dNds2 = zeros(8)
         dNds3 = zeros(8)
         B = zeros(6, 24)
+        U = zeros(24)
     end
 
     ds1dx /= 8
