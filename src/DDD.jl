@@ -10,18 +10,21 @@ using CSV,
 import Base:
     zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex, push!
 
-include("Misc.jl")
-export inclusiveComparison, compStruct, intAngle, extAngle, rot3D, makeTypeDict
+include("./Misc/Misc.jl")
+include("./Integration/CustomIntegration.jl")
+include("./Dislocation/DislocationBase.jl")
+include("./Material/MaterialBase.jl")
+include("./IO/IOBase.jl")
+include("./PostProcessing/Plotting.jl")
 
-include("PrimitiveTypes.jl")
+
+export inclusiveComparison, compStruct, intAngle, extAngle, rot3D, makeTypeDict
 export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
 export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
 export AbstractDistribution, Zeros, Rand, Randn, Regular
 export AbstractCrystalStruct, BCC, FCC, HCP
 export AbstractMobility, mobBCC, mobFCC, mobHCP
 export AbstractIntegrator, CustomTrapezoid, AbstractMesh
-
-include("DislocationBase.jl")
 export DislocationP, DislocationNetwork
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond
 export makeSegment,
@@ -33,18 +36,10 @@ export makeSegment,
     makeConnect,
     checkNetwork,
     getSegmentIdx!
-
-include("Material.jl")
-
-include("CustomIntegration.jl")
-
-include("Input.jl")
 export loadCSV, loadParams, loadDln, loadSlipSys
 
-include("Output.jl")
 export saveParams
 
-include("Plotting.jl")
 export plotNodes, plotNodes!
 
 end # module

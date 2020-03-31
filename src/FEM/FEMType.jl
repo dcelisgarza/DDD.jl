@@ -1,6 +1,21 @@
-struct DislocationFEMCorrective{T1 <: AbstractArray{<:Float64, N} where {N}}
-    uHat::T1 # U_hat
-    fHat::T1 # F_hat
+"""
+```
+abstract type AbstractMesh end
+```
+Abstract mesh type.
+"""
+abstract type AbstractMesh end
+
+struct RegularCuboidMesh{
+    T1 <: AbstractArray{<:Int64, N} where {N},
+    T2 <: AbstractArray{<:Float64, N} where {N},
+}
+    numElem::T1
+    sizeElem::T2
+    sizeMesh::T2
+    stiffTensor::T2
+    label::T1
+    coord::T2
 end
 
 
