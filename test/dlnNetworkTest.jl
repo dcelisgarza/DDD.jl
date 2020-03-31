@@ -182,6 +182,8 @@ end
     @test randArr == test
     @test_throws ErrorException loopDistribution(Regular(), n)
     @test checkNetwork(network)
+    network.label[1] = 4
+    @test !compStruct(network, network3)
 end
 
 @testset "Overloaded type functions" begin

@@ -17,7 +17,7 @@ network = DislocationNetwork(
 )
 makeNetwork!(network, loops)
 network2 = makeNetwork(loops,4,1)
-compStruct(network, network2)
+compStruct(network, network2; verbose = false)
 
 
 using Test, Plots

@@ -29,11 +29,11 @@ function inclusiveComparison(data, args...)::Bool
 end
 """
 ```
-compStruct(arg1, arg2)
+compStruct(arg1, arg2; verbose)
 ```
-Compares structures to see if they are equal.
+Compares structures to see if they are equal. If `verbose` it prints which which fields are different.
 """
-function compStruct(arg1, arg2)
+function compStruct(arg1, arg2; verbose::Bool=false)
     @assert typeof(arg1) == typeof(arg2)
     names = fieldnames(typeof(arg1))
     flag::Bool = true
@@ -41,7 +41,7 @@ function compStruct(arg1, arg2)
         result = getproperty(arg1, i) == getproperty(arg2, i)
         if result == false
             flag = false
-            println("Structures differ in field: $(i).")
+            verbose ? println("Structures differ in field: $(i).") : nothing
         end
     end
     return flag
