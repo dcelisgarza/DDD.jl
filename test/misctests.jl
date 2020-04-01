@@ -17,7 +17,10 @@ network = DislocationNetwork(
 makeNetwork!(network, loops)
 network2 = makeNetwork(loops,4,1)
 compStruct(network, network2; verbose = false)
+compStruct(loops, loops; verbose = false)
+test1 = MyStruct1(1)
 
+xyz = ones(3); uvw = [-0.5;2.0;1.0]; abc = zeros(3);
 
 using Test, Plots
 plotlyjs()
@@ -166,3 +169,11 @@ dlnTypes = Dict(
     "DDD.loopMixed()" => loopMixed(),
     "DDD.loopDln()" => loopDln(),
 )
+
+
+test = rand(3,3)
+var = zeros(6, length(test))
+for i in eachindex(test)
+    var[:,i] .= i
+end
+sxx = reshape(var[1,:],size(test))

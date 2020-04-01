@@ -22,6 +22,7 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 
 ## Current TODO:
 - [x] Generate docs
+  - [x] Documented Misc
   - [ ] Upload docs
 - [ ] Optimise
 - [ ] Specialised integrator

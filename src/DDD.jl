@@ -14,17 +14,21 @@ include("./Misc/Misc.jl")
 include("./Integration/CustomIntegration.jl")
 include("./Dislocation/DislocationBase.jl")
 include("./Material/MaterialBase.jl")
+include("./FEM/FEMBase.jl")
+include("./DislocationFEM/DislocationFEMBase.jl")
 include("./IO/IOBase.jl")
 include("./PostProcessing/Plotting.jl")
 
-
-export inclusiveComparison, compStruct, intAngle, extAngle, rot3D, makeTypeDict
+export inclusiveComparison
+export compStruct, intAngle, extAngle, rot3D, makeTypeDict
 export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
 export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
 export AbstractDistribution, Zeros, Rand, Randn, Regular
 export AbstractCrystalStruct, BCC, FCC, HCP
 export AbstractMobility, mobBCC, mobFCC, mobHCP
-export AbstractIntegrator, CustomTrapezoid, AbstractMesh
+export AbstractIntegrator, CustomTrapezoid
+export AbstractMesh, RegularCuboidMesh
+export hatStress
 export DislocationP, DislocationNetwork
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond
 export makeSegment,
