@@ -31,4 +31,5 @@ cd(@__DIR__)
     θ = 37 / 180 * pi
     p = rot3D(xyz, uvw, abc, θ)
     @test isapprox(p, [-21.1690, 31.0685, -30.6029]; atol = 1e-4)
+    @test compStruct(1, 1.2) == false
 end

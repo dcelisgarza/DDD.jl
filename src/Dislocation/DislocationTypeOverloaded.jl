@@ -38,10 +38,6 @@ function makeSegment(
 end
 length(::T) where {T <: AbstractDlnSeg} = 1
 
-
-
-
-
 # Dislocationloop.
 length(::DislocationLoop) = 1
 getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
