@@ -17,6 +17,52 @@ network = DislocationNetwork(
 )
 makeNetwork!(network, loops)
 
+points = Float64[
+    0 0 0
+    1 0 0
+    1 1 0
+    0 1 0
+    0 0 1
+    1 0 1
+    1 1 1
+    0 1 1
+    0.5 0.5 0.25
+]
+Nall = shapeFunction(
+    LinearQuadrangle3D(),
+    points[:, 1],
+    points[:, 2],
+    points[:, 3],
+)
+
+N1 = shapeFunction(
+    LinearQuadrangle3D(),
+    points[2, 1],
+    points[2, 2],
+    points[2, 3],
+)
+Nall[:,2] == N1
+isapprox(Nall[:,2], N1)
+
+dNdS = shapeFunctionDeriv(
+    LinearQuadrangle3D(),
+    points[:, 1],
+    points[:, 2],
+    points[:, 3],
+)
+
+isapprox.(sum(dNdS[:,1,1]), 0)
+for i = 1:size(points,1)
+    # for j = 1:3
+        @test isapprox.(sum(dNdS[:,:,i], dim=2), 0)
+    # end
+end
+sum(dNdS[:,:,1], dims=1)
+
+
+isapprox.(sum(dNdS[:,:,1], dims=1), 0)
+
+
 gr()
 fig = plot()
 plotNodes!(
@@ -178,11 +224,16 @@ xyz = ones(3);
 uvw = [-0.5; 2.0; 1.0];
 abc = zeros(3);
 
-test = rand(300, 3)
+using BenchmarkTools
+test = rand(3000, 3)
 x = test[:, 1]
 y = test[:, 2]
 z = test[:, 3]
 @benchmark shapeFunction(LinearQuadrangle3D(), x, y, z)
+@benchmark shapeFunctionDeriv(LinearQuadrangle3D(), x, y, z)
+@benchmark shapeFunction(LinearQuadrangle3D(), x, y, z)
+
+
 @benchmark shapeFunction(
     LinearQuadrangle3D(),
     test[:, 1],

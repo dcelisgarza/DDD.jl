@@ -86,7 +86,7 @@ false
 """
 function compStruct(arg1, arg2; verbose::Bool = false)
     if typeof(arg1) != typeof(arg2)
-        @warn "Variables have different types:
+        @warn "compStruct: Variables have different types:
             typeof(arg1) = $(typeof(arg1))
             typeof(arg2) = $(typeof(arg2))"
         return false
