@@ -83,11 +83,10 @@ function hatStress(
     s2 = dx2dy * (y - yc)
     s3 = dx3dz * (z - zc)
 
-    # Performance-fu for the loop. Single point so we take the transpose. dNdS is now 3 x 8, the rows are the dimensions and the columns the node number.
-    dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), [s1 s2 s3])[1,:,:]'
-    dNdS[:,1] .*= ds1dx
-    dNdS[:,2] .*= ds2dy
-    dNdS[:,3] .*= ds3dz
+    dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), s1, s2, s3)
+    dNdS[:, 1] .*= ds1dx
+    dNdS[:, 2] .*= ds2dy
+    dNdS[:, 3] .*= ds3dz
 
     @inbounds for i = 1:size(dNdS, 2)
         # Indices calculated once for performance.
@@ -96,9 +95,9 @@ function hatStress(
         # label[a, b] is the index of the node b, in FE element a.
         idx3 = 3 * label[i]
         # Constructing the Jacobian for node i.
-        B[1, idx2 + 1] = dNdS[1, i]
-        B[2, idx2 + 2] = dNdS[2, i]
-        B[3, idx2 + 3] = dNdS[3, i]
+        B[1, idx2 + 1] = dNdS[i, 1]
+        B[2, idx2 + 2] = dNdS[i, 2]
+        B[3, idx2 + 3] = dNdS[i, 3]
         B[4, idx2 + 1] = B[2, idx2 + 2]
         B[4, idx2 + 2] = B[1, idx2 + 1]
         B[5, idx2 + 1] = B[3, idx1 + 0]

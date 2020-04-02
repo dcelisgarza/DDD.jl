@@ -17,8 +17,6 @@ network = DislocationNetwork(
 )
 makeNetwork!(network, loops)
 
-
-
 gr()
 fig = plot()
 plotNodes!(
@@ -30,7 +28,6 @@ plotNodes!(
     markercolor = :black,
     legend = false,
 )
-
 
 using Makie
 function plotNodesMakie(network::DislocationNetwork, args...; kw...)
@@ -70,8 +67,7 @@ function plotNodesMakie!(fig, network::DislocationNetwork, args...; kw...)
     return fig
 end
 
-plotNodesMakie(network, linewidth=0.3, markersize=2)
-
+plotNodesMakie(network, linewidth = 0.3, markersize = 2)
 
 fig = plot()
 plot(
@@ -166,18 +162,38 @@ dlnTypes = Dict(
     "DDD.loopDln()" => loopDln(),
 )
 
-
-test = rand(3,3)
+test = rand(3, 3)
 var = zeros(6, length(test))
 for i in eachindex(test)
-    var[:,i] .= i
+    var[:, i] .= i
 end
-sxx = reshape(var[1,:],size(test))
+sxx = reshape(var[1, :], size(test))
 
-
-network2 = makeNetwork(loops,4,1)
+network2 = makeNetwork(loops, 4, 1)
 compStruct(network, network2; verbose = false)
 compStruct(loops, loops; verbose = false)
 test1 = MyStruct1(1)
 
-xyz = ones(3); uvw = [-0.5;2.0;1.0]; abc = zeros(3);
+xyz = ones(3);
+uvw = [-0.5; 2.0; 1.0];
+abc = zeros(3);
+
+test = rand(300, 3)
+x = test[:, 1]
+y = test[:, 2]
+z = test[:, 3]
+@benchmark shapeFunction(LinearQuadrangle3D(), x, y, z)
+@benchmark shapeFunction(
+    LinearQuadrangle3D(),
+    test[:, 1],
+    test[:, 2],
+    test[:, 3],
+)
+
+@benchmark shapeFunctionDeriv(LinearQuadrangle3D(), x, y, z)
+@benchmark shapeFunctionDeriv(
+    LinearQuadrangle3D(),
+    test[:, 1],
+    test[:, 2],
+    test[:, 3],
+)
