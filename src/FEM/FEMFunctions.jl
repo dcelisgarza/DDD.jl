@@ -1,3 +1,16 @@
+"""
+```
+shapeFunction(
+    shape<:AbstractShapeFunction,
+    x::Union{Float64, AbstractVector{<:Float64}},
+    y::Union{Float64, AbstractVector{<:Float64}},
+    z::Union{Float64, AbstractVector{<:Float64}}
+```
+Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If `x,y,z` are floats returns a vector of length `N`, different shape functons have different numbers of nodes. If given vectors, returns an array of size `(N, length(x))`.
+!!! note
+    All coordinate vectors must be of equal length.
+[`shapeFunctionDeriv`](@ref) are the 1st order derivatives of the shape functions.
+"""
 function shapeFunction(
     shape::LinearQuadrangle3D,
     x::Float64,
@@ -6,21 +19,26 @@ function shapeFunction(
 )
     # N[n](x,y,z) := shape function n.
     N = zeros(8)
+    omx = 1 - x
+    omy = 1 - y
+    omz = 1 - z
+    opx = 1 + x
+    opy = 1 + y
+    opz = 1 + z
 
-    N[1] = (1 - x) * (1 - y) * (1 - z)
-    N[2] = (1 + x) * (1 - y) * (1 - z)
-    N[3] = (1 + x) * (1 + y) * (1 - z)
-    N[4] = (1 - x) * (1 + y) * (1 - z)
-    N[5] = (1 - x) * (1 - y) * (1 + z)
-    N[6] = (1 + x) * (1 - y) * (1 + z)
-    N[7] = (1 + x) * (1 + y) * (1 + z)
-    N[8] = (1 - x) * (1 + y) * (1 + z)
+    N[1] = omx * omy * omz
+    N[2] = opx * omy * omz
+    N[3] = opx * opy * omz
+    N[4] = omx * opy * omz
+    N[5] = omx * omy * opz
+    N[6] = opx * omy * opz
+    N[7] = opx * opy * opz
+    N[8] = omx * opy * opz
 
     N .*= 0.125
 
     return N
 end
-
 function shapeFunction(
     shape::LinearQuadrangle3D,
     x::AbstractVector{<:Float64},
@@ -30,15 +48,28 @@ function shapeFunction(
     @assert length(x) == length(y) == length(z)
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
     N = zeros(8, length(x))
-    for i in eachindex(x)
-        N[1, i] = (1 - x[i]) * (1 - y[i]) * (1 - z[i])
-        N[2, i] = (1 + x[i]) * (1 - y[i]) * (1 - z[i])
-        N[3, i] = (1 + x[i]) * (1 + y[i]) * (1 - z[i])
-        N[4, i] = (1 - x[i]) * (1 + y[i]) * (1 - z[i])
-        N[5, i] = (1 - x[i]) * (1 - y[i]) * (1 + z[i])
-        N[6, i] = (1 + x[i]) * (1 - y[i]) * (1 + z[i])
-        N[7, i] = (1 + x[i]) * (1 + y[i]) * (1 + z[i])
-        N[8, i] = (1 - x[i]) * (1 + y[i]) * (1 + z[i])
+    omx::Float64 = 0
+    omy::Float64 = 0
+    omz::Float64 = 0
+    opx::Float64 = 0
+    opy::Float64 = 0
+    opz::Float64 = 0
+    @inbounds for i in eachindex(x)
+        omx = 1 - x[i]
+        omy = 1 - y[i]
+        omz = 1 - z[i]
+        opx = 1 + x[i]
+        opy = 1 + y[i]
+        opz = 1 + z[i]
+
+        N[1, i] = omx * omy * omz
+        N[2, i] = opx * omy * omz
+        N[3, i] = opx * opy * omz
+        N[4, i] = omx * opy * omz
+        N[5, i] = omx * omy * opz
+        N[6, i] = opx * omy * opz
+        N[7, i] = opx * opy * opz
+        N[8, i] = omx * opy * opz
     end
 
     N .*= 0.125
@@ -46,6 +77,18 @@ function shapeFunction(
     return N
 end
 
+"""
+```
+shapeFunctionDeriv(
+    shape<:AbstractShapeFunction,
+    x::Union{Float64, AbstractVector{<:Float64}},
+    y::Union{Float64, AbstractVector{<:Float64}},
+    z::Union{Float64, AbstractVector{<:Float64}}
+```
+Returns the first order derivative of the shape functions, [`shapeFunction`](@ref), of type `typeof(shape) <: AbstractShapeFunction`. If `x,y,z` are floats returns a 2D array of size `(N, 3)`. If given vectors, returns a 3D array of size `(N, 3, length(x))`.
+!!! note
+    All coordinate vectors must be of equal length.
+"""
 function shapeFunctionDeriv(
     shape::LinearQuadrangle3D,
     x::Float64,
@@ -55,33 +98,39 @@ function shapeFunctionDeriv(
     # dNdS[n, x](x,y,z) := x'th derivative of shape function n.
     # dNdS[n, x](x,y,z) = dN[a, b] / dx
     dNdS = zeros(8, 3)
+    omx = 1 - x
+    omy = 1 - y
+    omz = 1 - z
+    opx = 1 + x
+    opy = 1 + y
+    opz = 1 + z
 
-    dNdS[1, 1] = -(1 - y) * (1 - z)
-    dNdS[2, 1] = (1 - y) * (1 - z)
-    dNdS[3, 1] = (1 + y) * (1 - z)
-    dNdS[4, 1] = -(1 + y) * (1 - z)
-    dNdS[5, 1] = -(1 - y) * (1 + z)
-    dNdS[6, 1] = (1 - y) * (1 + z)
-    dNdS[7, 1] = (1 + y) * (1 + z)
-    dNdS[8, 1] = -(1 + y) * (1 + z)
+    dNdS[1, 1] = -omy * omz
+    dNdS[2, 1] = omy * omz
+    dNdS[3, 1] = opy * omz
+    dNdS[4, 1] = -opy * omz
+    dNdS[5, 1] = -omy * opz
+    dNdS[6, 1] = omy * opz
+    dNdS[7, 1] = opy * opz
+    dNdS[8, 1] = -opy * opz
 
-    dNdS[1, 2] = -(1 - x) * (1 - z)
-    dNdS[2, 2] = -(1 + x) * (1 - z)
-    dNdS[3, 2] = (1 + x) * (1 - z)
-    dNdS[4, 2] = (1 - x) * (1 - z)
-    dNdS[5, 2] = -(1 - x) * (1 + z)
-    dNdS[6, 2] = -(1 + x) * (1 + z)
-    dNdS[7, 2] = (1 + x) * (1 + z)
-    dNdS[8, 2] = (1 - x) * (1 + z)
+    dNdS[1, 2] = -omx * omz
+    dNdS[2, 2] = -opx * omz
+    dNdS[3, 2] = opx * omz
+    dNdS[4, 2] = omx * omz
+    dNdS[5, 2] = -omx * opz
+    dNdS[6, 2] = -opx * opz
+    dNdS[7, 2] = opx * opz
+    dNdS[8, 2] = omx * opz
 
-    dNdS[1, 3] = -(1 - x) * (1 - y)
-    dNdS[2, 3] = -(1 + x) * (1 - y)
-    dNdS[3, 3] = -(1 + x) * (1 + y)
-    dNdS[4, 3] = -(1 - x) * (1 + y)
-    dNdS[5, 3] = (1 - x) * (1 - y)
-    dNdS[6, 3] = (1 + x) * (1 - y)
-    dNdS[7, 3] = (1 + x) * (1 + y)
-    dNdS[8, 3] = (1 - x) * (1 + y)
+    dNdS[1, 3] = -omx * omy
+    dNdS[2, 3] = -opx * omy
+    dNdS[3, 3] = -opx * opy
+    dNdS[4, 3] = -omx * opy
+    dNdS[5, 3] = omx * omy
+    dNdS[6, 3] = opx * omy
+    dNdS[7, 3] = opx * opy
+    dNdS[8, 3] = omx * opy
 
     dNdS .*= 0.125
 
@@ -98,34 +147,46 @@ function shapeFunctionDeriv(
     # dNdS[n, x, p](x,y,z) := x'th derivative of shape function n for point p.
     # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
     dNdS = zeros(8, 3, length(x))
+    omx::Float64 = 0
+    omy::Float64 = 0
+    omz::Float64 = 0
+    opx::Float64 = 0
+    opy::Float64 = 0
+    opz::Float64 = 0
+    @inbounds for i in eachindex(x)
+        omx = 1 - x[i]
+        omy = 1 - y[i]
+        omz = 1 - z[i]
+        opx = 1 + x[i]
+        opy = 1 + y[i]
+        opz = 1 + z[i]
 
-    for i in eachindex(x)
-        dNdS[1, 1, i] = -(1 - y[i]) * (1 - z[i])
-        dNdS[2, 1, i] = (1 - y[i]) * (1 - z[i])
-        dNdS[3, 1, i] = (1 + y[i]) * (1 - z[i])
-        dNdS[4, 1, i] = -(1 + y[i]) * (1 - z[i])
-        dNdS[5, 1, i] = -(1 - y[i]) * (1 + z[i])
-        dNdS[6, 1, i] = (1 - y[i]) * (1 + z[i])
-        dNdS[7, 1, i] = (1 + y[i]) * (1 + z[i])
-        dNdS[8, 1, i] = -(1 + y[i]) * (1 + z[i])
+        dNdS[1, 1, i] = -omy * omz
+        dNdS[2, 1, i] = omy * omz
+        dNdS[3, 1, i] = opy * omz
+        dNdS[4, 1, i] = -opy * omz
+        dNdS[5, 1, i] = -omy * opz
+        dNdS[6, 1, i] = omy * opz
+        dNdS[7, 1, i] = opy * opz
+        dNdS[8, 1, i] = -opy * opz
 
-        dNdS[1, 2, i] = -(1 - x[i]) * (1 - z[i])
-        dNdS[2, 2, i] = -(1 + x[i]) * (1 - z[i])
-        dNdS[3, 2, i] = (1 + x[i]) * (1 - z[i])
-        dNdS[4, 2, i] = (1 - x[i]) * (1 - z[i])
-        dNdS[5, 2, i] = -(1 - x[i]) * (1 + z[i])
-        dNdS[6, 2, i] = -(1 + x[i]) * (1 + z[i])
-        dNdS[7, 2, i] = (1 + x[i]) * (1 + z[i])
-        dNdS[8, 2, i] = (1 - x[i]) * (1 + z[i])
+        dNdS[1, 2, i] = -omx * omz
+        dNdS[2, 2, i] = -opx * omz
+        dNdS[3, 2, i] = opx * omz
+        dNdS[4, 2, i] = omx * omz
+        dNdS[5, 2, i] = -omx * opz
+        dNdS[6, 2, i] = -opx * opz
+        dNdS[7, 2, i] = opx * opz
+        dNdS[8, 2, i] = omx * opz
 
-        dNdS[1, 3, i] = -(1 - x[i]) * (1 - y[i])
-        dNdS[2, 3, i] = -(1 + x[i]) * (1 - y[i])
-        dNdS[3, 3, i] = -(1 + x[i]) * (1 + y[i])
-        dNdS[4, 3, i] = -(1 - x[i]) * (1 + y[i])
-        dNdS[5, 3, i] = (1 - x[i]) * (1 - y[i])
-        dNdS[6, 3, i] = (1 + x[i]) * (1 - y[i])
-        dNdS[7, 3, i] = (1 + x[i]) * (1 + y[i])
-        dNdS[8, 3, i] = (1 - x[i]) * (1 + y[i])
+        dNdS[1, 3, i] = -omx * omy
+        dNdS[2, 3, i] = -opx * omy
+        dNdS[3, 3, i] = -opx * opy
+        dNdS[4, 3, i] = -omx * opy
+        dNdS[5, 3, i] = omx * omy
+        dNdS[6, 3, i] = opx * omy
+        dNdS[7, 3, i] = opx * opy
+        dNdS[8, 3, i] = omx * opy
     end
 
     dNdS .*= 0.125

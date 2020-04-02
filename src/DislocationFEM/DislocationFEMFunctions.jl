@@ -12,6 +12,7 @@ function pkForce(
 """
 ```
 ```
+Calculate the reaction from a dislocation.
 """
 function hatStress(
     mesh::RegularCuboidMesh,
@@ -60,9 +61,9 @@ function hatStress(
     n1 = label[idx, 1]
     n7 = label[idx, 7]
     # Find element midpoints.
-    xc = @. 0.5 * (coord[n1, 1] + coord[n7, 1])
-    yc = @. 0.5 * (coord[n1, 2] + coord[n7, 2])
-    zc = @. 0.5 * (coord[n1, 3] + coord[n7, 3])
+    xc = 0.5 * (coord[n1, 1] + coord[n7, 1])
+    yc = 0.5 * (coord[n1, 2] + coord[n7, 2])
+    zc = 0.5 * (coord[n1, 3] + coord[n7, 3])
     # Setting up Jacobian.
     #=
         # The code is this but simplified for performance.

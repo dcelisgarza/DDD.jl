@@ -225,13 +225,19 @@ uvw = [-0.5; 2.0; 1.0];
 abc = zeros(3);
 
 using BenchmarkTools
-test = rand(3000, 3)
+test = rand(30000, 3)
 x = test[:, 1]
 y = test[:, 2]
 z = test[:, 3]
+shapeFunction(LinearQuadrangle3D(), x, y, z)
+shapeFunctionDeriv(LinearQuadrangle3D(), x, y, z)
 @benchmark shapeFunction(LinearQuadrangle3D(), x, y, z)
 @benchmark shapeFunctionDeriv(LinearQuadrangle3D(), x, y, z)
+
+
+
 @benchmark shapeFunction(LinearQuadrangle3D(), x, y, z)
+@benchmark shapeFunctionDeriv(LinearQuadrangle3D(), x, y, z)
 
 
 @benchmark shapeFunction(
