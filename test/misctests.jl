@@ -1,11 +1,75 @@
 using DDD
-using Test, Plots
+using Test
 cd(@__DIR__)
+
+using Makie
+function plotNodesMakie(network::DislocationNetwork, args...; kw...)
+    idx = idxLabel(network, -1; condition = !=)
+    coord = network.coord
+    fig = Scene()
+    meshscatter!(coord, args...; kw...)
+    for i in idx
+        n1 = network.links[i, 1]
+        n2 = network.links[i, 2]
+        lines!(
+            coord[[n1, n2], 1],
+            coord[[n1, n2], 2],
+            coord[[n1, n2], 3],
+            args...;
+            kw...,
+        )
+    end
+    return fig
+end
+
+function plotNodesMakie!(fig, network::DislocationNetwork, args...; kw...)
+    idx = idxLabel(network, -1; condition = !=)
+    coord = network.coord
+    meshscatter!(coord, args...; kw...)
+    for i in idx
+        n1 = network.links[i, 1]
+        n2 = network.links[i, 2]
+        lines!(
+            coord[[n1, n2], 1],
+            coord[[n1, n2], 2],
+            coord[[n1, n2], 3],
+            args...;
+            kw...,
+        )
+    end
+    return fig
+end
+
+params = "../inputs/simParams/sampleParams.csv"
+slipsys = "../data/slipSystems/bcc.csv"
+source = "../inputs/dln/sampleDln.csv"
+using LinearAlgebra
+dlnParams, matParams, intParams, slipSystems, loops =
+    loadParams(params, slipsys, source)
+network = makeNetwork(loops; memBuffer = 1)
+segVec = getSegVector(network)
+
+sqrt.(sum(segVec.*segVec, dims=2))
+
+
+
+segVec[:,:].*segVec[:,:]
+
+sum(segVec[1,:].*segVec[1,:],dims=1)
+norm(segVec,2)
+
+
+scene1 = plotNodesMakie(network, linewidth = 2, markersize = 0.1, strokecolor =:green, color=:orange)
+plotNodesMakie!(scene1, network2, linewidth = 2, markersize = 0.1, strokecolor =:blue, color=:blue)
+
+#=
+using Plots
 params = "../inputs/simParams/sampleParams.csv"
 slipsys = "../data/slipSystems/bcc.csv"
 source = "../inputs/dln/samplePrismaticShear.csv"
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
+
 network = DislocationNetwork(
     zeros(Int64, 3, 2),
     zeros(3, 3),
@@ -74,46 +138,6 @@ plotNodes!(
     markercolor = :black,
     legend = false,
 )
-
-using Makie
-function plotNodesMakie(network::DislocationNetwork, args...; kw...)
-    idx = idxLabel(network, -1; condition = !=)
-    coord = network.coord
-    fig = Scene()
-    meshscatter!(coord, args...; kw...)
-    for i in idx
-        n1 = network.links[i, 1]
-        n2 = network.links[i, 2]
-        lines!(
-            coord[[n1, n2], 1],
-            coord[[n1, n2], 2],
-            coord[[n1, n2], 3],
-            args...;
-            kw...,
-        )
-    end
-    return fig
-end
-
-function plotNodesMakie!(fig, network::DislocationNetwork, args...; kw...)
-    idx = idxLabel(network, -1; condition = !=)
-    coord = network.coord
-    meshscatter!(coord, args...; kw...)
-    for i in idx
-        n1 = network.links[i, 1]
-        n2 = network.links[i, 2]
-        lines!(
-            coord[[n1, n2], 1],
-            coord[[n1, n2], 2],
-            coord[[n1, n2], 3],
-            args...;
-            kw...,
-        )
-    end
-    return fig
-end
-
-plotNodesMakie(network, linewidth = 0.3, markersize = 2)
 
 fig = plot()
 plot(
@@ -254,3 +278,4 @@ shapeFunctionDeriv(LinearQuadrangle3D(), x, y, z)
     test[:, 2],
     test[:, 3],
 )
+=#

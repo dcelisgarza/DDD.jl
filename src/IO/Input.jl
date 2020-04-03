@@ -95,6 +95,7 @@ function matLoadParams(df::DataFrame)
         convert(Float64, df[1, :μ]),
         convert(Float64, df[1, :μMag]),
         convert(Float64, df[1, :ν]),
+        convert(Float64, df[1, :E]),
         strucDict[df[1, :crystalStruct]],
     )
     return matParams

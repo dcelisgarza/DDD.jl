@@ -17,6 +17,7 @@ mobility,mobBCC()
 μ,1.0
 μMag,145000
 ν,0.28
+E,1.
 crystalStruct,BCC()
 dt,1000000.0
 tmin,0.0

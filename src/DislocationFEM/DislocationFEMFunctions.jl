@@ -89,7 +89,7 @@ function hatStress(
     dNdS[:, 2] .*= ds2dy
     dNdS[:, 3] .*= ds3dz
 
-    @inbounds for i = 1:size(dNdS, 2)
+    @inbounds for i = 1:size(dNdS, 1)
         # Indices calculated once for performance.
         idx1 = 3 * i
         idx2 = 3 * (i - 1)

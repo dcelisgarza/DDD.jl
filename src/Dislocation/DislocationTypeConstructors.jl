@@ -200,8 +200,8 @@ Constructor for [`DislocationNetwork`](@ref), see [`makeNetwork!`](@ref) for in-
 function makeNetwork(
     sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
     maxConnect::Integer = 4,
-    memBuffer::Integer = 10,
     args...;
+    memBuffer::Integer = 10,
     checkConsistency::Bool = false,
     kw...,
 )
