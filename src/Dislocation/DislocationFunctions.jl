@@ -116,6 +116,7 @@ At a high level this works by creating a local coordinate frame using the line d
     bVec = transpose(network.bVec[idx[:, 1], :])
     node1 = transpose(coord[idx[:, 2], :])
     node2 = transpose(coord[idx[:, 3], :])
+    
     b1 = zeros(3)
     b2 = zeros(3)
     t1 = zeros(3)
@@ -124,16 +125,24 @@ At a high level this works by creating a local coordinate frame using the line d
     n12 = zeros(3) # Segment 1, node 2
     n21 = zeros(3) # Segment 2, node 1
     n22 = zeros(3) # Segment 2, node 2
-    integ = zeros(19)
-    integt = zeros(19)
-    SegSegForcet = zeros(3, 4)
-    SegSegForce = zeros(3, 2, numSegs - 1)
     t2ct1 = zeros(3)
     t1ct2 = zeros(3)
     t2cb1 = zeros(3)
     t1cb2 = zeros(3)
     b2ct2 = zeros(3)
     b1ct1 = zeros(3)
+    t2ct1ct2 = zeros(3)
+    t1ct2ct2 = zeros(3)
+    t2ct1cb1 = zeros(3)
+    t1ct2cb2 = zeros(3)
+    t2cb1ct2 = zeros(3)
+    t1cb2ct1 = zeros(3)
+    b1ct1ct2 = zeros(3)
+    b2ct2ct1 = zeros(3)
+    integ = zeros(19)
+    integt = zeros(19)
+    SegSegForcet = zeros(3, 4)
+    SegSegForce = zeros(3, 2, numSegs - 1)
 
     # We're also explcitly using dot products and norms because caching due to variable reuse makes things faster when explicitly typed.
     for i = 1:(numSegs - 1)
