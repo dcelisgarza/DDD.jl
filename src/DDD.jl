@@ -18,10 +18,10 @@ include("./FEM/FEMBase.jl")
 include("./DislocationFEM/DislocationFEMBase.jl")
 include("./IO/IOBase.jl")
 include("./PostProcessing/Plotting.jl")
-export shapeFunction, shapeFunctionDeriv
+export shapeFunction, shapeFunctionDeriv, dimDot, dimNorm
 export inclusiveComparison
 export compStruct, intAngle, extAngle, rot3D, makeTypeDict
-export getSegVector
+export getSegVector, calcSelfForce, calcSegSegForce
 export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
 export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
 export AbstractDistribution, Zeros, Rand, Randn, Regular
@@ -31,9 +31,6 @@ export AbstractIntegrator, CustomTrapezoid
 export AbstractMesh, RegularCuboidMesh, AbstractShapeFunction
 export AbstractShapeFunction3D, AbstractShapeFunction2D
 export LinearQuadrangle3D, LinearQuadrangle2D
-
-
-
 export hatStress
 export DislocationP, DislocationNetwork
 export coordLbl, coordIdx, idxLabel, idxCond, dataCond

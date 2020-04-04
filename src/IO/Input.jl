@@ -141,5 +141,5 @@ function loadParams(
     intParams = intLoadParams(df)
     slipSystems = loadSlipSys(fileSlipSys)
     sources = loadDln(df2, slipSystems)
-    return dlnParams, matParams, intParams, slipSystems, sources
+    return (dlnParams, matParams, intParams, slipSystems, sources)
 end # function

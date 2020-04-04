@@ -192,3 +192,13 @@ function rot3D(
         )
     ]
 end
+function dimDot(
+    x::AbstractArray{<:T, N} where {N},
+    y::AbstractArray{<:T, N} where {N};
+    dims::Integer=2,
+) where {T}
+    return sum(x .* y, dims = dims)
+end
+function dimNorm(x::AbstractArray{<:T, N} where {N}; dims::Integer=2) where {T}
+    return sqrt.(dimDot(x, x; dims = dims))
+end

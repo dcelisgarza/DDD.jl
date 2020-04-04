@@ -1,3 +1,7 @@
+function getNodeCoord(network::DislocationNetwork, )
+
+end
+
 function getSegVector(network::DislocationNetwork)
     coord = network.coord
     idx = network.segIdx[:, 2:3]
@@ -6,7 +10,7 @@ function getSegVector(network::DislocationNetwork)
 end
 
 function getSegBvec(network::DislocationNetwork)
-    bVec = network.coord
+    bVec = network.bVec
     idx = network.segIdx[:, 1]
 
     return bVec[idx]

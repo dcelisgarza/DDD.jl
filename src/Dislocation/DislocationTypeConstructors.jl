@@ -32,20 +32,22 @@ function makeLoop(
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
 
-    return numSides,
-    nodeSide,
-    numLoops,
-    segType,
-    segLen,
-    slipSystem,
-    links,
-    slipPlane,
-    bVec,
-    coord,
-    label,
-    buffer,
-    range,
-    dist
+    return (
+        numSides,
+        nodeSide,
+        numLoops,
+        segType,
+        segLen,
+        slipSystem,
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        buffer,
+        range,
+        dist,
+    )
 end
 
 """
@@ -165,20 +167,22 @@ function makeLoop(
     end
     links[nodeTotal, :] = [nodeTotal; 1]
 
-    return numSides,
-    nodeSide,
-    numLoops,
-    segType,
-    segLen,
-    slipSystem,
-    links,
-    slipPlane,
-    bVec,
-    coord,
-    label,
-    buffer,
-    range,
-    dist
+    return (
+        numSides,
+        nodeSide,
+        numLoops,
+        segType,
+        segLen,
+        slipSystem,
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        buffer,
+        range,
+        dist,
+    )
 end
 
 """

@@ -1,6 +1,38 @@
 using DDD
-using Test
+using Test, BenchmarkTools, Profile
 cd(@__DIR__)
+
+params = "../inputs/simParams/sampleParams.csv"
+slipsys = "../data/slipSystems/bcc.csv"
+source = "../inputs/dln/sampleDln.csv"
+using LinearAlgebra
+dlnParams, matParams, intParams, slipSystems, loops =
+    loadParams(params, slipsys, source)
+network = makeNetwork(loops; memBuffer = 1)
+calcSelfForce(dlnParams, matParams, network)
+# @benchmark calcSelfForce(dlnParams, matParams, network)
+calcSegSegForce(dlnParams, matParams,network)
+
+Profile.clear()
+
+for i in 1:10000
+    @profile calcSelfForce(dlnParams, matParams, network)
+end
+
+@benchmark calcSelfForce(dlnParams, matParams, network)
+
+
+
+
+
+
+
+
+
+
+
+
+@benchmark calcSelfForce(dlnParams, matParams, network)
 
 using Makie
 function plotNodesMakie(network::DislocationNetwork, args...; kw...)
@@ -40,28 +72,37 @@ function plotNodesMakie!(fig, network::DislocationNetwork, args...; kw...)
     return fig
 end
 
-params = "../inputs/simParams/sampleParams.csv"
-slipsys = "../data/slipSystems/bcc.csv"
-source = "../inputs/dln/sampleDln.csv"
-using LinearAlgebra
-dlnParams, matParams, intParams, slipSystems, loops =
-    loadParams(params, slipsys, source)
-network = makeNetwork(loops; memBuffer = 1)
 segVec = getSegVector(network)
 
-sqrt.(sum(segVec.*segVec, dims=2))
+sqrt.(sum(segVec .* segVec, dims = 2))
 
+segVec[:, :] .* segVec[:, :]
 
+sum(segVec[1, :] .* segVec[1, :], dims = 1)
+norm(segVec, 2)
 
-segVec[:,:].*segVec[:,:]
+scene1 = plotNodesMakie(
+    network,
+    linewidth = 2,
+    markersize = 0.1,
+    strokecolor = :green,
+    color = :orange,
+)
+plotNodesMakie!(
+    scene1,
+    network2,
+    linewidth = 2,
+    markersize = 0.1,
+    strokecolor = :blue,
+    color = :blue,
+)
 
-sum(segVec[1,:].*segVec[1,:],dims=1)
-norm(segVec,2)
+trythis = rand(100000, 3)
+trythis2 = rand(100000, 3)
 
-
-scene1 = plotNodesMakie(network, linewidth = 2, markersize = 0.1, strokecolor =:green, color=:orange)
-plotNodesMakie!(scene1, network2, linewidth = 2, markersize = 0.1, strokecolor =:blue, color=:blue)
-
+dimDot(trythis,trythis)
+@benchmark dimNorm(trythis; dims = 2)
+@benchmark sqrt.(sum(trythis .* trythis, dims = 2))
 #=
 using Plots
 params = "../inputs/simParams/sampleParams.csv"
