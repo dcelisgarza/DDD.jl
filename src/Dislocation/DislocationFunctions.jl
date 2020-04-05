@@ -135,9 +135,14 @@ At a high level this works by creating a local coordinate frame using the line d
     t1cb2ct1 = zeros(3)
     b1ct1ct2 = zeros(3)
     b2ct2ct1 = zeros(3)
+
+    # auxVecs = zeros(3, 18)
+
     integ = zeros(19)
     integt = zeros(19)
-    SegSegForcet = zeros(3, 4)
+    V = zeros(3, 17)
+    Fint = zeros(11)
+    Fnode = zeros(3, 4)
     SegSegForce = zeros(3, 2, numSegs - 1)
 
     # We're also explcitly using dot products and norms because caching due to variable reuse makes things faster when explicitly typed.
@@ -172,6 +177,10 @@ At a high level this works by creating a local coordinate frame using the line d
             c = t2[1] * t1[1] + t2[2] * t1[2] + t2[3] * t1[3]
             cSq = c^2
             omcSq = 1 - cSq
+            V .= 0.0
+            Fint .= 0.0
+            Fnode .= 0.0
+            # println("$i, $j")
             if omcSq > eps(Float64)
                 calcSegSegForce(
                     aSq,
@@ -194,12 +203,20 @@ At a high level this works by creating a local coordinate frame using the line d
                     t1ct2,
                     b2ct2,
                     b1ct1,
+                    t2ct1ct2,
+                    t1ct2ct2,
+                    t2cb1ct2,
+                    t1cb2ct1,
+                    b1ct1ct2,
+                    b2ct2ct1,
                     c,
                     cSq,
                     omcSq,
                     integ,
                     integt,
-                    SegSegForcet,
+                    V,
+                    Fint,
+                    Fnode,
                 )
             else
                 calcSegSegForce(
@@ -221,7 +238,7 @@ At a high level this works by creating a local coordinate frame using the line d
                     n22,
                     integ,
                     integt,
-                    SegSegForcet,
+                    Fnode,
                 )
             end
         end
@@ -249,12 +266,20 @@ end
     t1ct2::T2,
     b2ct2::T2,
     b1ct1::T2,
+    t2ct1ct2::T2,
+    t1ct2ct2::T2,
+    t2cb1ct2::T2,
+    t1cb2ct1::T2,
+    b1ct1ct2::T2,
+    b2ct2ct1::T2,
     c::T1,
     cSq::T1,
     omcSq::T1,
     integ::T2,
     integt::T2,
-    SegSegForce::T3,
+    V::T3,
+    Fint::T2,
+    Fnode::T3,
 ) where {
     T1 <: Float64,
     T2 <: AbstractVector{<:Float64},
@@ -351,216 +376,51 @@ end
     t1ct2cb2dt2 = t1db2 - t2db2 * c
     t2ct1cb1db2 = t2db1 * t1db2 - t1db1 * t2db2
 
-    # Seg 2 (nodes 4-3)
-    tmp1 = t2db1 * t1db2 + t2ct1cb1db2
-    I00a = @. tmp1 * t1ct2
-    I00b = @. b2ct2 * t2ct1cb1dt1
-    I01a = @. t2ct1 * b1ct1db2 - b1ct1ct2 * t1db2
-    I10a = @. t2cb1ct2 * t1db2 - t2ct1 * b2ct2db1
-    I10b = @. b2ct2 * t1ct2db1
-
-    tmp1 = μ4πνd * t2ct1db2
-    tmp2 = μ4πνd * b1ct1db2
-    V[:, 1] = @. μ4πd * I00a - μ4πνd * I00b + tmp1 * b1ct1ct2 + tmp2 * t2ct1ct2
-
-
-    tmp1 = μ4πν * t2db2
-    V[:, 2] = @. tmp1 * b1ct1ct2 + μ4π * I10a - μ4πν * I10b
-
-    tmp1 = μ4πν * t1db2
-    tmp2 = μ4πν * b1ct1db2
-    V[:, 3] = @. μ4π * I01a + tmp1 * b1ct1ct2 - tmp2 * t2ct1
-
-    tmp1 = μ4πνdCu * t2ct1cb1dt1 * t2ct1db2
-    V[:, 4] = @. μ8πaSqd * I00a - μ4πνaSqd * I00b - tmp1 * t2ct1ct2
-
-    tmp1 = μ4πνdSq * (t1ct2db1 * t2ct1db2 + t2ct1cb1dt1 * t2db2)
-    V[:, 5] = @. μ8πaSq * I10a - a2m4pn * I10b - tmp1 * t2ct1ct2
-
-    tmp1 = μ4πνdSq * t2ct1cb1dt1 * t1db2
-    tmp2 = μ4πνdSq * t2ct1cb1dt1 * t2ct1db2
-    V[:, 6] = @. μ8πaSq * I01a - tmp1 * t2ct1ct2 + tmp2 * t2ct1
-
-    tmp1 = μ4πνd * (t2ct1cb1dt1 * t2db2 + t1ct2db1 * t2ct1db2)
-    tmp2 = μ4πνd * t1ct2db1 * t1db2
-    V[:, 7] = @. tmp1 * t2ct1 - tmp2 * t2ct1ct2
-
-    tmp1 = μ4πνd * t1ct2db1 * t2db2
-    V[:, 8] = @. -tmp1 * t2ct1ct2
-
-    tmp1 = μ4πνd * t2ct1cb1dt1 * t1db2
-    V[:, 9] = @. tmp1 * t2ct1
-
-    tmp1 = μ4πν * t1ct2db1 * t2db2
-    V[:, 10] = @. tmp1 * t2ct1
-
-    tmp1 = (μ4πν * t1ct2db1 * t1db2)
-    V[:, 11] = @. tmp1 * t2ct1
-
-    Fint[1] = integ[2] - x1 * integ[1]
-    Fint[2] = integ[5] - x1 * integ[2]
-    Fint[3] = integ[4] - x1 * integ[3]
-    Fint[4] = integ[8] - x1 * integ[7]
-    Fint[5] = integ[11] - x1 * integ[8]
-    Fint[6] = integ[10] - x1 * integ[9]
-    Fint[7] = integ[13] - x1 * integ[10]
-    Fint[8] = integ[16] - x1 * integ[11]
-    Fint[9] = integ[14] - x1 * integ[12]
-    Fint[10] = integ[18] - x1 * integ[13]
-    Fint[11] = integ[15] - x1 * integ[14]
-
-    fp4 = sum(V.*Fint',dims=2) .* t2N
-
-
-    Fint[1] = x2 * integ[1] - integ[2]
-    Fint[2] = x2 * integ[2] - integ[5]
-    Fint[3] = x2 * integ[3] - integ[4]
-    Fint[4] = x2 * integ[7] - integ[8]
-    Fint[5] = x2 * integ[8] - integ[11]
-    Fint[6] = x2 * integ[9] - integ[10]
-    Fint[7] = x2 * integ[10] - integ[13]
-    Fint[8] = x2 * integ[11] - integ[16]
-    Fint[9] = x2 * integ[12] - integ[14]
-    Fint[10] = x2 * integ[13] - integ[18]
-    Fint[11] = x2 * integ[14] - integ[15]
-
-    fp3x =
-        (
-            V[:, 1] * Fint[1] +
-            V[:, 2] * Fint[2] +
-            V[:, 3] * Fint[3] +
-            V[:, 4] * Fint[4] +
-            V[:, 5] * Fint[5] +
-            V[:, 6] * Fint[6] +
-            V[:, 7] * Fint[7] +
-            V[:, 8] * Fint[8] +
-            V[:, 9] * Fint[9] +
-            V[:, 10] * Fint[10] +
-            V[:, 11] * Fint[11]
-        ) * t2N
-
-    fp3y =
-        (
-            I_003y * Fint[1] +
-            I_103y * Fint[2] +
-            I_013y * Fint[3] +
-            I_005y * Fint[4] +
-            I_105y * Fint[5] +
-            I_015y * Fint[6] +
-            I_115y * Fint[7] +
-            I_205y * Fint[8] +
-            I_025y * Fint[9] +
-            I_215y * Fint[10] +
-            I_125y * Fint[11]
-        ) * t2N
-
-    fp3z =
-        (
-            I_003z * Fint[1] +
-            I_103z * Fint[2] +
-            I_013z * Fint[3] +
-            I_005z * Fint[4] +
-            I_105z * Fint[5] +
-            I_015z * Fint[6] +
-            I_115z * Fint[7] +
-            I_205z * Fint[8] +
-            I_025z * Fint[9] +
-            I_215z * Fint[10] +
-            I_125z * Fint[11]
-        ) * t2N
-
     # seg 1, nodes 2-1
     tmp1 = t1db2 * t2db1 + t2ct1cb1db2
-
-    I00ax = tmp1 * t2ct1
-    I00ay = tmp1 * tctpy
-    I00az = tmp1 * tctpz
-
-    I00bx = b1ct1 * t1ct2cb2dt2
-    I00by = bpctpy * t1ct2cb2dt2
-    I00bz = bpctpz * t1ct2cb2dt2
+    V[:, 1] = @. tmp1 * t2ct1
+    V[:, 2] = @. b1ct1 * t1ct2cb2dt2
+    V[:, 3] = @. t1ct2 * b1ct1db2 - t1cb2ct1 * t2db1
+    V[:, 4] = @. -b1ct1 * t2ct1db2
+    V[:, 5] = @. b2ct2ct1 * t2db1 - t1ct2 * b2ct2db1
 
     tmp1 = μ4πνd * t1ct2db1
     tmp2 = μ4πνd * b2ct2db1
-
-    V[:, 1] = μ4πd * I00ax - μ4πνd * I00bx + tmp1 * b2ct2ct1 + tmp2 * t1ct2ct1
-    I_003y = μ4πd * I00ay - μ4πνd * I00by + tmp1 * bctctpy + tmp2 * tpctctpy
-    I_003z = μ4πd * I00az - μ4πνd * I00bz + tmp1 * bctctpz + tmp2 * tpctctpz
-
-    tmp1 = μ4πνdCu * t1ct2cb2dt2 * t1ct2db1
-
-    V[:, 4] = μ8πaSqd * I00ax - μ4πνaSqd * I00bx - tmp1 * t1ct2ct1
-    I_005y = μ8πaSqd * I00ay - μ4πνaSqd * I00by - tmp1 * tpctctpy
-    I_005z = μ8πaSqd * I00az - μ4πνaSqd * I00bz - tmp1 * tpctctpz
-
-    I01ax = t1ct2 * b1ct1db2 - t1cb2ct1 * t2db1
-    I01ay = tpcty * b1ct1db2 - tpcbctpy * t2db1
-    I01az = tpctz * b1ct1db2 - tpcbctpz * t2db1
-
-    I01bx = -b1ct1 * t2ct1db2
-    I01by = -bpctpy * t2ct1db2
-    I01bz = -bpctpz * t2ct1db2
-
-    tmp1 = μ4πν * t1db1
-
-    V[:, 3] = -tmp1 * b2ct2ct1 + μ4π * I01ax - μ4πν * I01bx
-    I_013y = -tmp1 * bctctpy + μ4π * I01ay - μ4πν * I01by
-    I_013z = -tmp1 * bctctpz + μ4π * I01az - μ4πν * I01bz
-
-    tmp1 = μ4πνdSq * (t2ct1db2 * t1ct2db1 + t1ct2cb2dt2 * t1db1)
-
-    V[:, 6] = μ8πaSq * I01ax - a2m4pn * I01bx + tmp1 * t1ct2ct1
-    I_015y = μ8πaSq * I01ay - a2m4pn * I01by + tmp1 * tpctctpy
-    I_015z = μ8πaSq * I01az - a2m4pn * I01bz + tmp1 * tpctctpz
-
-    I10ax = b2ct2ct1 * t2db1 - t1ct2 * b2ct2db1
-    I10ay = bctctpy * t2db1 - tpcty * b2ct2db1
-    I10az = bctctpz * t2db1 - tpctz * b2ct2db1
+    V[:, 7] =
+        @. μ4πd * V[:, 1] - μ4πνd * V[:, 2] + tmp1 * b2ct2ct1 + tmp2 * t1ct2ct1
 
     tmp1 = μ4πν * t2db1
     tmp2 = μ4πν * b2ct2db1
+    V[:, 8] = μ4π * V[:, 5] - tmp1 * b2ct2ct1 + tmp2 * t1ct2
 
-    V[:, 2] = μ4π * I10ax - tmp1 * b2ct2ct1 + tmp2 * t1ct2
-    I_103y = μ4π * I10ay - tmp1 * bctctpy + tmp2 * tpcty
-    I_103z = μ4π * I10az - tmp1 * bctctpz + tmp2 * tpctz
+    tmp1 = μ4πν * t1db1
+    V[:, 9] = @. -tmp1 * b2ct2ct1 + μ4π * V[:, 3] - μ4πν * V[:, 4]
+
+    tmp1 = μ4πνdCu * t1ct2cb2dt2 * t1ct2db1
+    V[:, 10] = @. μ8πaSqd * V[:, 1] - μ4πνaSqd * V[:, 2] - tmp1 * t1ct2ct1
 
     tmp1 = μ4πνdSq * t1ct2cb2dt2 * t2db1
     tmp2 = μ4πνdSq * t1ct2cb2dt2 * t1ct2db1
+    V[:, 11] = @. μ8πaSq * V[:, 5] + tmp1 * t1ct2ct1 - tmp2 * t1ct2
 
-    V[:, 5] = μ8πaSq * I10ax + tmp1 * t1ct2ct1 - tmp2 * t1ct2
-    I_105y = μ8πaSq * I10ay + tmp1 * tpctctpy - tmp2 * tpcty
-    I_105z = μ8πaSq * I10az + tmp1 * tpctctpz - tmp2 * tpctz
-
-    tmp1 = (μ4πνd * t2ct1db2 * t1db1)
-
-    V[:, 9] = -tmp1 * t1ct2ct1
-    I_025y = -tmp1 * tpctctpy
-    I_025z = -tmp1 * tpctctpz
-
-    tmp1 = (μ4πνd * t1ct2cb2dt2 * t2db1)
-
-    V[:, 8] = tmp1 * t1ct2
-    I_205y = tmp1 * tpcty
-    I_205z = tmp1 * tpctz
+    tmp1 = μ4πνdSq * (t2ct1db2 * t1ct2db1 + t1ct2cb2dt2 * t1db1)
+    V[:, 12] = @. μ8πaSq * V[:, 3] - μ4πνaSq * V[:, 4] + tmp1 * t1ct2ct1
 
     tmp1 = μ4πνd * (t1ct2cb2dt2 * t1db1 + t2ct1db2 * t1ct2db1)
     tmp2 = μ4πνd * t2ct1db2 * t2db1
+    V[:, 13] = @. tmp1 * t1ct2 - tmp2 * t1ct2ct1
 
-    V[:, 7] = tmp1 * t1ct2 - tmp2 * t1ct2ct1
-    I_115y = tmp1 * tpcty - tmp2 * tpctctpy
-    I_115z = tmp1 * tpctz - tmp2 * tpctctpz
+    tmp1 = μ4πνd * t1ct2cb2dt2 * t2db1
+    V[:, 14] = @. tmp1 * t1ct2
 
-    tmp1 = (μ4πν * t2ct1db2 * t1db1)
-
-    V[:, 11] = -tmp1 * t1ct2
-    I_125y = -tmp1 * tpcty
-    I_125z = -tmp1 * tpctz
+    tmp1 = μ4πνd * t2ct1db2 * t1db1
+    V[:, 15] = @. -tmp1 * t1ct2ct1
 
     tmp1 = (μ4πν * t2ct1db2 * t2db1)
+    V[:, 16] = @. -tmp1 * t1ct2
 
-    V[:, 10] = -tmp1 * t1ct2
-    I_215y = -tmp1 * tpcty
-    I_215z = -tmp1 * tpctz
+    tmp1 = (μ4πν * t2ct1db2 * t1db1)
+    V[:, 17] = @. -tmp1 * t1ct2
 
     Fint[1] = integ[3] - y2 * integ[1]
     Fint[2] = integ[4] - y2 * integ[2]
@@ -574,50 +434,7 @@ end
     Fint[10] = integ[15] - y2 * integ[13]
     Fint[11] = integ[19] - y2 * integ[14]
 
-    fp1x =
-        (
-            V[:, 1] * Fint[1] +
-            V[:, 2] * Fint[2] +
-            V[:, 3] * Fint[3] +
-            V[:, 4] * Fint[4] +
-            V[:, 5] * Fint[5] +
-            V[:, 6] * Fint[6] +
-            V[:, 7] * Fint[7] +
-            V[:, 8] * Fint[8] +
-            V[:, 9] * Fint[9] +
-            V[:, 10] * Fint[10] +
-            V[:, 11] * Fint[11]
-        ) * t1N
-
-    fp1y =
-        (
-            I_003y * Fint[1] +
-            I_103y * Fint[2] +
-            I_013y * Fint[3] +
-            I_005y * Fint[4] +
-            I_105y * Fint[5] +
-            I_015y * Fint[6] +
-            I_115y * Fint[7] +
-            I_205y * Fint[8] +
-            I_025y * Fint[9] +
-            I_215y * Fint[10] +
-            I_125y * Fint[11]
-        ) * t1N
-
-    fp1z =
-        (
-            I_003z * Fint[1] +
-            I_103z * Fint[2] +
-            I_013z * Fint[3] +
-            I_005z * Fint[4] +
-            I_105z * Fint[5] +
-            I_015z * Fint[6] +
-            I_115z * Fint[7] +
-            I_205z * Fint[8] +
-            I_025z * Fint[9] +
-            I_215z * Fint[10] +
-            I_125z * Fint[11]
-        ) * t1N
+    Fnode[:, 1] = sum(V[:, 7:17] .* Fint', dims = 2) .* t1N
 
     Fint[1] = y1 * integ[1] - integ[3]
     Fint[2] = y1 * integ[2] - integ[4]
@@ -631,52 +448,85 @@ end
     Fint[10] = y1 * integ[13] - integ[15]
     Fint[11] = y1 * integ[14] - integ[19]
 
-    fp2x =
-        (
-            V[:, 1] * Fint[1] +
-            V[:, 2] * Fint[2] +
-            V[:, 3] * Fint[3] +
-            V[:, 4] * Fint[4] +
-            V[:, 5] * Fint[5] +
-            V[:, 6] * Fint[6] +
-            V[:, 7] * Fint[7] +
-            V[:, 8] * Fint[8] +
-            V[:, 9] * Fint[9] +
-            V[:, 10] * Fint[10] +
-            V[:, 11] * Fint[11]
-        ) * t1N
+    Fnode[:, 2] = sum(V[:, 7:17] .* Fint', dims = 2) .* t1N
 
-    fp2y =
-        (
-            I_003y * Fint[1] +
-            I_103y * Fint[2] +
-            I_013y * Fint[3] +
-            I_005y * Fint[4] +
-            I_105y * Fint[5] +
-            I_015y * Fint[6] +
-            I_115y * Fint[7] +
-            I_205y * Fint[8] +
-            I_025y * Fint[9] +
-            I_215y * Fint[10] +
-            I_125y * Fint[11]
-        ) * t1N
+    # Seg 2 (nodes 4-3)
+    tmp1 = t2db1 * t1db2 + t2ct1cb1db2
+    V[:, 1] = @. tmp1 * t1ct2
+    V[:, 2] = @. b2ct2 * t2ct1cb1dt1
+    V[:, 3] = @. t2ct1 * b1ct1db2 - b1ct1ct2 * t1db2
+    V[:, 5] = @. t2cb1ct2 * t1db2 - t2ct1 * b2ct2db1
+    V[:, 6] = @. b2ct2 * t1ct2db1
 
-    fp2z =
-        (
-            I_003z * Fint[1] +
-            I_103z * Fint[2] +
-            I_013z * Fint[3] +
-            I_005z * Fint[4] +
-            I_105z * Fint[5] +
-            I_015z * Fint[6] +
-            I_115z * Fint[7] +
-            I_205z * Fint[8] +
-            I_025z * Fint[9] +
-            I_215z * Fint[10] +
-            I_125z * Fint[11]
-        ) * t1N
+    tmp1 = μ4πνd * t2ct1db2
+    tmp2 = μ4πνd * b1ct1db2
+    V[:, 7] =
+        @. μ4πd * V[:, 1] - μ4πνd * V[:, 2] + tmp1 * b1ct1ct2 + tmp2 * t2ct1ct2
 
-    return SegSegForce
+    tmp1 = μ4πν * t2db2
+    V[:, 8] = @. tmp1 * b1ct1ct2 + μ4π * V[:, 5] - μ4πν * V[:, 6]
+
+    tmp1 = μ4πν * t1db2
+    tmp2 = μ4πν * b1ct1db2
+    V[:, 9] = @. μ4π * V[:, 3] + tmp1 * b1ct1ct2 - tmp2 * t2ct1
+
+    tmp1 = μ4πνdCu * t2ct1cb1dt1 * t2ct1db2
+    V[:, 10] = @. μ8πaSqd * V[:, 1] - μ4πνaSqd * V[:, 2] - tmp1 * t2ct1ct2
+
+    tmp1 = μ4πνdSq * (t1ct2db1 * t2ct1db2 + t2ct1cb1dt1 * t2db2)
+    V[:, 11] = @. μ8πaSq * V[:, 5] - μ4πνaSq * V[:, 6] - tmp1 * t2ct1ct2
+
+    tmp1 = μ4πνdSq * t2ct1cb1dt1 * t1db2
+    tmp2 = μ4πνdSq * t2ct1cb1dt1 * t2ct1db2
+    V[:, 12] = @. μ8πaSq * V[:, 3] - tmp1 * t2ct1ct2 + tmp2 * t2ct1
+
+    tmp1 = μ4πνd * (t2ct1cb1dt1 * t2db2 + t1ct2db1 * t2ct1db2)
+    tmp2 = μ4πνd * t1ct2db1 * t1db2
+    V[:, 13] = @. tmp1 * t2ct1 - tmp2 * t2ct1ct2
+
+    tmp1 = μ4πνd * t1ct2db1 * t2db2
+    V[:, 14] = @. -tmp1 * t2ct1ct2
+
+    tmp1 = μ4πνd * t2ct1cb1dt1 * t1db2
+    V[:, 15] = @. tmp1 * t2ct1
+
+    tmp1 = μ4πν * t1ct2db1 * t2db2
+    V[:, 16] = @. tmp1 * t2ct1
+
+    tmp1 = (μ4πν * t1ct2db1 * t1db2)
+    V[:, 17] = @. tmp1 * t2ct1
+
+    Fint[1] = x2 * integ[1] - integ[2]
+    Fint[2] = x2 * integ[2] - integ[5]
+    Fint[3] = x2 * integ[3] - integ[4]
+    Fint[4] = x2 * integ[7] - integ[8]
+    Fint[5] = x2 * integ[8] - integ[11]
+    Fint[6] = x2 * integ[9] - integ[10]
+    Fint[7] = x2 * integ[10] - integ[13]
+    Fint[8] = x2 * integ[11] - integ[16]
+    Fint[9] = x2 * integ[12] - integ[14]
+    Fint[10] = x2 * integ[13] - integ[18]
+    Fint[11] = x2 * integ[14] - integ[15]
+
+    Fnode[:, 3] = sum(V[:, 7:17] .* Fint', dims = 2) .* t2N
+
+    Fint[1] = integ[2] - x1 * integ[1]
+    Fint[2] = integ[5] - x1 * integ[2]
+    Fint[3] = integ[4] - x1 * integ[3]
+    Fint[4] = integ[8] - x1 * integ[7]
+    Fint[5] = integ[11] - x1 * integ[8]
+    Fint[6] = integ[10] - x1 * integ[9]
+    Fint[7] = integ[13] - x1 * integ[10]
+    Fint[8] = integ[16] - x1 * integ[11]
+    Fint[9] = integ[14] - x1 * integ[12]
+    Fint[10] = integ[18] - x1 * integ[13]
+    Fint[11] = integ[15] - x1 * integ[14]
+
+    Fnode[:, 4] = sum(V[:, 7:17] .* Fint', dims = 2) .* t2N
+
+    # println(Fnode[:,1])
+    # println("\n\n\n\n\n\n")
+    return Fnode
 end
 
 @inline function calcSegSegForce(

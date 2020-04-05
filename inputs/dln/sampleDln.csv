@@ -1,11 +1,11 @@
 loopType,loopPrism()
 numSides,4
-nodeSide,2
+nodeSide,1
 numLoops,1
 segType,segEdge()
 segLen,1;1
 slipSystem,1
-label,1;0;1;0;1;0;1;0
+label,1;0;1;0
 buffer,0.
 spanmin,0;0;0
 spanmax,0;0;0
