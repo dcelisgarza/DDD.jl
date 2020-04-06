@@ -9,11 +9,13 @@ using LinearAlgebra
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
 network = makeNetwork(loops; memBuffer = 1)
+makeNetwork!(network,loops)
 calcSelfForce(dlnParams, matParams, network)
 # @benchmark calcSelfForce(dlnParams, matParams, network)
-segseg = calcSegSegForce(dlnParams, matParams,network)
-
-mean(segseg)
+segseg1, segseg2 = calcSegSegForce(dlnParams, matParams,network)
+mean(segseg1)
+@benchmark calcSegSegForce(dlnParams, matParams,network)
+Juno.@profiler (for i = 1:100; calcSegSegForce(dlnParams, matParams, network); end)
 
 
 isapprox(sum(segseg)-2*eps(Float64),0)
