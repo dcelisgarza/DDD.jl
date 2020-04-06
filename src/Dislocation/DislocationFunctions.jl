@@ -71,7 +71,7 @@ end
 
 """
 !!! Note
-    This function is based on the SegSegForces function by A. Arsenlis et al. However, has been quite heavily modified to increase its memory and computational efficiency as segment-segment interactions are the bottleneck of 3D dislocation dynamics simulations.
+    This function is based on the SegSegForces function by A. Arsenlis et al. It used to be modified for speed but we decided sacrificing a miniscule amount of time to the gods of garbage collection, lets the functions self-contained and safe. It also lets the internal function be trivially parallelised without heavy modification.
 ```
 ```
  It implements the analytical solution of the force between two dislocation segments. Details are found in Appendix A.1. in ["Enabling Strain Hardening Simulations with Dislocation Dynamics" by A. Arsenlis et al.](https://doi.org/10.1088%2F0965-0393%2F15%2F6%2F001)
@@ -125,28 +125,9 @@ At a high level this works by creating a local coordinate frame using the line d
     n12 = zeros(3) # Segment 1, node 2
     n21 = zeros(3) # Segment 2, node 1
     n22 = zeros(3) # Segment 2, node 2
-    t2ct1 = zeros(3)
-    t1ct2 = zeros(3)
-    b2ct2 = zeros(3)
-    b1ct1 = zeros(3)
-    t2ct1ct2 = zeros(3)
-    t1ct2ct2 = zeros(3)
-    t2cb1ct2 = zeros(3)
-    t1cb2ct1 = zeros(3)
-    b1ct1ct2 = zeros(3)
-    b2ct2ct1 = zeros(3)
+    SegSegForce = zeros(numSegs, 3, 2)
 
-    # auxVecs = zeros(3, 18)
-
-    integ = zeros(19)
-    integt = zeros(19)
-    V = zeros(3, 17)
-    Fint = zeros(11)
-    Fnode = zeros(3, 4)
-    SegSegForce = zeros(3, 2, numSegs - 1)
-
-    # We're also explcitly using dot products and norms because caching due to variable reuse makes things faster when explicitly typed.
-    for i = 1:(numSegs - 1)
+    for i = 1:numSegs
         b1 = bVec[:, i]
         n11 = node1[:, i]
         n12 = node2[:, i]
@@ -161,28 +142,12 @@ At a high level this works by creating a local coordinate frame using the line d
             t2N = 1 / sqrt(t2[1] * t2[1] + t2[2] * t2[2] + t2[3] * t2[3])
             t2 = @. t2 * t2N
 
-            # t2 × t1
-            t2ct1[1] = t2[2] * t1[3] - t2[3] * t1[2]
-            t2ct1[2] = t2[3] * t1[1] - t2[1] * t1[3]
-            t2ct1[3] = t2[1] * t1[2] - t2[2] * t1[1]
-            # b2 × t2
-            b2ct2[1] = b2[2] * t2[3] - b2[3] * t2[2]
-            b2ct2[2] = b2[3] * t2[1] - b2[1] * t2[3]
-            b2ct2[3] = b2[1] * t2[2] - b2[2] * t2[1]
-            # b1 × t1
-            b1ct1[1] = b1[2] * t1[3] - b1[3] * t1[2]
-            b1ct1[2] = b1[3] * t1[1] - b1[1] * t1[3]
-            b1ct1[3] = b1[1] * t1[2] - b1[2] * t1[1]
-
             c = t2[1] * t1[1] + t2[2] * t1[2] + t2[3] * t1[3]
             cSq = c^2
             omcSq = 1 - cSq
-            V .= 0.0
-            Fint .= 0.0
-            Fnode .= 0.0
             # println("$i, $j")
             if omcSq > eps(Float64)
-                calcSegSegForce(
+                Fnode = calcSegSegForce(
                     aSq,
                     μ4π,
                     μ8π,
@@ -199,25 +164,14 @@ At a high level this works by creating a local coordinate frame using the line d
                     t2N,
                     n21,
                     n22,
-                    t2ct1,
-                    t1ct2,
-                    b2ct2,
-                    b1ct1,
-                    t2ct1ct2,
-                    t1ct2ct2,
-                    t2cb1ct2,
-                    t1cb2ct1,
-                    b1ct1ct2,
-                    b2ct2ct1,
                     c,
                     cSq,
                     omcSq,
-                    integ,
-                    integt,
-                    V,
-                    Fint,
-                    Fnode,
                 )
+                SegSegForce[i, :, 1] .+= Fnode[:, 1]
+                SegSegForce[i, :, 2] .+= Fnode[:, 2]
+                SegSegForce[j, :, 1] .+= Fnode[:, 3]
+                SegSegForce[j, :, 2] .+= Fnode[:, 4]
             else
                 calcSegSegForce(
                     aSq,
@@ -236,9 +190,6 @@ At a high level this works by creating a local coordinate frame using the line d
                     t2N,
                     n21,
                     n22,
-                    integ,
-                    integt,
-                    Fnode,
                 )
             end
         end
@@ -262,36 +213,52 @@ end
     t2N::T1,
     n21::T2,
     n22::T2,
-    t2ct1::T2,
-    t1ct2::T2,
-    b2ct2::T2,
-    b1ct1::T2,
-    t2ct1ct2::T2,
-    t1ct2ct2::T2,
-    t2cb1ct2::T2,
-    t1cb2ct1::T2,
-    b1ct1ct2::T2,
-    b2ct2ct1::T2,
     c::T1,
     cSq::T1,
     omcSq::T1,
-    integ::T2,
-    integt::T2,
-    V::T3,
-    Fint::T2,
-    Fnode::T3,
-) where {
-    T1 <: Float64,
-    T2 <: AbstractVector{<:Float64},
-    T3 <: AbstractArray{<:Float64, N} where {N},
-}
+) where {T1 <: Float64, T2 <: AbstractVector{<:Float64}}
+
+    V = zeros(3, 17)
+    Fint = zeros(11)
+    Fnode = zeros(3, 4)
+
+    # Single cross products.
+    t2ct1 = cross(t2, t1)
+    b2ct2 = cross(b2, t2)
+    b1ct1 = cross(b1, t1)
+    t1ct2 = @. -t2ct1
+
+    # Dot products.
+    t2db2 = dot(t2, b2)
+    t2db1 = dot(t2, b1)
+    t1db2 = dot(t1, b2)
+    t1db1 = dot(t1, b1)
+
+    # Cross dot products.
+    t2ct1db2 = dot(t2ct1, b2)
+    t1ct2db1 = dot(t1ct2, b1)
+    b1ct1db2 = dot(b1ct1, b2)
+    b2ct2db1 = dot(b2ct2, b1)
+
+    # Double cross products.
+    t2ct1ct2 = @. t1 - c * t2
+    t1ct2ct1 = @. t2 - c * t1
+    t2cb1ct2 = @. b1 - t2db1 * t2
+    t1cb2ct1 = @. b2 - t1db2 * t1
+    b1ct1ct2 = @. t2db1 * t1 - c * b1
+    b2ct2ct1 = @. t1db2 * t2 - c * b2
+
+    # Double cross product dot product.
+    t2ct1cb1dt1 = t2db1 - t1db1 * c
+    t1ct2cb2dt2 = t1db2 - t2db2 * c
+    t2ct1cb1db2 = t2db1 * t1db2 - t1db1 * t2db2
 
     omcSqI = 1 / omcSq
 
+    # Integration limits for local coordinates.
     R1 = @. n21 - n11
     R2 = @. n22 - n12
-    # Caching makes explicit expressions faster than dot products.
-    d = (R2[1] * t2ct1[1] + R2[2] * t2ct1[2] + R2[3] * t2ct1[3]) * omcSqI
+    d = dot(R2, t2ct1) * omcSqI
 
     μ4πd = μ4π * d
     μ8πd = μ8π * d
@@ -301,80 +268,20 @@ end
     μ4πνaSqd = μ4πνaSq * d
     μ8πaSqd = μ8πaSq * d
 
-    lim11 = R1[1] * t1[1] + R1[2] * t1[2] + R1[3] * t1[3]
-    lim12 = R1[1] * t2[1] + R1[2] * t2[2] + R1[3] * t2[3]
-    lim21 = R2[1] * t1[1] + R2[2] * t1[2] + R2[3] * t1[3]
-    lim22 = R2[1] * t2[1] + R2[2] * t2[2] + R2[3] * t2[3]
-
-    t2db2 = t2[1] * b2[1] + t2[2] * b2[2] + t2[3] * b2[3]
-    t2db1 = t2[1] * b1[1] + t2[2] * b1[2] + t2[3] * b1[3]
-    t1db2 = t1[1] * b2[1] + t1[2] * b2[2] + t1[3] * b2[3]
-    t1db1 = t1[1] * b1[1] + t1[2] * b1[2] + t1[3] * b1[3]
-    t2ct1db2 = t2ct1[1] * b2[2] + t2ct1[2] * b2[2] + t2ct1[3] * b2[3]
-    t1ct2db1 = t1ct2[1] * b1[1] + t1ct2[2] * b1[2] + t1ct2[3] * b1[3]
+    lim11 = dot(R1, t1)
+    lim12 = dot(R1, t2)
+    lim21 = dot(R2, t1)
+    lim22 = dot(R2, t2)
 
     x1 = (lim12 - c * lim11) * omcSqI
     x2 = (lim22 - c * lim21) * omcSqI
     y1 = (lim11 - c * lim12) * omcSqI
     y2 = (lim21 - c * lim22) * omcSqI
 
-    integ = SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y1, integt)
-    integ -= SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y2, integt)
-    integ -= SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y1, integt)
-    integ += SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y2, integt)
-
-    #=
-        μ4πd
-        μ8πd
-        μ4πνd
-        μ4πνdSq
-        μ4πνdCu
-        μ4πνaSqd
-        μ8πaSqd
-        aSq
-        μ4π
-        μ8π
-        μ8πaSq
-        μ4πν
-        μ4πνaSq
-    =#
-
-    # t1 × t2
-    t1ct2 = -t2ct1
-    # b2 × t2
-    b2ct2[1] = b2[2] * t2[3] - b2[3] * t2[2]
-    b2ct2[2] = b2[3] * t2[1] - b2[1] * t2[3]
-    b2ct2[3] = b2[1] * t2[2] - b2[2] * t2[1]
-    # b1 × t1
-    b1ct1[1] = b1[2] * t1[3] - b1[3] * t1[2]
-    b1ct1[2] = b1[3] * t1[1] - b1[1] * t1[3]
-    b1ct1[3] = b1[1] * t1[2] - b1[2] * t1[1]
-    # t2 ⋅ b2
-    t2db2 = t2[1] * b2[1] + t2[2] * b2[2] + t2[3] * b2[3]
-    # t2 ⋅ b1
-    t2db1 = t2[1] * b1[1] + t2[2] * b1[2] + t2[3] * b1[3]
-    # t1 ⋅ b2
-    t1db2 = t1[1] * b2[1] + t1[2] * b2[2] + t1[3] * b2[3]
-    # t1 ⋅ b1
-    t1db1 = t1[1] * b1[1] + t1[2] * b1[2] + t1[3] * b1[3]
-    # (t2 × t1) ⋅ b2
-    t2ct1db2 = t2ct1[1] * b2[1] + t2ct1[2] * b2[2] + t2ct1[3] * b2[3]
-    # (t1 × t2) ⋅ b1
-    t1ct2db1 = t1ct2[1] * b1[1] + t1ct2[2] * b1[2] + t1ct2[3] * b1[3]
-    # (b1 × t1) ⋅ b2
-    b1ct1db2 = b1ct1[1] * b2[1] + b1ct1[2] * b2[2] + b1ct1[3] * b2[3]
-    # (b2 × t2) ⋅ b1
-    b2ct2db1 = b2ct2[1] * b1[1] + b2ct2[2] * b1[2] + b2ct2[3] * b1[3]
-
-    t2ct1ct2 = @. t1 - c * t2
-    t1ct2ct1 = @. t2 - c * t1
-    t2cb1ct2 = @. b1 - t2db1 * t2
-    t1cb2ct1 = @. b2 - t1db2 * t1
-    b1ct1ct2 = @. t2db1 * t1 - c * b1
-    b2ct2ct1 = @. t1db2 * t2 - c * b2
-    t2ct1cb1dt1 = t2db1 - t1db1 * c
-    t1ct2cb2dt2 = t1db2 - t2db2 * c
-    t2ct1cb1db2 = t2db1 * t1db2 - t1db1 * t2db2
+    integ = SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y1)
+    integ -= SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y2)
+    integ -= SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y1)
+    integ += SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y2)
 
     # seg 1, nodes 2-1
     tmp1 = t1db2 * t2db1 + t2ct1cb1db2
@@ -416,11 +323,9 @@ end
     tmp1 = μ4πνd * t2ct1db2 * t1db1
     V[:, 15] = @. -tmp1 * t1ct2ct1
 
-    tmp1 = (μ4πν * t2ct1db2 * t2db1)
-    V[:, 16] = @. -tmp1 * t1ct2
-
-    tmp1 = (μ4πν * t2ct1db2 * t1db1)
-    V[:, 17] = @. -tmp1 * t1ct2
+    tmp1 = μ4πν * t2ct1db2 * t1ct2
+    V[:, 16] = @. -tmp1 * t2db1
+    V[:, 17] = @. -tmp1 * t1db1
 
     Fint[1] = integ[3] - y2 * integ[1]
     Fint[2] = integ[4] - y2 * integ[2]
@@ -490,11 +395,9 @@ end
     tmp1 = μ4πνd * t2ct1cb1dt1 * t1db2
     V[:, 15] = @. tmp1 * t2ct1
 
-    tmp1 = μ4πν * t1ct2db1 * t2db2
-    V[:, 16] = @. tmp1 * t2ct1
-
-    tmp1 = (μ4πν * t1ct2db1 * t1db2)
-    V[:, 17] = @. tmp1 * t2ct1
+    tmp1 = μ4πν * t1ct2db1 * t2ct1
+    V[:, 16] = @. tmp1 * t2db2
+    V[:, 17] = @. tmp1 * t1db2
 
     Fint[1] = x2 * integ[1] - integ[2]
     Fint[2] = x2 * integ[2] - integ[5]
@@ -524,8 +427,6 @@ end
 
     Fnode[:, 4] = sum(V[:, 7:17] .* Fint', dims = 2) .* t2N
 
-    # println(Fnode[:,1])
-    # println("\n\n\n\n\n\n")
     return Fnode
 end
 
@@ -546,15 +447,8 @@ end
     t2N::T1,
     n21::T2,
     n22::T2,
-    integ::T2,
-    integt::T2,
-    SegSegForce::T3,
-) where {
-    T1 <: Float64,
-    T2 <: AbstractVector{<:Float64},
-    T3 <: AbstractArray{<:Float64, N} where {N},
-}
-    return SegSegForce
+) where {T1 <: Float64, T2 <: AbstractVector{<:Float64}}
+    return
 end
 
 @inline function SegSegInteg(
@@ -566,8 +460,9 @@ end
     omcSqI::T1,
     x::T1,
     y::T1,
-    integ::T2,
-) where {T1 <: Float64, T2 <: AbstractVector{<:Float64}}
+) where {T1 <: Float64}
+
+    integ = zeros(19)
 
     aSq_dSq = aSq + d^2 * omcSqI
     xSq = y^2

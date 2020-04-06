@@ -11,8 +11,12 @@ dlnParams, matParams, intParams, slipSystems, loops =
 network = makeNetwork(loops; memBuffer = 1)
 calcSelfForce(dlnParams, matParams, network)
 # @benchmark calcSelfForce(dlnParams, matParams, network)
-calcSegSegForce(dlnParams, matParams,network)
+segseg = calcSegSegForce(dlnParams, matParams,network)
 
+sum(segseg)
+
+
+isapprox(sum(segseg)-2*eps(Float64),0)
 Profile.clear()
 
 for i in 1:10000
