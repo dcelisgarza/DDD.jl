@@ -119,75 +119,343 @@ At a high level this works by creating a local coordinate frame using the line d
 
     SegSegForce = zeros(numSegs, 3, 2)
 
-    @inbounds for i = 1:numSegs
+    @fastmath @inbounds for i = 1:numSegs
         b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
         n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
         n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-        t1 = (n12[1] - n11[1], n12[2] - n11[2], n12[3] - n11[3])
-        t1N = 1 / sqrt(t1[1] * t1[1] + t1[2] * t1[2] + t1[3] * t1[3])
-        t1 = @. t1 * t1N
         for j = (i + 1):numSegs
             b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
             n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
             n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
-            t2 = (n22[1] - n21[1], n22[2] - n21[2], n22[3] - n21[3])
-            t2N = 1 / sqrt(t2[1] * t2[1] + t2[2] * t2[2] + t2[3] * t2[3])
-            t2 = @. t2 * t2N
 
-            c = t2[1] * t1[1] + t2[2] * t1[2] + t2[3] * t1[3]
-            cSq = c^2
-            omcSq = 1 - cSq
-            if omcSq > eps(Float64)
-                Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-                    aSq,
-                    μ4π,
-                    μ8π,
-                    μ8πaSq,
-                    μ4πν,
-                    μ4πνaSq,
-                    b1,
-                    t1,
-                    t1N,
-                    n11,
-                    n12,
-                    b2,
-                    t2,
-                    t2N,
-                    n21,
-                    n22,
-                    c,
-                    cSq,
-                    omcSq,
-                )
-                SegSegForce[i, :, 1] .+= Fnode1
-                SegSegForce[j, :, 1] .+= Fnode3
-                SegSegForce[i, :, 2] .+= Fnode2
-                SegSegForce[j, :, 2] .+= Fnode4
-            else
-                #     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-                #         aSq,
-                #         μ4π,
-                #         μ8π,
-                #         μ8πaSq,
-                #         μ4πν,
-                #         μ4πνaSq,
-                #         b1,
-                #         t1,
-                #         t1N,
-                #         n11,
-                #         n12,
-                #         b2,
-                #         t2,
-                #         t2N,
-                #         n21,
-                #         n22,
-                #     )
-            end
+            Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+                aSq,
+                μ4π,
+                μ8π,
+                μ8πaSq,
+                μ4πν,
+                μ4πνaSq,
+                b1,
+                n11,
+                n12,
+                b2,
+                n21,
+                n22,
+            )
+            SegSegForce[i, :, 1] .+= Fnode1
+            SegSegForce[j, :, 1] .+= Fnode3
+            SegSegForce[i, :, 2] .+= Fnode2
+            SegSegForce[j, :, 2] .+= Fnode4
 
         end
     end
     return SegSegForce
 end
+@inline function calcSegSegForce(
+    aSq::T1,
+    μ4π::T1,
+    μ8π::T1,
+    μ8πaSq::T1,
+    μ4πν::T1,
+    μ4πνaSq::T1,
+    b1::T2,
+    n11::T2,
+    n12::T2,
+    b2::T2,
+    n21::T2,
+    n22::T2,
+) where {T1 <: Float64, T2 <: NTuple{N, <:Float64} where {N}}
+
+    Fnode1 = (0., 0., 0.)
+    Fnode2 = (0., 0., 0.)
+    Fnode3 = (0., 0., 0.)
+    Fnode4 = (0., 0., 0.)
+
+    t2 = @. n22 - n21
+    t2N = 1 / dot(t2, t2)
+    t2 = @. t2 / t2N
+
+    t1 = @. n12 - n11
+    t1N = 1 / dot(t1, t1)
+    t1 = @. t1 / t1N
+
+    c = dot(t1, t2)
+    cSq = c * c
+    omcSq = 1 - cSq
+
+    if omcSq > eps(Float32)
+        # Single cross products.
+        t2ct1 = (
+            t2[2] * t1[3] - t2[3] * t1[2],
+            t2[3] * t1[1] - t2[1] * t1[3],
+            t2[1] * t1[2] - t2[2] * t1[1],
+        )
+
+        t1ct2 = .-t2ct1
+
+        b2ct2 = (
+            b2[2] * t2[3] - b2[3] * t2[2],
+            b2[3] * t2[1] - b2[1] * t2[3],
+            b2[1] * t2[2] - b2[2] * t2[1],
+        )
+
+        b1ct1 = (
+            b1[2] * t1[3] - b1[3] * t1[2],
+            b1[3] * t1[1] - b1[1] * t1[3],
+            b1[1] * t1[2] - b1[2] * t1[1],
+        )
+
+        # Dot products.
+        t2db2 = dot(t2, b2)
+        t2db1 = dot(t2, b1)
+        t1db2 = dot(t1, b2)
+        t1db1 = dot(t1, b1)
+
+        # Cross dot products.
+        t2ct1db2 = dot(t2ct1, b2)
+        t1ct2db1 = dot(t1ct2, b1)
+        b1ct1db2 = dot(b1ct1, b2)
+        b2ct2db1 = dot(b2ct2, b1)
+
+        # Double cross products.
+        t2ct1ct2 = @. t1 - c * t2
+        t1ct2ct1 = @. t2 - c * t1
+        t2cb1ct2 = @. b1 - t2db1 * t2
+        t1cb2ct1 = @. b2 - t1db2 * t1
+        b1ct1ct2 = @. t2db1 * t1 - c * b1
+        b2ct2ct1 = @. t1db2 * t2 - c * b2
+
+        # Double cross product dot product.
+        t2ct1cb1dt1 = t2db1 - t1db1 * c
+        t1ct2cb2dt2 = t1db2 - t2db2 * c
+        t2ct1cb1db2 = t2db1 * t1db2 - t1db1 * t2db2
+
+        omcSqI = 1 / omcSq
+
+        # Integration limits for local coordinates.
+        R1 = @. n21 - n11
+        R2 = @. n22 - n12
+        d = dot(R2, t2ct1) * omcSqI
+
+        μ4πd = μ4π * d
+        μ8πd = μ8π * d
+        μ4πνd = μ4πν * d
+        μ4πνdSq = μ4πνd * d
+        μ4πνdCu = μ4πνdSq * d
+        μ4πνaSqd = μ4πνaSq * d
+        μ8πaSqd = μ8πaSq * d
+
+        lim11 = dot(R1, t1)
+        lim12 = dot(R1, t2)
+        lim21 = dot(R2, t1)
+        lim22 = dot(R2, t2)
+
+        x1 = (lim12 - c * lim11) * omcSqI
+        x2 = (lim22 - c * lim21) * omcSqI
+        y1 = (lim11 - c * lim12) * omcSqI
+        y2 = (lim21 - c * lim22) * omcSqI
+
+        integ = SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y1)
+        integ = integ .- SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y2)
+        integ = integ .- SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y1)
+        integ = integ .+ SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y2)
+
+        # seg 1, nodes 2-1
+        tmp1 = t1db2 * t2db1 + t2ct1cb1db2
+        V1 = @. tmp1 * t2ct1
+        V2 = @. b1ct1 * t1ct2cb2dt2
+        V3 = @. t1ct2 * b1ct1db2 - t1cb2ct1 * t2db1
+        V4 = @. -b1ct1 * t2ct1db2
+        V5 = @. b2ct2ct1 * t2db1 - t1ct2 * b2ct2db1
+
+        tmp1 = μ4πνd * t1ct2db1
+        tmp2 = μ4πνd * b2ct2db1
+        V7 = @. μ4πd * V1 - μ4πνd * V2 + tmp1 * b2ct2ct1 + tmp2 * t1ct2ct1
+
+        tmp1 = μ4πν * t2db1
+        tmp2 = μ4πν * b2ct2db1
+        V8 = @. μ4π * V5 - tmp1 * b2ct2ct1 + tmp2 * t1ct2
+
+        tmp1 = μ4πν * t1db1
+        V9 = @. -tmp1 * b2ct2ct1 + μ4π * V3 - μ4πν * V4
+
+        tmp1 = μ4πνdCu * t1ct2cb2dt2 * t1ct2db1
+        V10 = @. μ8πaSqd * V1 - μ4πνaSqd * V2 - tmp1 * t1ct2ct1
+
+        tmp1 = μ4πνdSq * t1ct2cb2dt2 * t2db1
+        tmp2 = μ4πνdSq * t1ct2cb2dt2 * t1ct2db1
+        V11 = @. μ8πaSq * V5 + tmp1 * t1ct2ct1 - tmp2 * t1ct2
+
+        tmp1 = μ4πνdSq * (t2ct1db2 * t1ct2db1 + t1ct2cb2dt2 * t1db1)
+        V12 = @. μ8πaSq * V3 - μ4πνaSq * V4 + tmp1 * t1ct2ct1
+
+        tmp1 = μ4πνd * (t1ct2cb2dt2 * t1db1 + t2ct1db2 * t1ct2db1)
+        tmp2 = μ4πνd * t2ct1db2 * t2db1
+        V13 = @. tmp1 * t1ct2 - tmp2 * t1ct2ct1
+
+        tmp1 = μ4πνd * t1ct2cb2dt2 * t2db1
+        V14 = @. tmp1 * t1ct2
+
+        tmp1 = μ4πνd * t2ct1db2 * t1db1
+        V15 = @. -tmp1 * t1ct2ct1
+
+        tmp1 = @. μ4πν * t2ct1db2 * t1ct2
+        V16 = @. -tmp1 * t2db1
+        V17 = @. -tmp1 * t1db1
+
+        Fint1 = integ[3] - y2 * integ[1]
+        Fint2 = integ[4] - y2 * integ[2]
+        Fint3 = integ[6] - y2 * integ[3]
+        Fint4 = integ[9] - y2 * integ[7]
+        Fint5 = integ[10] - y2 * integ[8]
+        Fint6 = integ[12] - y2 * integ[9]
+        Fint7 = integ[14] - y2 * integ[10]
+        Fint8 = integ[13] - y2 * integ[11]
+        Fint9 = integ[17] - y2 * integ[12]
+        Fint10 = integ[15] - y2 * integ[13]
+        Fint11 = integ[19] - y2 * integ[14]
+
+        Fnode1 = @. (
+            V7 * Fint1 +
+            V8 * Fint2 +
+            V9 * Fint3 +
+            V10 * Fint4 +
+            V11 * Fint5 +
+            V12 * Fint6 +
+            V13 * Fint7 +
+            V14 * Fint8 +
+            V15 * Fint9 +
+            V16 * Fint10 +
+            V17 * Fint11
+        ) * t1N
+
+        Fint1 = y1 * integ[1] - integ[3]
+        Fint2 = y1 * integ[2] - integ[4]
+        Fint3 = y1 * integ[3] - integ[6]
+        Fint4 = y1 * integ[7] - integ[9]
+        Fint5 = y1 * integ[8] - integ[10]
+        Fint6 = y1 * integ[9] - integ[12]
+        Fint7 = y1 * integ[10] - integ[14]
+        Fint8 = y1 * integ[11] - integ[13]
+        Fint9 = y1 * integ[12] - integ[17]
+        Fint10 = y1 * integ[13] - integ[15]
+        Fint11 = y1 * integ[14] - integ[19]
+
+        Fnode2 = @. (
+            V7 * Fint1 +
+            V8 * Fint2 +
+            V9 * Fint3 +
+            V10 * Fint4 +
+            V11 * Fint5 +
+            V12 * Fint6 +
+            V13 * Fint7 +
+            V14 * Fint8 +
+            V15 * Fint9 +
+            V16 * Fint10 +
+            V17 * Fint11
+        ) * t1N
+
+        # Seg 2 (nodes 4-3)
+        tmp1 = t2db1 * t1db2 + t2ct1cb1db2
+        V1 = @. tmp1 * t1ct2
+        V2 = @. b2ct2 * t2ct1cb1dt1
+        V3 = @. t2ct1 * b1ct1db2 - b1ct1ct2 * t1db2
+        V5 = @. t2cb1ct2 * t1db2 - t2ct1 * b2ct2db1
+        V6 = @. b2ct2 * t1ct2db1
+
+        tmp1 = μ4πνd * t2ct1db2
+        tmp2 = μ4πνd * b1ct1db2
+        V7 = @. μ4πd * V1 - μ4πνd * V2 + tmp1 * b1ct1ct2 + tmp2 * t2ct1ct2
+
+        tmp1 = μ4πν * t2db2
+        V8 = @. tmp1 * b1ct1ct2 + μ4π * V5 - μ4πν * V6
+
+        tmp1 = μ4πν * t1db2
+        tmp2 = μ4πν * b1ct1db2
+        V9 = @. μ4π * V3 + tmp1 * b1ct1ct2 - tmp2 * t2ct1
+
+        tmp1 = μ4πνdCu * t2ct1cb1dt1 * t2ct1db2
+        V10 = @. μ8πaSqd * V1 - μ4πνaSqd * V2 - tmp1 * t2ct1ct2
+
+        tmp1 = μ4πνdSq * (t1ct2db1 * t2ct1db2 + t2ct1cb1dt1 * t2db2)
+        V11 = @. μ8πaSq * V5 - μ4πνaSq * V6 - tmp1 * t2ct1ct2
+
+        tmp1 = μ4πνdSq * t2ct1cb1dt1 * t1db2
+        tmp2 = μ4πνdSq * t2ct1cb1dt1 * t2ct1db2
+        V12 = @. μ8πaSq * V3 - tmp1 * t2ct1ct2 + tmp2 * t2ct1
+
+        tmp1 = μ4πνd * (t2ct1cb1dt1 * t2db2 + t1ct2db1 * t2ct1db2)
+        tmp2 = μ4πνd * t1ct2db1 * t1db2
+        V13 = @. tmp1 * t2ct1 - tmp2 * t2ct1ct2
+
+        tmp1 = μ4πνd * t1ct2db1 * t2db2
+        V14 = @. -tmp1 * t2ct1ct2
+
+        tmp1 = μ4πνd * t2ct1cb1dt1 * t1db2
+        V15 = @. tmp1 * t2ct1
+
+        tmp1 = @. μ4πν * t1ct2db1 * t2ct1
+        V16 = @. tmp1 * t2db2
+        V17 = @. tmp1 * t1db2
+
+        Fint1 = x2 * integ[1] - integ[2]
+        Fint2 = x2 * integ[2] - integ[5]
+        Fint3 = x2 * integ[3] - integ[4]
+        Fint4 = x2 * integ[7] - integ[8]
+        Fint5 = x2 * integ[8] - integ[11]
+        Fint6 = x2 * integ[9] - integ[10]
+        Fint7 = x2 * integ[10] - integ[13]
+        Fint8 = x2 * integ[11] - integ[16]
+        Fint9 = x2 * integ[12] - integ[14]
+        Fint10 = x2 * integ[13] - integ[18]
+        Fint11 = x2 * integ[14] - integ[15]
+
+        Fnode3 = @. (
+            V7 * Fint1 +
+            V8 * Fint2 +
+            V9 * Fint3 +
+            V10 * Fint4 +
+            V11 * Fint5 +
+            V12 * Fint6 +
+            V13 * Fint7 +
+            V14 * Fint8 +
+            V15 * Fint9 +
+            V16 * Fint10 +
+            V17 * Fint11
+        ) .* t2N
+
+        Fint1 = integ[2] - x1 * integ[1]
+        Fint2 = integ[5] - x1 * integ[2]
+        Fint3 = integ[4] - x1 * integ[3]
+        Fint4 = integ[8] - x1 * integ[7]
+        Fint5 = integ[11] - x1 * integ[8]
+        Fint6 = integ[10] - x1 * integ[9]
+        Fint7 = integ[13] - x1 * integ[10]
+        Fint8 = integ[16] - x1 * integ[11]
+        Fint9 = integ[14] - x1 * integ[12]
+        Fint10 = integ[18] - x1 * integ[13]
+        Fint11 = integ[15] - x1 * integ[14]
+
+        Fnode4 = @. (
+            V7 * Fint1 +
+            V8 * Fint2 +
+            V9 * Fint3 +
+            V10 * Fint4 +
+            V11 * Fint5 +
+            V12 * Fint6 +
+            V13 * Fint7 +
+            V14 * Fint8 +
+            V15 * Fint9 +
+            V16 * Fint10 +
+            V17 * Fint11
+        ) .* t2N
+
+    else
+    end
+
+    return Fnode1, Fnode2, Fnode3, Fnode4
+end
+
 @inline function calcSegSegForce(
     aSq::T1,
     μ4π::T1,
@@ -207,25 +475,52 @@ end
     n22::T2,
     c::T1,
     cSq::T1,
-    omcSq::T1,
 ) where {T1 <: Float64, T2 <: NTuple{N, <:Float64} where {N}}
-    # V = zeros(3, 17)
-    # Fint = zeros(11)
-    # Fnode = zeros(3, 4)
 
-    # Single cross products.
-    t2ct1 = (
-        t2[2] * t1[3] - t2[3] * t1[2],
-        t2[3] * t1[1] - t2[1] * t1[3],
-        t2[1] * t1[2] - t2[2] * t1[1],
-    )
+    flip::Bool = false
+    # half of the cotangent of critical θ
+    hCotanθc = sqrt((1 - eps(Float32) * 1.01) / (eps(Float32) * 1.01)) / 2
 
-    t1ct2 = .-t2ct1
+    # Keep notation consistent and ensire no negative angles between segments.
+    if c < 0
+        flip = true
+        n11, n12 = n12, n11
+        t1 = @. -1 * t1
+        b1 = @. -1 * b1
+    end
 
-    b2ct2 = (
-        b2[2] * t2[3] - b2[3] * t2[2],
-        b2[3] * t2[1] - b2[1] * t2[3],
-        b2[1] * t2[2] - b2[2] * t2[1],
+    # Segment 1, n12 - n11
+    tmp = dot(n22 .- n21, t1)
+    n22m = @. n21 + tmp * t1
+    diff = @. n22 - n22m
+    magDiff = sqrt(dot(diff, diff))
+
+    tmp = hCotanθc * magDiff
+    tmpt1 = @. hCotanθc * magDiff * t1
+    n21m = @. n21 + 0.5 * diff + tmpt1
+    n22m = @. n22m + 0.5 * diff - tmpt1
+
+    # Dot products.
+    R = @. n21m - n11
+    Rdt1 = dot(R, t1)
+
+    nd = @. R - Rdt1 * t1
+    dSq = dot(nd, nd)
+    nddb1 = dot(nd, b1)
+
+    x1 = dot(n21m, t1)
+    x2 = dot(n22m, t1)
+    y1 = -dot(n11, t1)
+    y2 = -dot(n12, t1)
+
+    t1db2 = dot(t1, b2)
+    t1db1 = dot(t1, b1)
+
+    # Cross products.
+    b2ct1 = (
+        b2[2] * t1[3] - b2[3] * t1[2],
+        b2[3] * t1[1] - b2[1] * t1[3],
+        b2[1] * t1[2] - b2[2] * t1[1],
     )
 
     b1ct1 = (
@@ -234,284 +529,330 @@ end
         b1[1] * t1[2] - b1[2] * t1[1],
     )
 
-    # Dot products.
-    t2db2 = dot(t2, b2)
-    t2db1 = dot(t2, b1)
-    t1db2 = dot(t1, b2)
-    t1db1 = dot(t1, b1)
+    ndct1 = (
+        nd[2] * t1[3] - nd[3] * t1[2],
+        nd[3] * t1[1] - nd[1] * t1[3],
+        nd[1] * t1[2] - nd[2] * t1[1],
+    )
 
     # Cross dot products.
-    t2ct1db2 = dot(t2ct1, b2)
-    t1ct2db1 = dot(t1ct2, b1)
-    b1ct1db2 = dot(b1ct1, b2)
-    b2ct2db1 = dot(b2ct2, b1)
+    b2t1db1 = dot(b2ct1, b1)
+    b2t1dnd = dot(b2ct1, nd)
 
     # Double cross products.
-    t2ct1ct2 = (t1[1] - c * t2[1], t1[2] - c * t2[2], t1[3] - c * t2[3])
-    t1ct2ct1 = (t2[1] - c * t1[1], t2[2] - c * t1[2], t2[3] - c * t1[3])
-    t2cb1ct2 =
-        (b1[1] - t2db1 * t2[1], b1[2] - t2db1 * t2[2], b1[3] - t2db1 * t2[3])
-    t1cb2ct1 =
-        (b2[1] - t1db2 * t1[1], b2[2] - t1db2 * t1[2], b2[3] - t1db2 * t1[3])
-    b1ct1ct2 = (
-        t2db1 * t1[1] - c * b1[1],
-        t2db1 * t1[2] - c * b1[2],
-        t2db1 * t1[3] - c * b1[3],
+    b2ct1ct1 = @. t1db2 * t1 - b2
+
+    aSq_dSqI = 1 / (aSq + dSq)
+
+    integ = SegSegInteg(aSq, dSq, aSq_dSqI, x1, y1)
+    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x1, y2)
+    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x2, y1)
+    integ = integ .+ SegSegInteg(aSq, dSq, aSq_dSqI, x2, y2)
+
+    tmp = t1db1 * t1db2
+    tmp2 = @. tmp * nd
+    tmp3 = @. b2t1dnd * b1ct1
+
+    V1 = @. μ4πν * (nddb1 * b2ct1ct1 + b2t1db1 * ndct1 - tmp3) - μ4π * tmp2
+
+    tmp = (μ4πν - μ4π) * t1db1
+    V2 = @. tmp * b2ct1ct1
+
+    tmp = μ4πν * b2t1dnd * nddb1
+    V3 = @. -μ8πaSq * tmp2 - μ4πνaSq * tmp3 - tmp * ndct1
+
+    tmp = μ8πaSq * t1db1
+    tmp4 = μ4πν * b2t1dnd * t1db1
+    V4 = @. -tmp * b2ct1ct1 - tmp4 * ndct1
+
+    # Node 2, n12
+    Fint1 = integ[3] - y1 * integ[1]
+    Fint2 = integ[6] - y1 * integ[4]
+    Fint3 = integ[9] - y1 * integ[7]
+    Fint4 = integ[12] - y1 * integ[10]
+    Fnode2 = @. (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t1N
+
+    # Node 1, n11
+    Fint1 = y2 * integ[1] - integ[3]
+    Fint2 = y2 * integ[4] - integ[6]
+    Fint3 = y2 * integ[7] - integ[9]
+    Fint4 = y2 * integ[10] - integ[12]
+
+    Fnode1 = @. (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t1N
+
+    diffSq = dot(diff, diff)
+    n21mSq = dot(n21m, n21m)
+    n22mSq = dot(n22m, n22m)
+
+    if diffSq > (eps(Float32) * (n21mSq + n22mSq))
+
+        t2 = @. n21m - n21
+        t2N = 1 / sqrt(dot(t2, t2))
+        t2 = @. t2 * t2N
+        c = dot(t2, t1)
+        cSq = c^2
+        omcSq = 1 - cSq
+
+        nothing, nothing, Fnode1Core, Fnode2Core = calcSegSegForce(
+            aSq,
+            μ4π,
+            μ8π,
+            μ8πaSq,
+            μ4πν,
+            μ4πνaSq,
+            b2,
+            t2,
+            t2N,
+            n21,
+            n21m,
+            b1,
+            t1,
+            t1N,
+            n11,
+            n12,
+            c,
+            cSq,
+            omcSq,
+        )
+
+        Fnode1 = @. Fnode1 + Fnode1Core
+        Fnode2 = @. Fnode2 + Fnode2Core
+
+        t2 = @. n22 - n22m
+        t2N = 1 / sqrt(dot(t2, t2))
+        t2 = @. t2 * t2N
+        c = dot(t2, t1)
+        cSq = c^2
+        omcSq = 1 - cSq
+
+        nothing, nothing, Fnode1Core, Fnode2Core = calcSegSegForce(
+            aSq,
+            μ4π,
+            μ8π,
+            μ8πaSq,
+            μ4πν,
+            μ4πνaSq,
+            b2,
+            t2,
+            t2N,
+            n22m,
+            n22,
+            b1,
+            t1,
+            t1N,
+            n11,
+            n12,
+            c,
+            cSq,
+            omcSq,
+        )
+
+        Fnode1 = @. Fnode1 + Fnode1Core
+        Fnode2 = @. Fnode2 + Fnode2Core
+    end
+
+    # Segment 2, n22-n21
+    tmp = @. (n12 - n11) * t2
+    n12m = @. n11 + tmp * t2
+    diff = @. n12 - n12m
+
+    magDiff = sqrt(dot(diff, diff))
+    tmpt2 = @. hCotanθc * magDiff * t2
+
+    n11m = @. n11 + 0.5 * diff + tmpt2
+    n12m = @. n12m + 0.5 * diff - tmpt2
+
+    # Dot products
+    R = @. n21 - n11m
+    Rdt = dot(R, t2)
+
+    nd = @. R - Rdt * t2
+    dSq = dot(nd, nd)
+
+    x1 = dot(n21, t2)
+    x2 = dot(n22, t2)
+    y1 = -dot(n11m, t2)
+    y2 = -dot(n12m, t2)
+
+    t2db2 = dot(t2, b2)
+    t2db1 = dot(t2, b1)
+    nddb2 = dot(nd, b2)
+
+    # Cross products.
+    b2ct2 = (
+        b2[2] * t2[3] - b2[3] * t2[2],
+        b2[3] * t2[1] - b2[1] * t2[3],
+        b2[1] * t2[2] - b2[2] * t2[1],
     )
-    b2ct2ct1 = (
-        t1db2 * t2[1] - c * b2[1],
-        t1db2 * t2[2] - c * b2[2],
-        t1db2 * t2[3] - c * b2[3],
+
+    b1ct2 = (
+        b1[2] * t2[3] - b1[3] * t2[2],
+        b1[3] * t2[1] - b1[1] * t2[3],
+        b1[1] * t2[2] - b1[2] * t2[1],
     )
 
-    # Double cross product dot product.
-    t2ct1cb1dt1 = t2db1 - t1db1 * c
-    t1ct2cb2dt2 = t1db2 - t2db2 * c
-    t2ct1cb1db2 = t2db1 * t1db2 - t1db1 * t2db2
+    ndct2 = (
+        nd[2] * t2[3] - nd[3] * t2[2],
+        nd[3] * t2[1] - nd[1] * t2[3],
+        nd[1] * t2[2] - nd[2] * t2[1],
+    )
 
-    omcSqI = 1 / omcSq
+    integ = SegSegInteg(aSq, dSq, aSq_dSqI, x1, y1)
+    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x1, y2)
+    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x2, y1)
+    integ = integ .+ SegSegInteg(aSq, dSq, aSq_dSqI, x2, y2)
 
-    # Integration limits for local coordinates.
-    R1 = (n21[1] - n11[1], n21[2] - n11[2], n21[3] - n11[3])
-    R2 = (n22[1] - n12[1], n22[2] - n12[2], n22[3] - n12[3])
-    d = dot(R2, t2ct1) * omcSqI
+    b1ct2db2 = dot(b1ct2, b2)
+    b1ct2dnd = dot(b1ct2, nd)
+    b1ct2ct2 = @. t2db1 * t2 - b1
 
-    μ4πd = μ4π * d
-    μ8πd = μ8π * d
-    μ4πνd = μ4πν * d
-    μ4πνdSq = μ4πνd * d
-    μ4πνdCu = μ4πνdSq * d
-    μ4πνaSqd = μ4πνaSq * d
-    μ8πaSqd = μ8πaSq * d
+    tmp = t2db2 * t2db1
+    tmp2 = @. tmp * nd
+    tmp3 = @. b1ct2dnd * b2ct2
+    V1 = @. μ4πν * (nddb2 * b1ct2ct2 + b1ct2db2 * ndct2 - tmp3) - μ4π * tmp2
 
-    lim11 = dot(R1, t1)
-    lim12 = dot(R1, t2)
-    lim21 = dot(R2, t1)
-    lim22 = dot(R2, t2)
+    tmp4 = (μ4πν - μ4π) * t2db2
+    V2 = @. tmp4 * b1ct2ct2
 
-    x1 = (lim12 - c * lim11) * omcSqI
-    x2 = (lim22 - c * lim21) * omcSqI
-    y1 = (lim11 - c * lim12) * omcSqI
-    y2 = (lim21 - c * lim22) * omcSqI
+    tmp = μ4πν * b1ct2dnd * nddb2
+    V3 = @. -μ8πaSq * tmp2 - μ4πνaSq * tmp3 - tmp * ndct2
 
-    integ = SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y1)
-    integ = integ .- SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y2)
-    integ = integ .- SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y1)
-    integ = integ .+ SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y2)
-
-    # seg 1, nodes 2-1
-    tmp1 = t1db2 * t2db1 + t2ct1cb1db2
-    V1 = @. tmp1 * t2ct1
-    V2 = @. b1ct1 * t1ct2cb2dt2
-    V3 = @. t1ct2 * b1ct1db2 - t1cb2ct1 * t2db1
-    V4 = @. -b1ct1 * t2ct1db2
-    V5 = @. b2ct2ct1 * t2db1 - t1ct2 * b2ct2db1
-
-    tmp1 = μ4πνd * t1ct2db1
-    tmp2 = μ4πνd * b2ct2db1
-    V7 = @. μ4πd * V1 - μ4πνd * V2 + tmp1 * b2ct2ct1 + tmp2 * t1ct2ct1
-
-    tmp1 = μ4πν * t2db1
-    tmp2 = μ4πν * b2ct2db1
-    V8 = @. μ4π * V5 - tmp1 * b2ct2ct1 + tmp2 * t1ct2
-
-    tmp1 = μ4πν * t1db1
-    V9 = @. -tmp1 * b2ct2ct1 + μ4π * V3 - μ4πν * V4
-
-    tmp1 = μ4πνdCu * t1ct2cb2dt2 * t1ct2db1
-    V10 = @. μ8πaSqd * V1 - μ4πνaSqd * V2 - tmp1 * t1ct2ct1
-
-    tmp1 = μ4πνdSq * t1ct2cb2dt2 * t2db1
-    tmp2 = μ4πνdSq * t1ct2cb2dt2 * t1ct2db1
-    V11 = @. μ8πaSq * V5 + tmp1 * t1ct2ct1 - tmp2 * t1ct2
-
-    tmp1 = μ4πνdSq * (t2ct1db2 * t1ct2db1 + t1ct2cb2dt2 * t1db1)
-    V12 = @. μ8πaSq * V3 - μ4πνaSq * V4 + tmp1 * t1ct2ct1
-
-    tmp1 = μ4πνd * (t1ct2cb2dt2 * t1db1 + t2ct1db2 * t1ct2db1)
-    tmp2 = μ4πνd * t2ct1db2 * t2db1
-    V13 = @. tmp1 * t1ct2 - tmp2 * t1ct2ct1
-
-    tmp1 = μ4πνd * t1ct2cb2dt2 * t2db1
-    V14 = @. tmp1 * t1ct2
-
-    tmp1 = μ4πνd * t2ct1db2 * t1db1
-    V15 = @. -tmp1 * t1ct2ct1
-
-    tmp1 = @. μ4πν * t2ct1db2 * t1ct2
-    V16 = @. -tmp1 * t2db1
-    V17 = @. -tmp1 * t1db1
-
-    Fint1 = integ[3] - y2 * integ[1]
-    Fint2 = integ[4] - y2 * integ[2]
-    Fint3 = integ[6] - y2 * integ[3]
-    Fint4 = integ[9] - y2 * integ[7]
-    Fint5 = integ[10] - y2 * integ[8]
-    Fint6 = integ[12] - y2 * integ[9]
-    Fint7 = integ[14] - y2 * integ[10]
-    Fint8 = integ[13] - y2 * integ[11]
-    Fint9 = integ[17] - y2 * integ[12]
-    Fint10 = integ[15] - y2 * integ[13]
-    Fint11 = integ[19] - y2 * integ[14]
-
-    Fnode1 = @. (
-        V7 * Fint1 +
-        V8 * Fint2 +
-        V9 * Fint3 +
-        V10 * Fint4 +
-        V11 * Fint5 +
-        V12 * Fint6 +
-        V13 * Fint7 +
-        V14 * Fint8 +
-        V15 * Fint9 +
-        V16 * Fint10 +
-        V17 * Fint11
-    ) * t1N
-
-    Fint1 = y1 * integ[1] - integ[3]
-    Fint2 = y1 * integ[2] - integ[4]
-    Fint3 = y1 * integ[3] - integ[6]
-    Fint4 = y1 * integ[7] - integ[9]
-    Fint5 = y1 * integ[8] - integ[10]
-    Fint6 = y1 * integ[9] - integ[12]
-    Fint7 = y1 * integ[10] - integ[14]
-    Fint8 = y1 * integ[11] - integ[13]
-    Fint9 = y1 * integ[12] - integ[17]
-    Fint10 = y1 * integ[13] - integ[15]
-    Fint11 = y1 * integ[14] - integ[19]
-
-    Fnode2 = @. (
-        V7 * Fint1 +
-        V8 * Fint2 +
-        V9 * Fint3 +
-        V10 * Fint4 +
-        V11 * Fint5 +
-        V12 * Fint6 +
-        V13 * Fint7 +
-        V14 * Fint8 +
-        V15 * Fint9 +
-        V16 * Fint10 +
-        V17 * Fint11
-    ) * t1N
-
-    # Seg 2 (nodes 4-3)
-    tmp1 = t2db1 * t1db2 + t2ct1cb1db2
-    V1 = @. tmp1 * t1ct2
-    V2 = @. b2ct2 * t2ct1cb1dt1
-    V3 = @. t2ct1 * b1ct1db2 - b1ct1ct2 * t1db2
-    V5 = @. t2cb1ct2 * t1db2 - t2ct1 * b2ct2db1
-    V6 = @. b2ct2 * t1ct2db1
-
-    tmp1 = μ4πνd * t2ct1db2
-    tmp2 = μ4πνd * b1ct1db2
-    V7 = @. μ4πd * V1 - μ4πνd * V2 + tmp1 * b1ct1ct2 + tmp2 * t2ct1ct2
-
-    tmp1 = μ4πν * t2db2
-    V8 = @. tmp1 * b1ct1ct2 + μ4π * V5 - μ4πν * V6
-
-    tmp1 = μ4πν * t1db2
-    tmp2 = μ4πν * b1ct1db2
-    V9 = @. μ4π * V3 + tmp1 * b1ct1ct2 - tmp2 * t2ct1
-
-    tmp1 = μ4πνdCu * t2ct1cb1dt1 * t2ct1db2
-    V10 = @. μ8πaSqd * V1 - μ4πνaSqd * V2 - tmp1 * t2ct1ct2
-
-    tmp1 = μ4πνdSq * (t1ct2db1 * t2ct1db2 + t2ct1cb1dt1 * t2db2)
-    V11 = @. μ8πaSq * V5 - μ4πνaSq * V6 - tmp1 * t2ct1ct2
-
-    tmp1 = μ4πνdSq * t2ct1cb1dt1 * t1db2
-    tmp2 = μ4πνdSq * t2ct1cb1dt1 * t2ct1db2
-    V12 = @. μ8πaSq * V3 - tmp1 * t2ct1ct2 + tmp2 * t2ct1
-
-    tmp1 = μ4πνd * (t2ct1cb1dt1 * t2db2 + t1ct2db1 * t2ct1db2)
-    tmp2 = μ4πνd * t1ct2db1 * t1db2
-    V13 = @. tmp1 * t2ct1 - tmp2 * t2ct1ct2
-
-    tmp1 = μ4πνd * t1ct2db1 * t2db2
-    V14 = @. -tmp1 * t2ct1ct2
-
-    tmp1 = μ4πνd * t2ct1cb1dt1 * t1db2
-    V15 = @. tmp1 * t2ct1
-
-    tmp1 = @. μ4πν * t1ct2db1 * t2ct1
-    V16 = @. tmp1 * t2db2
-    V17 = @. tmp1 * t1db2
-
-    Fint1 = x2 * integ[1] - integ[2]
-    Fint2 = x2 * integ[2] - integ[5]
-    Fint3 = x2 * integ[3] - integ[4]
-    Fint4 = x2 * integ[7] - integ[8]
-    Fint5 = x2 * integ[8] - integ[11]
-    Fint6 = x2 * integ[9] - integ[10]
-    Fint7 = x2 * integ[10] - integ[13]
-    Fint8 = x2 * integ[11] - integ[16]
-    Fint9 = x2 * integ[12] - integ[14]
-    Fint10 = x2 * integ[13] - integ[18]
-    Fint11 = x2 * integ[14] - integ[15]
-
-    Fnode3 = @. (
-        V7 * Fint1 +
-        V8 * Fint2 +
-        V9 * Fint3 +
-        V10 * Fint4 +
-        V11 * Fint5 +
-        V12 * Fint6 +
-        V13 * Fint7 +
-        V14 * Fint8 +
-        V15 * Fint9 +
-        V16 * Fint10 +
-        V17 * Fint11
-    ) .* t2N
+    tmp = μ8πaSq * t2db2
+    tmp4 = μ4πν * b1ct2dnd * t2db2
+    V4 = @. -tmp * b1ct2ct2 - tmp4 * ndct2
 
     Fint1 = integ[2] - x1 * integ[1]
-    Fint2 = integ[5] - x1 * integ[2]
-    Fint3 = integ[4] - x1 * integ[3]
-    Fint4 = integ[8] - x1 * integ[7]
-    Fint5 = integ[11] - x1 * integ[8]
-    Fint6 = integ[10] - x1 * integ[9]
-    Fint7 = integ[13] - x1 * integ[10]
-    Fint8 = integ[16] - x1 * integ[11]
-    Fint9 = integ[14] - x1 * integ[12]
-    Fint10 = integ[18] - x1 * integ[13]
-    Fint11 = integ[15] - x1 * integ[14]
+    Fint2 = integ[5] - x1 * integ[4]
+    Fint3 = integ[8] - x1 * integ[7]
+    Fint4 = integ[11] - x1 * integ[10]
+    Fnode4 = @. (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t2N
 
-    Fnode4 = @. (
-        V7 * Fint1 +
-        V8 * Fint2 +
-        V9 * Fint3 +
-        V10 * Fint4 +
-        V11 * Fint5 +
-        V12 * Fint6 +
-        V13 * Fint7 +
-        V14 * Fint8 +
-        V15 * Fint9 +
-        V16 * Fint10 +
-        V17 * Fint11
-    ) .* t2N
+    Fint1 = x2 * integ[1] - integ[2]
+    Fint2 = x2 * integ[4] - integ[5]
+    Fint3 = x2 * integ[7] - integ[8]
+    Fint4 = x2 * integ[10] - integ[11]
+    Fnode3 = @. (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t2N
+
+    diffSq = dot(diff, diff)
+    n11mSq = dot(n11m, n11m)
+    n12mSq = dot(n12m, n12m)
+
+    if diffSq > (eps(Float32) * (n11mSq + n12mSq))
+
+        # t1 = @. n11m - n11
+        # t1N = 1 / sqrt(dot(t1, t1))
+        # t1 = @. t1 * t1N
+        # c = dot(t1, t2)
+        # cSq = c^2
+        # omcSq = 1 - cSq
+
+        # nothing, nothing, Fnode3Core, Fnode4Core = calcSegSegForce(
+        #     aSq,
+        #     μ4π,
+        #     μ8π,
+        #     μ8πaSq,
+        #     μ4πν,
+        #     μ4πνaSq,
+        #     b1,
+        #     t1,
+        #     t1N,
+        #     n11,
+        #     n11m,
+        #     b2,
+        #     t2,
+        #     t2N,
+        #     n21,
+        #     n22,
+        #     c,
+        #     cSq,
+        #     omcSq
+        # )
+        #
+        # Fnode3 = @. Fnode3 + Fnode3Core
+        # Fnode4 = @. Fnode3 + Fnode4Core
+
+        t1 = @. n12 - n12m
+        t1N = 1 / sqrt(dot(t1, t1))
+        t1 = @. t1 * t1N
+        c = dot(t1, t2)
+        cSq = c^2
+        omcSq = 1 - cSq
+
+        nothing, nothing, Fnode3Core, Fnode4Core = calcSegSegForce(
+            aSq,
+            μ4π,
+            μ8π,
+            μ8πaSq,
+            μ4πν,
+            μ4πνaSq,
+            b1,
+            t1,
+            t1N,
+            n12m,
+            n12,
+            b2,
+            t2,
+            t2N,
+            n21,
+            n22,
+            c,
+            cSq,
+        )
+
+        Fnode3 = @. Fnode3 + Fnode3Core
+        Fnode4 = @. Fnode3 + Fnode4Core
+    end
+
+    # If we flipped the first segment, flip it back so the on the nodes are correct.
+    if flip
+        Fnode1, Fnode2 = Fnode2, Fnode1
+    end
 
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-# @inline function calcSegSegForce(
-#     aSq::T1,
-#     μ4π::T1,
-#     μ8π::T1,
-#     μ8πaSq::T1,
-#     μ4πν::T1,
-#     μ4πνaSq::T1,
-#     b1::T2,
-#     t1::T2,
-#     t1N::T1,
-#     n11::T2,
-#     n12::T2,
-#     b2::T2,
-#     t2::T2,
-#     t2N::T1,
-#     n21::T2,
-#     n22::T2,
-# ) where {T1 <: Float64, T2 <: AbstractVector{<:Float64}}
-#     return [0.0; 0.0; 0.0], [0.0; 0.0; 0.0], [0.0; 0.0; 0.0], [0.0; 0.0; 0.0]
-# end
+@inline function SegSegInteg(
+    aSq::T1,
+    dSq::T1,
+    aSq_dSqI::T1,
+    x::T1,
+    y::T1,
+) where {T1 <: Float64}
+
+    xpy = x + y
+    xmy = x - y
+    Ra = sqrt(aSq_dSqI + xpy * xpy)
+    RaInv = 1 / Ra
+    Log_Ra_ypz = log(Ra + xpy)
+
+    tmp = xmy * Ra * aSq_dSqI
+
+    integ1 = Ra * aSq_dSqI
+    integ2 = -0.5 * (Log_Ra_ypz - tmp)
+    integ3 = -0.5 * (Log_Ra_ypz + tmp)
+    integ4 = -Log_Ra_ypz
+    integ5 = y * Log_Ra_ypz - Ra
+    integ6 = x * Log_Ra_ypz - Ra
+    integ7 = aSq_dSqI * (2 * aSq_dSqI * Ra - RaInv)
+    integ8 = aSq_dSqI * (tmp - x * RaInv)
+    integ9 = -aSq_dSqI * (tmp + y * RaInv)
+    integ10 = -aSq_dSqI * xpy * RaInv
+    integ11 = RaInv - y * integ10
+    integ12 = RaInv - x * integ10
+
+    return integ1,
+    integ2,
+    integ3,
+    integ4,
+    integ5,
+    integ6,
+    integ7,
+    integ8,
+    integ9,
+    integ10,
+    integ11,
+    integ12
+end
 
 @inline function SegSegInteg(
     aSq::T1,
@@ -523,8 +864,6 @@ end
     x::T1,
     y::T1,
 ) where {T1 <: Float64}
-
-    # integ = zeros(19)
 
     aSq_dSq = aSq + d^2 * omcSqI
     xSq = y^2
