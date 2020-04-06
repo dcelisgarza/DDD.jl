@@ -113,9 +113,9 @@ At a high level this works by creating a local coordinate frame using the line d
     numSegs = network.numSeg
     idx = network.segIdx
     coord = network.coord
-    bVec = transpose(network.bVec[idx[:, 1], :])
-    node1 = transpose(coord[idx[:, 2], :])
-    node2 = transpose(coord[idx[:, 3], :])
+    bVec = network.bVec[idx[:, 1], :]
+    node1 = coord[idx[:, 2], :]
+    node2 = coord[idx[:, 3], :]
 
     b1 = zeros(3)
     b2 = zeros(3)
@@ -125,19 +125,20 @@ At a high level this works by creating a local coordinate frame using the line d
     n12 = zeros(3) # Segment 1, node 2
     n21 = zeros(3) # Segment 2, node 1
     n22 = zeros(3) # Segment 2, node 2
+    Fnode = zeros(3,4)
     SegSegForce = zeros(numSegs, 3, 2)
 
-    for i = 1:numSegs
-        b1 = bVec[:, i]
-        n11 = node1[:, i]
-        n12 = node2[:, i]
+    @inbounds for i = 1:numSegs
+        b1 = bVec[i, :]
+        n11 = node1[i, :]
+        n12 = node2[i, :]
         t1 = @. n12 - n11
         t1N = 1 / sqrt(t1[1] * t1[1] + t1[2] * t1[2] + t1[3] * t1[3])
         t1 = @. t1 * t1N
         for j = (i + 1):numSegs
-            b2 = bVec[:, j]
-            n21 = node1[:, j]
-            n22 = node2[:, j]
+            b2 = bVec[j, :]
+            n21 = node1[j, :]
+            n22 = node2[j, :]
             t2 = @. n22 - n21
             t2N = 1 / sqrt(t2[1] * t2[1] + t2[2] * t2[2] + t2[3] * t2[3])
             t2 = @. t2 * t2N
@@ -168,12 +169,8 @@ At a high level this works by creating a local coordinate frame using the line d
                     cSq,
                     omcSq,
                 )
-                SegSegForce[i, :, 1] .+= Fnode[:, 1]
-                SegSegForce[i, :, 2] .+= Fnode[:, 2]
-                SegSegForce[j, :, 1] .+= Fnode[:, 3]
-                SegSegForce[j, :, 2] .+= Fnode[:, 4]
             else
-                calcSegSegForce(
+                Fnode = calcSegSegForce(
                     aSq,
                     μ4π,
                     μ8π,
@@ -192,6 +189,10 @@ At a high level this works by creating a local coordinate frame using the line d
                     n22,
                 )
             end
+            SegSegForce[i, :, 1] .+= Fnode[:, 1]
+            SegSegForce[i, :, 2] .+= Fnode[:, 2]
+            SegSegForce[j, :, 1] .+= Fnode[:, 3]
+            SegSegForce[j, :, 2] .+= Fnode[:, 4]
         end
     end
     return SegSegForce
@@ -448,7 +449,8 @@ end
     n21::T2,
     n22::T2,
 ) where {T1 <: Float64, T2 <: AbstractVector{<:Float64}}
-    return
+    Fnode = zeros(3, 4)
+    return Fnode
 end
 
 @inline function SegSegInteg(

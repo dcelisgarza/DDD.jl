@@ -4,7 +4,7 @@ cd(@__DIR__)
 
 params = "../inputs/simParams/sampleParams.csv"
 slipsys = "../data/slipSystems/bcc.csv"
-source = "../inputs/dln/sampleDln.csv"
+source = "../inputs/dln/samplePrismaticShear.csv"
 using LinearAlgebra
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
@@ -13,7 +13,7 @@ calcSelfForce(dlnParams, matParams, network)
 # @benchmark calcSelfForce(dlnParams, matParams, network)
 segseg = calcSegSegForce(dlnParams, matParams,network)
 
-sum(segseg)
+mean(segseg)
 
 
 isapprox(sum(segseg)-2*eps(Float64),0)
