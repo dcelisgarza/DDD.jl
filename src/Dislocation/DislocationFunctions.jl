@@ -188,8 +188,31 @@ At a high level this works by creating a local coordinate frame using the line d
         end
     end
 
-    # check this for a better reduction
+    # check this for a better reduction, 2nd of october 2019 has the way
     #https://discourse.julialang.org/t/parallel-reductions/30180/9
+    #=
+
+    x = [Threads.Atomic{Float64}(0.) for i in 1:numSegs*3*2]
+    x = reshape(x, numSegs, 3, 2)
+
+    Threads.@threads for i = 1:numSegs
+        Threads.atomic_add!.(x[i,:,2], (rand(), rand(), rand()))
+    end
+
+    y = zeros(size(x))
+
+    for i in eachindex(x)
+       y[i] = x[i].value
+    end
+
+    3×2 Array{Base.Threads.Atomic{Float64},2}:
+ Atomic{Float64}(0.0)  Atomic{Float64}(6.08041)
+ Atomic{Float64}(0.0)  Atomic{Float64}(8.66023)
+ Atomic{Float64}(0.0)  Atomic{Float64}(7.27086)
+
+
+
+    =#
     SegSegForce[:,:,:] = sum(TSegSegForce, dims=1)
 
 
