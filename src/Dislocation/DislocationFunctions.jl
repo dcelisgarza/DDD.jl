@@ -119,7 +119,45 @@ At a high level this works by creating a local coordinate frame using the line d
 
     SegSegForce = zeros(numSegs, 3, 2)
 
-    @fastmath @inbounds for i = 1:numSegs
+
+    # @fastmath @inbounds for i = 1:numSegs
+    #     b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
+    #     n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
+    #     n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
+    #     for j = (i + 1):numSegs
+    #         b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
+    #         n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
+    #         n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
+    #
+    #         Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+    #             aSq,
+    #             μ4π,
+    #             μ8π,
+    #             μ8πaSq,
+    #             μ4πν,
+    #             μ4πνaSq,
+    #             b1,
+    #             n11,
+    #             n12,
+    #             b2,
+    #             n21,
+    #             n22,
+    #         )
+    #         SegSegForce[i, :, 1] .+= Fnode1
+    #         SegSegForce[j, :, 1] .+= Fnode3
+    #         SegSegForce[i, :, 2] .+= Fnode2
+    #         SegSegForce[j, :, 2] .+= Fnode4
+    #
+    #     end
+    # end
+
+
+
+
+
+    TSegSegForce = zeros(Threads.nthreads(), numSegs, 3, 2)
+
+    @fastmath @inbounds Threads.@threads for i = 1:numSegs
         b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
         n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
         n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
@@ -142,13 +180,26 @@ At a high level this works by creating a local coordinate frame using the line d
                 n21,
                 n22,
             )
-            SegSegForce[i, :, 1] .+= Fnode1
-            SegSegForce[j, :, 1] .+= Fnode3
-            SegSegForce[i, :, 2] .+= Fnode2
-            SegSegForce[j, :, 2] .+= Fnode4
+            TSegSegForce[Threads.threadid(), i, :, 1] .+= Fnode1
+            TSegSegForce[Threads.threadid(), j, :, 1] .+= Fnode3
+            TSegSegForce[Threads.threadid(), i, :, 2] .+= Fnode2
+            TSegSegForce[Threads.threadid(), j, :, 2] .+= Fnode4
 
         end
     end
+
+    # check this for a better reduction
+    #https://discourse.julialang.org/t/parallel-reductions/30180/9
+    SegSegForce[:,:,:] = sum(TSegSegForce, dims=1)
+
+
+
+
+
+
+
+
+
     return SegSegForce
 end
 @inline function calcSegSegForce(
@@ -166,18 +217,18 @@ end
     n22::T2,
 ) where {T1 <: Float64, T2 <: NTuple{N, <:Float64} where {N}}
 
-    Fnode1 = (0.0, 0.0, 0.0)
-    Fnode2 = (0.0, 0.0, 0.0)
-    Fnode3 = (0.0, 0.0, 0.0)
-    Fnode4 = (0.0, 0.0, 0.0)
+    Fnode1::NTuple{3, Float64} = (0.0, 0.0, 0.0)
+    Fnode2::NTuple{3, Float64} = (0.0, 0.0, 0.0)
+    Fnode3::NTuple{3, Float64} = (0.0, 0.0, 0.0)
+    Fnode4::NTuple{3, Float64} = (0.0, 0.0, 0.0)
 
     t2 = @. n22 - n21
     t2N = 1 / norm(t2)
-    t2 = @. t2 / t2N
+    t2 = @. t2 * t2N
 
     t1 = @. n12 - n11
     t1N = 1 / norm(t1)
-    t1 = @. t1 / t1N
+    t1 = @. t1 * t1N
 
     c = dot(t1, t2)
     cSq = c * c
@@ -452,12 +503,26 @@ end
         ) .* t2N
 
     else
+        Fnode1, Fnode2, Fnode3, Fnode4 = calcParSegSegForce(
+            aSq,
+            μ4π,
+            μ8π,
+            μ8πaSq,
+            μ4πν,
+            μ4πνaSq,
+            b1,
+            n11,
+            n12,
+            b2,
+            n21,
+            n22,
+        )
     end
 
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-@inline function calcSegSegForce(
+@inline function calcParSegSegForce(
     aSq::T1,
     μ4π::T1,
     μ8π::T1,
@@ -465,49 +530,59 @@ end
     μ4πν::T1,
     μ4πνaSq::T1,
     b1::T2,
-    t1::T2,
-    t1N::T1,
     n11::T2,
     n12::T2,
     b2::T2,
-    t2::T2,
-    t2N::T1,
     n21::T2,
     n22::T2,
-    c::T1,
-    cSq::T1,
 ) where {T1 <: Float64, T2 <: NTuple{N, <:Float64} where {N}}
 
+    Fnode1::NTuple{3, Float64} = (0.0, 0.0, 0.0)
+    Fnode2::NTuple{3, Float64} = (0.0, 0.0, 0.0)
+    Fnode3::NTuple{3, Float64} = (0.0, 0.0, 0.0)
+    Fnode4::NTuple{3, Float64} = (0.0, 0.0, 0.0)
     flip::Bool = false
-    # half of the cotangent of critical θ
-    hCotanθc = sqrt((1 - eps(Float32) * 1.01) / (eps(Float32) * 1.01)) / 2
 
-    # Keep notation consistent and ensire no negative angles between segments.
+    # half of the cotangent of critical θ
+    hCotanθc = sqrt((1 - sqrt(eps(Float64)) * 1.01) / (sqrt(eps(Float64)) * 1.01)) / 2
+
+    t2 = @. n22 - n21
+    t2N = 1 / norm(t2)
+    t2 = @. t2 * t2N
+
+    t1 = @. n12 - n11
+    t1N = 1 / norm(t1)
+    t1 = @. t1 * t1N
+
+    c = dot(t2, t1)
+    # If c is negative we do a swap of n11 and n12 to keep notation consistent and avoid
     if c < 0
         flip = true
-        n11, n12 = n12, n11
-        t1 = @. -1 * t1
-        b1 = @. -1 * b1
+        n12, n11 = n11, n12
+        t1 = .-t1
+        b1 = .-b1
     end
 
-    # Segment 1, n12 - n11
+    # Vector projection and rejection.
     tmp = dot(n22 .- n21, t1)
     n22m = @. n21 + tmp * t1
     diff = @. n22 - n22m
-    magDiff = sqrt(dot(diff, diff))
+    magDiff = norm(diff)
 
-    tmp = hCotanθc * magDiff
-    tmpt1 = @. hCotanθc * magDiff * t1
-    n21m = @. n21 + 0.5 * diff + tmpt1
-    n22m = @. n22m + 0.5 * diff - tmpt1
+    tmpVec1 = @. 0.5 * diff
+    tmpVec2 = @. hCotanθc * magDiff * t1
+    n21m = @. n21 + tmpVec1 + tmpVec2
+    n22m = @. n22m + tmpVec1 - tmpVec2
 
     # Dot products.
     R = @. n21m - n11
     Rdt1 = dot(R, t1)
 
     nd = @. R - Rdt1 * t1
+    ndb1 = dot(nd, b1)
     dSq = dot(nd, nd)
-    nddb1 = dot(nd, b1)
+    aSq_dSq = aSq + dSq
+    aSq_dSqI = 1 / aSq_dSq
 
     x1 = dot(n21m, t1)
     x2 = dot(n22m, t1)
@@ -516,6 +591,7 @@ end
 
     t1db2 = dot(t1, b2)
     t1db1 = dot(t1, b1)
+    nddb1 = dot(nd, b1)
 
     # Cross products.
     b2ct1 = (
@@ -536,35 +612,33 @@ end
         nd[1] * t1[2] - nd[2] * t1[1],
     )
 
-    # Cross dot products.
-    b2t1db1 = dot(b2ct1, b1)
-    b2t1dnd = dot(b2ct1, nd)
+    # Cross dot products
+    b2ct1db1 = dot(b2ct1, b1)
+    b2ct1dnd = dot(b2ct1, nd)
 
-    # Double cross products.
+    # Double cross products
     b2ct1ct1 = @. t1db2 * t1 - b2
 
-    aSq_dSqI = 1 / (aSq + dSq)
-
-    integ = SegSegInteg(aSq, dSq, aSq_dSqI, x1, y1)
-    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x1, y2)
-    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x2, y1)
-    integ = integ .+ SegSegInteg(aSq, dSq, aSq_dSqI, x2, y2)
+    integ = ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y1)
+    integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y2)
+    integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x2, y1)
+    integ = integ .+ ParSegSegInteg(aSq_dSq, aSq_dSqI, x2, y2)
 
     tmp = t1db1 * t1db2
-    tmp2 = @. tmp * nd
-    tmp3 = @. b2t1dnd * b1ct1
-
-    V1 = @. μ4πν * (nddb1 * b2ct1ct1 + b2t1db1 * ndct1 - tmp3) - μ4π * tmp2
+    tmpVec1 = @. tmp * nd
+    tmpVec2 = @. b2ct1dnd * b1ct1
+    V1 = @. μ4πν * (nddb1 * b2ct1ct1 + b2ct1db1 * ndct1 - tmpVec2) -
+            μ4π * tmpVec1
 
     tmp = (μ4πν - μ4π) * t1db1
     V2 = @. tmp * b2ct1ct1
 
-    tmp = μ4πν * b2t1dnd * nddb1
-    V3 = @. -μ8πaSq * tmp2 - μ4πνaSq * tmp3 - tmp * ndct1
+    tmp = μ4πν * b2ct1dnd * nddb1
+    V3 = @. -μ8πaSq * tmpVec1 - μ4πνaSq * tmpVec2 - tmp * ndct1
 
     tmp = μ8πaSq * t1db1
-    tmp4 = μ4πν * b2t1dnd * t1db1
-    V4 = @. -tmp * b2ct1ct1 - tmp4 * ndct1
+    tmp2 = μ4πν * b2ct1dnd * t1db1
+    V4 = @. -tmp * b2ct1ct1 - tmp2 * ndct1
 
     # Node 2, n12
     Fint1 = integ[3] - y1 * integ[1]
@@ -581,20 +655,12 @@ end
 
     Fnode1 = @. (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t1N
 
-    diffSq = dot(diff, diff)
-    n21mSq = dot(n21m, n21m)
-    n22mSq = dot(n22m, n22m)
+    magDiffSq = dot(diff, diff)
+    magn21mSq = dot(n21m, n21m)
+    magn22mSq = dot(n22m, n22m)
 
-    if diffSq > (eps(Float32) * (n21mSq + n22mSq))
-
-        t2 = @. n21m - n21
-        t2N = 1 / sqrt(dot(t2, t2))
-        t2 = @. t2 * t2N
-        c = dot(t2, t1)
-        cSq = c^2
-        omcSq = 1 - cSq
-
-        nothing, nothing, Fnode1Core, Fnode2Core = calcSegSegForce(
+    if magDiffSq > eps(Float64) * (magn21mSq + magn22mSq)
+        missing, missing, Fnode1Core, Fnode2Core = calcSegSegForce(
             aSq,
             μ4π,
             μ8π,
@@ -602,31 +668,16 @@ end
             μ4πν,
             μ4πνaSq,
             b2,
-            t2,
-            t2N,
             n21,
             n21m,
             b1,
-            t1,
-            t1N,
             n11,
             n12,
-            c,
-            cSq,
-            omcSq,
         )
-
         Fnode1 = @. Fnode1 + Fnode1Core
         Fnode2 = @. Fnode2 + Fnode2Core
 
-        t2 = @. n22 - n22m
-        t2N = 1 / sqrt(dot(t2, t2))
-        t2 = @. t2 * t2N
-        c = dot(t2, t1)
-        cSq = c^2
-        omcSq = 1 - cSq
-
-        nothing, nothing, Fnode1Core, Fnode2Core = calcSegSegForce(
+        missing, missing, Fnode1Core, Fnode2Core = calcSegSegForce(
             aSq,
             μ4π,
             μ8π,
@@ -634,41 +685,38 @@ end
             μ4πν,
             μ4πνaSq,
             b2,
-            t2,
-            t2N,
             n22m,
             n22,
             b1,
-            t1,
-            t1N,
             n11,
             n12,
-            c,
-            cSq,
-            omcSq,
         )
-
         Fnode1 = @. Fnode1 + Fnode1Core
         Fnode2 = @. Fnode2 + Fnode2Core
     end
 
-    # Segment 2, n22-n21
-    tmp = @. (n12 - n11) * t2
+    # Segment 2
+    # Scalar projection of seg1 (n12-n11) onto t2, not normalised because we need the length.
+    tmp = dot(n12 .- n11, t2)
+    # Vector projection of seg 1 to seg 2.
     n12m = @. n11 + tmp * t2
+    # Vector rejection and its magnitude.
     diff = @. n12 - n12m
+    magDiff = norm(diff)
 
-    magDiff = sqrt(dot(diff, diff))
-    tmpt2 = @. hCotanθc * magDiff * t2
+    tmpVec1 = @. 0.5 * diff
+    tmpVec2 = @. hCotanθc * magDiff * t2
+    n11m = @. n11 + tmpVec1 + tmpVec2
+    n12m = @. n12m + tmpVec1 - tmpVec2
 
-    n11m = @. n11 + 0.5 * diff + tmpt2
-    n12m = @. n12m + 0.5 * diff - tmpt2
-
-    # Dot products
+    # Dot products.
     R = @. n21 - n11m
-    Rdt = dot(R, t2)
+    Rdt2 = dot(R, t2)
 
-    nd = @. R - Rdt * t2
+    nd = @. R - Rdt2 * t2
     dSq = dot(nd, nd)
+    aSq_dSq = aSq + dSq
+    aSq_dSqI = 1 / aSq_dSq
 
     x1 = dot(n21, t2)
     x2 = dot(n22, t2)
@@ -698,29 +746,33 @@ end
         nd[1] * t2[2] - nd[2] * t2[1],
     )
 
-    integ = SegSegInteg(aSq, dSq, aSq_dSqI, x1, y1)
-    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x1, y2)
-    integ = integ .- SegSegInteg(aSq, dSq, aSq_dSqI, x2, y1)
-    integ = integ .+ SegSegInteg(aSq, dSq, aSq_dSqI, x2, y2)
-
+    # Cross dot producs.
     b1ct2db2 = dot(b1ct2, b2)
     b1ct2dnd = dot(b1ct2, nd)
+
+    # Double cross products.
     b1ct2ct2 = @. t2db1 * t2 - b1
 
-    tmp = t2db2 * t2db1
-    tmp2 = @. tmp * nd
-    tmp3 = @. b1ct2dnd * b2ct2
-    V1 = @. μ4πν * (nddb2 * b1ct2ct2 + b1ct2db2 * ndct2 - tmp3) - μ4π * tmp2
+    integ = ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y1)
+    integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y2)
+    integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x2, y1)
+    integ = integ .+ ParSegSegInteg(aSq_dSq, aSq_dSqI, x2, y2)
 
-    tmp4 = (μ4πν - μ4π) * t2db2
-    V2 = @. tmp4 * b1ct2ct2
+    tmp = t2db2 * t2db1
+    tmpVec1 = @. tmp * nd
+    tmpVec2 = @. b1ct2dnd * b2ct2
+    V1 = @. μ4πν * (nddb2 * b1ct2ct2 + b1ct2db2 * ndct2 - tmpVec2) -
+            μ4π * tmpVec2
+
+    tmp = (μ4πν - μ4π) * t2db2
+    V2 = @. tmp * b1ct2ct2
 
     tmp = μ4πν * b1ct2dnd * nddb2
-    V3 = @. -μ8πaSq * tmp2 - μ4πνaSq * tmp3 - tmp * ndct2
+    V3 = @. -μ8πaSq * tmpVec1 - μ4πνaSq * tmpVec2 - tmp * ndct2
 
     tmp = μ8πaSq * t2db2
-    tmp4 = μ4πν * b1ct2dnd * t2db2
-    V4 = @. -tmp * b1ct2ct2 - tmp4 * ndct2
+    tmp2 = μ4πν * b1ct2dnd * t2db2
+    V4 = @. -tmp * b1ct2ct2 - tmp2 * tmp2 * ndct2
 
     Fint1 = integ[2] - x1 * integ[1]
     Fint2 = integ[5] - x1 * integ[4]
@@ -734,52 +786,12 @@ end
     Fint4 = x2 * integ[10] - integ[11]
     Fnode3 = @. (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t2N
 
-    diffSq = dot(diff, diff)
-    n11mSq = dot(n11m, n11m)
-    n12mSq = dot(n12m, n12m)
+    magDiffSq = magDiff^2
+    magn11mSq = dot(n11m, n11m)
+    magn12mSq = dot(n12m, n12m)
 
-    if diffSq > (eps(Float32) * (n11mSq + n12mSq))
-
-        # t1 = @. n11m - n11
-        # t1N = 1 / sqrt(dot(t1, t1))
-        # t1 = @. t1 * t1N
-        # c = dot(t1, t2)
-        # cSq = c^2
-        # omcSq = 1 - cSq
-
-        # nothing, nothing, Fnode3Core, Fnode4Core = calcSegSegForce(
-        #     aSq,
-        #     μ4π,
-        #     μ8π,
-        #     μ8πaSq,
-        #     μ4πν,
-        #     μ4πνaSq,
-        #     b1,
-        #     t1,
-        #     t1N,
-        #     n11,
-        #     n11m,
-        #     b2,
-        #     t2,
-        #     t2N,
-        #     n21,
-        #     n22,
-        #     c,
-        #     cSq,
-        #     omcSq
-        # )
-        #
-        # Fnode3 = @. Fnode3 + Fnode3Core
-        # Fnode4 = @. Fnode3 + Fnode4Core
-
-        t1 = @. n12 - n12m
-        t1N = 1 / sqrt(dot(t1, t1))
-        t1 = @. t1 * t1N
-        c = dot(t1, t2)
-        cSq = c^2
-        omcSq = 1 - cSq
-
-        nothing, nothing, Fnode3Core, Fnode4Core = calcSegSegForce(
+    if magDiffSq > eps(Float64) * (magn11mSq + magn12mSq)
+        missing, missing, Fnode3Core, Fnode4Core = calcSegSegForce(
             aSq,
             μ4π,
             μ8π,
@@ -787,24 +799,34 @@ end
             μ4πν,
             μ4πνaSq,
             b1,
-            t1,
-            t1N,
+            n11,
+            n11m,
+            b2,
+            n21,
+            n22,
+        )
+        Fnode3 = @. Fnode3 + Fnode3Core
+        Fnode4 = @. Fnode4 + Fnode4Core
+
+        missing, missing, Fnode3Core, Fnode4Core = calcSegSegForce(
+            aSq,
+            μ4π,
+            μ8π,
+            μ8πaSq,
+            μ4πν,
+            μ4πνaSq,
+            b1,
             n12m,
             n12,
             b2,
-            t2,
-            t2N,
             n21,
             n22,
-            c,
-            cSq,
         )
-
         Fnode3 = @. Fnode3 + Fnode3Core
-        Fnode4 = @. Fnode3 + Fnode4Core
+        Fnode4 = @. Fnode4 + Fnode4Core
     end
 
-    # If we flipped the first segment, flip it back so the on the nodes are correct.
+    # If we flipped the first segment originally, flip the forces round.
     if flip
         Fnode1, Fnode2 = Fnode2, Fnode1
     end
@@ -812,9 +834,8 @@ end
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-@inline function SegSegInteg(
-    aSq::T1,
-    dSq::T1,
+@inline function ParSegSegInteg(
+    aSq_dSq::T1,
     aSq_dSqI::T1,
     x::T1,
     y::T1,
@@ -822,7 +843,7 @@ end
 
     xpy = x + y
     xmy = x - y
-    Ra = sqrt(aSq_dSqI + xpy * xpy)
+    Ra = sqrt(aSq_dSq + xpy * xpy)
     RaInv = 1 / Ra
     Log_Ra_ypz = log(Ra + xpy)
 

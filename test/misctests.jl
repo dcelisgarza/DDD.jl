@@ -10,11 +10,38 @@ using LinearAlgebra
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
 network = makeNetwork(loops; memBuffer = 1)
-# makeNetwork!(network,loops)
+makeNetwork!(network,loops)
 calcSelfForce(dlnParams, matParams, network)
 # @benchmark calcSelfForce(dlnParams, matParams, network)
-segseg1, segseg2 = calcSegSegForce(dlnParams, matParams,network)
-mean(segseg1)
+segseg = calcSegSegForce(dlnParams, matParams,network)
+segsegFT = calcSegSegForce(dlnParams, matParams,network)
+diff = segseg - segsegFT
+maximum(diff)
+minimum(diff)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+segsegT = calcSegSegForce(dlnParams, matParams,network)
+
+
+diffFT_T = segsegFT - segsegFT
+
+
+mean(segseg)
+maximum(segseg)
+minimum(segseg)
 @time calcSegSegForce(dlnParams, matParams,network)
 Juno.@profiler (for i = 1:1000; calcSegSegForce(dlnParams, matParams, network); end)
 
