@@ -166,17 +166,17 @@ end
     n22::T2,
 ) where {T1 <: Float64, T2 <: NTuple{N, <:Float64} where {N}}
 
-    Fnode1 = (0., 0., 0.)
-    Fnode2 = (0., 0., 0.)
-    Fnode3 = (0., 0., 0.)
-    Fnode4 = (0., 0., 0.)
+    Fnode1 = (0.0, 0.0, 0.0)
+    Fnode2 = (0.0, 0.0, 0.0)
+    Fnode3 = (0.0, 0.0, 0.0)
+    Fnode4 = (0.0, 0.0, 0.0)
 
     t2 = @. n22 - n21
-    t2N = 1 / dot(t2, t2)
+    t2N = 1 / norm(t2)
     t2 = @. t2 / t2N
 
     t1 = @. n12 - n11
-    t1N = 1 / dot(t1, t1)
+    t1N = 1 / norm(t1)
     t1 = @. t1 / t1N
 
     c = dot(t1, t2)
@@ -184,6 +184,9 @@ end
     omcSq = 1 - cSq
 
     if omcSq > eps(Float32)
+
+        omcSqI = 1 / omcSq
+
         # Single cross products.
         t2ct1 = (
             t2[2] * t1[3] - t2[3] * t1[2],
@@ -230,8 +233,6 @@ end
         t1ct2cb2dt2 = t1db2 - t2db2 * c
         t2ct1cb1db2 = t2db1 * t1db2 - t1db1 * t2db2
 
-        omcSqI = 1 / omcSq
-
         # Integration limits for local coordinates.
         R1 = @. n21 - n11
         R2 = @. n22 - n12
@@ -260,7 +261,7 @@ end
         integ = integ .- SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y1)
         integ = integ .+ SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y2)
 
-        # seg 1, nodes 2-1
+        # Seg 1, nodes 2-1
         tmp1 = t1db2 * t2db1 + t2ct1cb1db2
         V1 = @. tmp1 * t2ct1
         V2 = @. b1ct1 * t1ct2cb2dt2
