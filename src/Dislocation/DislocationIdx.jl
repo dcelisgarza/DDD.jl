@@ -1,4 +1,4 @@
-function getNodeCoord(network::DislocationNetwork, )
+function getNodeCoord(network::DislocationNetwork)
 
 end
 

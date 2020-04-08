@@ -219,13 +219,13 @@ function makeNetwork(
     nodeBuffer::Integer = nodeTotal * memBuffer
 
     network = DislocationNetwork(
-        zeros(Int64, nodeBuffer, 2),
-        zeros(nodeBuffer, 3),
-        zeros(nodeBuffer, 3),
-        zeros(nodeBuffer, 3),
-        zeros(nodeType, nodeBuffer),
-        nodeTotal,
-        nodeTotal,
+        links = zeros(Int64, nodeBuffer, 2),
+        slipPlane = zeros(nodeBuffer, 3),
+        bVec = zeros(nodeBuffer, 3),
+        coord = zeros(nodeBuffer, 3),
+        label = zeros(nodeType, nodeBuffer),
+        numNode = nodeTotal,
+        numSeg = nodeTotal,
     )
     network.maxConnect = maxConnect
 

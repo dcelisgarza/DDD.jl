@@ -6,21 +6,24 @@
 
     μ = matParams.μ
     ν = matParams.ν
-    omNuInv = 1 / (1 - ν)
     E = matParams.E
+    omNuInv = matParams.omνInv
+    nuOmNuInv = matParams.νomνInv
+    μ4π = matParams.μ4π
     a = dlnParams.coreRad
+    aSq = dlnParams.coreRadSq
 
     idx = network.segIdx
     coord = network.coord
     # Un normalised segment vectors.
     bVec = network.bVec[idx[:, 1], :]
-    tVec = coord[idx[:, 3], :] - coord[idx[:, 2], :]
+    tVec = @. coord[idx[:, 3], :] - coord[idx[:, 2], :]
 
     # Finding the norm of each line vector.
     L = dimNorm(tVec; dims = 2)
     Linv = @. 1 / L
     # Finding the non-singular norm.
-    La = @. sqrt(L * L + a * a)
+    La = @. sqrt(L * L + aSq)
 
     # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
     tVec = @. tVec * Linv
@@ -48,15 +51,15 @@
     =#
     # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
     LaMa = @. La - a
-    tor = @. (μ / (4π)) *
+    tor = @. μ4π *
        bScrew *
        (
-           ν * omNuInv * (log((La + L) / a) - 2 * LaMa * Linv) -
+           nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) -
            LaMa^2 / (2 * La * L)
        )
 
     # Torsional component of core self interaction.
-    torCore = @. 2 * E * ν * omNuInv * bScrew
+    torCore = @. 2 * E * nuOmNuInv * bScrew
     torTot = @. tor + torCore
 
     # Longitudinal component of core self interaction.
@@ -96,17 +99,18 @@ At a high level this works by creating a local coordinate frame using the line d
 @inline function calcSegSegForce(
     dlnParams::DislocationP,
     matParams::MaterialP,
-    network::DislocationNetwork,
+    network::DislocationNetwork;
+    parallel::Bool = true,
 )
+
+    # Constants.
     μ = matParams.μ
     ν = matParams.ν
-    a = dlnParams.coreRad
-    # Constants.
-    aSq = a^2
-    μ4π = μ / (4π)
-    μ8π = μ4π / 2
+    μ4π = matParams.μ4π
+    μ8π = matParams.μ8π
+    μ4πν = matParams.μ4πν
+    aSq = dlnParams.coreRadSq
     μ8πaSq = aSq * μ8π
-    μ4πν = μ4π / (1 - ν)
     μ4πνaSq = aSq * μ4πν
 
     # Un normalised segment vectors.
@@ -117,86 +121,91 @@ At a high level this works by creating a local coordinate frame using the line d
     node1 = coord[idx[:, 2], :]
     node2 = coord[idx[:, 3], :]
 
-### Serial execution.
-    SegSegForce = zeros(numSegs, 3, 2)
-    @fastmath @inbounds for i = 1:numSegs
-        b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
-        n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
-        n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-        for j = (i + 1):numSegs
-            b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
-            n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
-            n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
+    if parallel
+        # Threadid parallelisation + parallelised reduction.
+        # Uses a lot more memory but is faster than the other two.
+        TSegSegForce = zeros(Threads.nthreads(), numSegs, 3, 2)
+        @fastmath @inbounds Threads.@threads for i = 1:numSegs
+            b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
+            n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
+            n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
+            for j = (i + 1):numSegs
+                b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
+                n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
+                n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
 
-            Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-                aSq,
-                μ4π,
-                μ8π,
-                μ8πaSq,
-                μ4πν,
-                μ4πνaSq,
-                b1,
-                n11,
-                n12,
-                b2,
-                n21,
-                n22,
+                Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+                    aSq,
+                    μ4π,
+                    μ8π,
+                    μ8πaSq,
+                    μ4πν,
+                    μ4πνaSq,
+                    b1,
+                    n11,
+                    n12,
+                    b2,
+                    n21,
+                    n22,
+                )
+
+                TSegSegForce[Threads.threadid(), i, :, 1] .+= Fnode1
+                TSegSegForce[Threads.threadid(), j, :, 1] .+= Fnode3
+                TSegSegForce[Threads.threadid(), i, :, 2] .+= Fnode2
+                TSegSegForce[Threads.threadid(), j, :, 2] .+= Fnode4
+
+            end
+        end
+
+        nthreads = Threads.nthreads()
+        TSegSegForce2 =
+            [Threads.Atomic{Float64}(0.0) for i = 1:(numSegs * 3 * 2)]
+        TSegSegForce2 = reshape(TSegSegForce2, numSegs, 3, 2)
+        @fastmath @inbounds Threads.@threads for tid = 1:nthreads
+            start = 1 + ((tid - 1) * numSegs) ÷ nthreads
+            stop = (tid * numSegs) ÷ nthreads
+            domain = start:stop
+            Threads.atomic_add!.(
+                TSegSegForce2[start:stop, :, :],
+                sum(TSegSegForce[:, start:stop, :, :], dims = 1)[1, :, :, :],
             )
-            SegSegForce[i, :, 1] .+= Fnode1
-            SegSegForce[j, :, 1] .+= Fnode3
-            SegSegForce[i, :, 2] .+= Fnode2
-            SegSegForce[j, :, 2] .+= Fnode4
+        end
+        SegSegForce = getproperty.(TSegSegForce2, :value)
+    else
+        # Serial execution.
+        SegSegForce = zeros(numSegs, 3, 2)
+        @fastmath @inbounds for i = 1:numSegs
+            b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
+            n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
+            n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
+            for j = (i + 1):numSegs
+                b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
+                n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
+                n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
 
+                Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+                    aSq,
+                    μ4π,
+                    μ8π,
+                    μ8πaSq,
+                    μ4πν,
+                    μ4πνaSq,
+                    b1,
+                    n11,
+                    n12,
+                    b2,
+                    n21,
+                    n22,
+                )
+                SegSegForce[i, :, 1] .+= Fnode1
+                SegSegForce[j, :, 1] .+= Fnode3
+                SegSegForce[i, :, 2] .+= Fnode2
+                SegSegForce[j, :, 2] .+= Fnode4
+            end
         end
     end
 
-### Threadid parallelisation + parallelised reduction.
-# Uses a lot more memory but is faster than the other two.
-    # TSegSegForce = zeros(Threads.nthreads(), numSegs, 3, 2)
-    # @fastmath @inbounds Threads.@threads for i = 1:numSegs
-    #     b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
-    #     n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
-    #     n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-    #     for j = (i + 1):numSegs
-    #         b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
-    #         n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
-    #         n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
-    #
-    #         Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-    #             aSq,
-    #             μ4π,
-    #             μ8π,
-    #             μ8πaSq,
-    #             μ4πν,
-    #             μ4πνaSq,
-    #             b1,
-    #             n11,
-    #             n12,
-    #             b2,
-    #             n21,
-    #             n22,
-    #         )
-    #
-    #         TSegSegForce[Threads.threadid(), i, :, 1] .+= Fnode1
-    #         TSegSegForce[Threads.threadid(), j, :, 1] .+= Fnode3
-    #         TSegSegForce[Threads.threadid(), i, :, 2] .+= Fnode2
-    #         TSegSegForce[Threads.threadid(), j, :, 2] .+= Fnode4
-    #
-    #     end
-    # end
-    #
-    # nthreads = Threads.nthreads()
-    # TSegSegForce2 = [Threads.Atomic{Float64}(0.0) for i = 1:(numSegs * 3 * 2)]
-    # TSegSegForce2 = reshape(TSegSegForce2, numSegs, 3, 2)
-    # @fastmath @inbounds Threads.@threads for tid in 1:nthreads
-    #     start = 1 + ((tid - 1) * numSegs) ÷ nthreads
-    #     stop = (tid * numSegs) ÷ nthreads
-    #     domain = start:stop
-    #     Threads.atomic_add!.(TSegSegForce2[start:stop,:,:], sum(TSegSegForce[:,start:stop,:,:], dims = 1)[1, :, :, :])
-    # end
-    # SegSegForce = getproperty.(TSegSegForce2, :value)
-
-### Atomic add parallelisation, slow as heck.
+    ### Atomic add parallelisation, slow as heck on a single processor.
     # TSegSegForce = [Threads.Atomic{Float64}(0.0) for i = 1:(numSegs * 3 * 2)]
     # TSegSegForce = reshape(TSegSegForce, numSegs, 3, 2)
     # nthreads = Base.Threads.nthreads()
