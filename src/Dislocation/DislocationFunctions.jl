@@ -117,47 +117,9 @@ At a high level this works by creating a local coordinate frame using the line d
     node1 = coord[idx[:, 2], :]
     node2 = coord[idx[:, 3], :]
 
+### Serial execution.
     SegSegForce = zeros(numSegs, 3, 2)
-
-
-    # @fastmath @inbounds for i = 1:numSegs
-    #     b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
-    #     n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
-    #     n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-    #     for j = (i + 1):numSegs
-    #         b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
-    #         n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
-    #         n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
-    #
-    #         Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-    #             aSq,
-    #             μ4π,
-    #             μ8π,
-    #             μ8πaSq,
-    #             μ4πν,
-    #             μ4πνaSq,
-    #             b1,
-    #             n11,
-    #             n12,
-    #             b2,
-    #             n21,
-    #             n22,
-    #         )
-    #         SegSegForce[i, :, 1] .+= Fnode1
-    #         SegSegForce[j, :, 1] .+= Fnode3
-    #         SegSegForce[i, :, 2] .+= Fnode2
-    #         SegSegForce[j, :, 2] .+= Fnode4
-    #
-    #     end
-    # end
-
-
-
-
-
-    TSegSegForce = zeros(Threads.nthreads(), numSegs, 3, 2)
-
-    @fastmath @inbounds Threads.@threads for i = 1:numSegs
+    @fastmath @inbounds for i = 1:numSegs
         b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
         n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
         n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
@@ -180,48 +142,99 @@ At a high level this works by creating a local coordinate frame using the line d
                 n21,
                 n22,
             )
-            TSegSegForce[Threads.threadid(), i, :, 1] .+= Fnode1
-            TSegSegForce[Threads.threadid(), j, :, 1] .+= Fnode3
-            TSegSegForce[Threads.threadid(), i, :, 2] .+= Fnode2
-            TSegSegForce[Threads.threadid(), j, :, 2] .+= Fnode4
+            SegSegForce[i, :, 1] .+= Fnode1
+            SegSegForce[j, :, 1] .+= Fnode3
+            SegSegForce[i, :, 2] .+= Fnode2
+            SegSegForce[j, :, 2] .+= Fnode4
 
         end
     end
 
-    # check this for a better reduction, 2nd of october 2019 has the way
-    #https://discourse.julialang.org/t/parallel-reductions/30180/9
-    #=
+### Threadid parallelisation + parallelised reduction.
+# Uses a lot more memory but is faster than the other two.
+    # TSegSegForce = zeros(Threads.nthreads(), numSegs, 3, 2)
+    # @fastmath @inbounds Threads.@threads for i = 1:numSegs
+    #     b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
+    #     n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
+    #     n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
+    #     for j = (i + 1):numSegs
+    #         b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
+    #         n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
+    #         n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
+    #
+    #         Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+    #             aSq,
+    #             μ4π,
+    #             μ8π,
+    #             μ8πaSq,
+    #             μ4πν,
+    #             μ4πνaSq,
+    #             b1,
+    #             n11,
+    #             n12,
+    #             b2,
+    #             n21,
+    #             n22,
+    #         )
+    #
+    #         TSegSegForce[Threads.threadid(), i, :, 1] .+= Fnode1
+    #         TSegSegForce[Threads.threadid(), j, :, 1] .+= Fnode3
+    #         TSegSegForce[Threads.threadid(), i, :, 2] .+= Fnode2
+    #         TSegSegForce[Threads.threadid(), j, :, 2] .+= Fnode4
+    #
+    #     end
+    # end
+    #
+    # nthreads = Threads.nthreads()
+    # TSegSegForce2 = [Threads.Atomic{Float64}(0.0) for i = 1:(numSegs * 3 * 2)]
+    # TSegSegForce2 = reshape(TSegSegForce2, numSegs, 3, 2)
+    # @fastmath @inbounds Threads.@threads for tid in 1:nthreads
+    #     start = 1 + ((tid - 1) * numSegs) ÷ nthreads
+    #     stop = (tid * numSegs) ÷ nthreads
+    #     domain = start:stop
+    #     Threads.atomic_add!.(TSegSegForce2[start:stop,:,:], sum(TSegSegForce[:,start:stop,:,:], dims = 1)[1, :, :, :])
+    # end
+    # SegSegForce = getproperty.(TSegSegForce2, :value)
 
-    x = [Threads.Atomic{Float64}(0.) for i in 1:numSegs*3*2]
-    x = reshape(x, numSegs, 3, 2)
-
-    Threads.@threads for i = 1:numSegs
-        Threads.atomic_add!.(x[i,:,2], (rand(), rand(), rand()))
-    end
-
-    y = zeros(size(x))
-
-    for i in eachindex(x)
-       y[i] = x[i].value
-    end
-
-    3×2 Array{Base.Threads.Atomic{Float64},2}:
- Atomic{Float64}(0.0)  Atomic{Float64}(6.08041)
- Atomic{Float64}(0.0)  Atomic{Float64}(8.66023)
- Atomic{Float64}(0.0)  Atomic{Float64}(7.27086)
-
-
-
-    =#
-    SegSegForce[:,:,:] = sum(TSegSegForce, dims=1)
-
-
-
-
-
-
-
-
+### Atomic add parallelisation, slow as heck.
+    # TSegSegForce = [Threads.Atomic{Float64}(0.0) for i = 1:(numSegs * 3 * 2)]
+    # TSegSegForce = reshape(TSegSegForce, numSegs, 3, 2)
+    # nthreads = Base.Threads.nthreads()
+    # @fastmath @inbounds Threads.@threads for tid = 1:nthreads
+    #     start = 1 + ((tid - 1) * numSegs) ÷ nthreads
+    #     stop = (tid * numSegs) ÷ nthreads
+    #     domain = start:stop
+    #     for i = start:stop
+    #         b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
+    #         n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
+    #         n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
+    #         for j = (i + 1):numSegs
+    #             b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
+    #             n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
+    #             n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
+    #
+    #             Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+    #                 aSq,
+    #                 μ4π,
+    #                 μ8π,
+    #                 μ8πaSq,
+    #                 μ4πν,
+    #                 μ4πνaSq,
+    #                 b1,
+    #                 n11,
+    #                 n12,
+    #                 b2,
+    #                 n21,
+    #                 n22,
+    #             )
+    #             Threads.atomic_add!.(TSegSegForce[i, :, 1], Fnode1)
+    #             Threads.atomic_add!.(TSegSegForce[j, :, 1], Fnode3)
+    #             Threads.atomic_add!.(TSegSegForce[i, :, 2], Fnode2)
+    #             Threads.atomic_add!.(TSegSegForce[j, :, 2], Fnode4)
+    #         end
+    #     end
+    # end
+    # SegSegForce = getproperty.(TSegSegForce, :value)
 
     return SegSegForce
 end
@@ -567,7 +580,8 @@ end
     flip::Bool = false
 
     # half of the cotangent of critical θ
-    hCotanθc = sqrt((1 - sqrt(eps(Float64)) * 1.01) / (sqrt(eps(Float64)) * 1.01)) / 2
+    hCotanθc =
+        sqrt((1 - sqrt(eps(Float64)) * 1.01) / (sqrt(eps(Float64)) * 1.01)) / 2
 
     t2 = @. n22 - n21
     t2N = 1 / norm(t2)

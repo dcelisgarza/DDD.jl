@@ -13,8 +13,33 @@ network = makeNetwork(loops; memBuffer = 1)
 makeNetwork!(network,loops)
 calcSelfForce(dlnParams, matParams, network)
 # @benchmark calcSelfForce(dlnParams, matParams, network)
-segseg = calcSegSegForce(dlnParams, matParams,network)
-segsegFT = calcSegSegForce(dlnParams, matParams,network)
+serial = calcSegSegForce(dlnParams, matParams,network)
+@time calcSegSegForce(dlnParams, matParams,network)
+
+
+par1 = calcSegSegForce(dlnParams, matParams,network)
+@time calcSegSegForce(dlnParams, matParams,network)
+dsp1 = serial - par1
+maximum(dsp1)
+minimum(dsp1)
+
+
+
+
+
+
+
+
+
+network2 = makeNetwork(loops; memBuffer = 1)
+par2 = calcSegSegForce(dlnParams, matParams,network1)
+@time calcSegSegForce(dlnParams, matParams,network)
+dsp2 = serial - par2
+maximum(dsp2)
+minimum(dsp2)
+
+
+diff = par1-par2
 diff = segseg - segsegFT
 maximum(diff)
 minimum(diff)
@@ -42,7 +67,7 @@ diffFT_T = segsegFT - segsegFT
 mean(segseg)
 maximum(segseg)
 minimum(segseg)
-@time calcSegSegForce(dlnParams, matParams,network)
+
 Juno.@profiler (for i = 1:1000; calcSegSegForce(dlnParams, matParams, network); end)
 
 
