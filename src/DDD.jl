@@ -20,7 +20,7 @@ include("./IO/IOBase.jl")
 include("./PostProcessing/Plotting.jl")
 export shapeFunction, shapeFunctionDeriv, dimDot, dimNorm
 export inclusiveComparison
-export compStruct, intAngle, extAngle, rot3D, makeTypeDict
+export compStruct, intAngle, extAngle, rot3D, makeTypeDict, subTypeTree
 export getSegVector, calcSelfForce, calcSegSegForce
 export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
 export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln

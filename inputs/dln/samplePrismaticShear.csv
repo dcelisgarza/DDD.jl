@@ -2,11 +2,11 @@ loopType,loopPrism(),loopShear()
 numSides,12,12
 nodeSide,2,2
 numLoops,3,1
-segType,segEdge(),segMixed()
+segType,DDD.segEdge(),DDD.segMixed()
 segLen,3;2;1;1;2;3,3;1;3;3;1;3
 slipSystem,1,1
 label,1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0,1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0
 buffer,0.,0.
 spanmin,-100;-100;-100,-100;-100;-100
 spanmax,100;100;100,100;100;100
-dist,Rand(),Rand()
+dist,DDD.Rand(),DDD.Rand()

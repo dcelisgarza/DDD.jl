@@ -33,12 +33,7 @@ function saveNetwork(
         for name in names
             push!(df, (name, getfield(network, name)))
         end
-        CSV.write(
-            filename,
-            df;
-            delim = delim,
-            writeheader = false,
-        )
+        CSV.write(filename, df; delim = delim, writeheader = false)
         # open(filename, "w") do io
         #     for name in names
         #         write(io, String(name) * '\n')
@@ -49,8 +44,8 @@ function saveNetwork(
         @warn """saveNetwork: save mode "$saveMode" not implemented. Network not saved."""
     end
 end
-
-
+subTypeTree(AbstractMobility)
+insts = instances(nodeType)
 labels = Dict()
 for inst in insts
     push!(labels, string(inst) => inst)
@@ -59,35 +54,39 @@ open(output, "w") do io
     JSON.print(io, network)
 end
 in = JSON.parsefile(output)
-for i in 1:length(in["label"])
+for i = 1:length(in["label"])
     in["label"][i] = labels[in["label"][i]]
 end
 in
 
-
 labels = dict["label"]
 first = labels
-insts = instances(nodeType)
 string(insts[1])
-
 
 parse(first[1])
 
 f(x::nodeType) = "I'm a Fruit with value: $(Int(x))"
 f(intMob)
 
+function subtypetree(t, level = 1, dict=Dict())
+    push!(dict, t => supertype(t))
+    for s in subtypes(t)
+        subtypetree(s, level + 1, dict)
+    end
+    return dict
+end
+abstract type test <: AbstractShapeFunction2D end
+wakanda = subtypetree(AbstractShapeFunction)
 
-
-
-
+wakanda = makeTypeDict(AbstractShapeFunction)
+for (key, val) in wakanda
+    println(key)
+end
+supertype(test)
 dict
 
 inst = instances(nodeType)
 inst[1]
-
-
-
-
 
 lbl = dict["label"]
 label1 = lbl[1]
@@ -102,22 +101,15 @@ push!(df, (:links, getfield(network, :links)))
 for name in names
     push!(df, (name, getfield(network, name)))
 end
-df[4,2]
-
-
-
-
-
-
-
+df[4, 2]
 
 readdlm(output)
 fieldnames(DislocationNetwork)
 
 saveNetwork(network, output)
 size(network.segIdx)
-data = CSV.read(output;delim=',')
-string = chop(data[4,2], head=1, tail=1)
+data = CSV.read(output; delim = ',')
+string = chop(data[4, 2], head = 1, tail = 1)
 pieces = split(string, ";")
 map(pieces) do piece
     pieces2 = split(string, " ")

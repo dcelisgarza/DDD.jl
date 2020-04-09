@@ -7,7 +7,7 @@ function pushToDataFrame!(
 )
     fieldNames = fieldnames(typeof(data))
     for fieldName in fieldNames
-        push!(df, (fieldNames, getproperty(data, fieldNames)))
+        push!(df, (fieldName, getproperty(data, fieldName)))
     end
     return df
 end # pushToDataFrame
