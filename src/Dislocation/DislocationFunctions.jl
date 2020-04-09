@@ -15,57 +15,72 @@
 
     idx = network.segIdx
     coord = network.coord
+    numSeg = network.numSeg
     # Un normalised segment vectors.
     bVec = network.bVec[idx[:, 1], :]
     tVec = @. coord[idx[:, 3], :] - coord[idx[:, 2], :]
 
-    # Finding the norm of each line vector.
-    L = dimNorm(tVec; dims = 2)
-    Linv = @. 1 / L
-    # Finding the non-singular norm.
-    La = @. sqrt(L * L + aSq)
+    # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
+    L = zeros(numSeg)
+    Linv = zeros(numSeg)
+    La = zeros(numSeg)
+    bScrew = zeros(numSeg)
+    bEdgeVec = zeros(numSeg, 3)
+    bEdgeSq = zeros(numSeg)
+    LaMa = zeros(numSeg)
+    tor = zeros(numSeg)
+    torCore = zeros(numSeg)
+    torTot = zeros(numSeg)
+    lonCore = zeros(numSeg)
 
-    # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-    tVec = @. tVec * Linv
-
-    # Screw component, scalar projection of bVec onto t.
-    # bScrew[i] = bVec[i,:] ⋅ t[i,:]
-    bScrew = dimDot(bVec, tVec; dims = 2)
-
-    # Edge component, vector rejection of bVec onto t.
-    # bEdgeVec[i, :] = bVec[i,:] - (bVec[i,:] ⋅ t[i,:]) t
-    bEdgeVec = @. bVec - bScrew * tVec
-    # Finding the norm squared of each edge component.
-    # bEdgeSq[i] = bEdgeVec[i,:] ⋅ bEdgeVec[i,:]
-    bEdgeSq = dimDot(bEdgeVec, bEdgeVec; dims = 2)
-
-    #=
+    @inbounds @simd for i = 1:numSeg
+        # Finding the norm of each line vector.
+        tVecSq = tVec[i, 1]^2 + tVec[i, 2]^2 + tVec[i, 3]^2
+        L[i] = sqrt(tVecSq)
+        Linv[i] = inv(L[i])
+        # Finding the non-singular norm.
+        La[i] = sqrt(tVecSq + aSq)
+        # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
+        tVec[i, 1] *= Linv[i]
+        tVec[i, 2] *= Linv[i]
+        tVec[i, 3] *= Linv[i]
+        # Screw component, scalar projection of bVec onto t.
+        bScrew[i] =
+            bVec[i, 1] * tVec[i, 1] +
+            bVec[i, 2] * tVec[i, 2] +
+            bVec[i, 3] * tVec[i, 3]
+        # Edge component, vector rejection of bVec onto t.
+        bEdgeVec[i, 1] = bVec[i, 1] - bScrew[i] * tVec[i, 1]
+        bEdgeVec[i, 2] = bVec[i, 2] - bScrew[i] * tVec[i, 2]
+        bEdgeVec[i, 3] = bVec[i, 3] - bScrew[i] * tVec[i, 3]
+        # Finding the norm squared of each edge component.
+        bEdgeSq[i] =
+            sqrt(bEdgeVec[i, 1]^2 + bEdgeVec[i, 2]^2 + bEdgeVec[i, 3]^2)
+        #=
         A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
 
-    tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
-                            = tVec * bScrew - bVec
-                            = - bEdgeVec
-    =#
-    # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
-    LaMa = @. La - a
-    tor = @. μ4π *
-       bScrew *
-       (
-           nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) -
-           LaMa^2 / (2 * La * L)
-       )
-
-    # Torsional component of core self interaction.
-    torCore = @. 2 * E * nuOmNuInv * bScrew
-    torTot = @. tor + torCore
-
-    # Longitudinal component of core self interaction.
-    lonCore = @. (bScrew^2 + bEdgeSq * omNuInv) * E
-
-    # Force on node 2 = -Force on node 1.
+        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
+        = tVec * bScrew - bVec
+        = - bEdgeVec
+        =#
+        # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
+        LaMa[i] = La[i] - a
+        # Torsional component of core self interaction.
+        tor[i] = @. μ4π *
+           bScrew[i] *
+           (
+               nuOmNuInv * (log((La[i] + L[i]) / a) - 2 * LaMa[i] * Linv[i]) -
+               LaMa[i]^2 / (2 * La[i] * L[i])
+           )
+        torCore[i] = 2 * E * nuOmNuInv * bScrew[i]
+        torTot[i] = tor[i] + torCore[i]
+        # Longitudinal component of core self interaction.
+        lonCore[i] = (bScrew[i]^2 + bEdgeSq[i] * omNuInv) * E
+    end
+    # Force on node 2 = -Force on node 1. This is faster as a fused operation than in the loop. The final assignment uses no memory, julia black magic.
     f2 = @. torTot * bEdgeVec - lonCore * tVec
     f1 = -f2
 

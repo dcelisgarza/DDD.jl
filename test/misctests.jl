@@ -10,9 +10,22 @@ using LinearAlgebra
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
 network = makeNetwork(loops; memBuffer = 1)
-# makeNetwork!(network,loops)
-@time calcSelfForce(dlnParams, matParams, network)
+makeNetwork!(network,loops)
 
+self = calcSelfForce(dlnParams, matParams, network)
+not_square = calcSelfForce(dlnParams, matParams, network)
+sum(square)
+sum(not_square)
+
+
+
+
+
+
+
+
+
+@btime calcSelfForce(dlnParams, matParams, network)
 Juno.@profiler for i = 1:10000
     calcSelfForce(dlnParams, matParams, network)
 end
