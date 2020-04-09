@@ -44,31 +44,32 @@ getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
 eachindex(x::DislocationLoop) = 1
 function zero(::Type{DislocationLoop})
     DislocationLoop(
-        loopDln(),
-        convert(Int64, 0),
-        convert(Int64, 0),
-        convert(Int64, 0),
-        segNone(),
-        convert(Float64, 0),
-        convert(Int64, 0),
-        zeros(Float64, 0, 3),
-        zeros(Float64, 0, 3),
-        zeros(nodeType, 0),
-        convert(Float64, 0),
-        zeros(0, 3),
-        Zeros(),
+        loopType = loopDln(),
+        numSides = convert(Int64, 0),
+        nodeSide = convert(Int64, 0),
+        numLoops = convert(Int64, 0),
+        segType = segNone(),
+        segLen = convert(Float64, 0),
+        slipSystem = convert(Int64, 0),
+        _slipPlane = zeros(Float64, 0, 3),
+        _bVec = zeros(Float64, 0, 3),
+        label = zeros(nodeType, 0),
+        buffer = convert(Float64, 0),
+        range = zeros(0, 3),
+        dist = Zeros(),
     )
 end
 
 # DislocationNetwork
 zero(::Type{DislocationNetwork}) = DislocationNetwork(
-    zeros(Int64, 0, 2),
-    zeros(Float64, 0, 3),
-    zeros(Float64, 0, 3),
-    zeros(Float64, 0, 3),
-    zeros(nodeType, 0),
-    convert(Int64, 0),
-    convert(Int64, 0),
+    links = zeros(Int64, 0, 2),
+    slipPlane = zeros(Float64, 0, 3),
+    bVec = zeros(Float64, 0, 3),
+    coord = zeros(Float64, 0, 3),
+    label = zeros(nodeType, 0),
+    numNode = convert(Int64, 0),
+    numSeg = convert(Int64, 0),
+    maxConnect = convert(Int64, 0),
 )
 function push!(network::DislocationNetwork, n::Int64)
     network.links = [network.links; zeros(Int64, n, 2)]

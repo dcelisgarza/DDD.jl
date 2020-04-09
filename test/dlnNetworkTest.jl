@@ -45,13 +45,14 @@ end
         for i = 1:length(label)
     ]
     network = DislocationNetwork(
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        convert(Int64, numNode),
-        convert(Int64, numSeg),
+        links = links,
+        slipPlane = slipPlane,
+        bVec = bVec,
+        coord = coord,
+        label = label,
+        numNode = convert(Int64, numNode),
+        numSeg = convert(Int64, numSeg),
+        maxConnect = convert(Int64, 0),
     )
     @test isequal(network.label[1], -1)
     @test isequal(-1, network.label[1])
@@ -106,15 +107,7 @@ end
     @test network.numNode ==
           loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
     # Test other branch of memory allocation.
-    network = DislocationNetwork(
-        zeros(Int64, 0, 2),
-        zeros(Float64, 0, 3),
-        zeros(Float64, 0, 3),
-        zeros(Float64, 0, 3),
-        zeros(nodeType, 0),
-        convert(Int64, 0),
-        convert(Int64, 0),
-    )
+    network = zero(DislocationNetwork)
     makeNetwork!(network, loops)
     function sumNodes(loops)
         totalNodes = 0
@@ -150,13 +143,14 @@ end
     @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
     @test network.label[(1 + end - nodeLoop):end] == loops[end].label
     network2 = DislocationNetwork(
-        zeros(Int64, 1, 2),
-        zeros(1, 3),
-        zeros(1, 3),
-        zeros(1, 3),
-        zeros(nodeType, 1),
-        convert(Int64, 0),
-        convert(Int64, 0),
+        links=zeros(Int64, 1, 2),
+        slipPlane=zeros(1, 3),
+        bVec=zeros(1, 3),
+        coord=zeros(1, 3),
+        label=zeros(nodeType, 1),
+        numNode=convert(Int64, 0),
+        numSeg=convert(Int64, 0),
+        maxConnect=convert(Int64,0)
     )
     makeNetwork!(network2, loops)
     @test compStruct(network, network2)

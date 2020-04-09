@@ -48,19 +48,19 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
         span[1, :] .= parse.(Float64, spanmin)
         span[2, :] .= parse.(Float64, spanmax)
         sources[i] = DislocationLoop(
-            dlnTypes[df[i, :loopType]],
-            df[i, :numSides],
-            convert(Int64, df[i, :nodeSide]),
-            convert(Int64, df[i, :numLoops]),
-            segType,
-            segLen,
-            _slipSystem,
-            slipSystems[_slipSystem, 1:3],
-            slipSystems[_slipSystem, 4:6],
-            label,
-            convert(Float64, df[i, :buffer]),
-            span,
-            dist[df[1, :dist]],
+            loopType = dlnTypes[df[i, :loopType]],
+            numSides = df[i, :numSides],
+            nodeSide = convert(Int64, df[i, :nodeSide]),
+            numLoops = convert(Int64, df[i, :numLoops]),
+            segType = segType,
+            segLen = segLen,
+            slipSystem = _slipSystem,
+            _slipPlane = slipSystems[_slipSystem, 1:3],
+            _bVec = slipSystems[_slipSystem, 4:6],
+            label = label,
+            buffer = convert(Float64, df[i, :buffer]),
+            range = span,
+            dist = dist[df[1, :dist]],
         )
     end
     return sources
@@ -69,22 +69,22 @@ end
 function dlnLoadParams(df::DataFrame)
     mobDict = makeTypeDict(AbstractMobility)
     dlnLoadParams = DislocationP(
-        convert(Float64, df[1, :coreRad]),
-        convert(Float64, df[1, :coreRadMag]),
-        convert(Float64, df[1, :minSegLen]),
-        convert(Float64, df[1, :maxSegLen]),
-        convert(Float64, df[1, :minArea]),
-        convert(Float64, df[1, :maxArea]),
-        convert(Int64, df[1, :maxConnect]),
-        df[1, :remesh],
-        df[1, :collision],
-        df[1, :separation],
-        df[1, :virtualRemesh],
-        convert(Float64, df[1, :edgeDrag]),
-        convert(Float64, df[1, :screwDrag]),
-        convert(Float64, df[1, :climbDrag]),
-        convert(Float64, df[1, :lineDrag]),
-        mobDict[df[1, :mobility]],
+        coreRad = convert(Float64, df[1, :coreRad]),
+        coreRadMag = convert(Float64, df[1, :coreRadMag]),
+        minSegLen = convert(Float64, df[1, :minSegLen]),
+        maxSegLen = convert(Float64, df[1, :maxSegLen]),
+        minArea = convert(Float64, df[1, :minArea]),
+        maxArea = convert(Float64, df[1, :maxArea]),
+        maxConnect = convert(Int64, df[1, :maxConnect]),
+        remesh = df[1, :remesh],
+        collision = df[1, :collision],
+        separation = df[1, :separation],
+        virtualRemesh = df[1, :virtualRemesh],
+        edgeDrag = convert(Float64, df[1, :edgeDrag]),
+        screwDrag = convert(Float64, df[1, :screwDrag]),
+        climbDrag = convert(Float64, df[1, :climbDrag]),
+        lineDrag = convert(Float64, df[1, :lineDrag]),
+        mobility = mobDict[df[1, :mobility]],
     )
     return dlnLoadParams
 end
@@ -92,29 +92,26 @@ end
 function matLoadParams(df::DataFrame)
     strucDict = makeTypeDict(AbstractCrystalStruct)
     matParams = MaterialP(
-        convert(Float64, df[1, :μ]),
-        convert(Float64, df[1, :μMag]),
-        convert(Float64, df[1, :ν]),
-        convert(Float64, df[1, :E]),
-        strucDict[df[1, :crystalStruct]],
+        μ = convert(Float64, df[1, :μ]),
+        μMag = convert(Float64, df[1, :μMag]),
+        ν = convert(Float64, df[1, :ν]),
+        E = convert(Float64, df[1, :E]),
+        crystalStruct = strucDict[df[1, :crystalStruct]],
     )
     return matParams
 end
 
 function intLoadParams(df::DataFrame)
-    integDict = Dict(
-        "CustomTrapezoid()" => CustomTrapezoid(),
-        "DDD.CustomTrapezoid()" => CustomTrapezoid(),
-    )
+    integDict = makeTypeDict(AbstractIntegrator)
     intParams = IntegrationP(
-        convert(Float64, df[1, :dt]),
-        convert(Float64, df[1, :tmin]),
-        convert(Float64, df[1, :tmax]),
-        integDict[df[1, :method]],
-        convert(Float64, df[1, :abstol]),
-        convert(Float64, df[1, :reltol]),
-        convert(Float64, df[1, :time]),
-        convert(Int64, df[1, :step]),
+        dt = convert(Float64, df[1, :dt]),
+        tmin = convert(Float64, df[1, :tmin]),
+        tmax = convert(Float64, df[1, :tmax]),
+        method = integDict[df[1, :method]],
+        abstol = convert(Float64, df[1, :abstol]),
+        reltol = convert(Float64, df[1, :reltol]),
+        time = convert(Float64, df[1, :time]),
+        step = convert(Int64, df[1, :step]),
     )
     return intParams
 end

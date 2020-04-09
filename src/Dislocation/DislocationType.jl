@@ -120,6 +120,7 @@ struct DislocationP{
 }
 
     coreRad::T1
+    coreRadSq::T1
     coreRadMag::T1
     minSegLen::T1
     maxSegLen::T1
@@ -136,7 +137,7 @@ struct DislocationP{
     lineDrag::T1
     mobility::T4
 
-    function DislocationP(
+    function DislocationP(;
         coreRad,
         coreRadMag,
         minSegLen,
@@ -158,7 +159,7 @@ struct DislocationP{
         coreRad == minSegLen == maxSegLen == 0 ? nothing :
         @assert coreRad < minSegLen < maxSegLen
         minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
-
+        coreRadSq = coreRad^2
         new{
             typeof(coreRad),
             typeof(maxConnect),
@@ -166,6 +167,7 @@ struct DislocationP{
             typeof(mobility),
         }(
             coreRad,
+            coreRadSq,
             coreRadMag,
             minSegLen,
             maxSegLen,
@@ -255,7 +257,7 @@ struct DislocationLoop{
     range::T7
     dist::T10
 
-    function DislocationLoop(
+    function DislocationLoop(;
         loopType,
         numSides,
         nodeSide,
@@ -372,7 +374,7 @@ mutable struct DislocationNetwork{
     linksConnect::T1
     segIdx::T1
 
-    function DislocationNetwork(
+    function DislocationNetwork(;
         links,
         slipPlane,
         bVec,
@@ -388,12 +390,7 @@ mutable struct DislocationNetwork{
         @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
         @assert size(coord, 1) == size(label, 1)
 
-        new{
-            typeof(links),
-            typeof(bVec),
-            typeof(label),
-            typeof(numNode),
-        }(
+        new{typeof(links), typeof(bVec), typeof(label), typeof(numNode)}(
             links,
             slipPlane,
             bVec,

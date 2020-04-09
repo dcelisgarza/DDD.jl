@@ -19,8 +19,8 @@ Abstract types for different shape functions.
 abstract type AbstractShapeFunction end
 abstract type AbstractShapeFunction3D <: AbstractShapeFunction end
 abstract type AbstractShapeFunction2D <: AbstractShapeFunction end
-struct LinearQuadrangle3D <:AbstractShapeFunction3D end
-struct LinearQuadrangle2D <:AbstractShapeFunction2D end
+struct LinearQuadrangle3D <: AbstractShapeFunction3D end
+struct LinearQuadrangle2D <: AbstractShapeFunction2D end
 
 struct RegularCuboidMesh{
     T1 <: AbstractArray{<:Int64, N} where {N},

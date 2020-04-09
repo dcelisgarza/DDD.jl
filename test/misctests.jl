@@ -1,4 +1,4 @@
-# using Revise
+using Revise
 using DDD
 using Test, BenchmarkTools, Profile
 cd(@__DIR__)
@@ -11,17 +11,38 @@ dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
 network = makeNetwork(loops; memBuffer = 1)
 makeNetwork!(network,loops)
-calcSelfForce(dlnParams, matParams, network)
+
+self = calcSelfForce(dlnParams, matParams, network)
+not_square = calcSelfForce(dlnParams, matParams, network)
+sum(square)
+sum(not_square)
+
+
+
+
+
+
+
+
+
+@btime calcSelfForce(dlnParams, matParams, network)
+Juno.@profiler for i = 1:10000
+    calcSelfForce(dlnParams, matParams, network)
+end
+
 # @benchmark calcSelfForce(dlnParams, matParams, network)
-serial = calcSegSegForce(dlnParams, matParams,network)
-@time calcSegSegForce(dlnParams, matParams,network)
-
-
-par1 = calcSegSegForce(dlnParams, matParams,network)
-@time calcSegSegForce(dlnParams, matParams,network)
+par1 = calcSegSegForce(dlnParams, matParams,network;parallel=true)
+@btime calcSegSegForce(dlnParams, matParams,network;parallel=true)
 dsp1 = serial - par1
 maximum(dsp1)
 minimum(dsp1)
+
+
+
+serial = calcSegSegForce(dlnParams, matParams,network; parallel=false)
+@btime calcSegSegForce(dlnParams, matParams,network; parallel=false)
+
+
 
 
 
