@@ -33,7 +33,7 @@
     torTot = zeros(numSeg)
     lonCore = zeros(numSeg)
 
-    @inbounds @simd for i = 1:numSeg
+    @fastmath @inbounds @simd for i = 1:numSeg
         # Finding the norm of each line vector.
         tVecSq = tVec[i, 1]^2 + tVec[i, 2]^2 + tVec[i, 3]^2
         L[i] = sqrt(tVecSq)
@@ -144,7 +144,7 @@ At a high level this works by creating a local coordinate frame using the line d
             b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
             n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
             n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-            for j = (i + 1):numSegs
+            @simd for j = (i + 1):numSegs
                 b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
                 n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
                 n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
@@ -193,7 +193,7 @@ At a high level this works by creating a local coordinate frame using the line d
             b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
             n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
             n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-            for j = (i + 1):numSegs
+            @simd for j = (i + 1):numSegs
                 b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
                 n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
                 n22 = (node2[j, 1], node2[j, 2], node2[j, 3])

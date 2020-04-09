@@ -12,7 +12,7 @@ end
 ```
 """
 @enum nodeType begin
-    undef = -1
+    none = -1
     intMob = 0
     intFix = 1
     srfMob = 2

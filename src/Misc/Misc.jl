@@ -18,17 +18,41 @@ Dict{String,Any} with 4 entries:
   "MyStruct2()"     => MyStruct2()
 ```
 """
-function makeTypeDict(valType::DataType)
-    subTypes = subtypes(valType)
+function makeTypeDict(valType::DataType; cutoff = 1)
+    primitive = subTypeTree(valType; cutoff=cutoff)
+
     dict = Dict{String, Any}()
-    for subType in subTypes
-        strSubType = string(subType) * "()"
-        push!(dict, strSubType => eval(subType()))
+    for (key, val) in primitive
+        strSubType = string(key) * "()"
+        push!(dict, strSubType => key())
         if strSubType[1:4] == "DDD."
-            push!(dict, strSubType[5:end] => eval(subType()))
+            push!(dict, strSubType[5:end] => key() )
         else
-            push!(dict, "DDD." * strSubType => eval(subType()))
+            push!(dict, "DDD." * strSubType => key() )
         end
+    end
+
+    # subTypes = subtypes(valType)
+    # dict = Dict{String, Any}()
+    # for subType in subTypes
+    #     strSubType = string(subType) * "()"
+    #     push!(dict, strSubType => eval(subType()))
+    #     if strSubType[1:4] == "DDD."
+    #         push!(dict, strSubType[5:end] => eval(subType()))
+    #     else
+    #         push!(dict, "DDD." * strSubType => eval(subType()))
+    #     end
+    # end
+    return dict
+end
+
+"""
+Adapted from https://github.com/JuliaLang/julia/issues/24741
+"""
+function subTypeTree(t, level = 1, dict = Dict(); cutoff = 0)
+    level > cutoff ? push!(dict, t => supertype(t)) : nothing
+    for s in subtypes(t)
+        subTypeTree(s, level + 1, dict)
     end
     return dict
 end

@@ -1,6 +1,7 @@
 using Revise
 using DDD
 using Test, BenchmarkTools, Profile
+using DelimitedFiles, CSV, DataFrames, JSON
 cd(@__DIR__)
 
 params = "../inputs/simParams/sampleParams.csv"
@@ -9,21 +10,116 @@ source = "../inputs/dln/samplePrismaticShear.csv"
 using LinearAlgebra
 dlnParams, matParams, intParams, slipSystems, loops =
     loadParams(params, slipsys, source)
-network = makeNetwork(loops; memBuffer = 1)
-makeNetwork!(network,loops)
+network = makeNetwork(loops; memBuffer = 2)
+makeNetwork!(network, loops)
 
 self = calcSelfForce(dlnParams, matParams, network)
-not_square = calcSelfForce(dlnParams, matParams, network)
-sum(square)
-sum(not_square)
+@btime calcSelfForce(dlnParams, matParams, network)
+par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
 
+display(par)
+output = "../outputs/dln/sampleDln.JSON"
 
+function saveNetwork(
+    network::DislocationNetwork,
+    filename::AbstractString;
+    delim::Char = ',',
+    saveMode::AbstractString = "dump",
+)
+    if saveMode == "dump"
+        names = fieldnames(DislocationNetwork)
+        df = DataFrame(var = Any[], val = Any[])
+        for name in names
+            push!(df, (name, getfield(network, name)))
+        end
+        CSV.write(filename, df; delim = delim, writeheader = false)
+        # open(filename, "w") do io
+        #     for name in names
+        #         write(io, String(name) * '\n')
+        #         writedlm(io, getfield(network, name), delim)
+        #     end
+        # end
+    else
+        @warn """saveNetwork: save mode "$saveMode" not implemented. Network not saved."""
+    end
+end
+subTypeTree(AbstractMobility)
+insts = instances(nodeType)
+labels = Dict()
+for inst in insts
+    push!(labels, string(inst) => inst)
+end
+open(output, "w") do io
+    JSON.print(io, network)
+end
+in = JSON.parsefile(output)
+for i = 1:length(in["label"])
+    in["label"][i] = labels[in["label"][i]]
+end
+in
 
+labels = dict["label"]
+first = labels
+string(insts[1])
 
+parse(first[1])
 
+f(x::nodeType) = "I'm a Fruit with value: $(Int(x))"
+f(intMob)
 
+function subtypetree(t, level = 1, dict=Dict())
+    push!(dict, t => supertype(t))
+    for s in subtypes(t)
+        subtypetree(s, level + 1, dict)
+    end
+    return dict
+end
+abstract type test <: AbstractShapeFunction2D end
+wakanda = subtypetree(AbstractShapeFunction)
 
+wakanda = makeTypeDict(AbstractShapeFunction)
+for (key, val) in wakanda
+    println(key)
+end
+supertype(test)
+dict
 
+inst = instances(nodeType)
+inst[1]
+
+lbl = dict["label"]
+label1 = lbl[1]
+eval(:label1)
+
+var = nodeType(instances(lbl[1]))
+var.value
+
+names = fieldnames(DislocationNetwork)
+df = DataFrame(var = Any[], val = Any[])
+push!(df, (:links, getfield(network, :links)))
+for name in names
+    push!(df, (name, getfield(network, name)))
+end
+df[4, 2]
+
+readdlm(output)
+fieldnames(DislocationNetwork)
+
+saveNetwork(network, output)
+size(network.segIdx)
+data = CSV.read(output; delim = ',')
+string = chop(data[4, 2], head = 1, tail = 1)
+pieces = split(string, ";")
+map(pieces) do piece
+    pieces2 = split(string, " ")
+    map(pieces2) do piece2
+        parse(Float64, piece2)
+    end
+end
+
+coord == network.coord
+import Base: getindex, iterate, length
 
 @btime calcSelfForce(dlnParams, matParams, network)
 Juno.@profiler for i = 1:10000
@@ -31,86 +127,48 @@ Juno.@profiler for i = 1:10000
 end
 
 # @benchmark calcSelfForce(dlnParams, matParams, network)
-par1 = calcSegSegForce(dlnParams, matParams,network;parallel=true)
-@btime calcSegSegForce(dlnParams, matParams,network;parallel=true)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
 dsp1 = serial - par1
 maximum(dsp1)
 minimum(dsp1)
 
-
-
-serial = calcSegSegForce(dlnParams, matParams,network; parallel=false)
-@btime calcSegSegForce(dlnParams, matParams,network; parallel=false)
-
-
-
-
-
-
-
-
-
-
+serial = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
 network2 = makeNetwork(loops; memBuffer = 1)
-par2 = calcSegSegForce(dlnParams, matParams,network1)
-@time calcSegSegForce(dlnParams, matParams,network)
+par2 = calcSegSegForce(dlnParams, matParams, network1)
+@time calcSegSegForce(dlnParams, matParams, network)
 dsp2 = serial - par2
 maximum(dsp2)
 minimum(dsp2)
 
-
-diff = par1-par2
+diff = par1 - par2
 diff = segseg - segsegFT
 maximum(diff)
 minimum(diff)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-segsegT = calcSegSegForce(dlnParams, matParams,network)
-
+segsegT = calcSegSegForce(dlnParams, matParams, network)
 
 diffFT_T = segsegFT - segsegFT
-
 
 mean(segseg)
 maximum(segseg)
 minimum(segseg)
 
-Juno.@profiler (for i = 1:1000; calcSegSegForce(dlnParams, matParams, network); end)
+Juno.@profiler (
+    for i = 1:1000
+        calcSegSegForce(dlnParams, matParams, network)
+    end
+)
 
-
-isapprox(sum(segseg)-2*eps(Float64),0)
+isapprox(sum(segseg) - 2 * eps(Float64), 0)
 Profile.clear()
 
-for i in 1:10000
+for i = 1:10000
     @profile calcSelfForce(dlnParams, matParams, network)
 end
 
 @benchmark calcSelfForce(dlnParams, matParams, network)
-
-
-
-
-
-
-
-
-
-
-
 
 @benchmark calcSelfForce(dlnParams, matParams, network)
 
@@ -180,7 +238,7 @@ plotNodesMakie!(
 trythis = rand(100000, 3)
 trythis2 = rand(100000, 3)
 
-dimDot(trythis,trythis)
+dimDot(trythis, trythis)
 @benchmark dimNorm(trythis; dims = 2)
 @benchmark sqrt.(sum(trythis .* trythis, dims = 2))
 #=
