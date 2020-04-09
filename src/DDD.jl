@@ -8,7 +8,7 @@ using CSV,
     Statistics,
     InteractiveUtils
 import Base:
-    zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex, push!
+    zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex, push!, iterate
 
 include("./Misc/Misc.jl")
 include("./Integration/CustomIntegration.jl")
