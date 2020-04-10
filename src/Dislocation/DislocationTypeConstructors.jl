@@ -191,7 +191,7 @@ function makeNetwork(
     maxConnect::Integer = 4,
     args...;
     memBuffer::Integer = 10,
-    checkConsistency::Bool = false,
+    checkConsistency::Bool = true,
     kw...,
 )
     nodeTotal::Integer = 0
