@@ -1,5 +1,56 @@
 """
 ```
+makeInstanceDict(valType::DataType)
+```
+Make a dictionary of enumerated variable instances. Helps in translating JSON files.
+"""
+function makeInstanceDict(valType::DataType)
+    insts = instances(valType)
+    dict = Dict{String, valType}()
+    for inst in insts
+        push!(dict, string(inst) => inst)
+    end
+    return dict
+end
+
+"""
+```
+translateEnum(
+    valType::DataType,
+    dict::Dict{T1, T2},
+    key::T3,
+) where {T1, T2, T3}
+```
+Translates the string name of enumerated types to the actual Julia type.
+"""
+function translateEnum(
+    valType::DataType,
+    dict::Dict{T1, T2},
+    key::T3,
+) where {T1, T2, T3}
+    instanceDict = makeInstanceDict(valType)
+    for i in eachindex(dict[key])
+        dict[key][i] = instanceDict[dict[key][i]]
+    end
+    return dict
+end
+
+"""
+```
+subTypeTree(t, level = 1, dict = Dict(); cutoff = 0)
+```
+Create subtype dictionary. . Adapted from https://github.com/JuliaLang/julia/issues/24741
+"""
+function subTypeTree(t; dict = Dict(), level = 1, cutoff = 0)
+    level > cutoff ? push!(dict, t => supertype(t)) : nothing
+    for s in subtypes(t)
+        subTypeTree(s; level = level + 1, dict = dict, cutoff = cutoff)
+    end
+    return dict
+end
+
+"""
+```
 function makeTypeDict(valType::DataType)
 ```
 Inputs contain strings that correspond to DDD data types. This function atuomatically creates a dictionary for all concrete subtypes of a given `valType`.
@@ -19,40 +70,16 @@ Dict{String,Any} with 4 entries:
 ```
 """
 function makeTypeDict(valType::DataType; cutoff = 1)
-    primitive = subTypeTree(valType; cutoff=cutoff)
-
+    primitive = subTypeTree(valType; cutoff = cutoff)
     dict = Dict{String, Any}()
     for (key, val) in primitive
         strSubType = string(key) * "()"
         push!(dict, strSubType => key())
         if strSubType[1:4] == "DDD."
-            push!(dict, strSubType[5:end] => key() )
+            push!(dict, strSubType[5:end] => key())
         else
-            push!(dict, "DDD." * strSubType => key() )
+            push!(dict, "DDD." * strSubType => key())
         end
-    end
-
-    # subTypes = subtypes(valType)
-    # dict = Dict{String, Any}()
-    # for subType in subTypes
-    #     strSubType = string(subType) * "()"
-    #     push!(dict, strSubType => eval(subType()))
-    #     if strSubType[1:4] == "DDD."
-    #         push!(dict, strSubType[5:end] => eval(subType()))
-    #     else
-    #         push!(dict, "DDD." * strSubType => eval(subType()))
-    #     end
-    # end
-    return dict
-end
-
-"""
-Adapted from https://github.com/JuliaLang/julia/issues/24741
-"""
-function subTypeTree(t, level = 1, dict = Dict(); cutoff = 0)
-    level > cutoff ? push!(dict, t => supertype(t)) : nothing
-    for s in subtypes(t)
-        subTypeTree(s, level + 1, dict)
     end
     return dict
 end

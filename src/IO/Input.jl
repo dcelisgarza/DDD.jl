@@ -1,3 +1,8 @@
+function load(filename::AbstractString)
+    dict = JSON.parsefile(filename)
+    return dict
+end
+
 function loadCSV(
     filename::AbstractString;
     header = 0,

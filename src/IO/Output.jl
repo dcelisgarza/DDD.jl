@@ -1,3 +1,11 @@
+JSON.lower(t::T) where {T<:Union{AbstractCrystalStruct, AbstractMobility, AbstractIntegrator, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution}} = string(t)
+
+function save(filename::AbstractString, args...)
+    open(filename, "w") do io
+        JSON.print(io, args)
+    end
+end
+
 """
 Pushes data to a dataframe for saving later.
 """

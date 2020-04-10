@@ -13,51 +13,66 @@ dlnParams, matParams, intParams, slipSystems, loops =
 network = makeNetwork(loops; memBuffer = 2)
 makeNetwork!(network, loops)
 
-self = calcSelfForce(dlnParams, matParams, network)
-@btime calcSelfForce(dlnParams, matParams, network)
-par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
-@btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
+# self = calcSelfForce(dlnParams, matParams, network)
+# @btime calcSelfForce(dlnParams, matParams, network)
+# par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+# @btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
 
-display(par)
+# import JSON: lower
+# # JSON.lower(t::T) where {T<:AbstractCrystalStruct} = string(t)
+# # JSON.lower(t::T) where {T<:AbstractMobility} = string(t)
+# # JSON.lower(t::T) where {T<:AbstractIntegrator} = string(t)
+# # JSON.lower(t::T) where {T<:AbstractDlnSeg} = string(t)
+# # JSON.lower(t::T) where {T<:AbstractDlnStr} = string(t)
+# # JSON.lower(t::T) where {T<:AbstractDistribution} = string(t)
+# JSON.lower(t::T) where {T<:Union{AbstractCrystalStruct, AbstractMobility, AbstractIntegrator, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution}} = string(t)
+
 output = "../outputs/dln/sampleDln.JSON"
+# , intParams, slipSystems, loops
+save(output, dlnParams, matParams, intParams, slipSystems, loops)
+dict = load(output)
+dict[end][1] = translateEnum(nodeType, dict[end][1], "label")
+dict[end][2] = translateEnum(nodeType, dict[end][2], "label")
 
-function saveNetwork(
-    network::DislocationNetwork,
-    filename::AbstractString;
-    delim::Char = ',',
-    saveMode::AbstractString = "dump",
-)
-    if saveMode == "dump"
-        names = fieldnames(DislocationNetwork)
-        df = DataFrame(var = Any[], val = Any[])
-        for name in names
-            push!(df, (name, getfield(network, name)))
-        end
-        CSV.write(filename, df; delim = delim, writeheader = false)
-        # open(filename, "w") do io
-        #     for name in names
-        #         write(io, String(name) * '\n')
-        #         writedlm(io, getfield(network, name), delim)
-        #     end
-        # end
-    else
-        @warn """saveNetwork: save mode "$saveMode" not implemented. Network not saved."""
-    end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+testing = "../outputs/dln/test3.JSON"
+open(testing, "w") do io
+    JSON.print(io, loops)
 end
-subTypeTree(AbstractMobility)
-insts = instances(nodeType)
-labels = Dict()
-for inst in insts
-    push!(labels, string(inst) => inst)
-end
-open(output, "w") do io
-    JSON.print(io, network)
-end
-in = JSON.parsefile(output)
+JSON.parsefile(testing)
+
 for i = 1:length(in["label"])
     in["label"][i] = labels[in["label"][i]]
 end
-in
+
+
+save(output, network, dlnParams, matParams)
+load(output)
+
+
+insts = instances(nodeType)
+labels = Dict{String, nodeType}()
+for inst in insts
+    push!(labels, string(inst) => inst)
+end
+labels
 
 labels = dict["label"]
 first = labels
@@ -68,7 +83,7 @@ parse(first[1])
 f(x::nodeType) = "I'm a Fruit with value: $(Int(x))"
 f(intMob)
 
-function subtypetree(t, level = 1, dict=Dict())
+function subtypetree(t, level = 1, dict = Dict())
     push!(dict, t => supertype(t))
     for s in subtypes(t)
         subtypetree(s, level + 1, dict)
@@ -76,9 +91,9 @@ function subtypetree(t, level = 1, dict=Dict())
     return dict
 end
 abstract type test <: AbstractShapeFunction2D end
-wakanda = subtypetree(AbstractShapeFunction)
+wakanda = subTypeTree(AbstractShapeFunction)
 
-wakanda = makeTypeDict(AbstractShapeFunction)
+wakanda = makeTypeDict(AbstractShapeFunction; cutoff = 3)
 for (key, val) in wakanda
     println(key)
 end

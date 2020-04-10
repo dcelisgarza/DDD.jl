@@ -6,7 +6,8 @@ using CSV,
     DelimitedFiles,
     Plots,
     Statistics,
-    InteractiveUtils
+    InteractiveUtils,
+    JSON
 import Base:
     zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex, push!, iterate
 
@@ -18,6 +19,7 @@ include("./FEM/FEMBase.jl")
 include("./DislocationFEM/DislocationFEMBase.jl")
 include("./IO/IOBase.jl")
 include("./PostProcessing/Plotting.jl")
+export load, save, makeInstanceDict, translateEnum
 export shapeFunction, shapeFunctionDeriv, dimDot, dimNorm
 export inclusiveComparison
 export compStruct, intAngle, extAngle, rot3D, makeTypeDict, subTypeTree
