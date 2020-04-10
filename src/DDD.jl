@@ -1,55 +1,26 @@
 module DDD
 
-using CSV,
-    DataFrames,
-    LinearAlgebra,
-    DelimitedFiles,
+using LinearAlgebra,
     Plots,
     Statistics,
     InteractiveUtils,
     JSON
+
 import Base:
     zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex, push!, iterate
 
 include("./Misc/Misc.jl")
+export makeTypeDict
 include("./Integration/CustomIntegration.jl")
 include("./Material/MaterialBase.jl")
 include("./Dislocation/DislocationBase.jl")
+export nodeType
+export SlipSystem, AbstractDlnStr, loopPrism, loopShear, DislocationLoop
+export AbstractDistribution, Zeros, Rand
 include("./FEM/FEMBase.jl")
 include("./DislocationFEM/DislocationFEMBase.jl")
 include("./IO/IOBase.jl")
+export load, loadSlipSystem, loadDislocationP, loadMaterialP, loadIntegrationP
+export save
 include("./PostProcessing/Plotting.jl")
-export load, save, makeInstanceDict, translateEnum
-export shapeFunction, shapeFunctionDeriv, dimDot, dimNorm
-export inclusiveComparison, IntegrationP
-export compStruct, intAngle, extAngle, rot3D, makeTypeDict, subTypeTree
-export getSegVector, calcSelfForce, calcSegSegForce
-export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
-export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
-export AbstractDistribution, Zeros, Rand, Randn, Regular
-export AbstractCrystalStruct, BCC, FCC, HCP, MaterialP
-export AbstractMobility, mobBCC, mobFCC, mobHCP
-export AbstractIntegrator, CustomTrapezoid
-export AbstractMesh, RegularCuboidMesh, AbstractShapeFunction
-export AbstractShapeFunction3D, AbstractShapeFunction2D
-export LinearQuadrangle3D, LinearQuadrangle2D
-export hatStress
-export DislocationP, DislocationNetwork
-export coordLbl, coordIdx, idxLabel, idxCond, dataCond
-export makeSegment,
-    makeLoop,
-    DislocationLoop,
-    makeNetwork,
-    makeNetwork!,
-    loopDistribution,
-    makeConnect,
-    checkNetwork,
-    getSegmentIdx!,
-    SlipSystem
-export loadCSV, loadParams, loadDln, loadSlipSys
-
-export saveParams
-
-export plotNodes, plotNodes!
-
 end # module

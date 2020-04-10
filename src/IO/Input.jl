@@ -3,84 +3,54 @@ function load(filename::AbstractString)
     return dict
 end
 
-function loadCSV(
-    filename::AbstractString;
-    header = 0,
-    transpose::Bool = false,
-    delim = ',',
-)
-    df = CSV.read(
-        filename;
-        copycols = false,
-        header = header,
-        transpose = transpose,
-        delim = delim,
-    )
-    @inbounds for i in names(df)
-        ismissing(df[1, i]) ? df[1, i] = 0 : nothing
-    end
-    return df
-end
-
-function loadSlipSys(dict::Dict{T1, T1}) where {T1, T2}
+function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     slipSystem = SlipSystem(
-        name = crystalStruct[dict["crystalStruct"]],
-        slipPlane["slipPlane"],
-        bVec = dict["bVec"],
+        crystalStruct = crystalStruct[dict["crystalStruct"]],
+        slipPlane = convert.(
+            Float64,
+            [dict["slipPlane"][1] dict["slipPlane"][2] dict["slipPlane"][3]],
+        ),
+        bVec = convert.(
+            Float64,
+            [dict["bVec"][1] dict["bVec"][2] dict["bVec"][3]],
+        ),
     )
 
     return slipSystem
 end
 
-function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
-    nRow = nrow(df)
-    sources = zeros(DislocationLoop, nRow)
-    span = zeros(Float64, 2, 3)
-    segTypes = makeTypeDict(AbstractDlnSeg)
+function loadDislocationLoop(
+    dict::Dict{T1, T2} where {T1, T2},
+    slipSystem::SlipSystem,
+)
     dlnTypes = makeTypeDict(AbstractDlnStr)
-    dist = makeTypeDict(AbstractDistribution)
+    distributions = makeTypeDict(AbstractDistribution)
 
-    @inbounds for i = 1:nRow
-        st = split.(df[i, :segType], ";")
-        segType = [segTypes[st[i]] for i = 1:length(st)]
-        length(segType) == 1 ? segType = segType[1] : nothing
-        sl = split.(df[i, :segLen], ";")
-        segLen = parse.(Float64, sl)
-        _slipSystem = df[i, :slipSystem]
-        try
-            ss = split.(df[i, :slipSystem], ";")
-            _slipSystem = parse.(Int64, ss)
-        catch err
-        end
-        lbl = split.(df[i, :label], ";")
-        label = convert.(nodeType, parse.(Int64, lbl))
-        spanmin = split.(df[i, :spanmin], ";")
-        spanmax = split.(df[i, :spanmax], ";")
-        span[1, :] .= parse.(Float64, spanmin)
-        span[2, :] .= parse.(Float64, spanmax)
-        sources[i] = DislocationLoop(
-            loopType = dlnTypes[df[i, :loopType]],
-            numSides = df[i, :numSides],
-            nodeSide = convert(Int64, df[i, :nodeSide]),
-            numLoops = convert(Int64, df[i, :numLoops]),
-            segType = segType,
-            segLen = segLen,
-            slipSystem = _slipSystem,
-            _slipPlane = slipSystems[_slipSystem, 1:3],
-            _bVec = slipSystems[_slipSystem, 4:6],
-            label = label,
-            buffer = convert(Float64, df[i, :buffer]),
-            range = span,
-            dist = dist[df[1, :dist]],
-        )
-    end
-    return sources
+    slipPlane = slipSystem.slipPlane
+    bVec = slipSystem.bVec
+
+    dislocationLoop = DislocationLoop(
+        loopType = dlnTypes[dict["loopType"]],
+        numSides = convert(Int64, dict["numSides"]),
+        nodeSide = convert(Int64, dict["nodeSide"]),
+        numLoops = convert(Int64, dict["numLoops"]),
+        segLen = convert.(Float64, dict["segLen"]),
+        slipSystem = convert(Int64, dict["slipSystem"]),
+        _slipPlane = convert.(Float64, slipPlane[dict["slipSystem"], 1:3]),
+        _bVec = convert.(Float64, bVec[dict["slipSystem"], 1:3]),
+        label = nodeType.(dict["label"]),
+        buffer = convert.(Float64, dict["buffer"]),
+        range = [0.0 0.0 0.0; 0.0 0.0 0.0],
+        dist = distributions[dict["dist"]],
+    )
+
+    return dislocationLoop
 end
 
-function dlnLoadParams(dict::Dict{T1, T2}) where {T1, T2}
+function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
@@ -103,10 +73,10 @@ function dlnLoadParams(dict::Dict{T1, T2}) where {T1, T2}
         mobility = mobDict[dict["mobility"]],
     )
 
-    return dlnLoadParams
+    return dlnParams
 end
 
-function matLoadParams(dict::Dict{T1, T2}) where {T1, T2}
+function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
@@ -121,7 +91,7 @@ function matLoadParams(dict::Dict{T1, T2}) where {T1, T2}
     return matParams
 end
 
-function intLoadParams(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
@@ -156,10 +126,10 @@ function loadParams(
         transpose = true,
         delim = ',',
     )
-    dlnParams = dlnLoadParams(df)
-    matParams = matLoadParams(df)
-    intParams = intLoadParams(df)
-    slipSystems = loadSlipSys(fileSlipSys)
-    sources = loadDln(df2, slipSystems)
+    dlnParams = loadDislocationP(df)
+    matParams = loadMaterialP(df)
+    intParams = loadIntegrationP(df)
+    slipSystems = loadSlipSystem(fileSlipSys)
+    sources = loadDislocationLoop(df2, slipSystems)
     return (dlnParams, matParams, intParams, slipSystems, sources)
 end # function

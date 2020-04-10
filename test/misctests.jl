@@ -1,8 +1,40 @@
 using Revise
 using DDD
-using Test, BenchmarkTools, Profile
-using DelimitedFiles, CSV, DataFrames, JSON
 cd(@__DIR__)
+
+
+
+
+slipSystem = load("../inputs/simParams/SlipSystems.JSON")
+dislocation = load("../inputs/simParams/sampleDislocation.JSON")
+slipSystem = loadSlipSystem(slipSystem[1])
+loadDislocationLoop(
+    dislocation[1],
+    slipSystem,
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 params = "../inputs/simParams/sampleParams.csv"
 slipsys = "../data/slipSystems/bcc.csv"
@@ -22,8 +54,6 @@ output = "../outputs/dln/sampleDln.JSON"
 # , intParams, slipSystems, loops
 save(output, dlnParams, matParams, intParams, slipSystems, loops)
 dict = load(output)
-[dict[4][1] dict[4][2] dict[4][3] dict[4][4] dict[4][5] dict[4][6]]
-
 
 zip(dict[4][:])
 
@@ -33,14 +63,16 @@ eval(dict[1]["mobility"][1:(end - 2)])
 dict[end][1] = translateEnum(nodeType, dict[end][1], "label")
 dict[end][2] = translateEnum(nodeType, dict[end][2], "label")
 
-replaceslip = readdlm(slipsys,',')
+replaceslip = readdlm(slipsys, ',')
 
-ss = SlipSystem(name = "BCC", slipPlane = replaceslip[:,1:3], bVec = replaceslip[:,4:6])
+ss = SlipSystem(
+    name = "BCC",
+    slipPlane = replaceslip[:, 1:3],
+    bVec = replaceslip[:, 4:6],
+)
 
 "../data/slipSystems/SlipSystems.JSON"
 save("../data/slipSystems/SlipSystems.JSON", ss)
-
-
 
 # import JSON: lower
 # # JSON.lower(t::T) where {T<:AbstractCrystalStruct} = string(t)

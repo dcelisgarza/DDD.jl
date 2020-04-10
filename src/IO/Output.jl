@@ -11,7 +11,7 @@ end
 Pushes data to a dataframe for saving later.
 """
 function pushToDataFrame!(
-    df::DataFrame,
+    df,
     data::Union{DislocationP, MaterialP, IntegrationP},
 )
     fieldNames = fieldnames(typeof(data))

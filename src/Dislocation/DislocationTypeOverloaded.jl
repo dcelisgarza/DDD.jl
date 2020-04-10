@@ -48,12 +48,11 @@ eachindex(x::DislocationLoop) = 1
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopType = loopDln(),
-        numSides = convert(Int64, 0),
-        nodeSide = convert(Int64, 0),
-        numLoops = convert(Int64, 0),
-        segType = segNone(),
+        numSides = 0,
+        nodeSide = 0,
+        numLoops = 0,
         segLen = convert(Float64, 0),
-        slipSystem = convert(Int64, 0),
+        slipSystem = 0,
         _slipPlane = zeros(Float64, 0, 3),
         _bVec = zeros(Float64, 0, 3),
         label = zeros(nodeType, 0),
