@@ -95,13 +95,13 @@ struct SlipSystem{
 Slip systems.
 """
 struct SlipSystem{
-    T1 <: AbstractString,
+    T1 <: AbstractCrystalStruct,
     T2 <: AbstractArray{<:Float64, N} where {N},
 }
-    name::T1
+    crystalStruct::T1
     slipPlane::T2
     bVec::T2
-    function SlipSystem(; name, slipPlane, bVec)
+    function SlipSystem(; crystalStruct, slipPlane, bVec)
         new{typeof(name), typeof(slipPlane)}(name, slipPlane, bVec)
     end
 end

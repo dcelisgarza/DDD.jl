@@ -22,8 +22,17 @@ function loadCSV(
     return df
 end
 
-function loadSlipSys(filename::AbstractString, delim = ',')
-    return readdlm(filename, delim)
+function loadSlipSys(dict::Dict{T1, T1}) where {T1, T2}
+
+    crystalStruct = makeTypeDict(AbstractCrystalStruct)
+
+    slipSystem = SlipSystem(
+        name = crystalStruct[dict["crystalStruct"]],
+        slipPlane["slipPlane"],
+        bVec = dict["bVec"],
+    )
+
+    return slipSystem
 end
 
 function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
@@ -99,14 +108,14 @@ end
 
 function matLoadParams(dict::Dict{T1, T2}) where {T1, T2}
 
-    matStruct = makeTypeDict(AbstractCrystalStruct)
+    crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     matParams = MaterialP(
         μ = convert(Float64, dict["μ"]),
         μMag = convert(Float64, dict["μMag"]),
         ν = convert(Float64, dict["ν"]),
         E = convert(Float64, dict["E"]),
-        crystalStruct = matStruct[dict["crystalStruct"]],
+        crystalStruct = crystalStruct[dict["crystalStruct"]],
     )
 
     return matParams
