@@ -21,13 +21,13 @@ include("./IO/IOBase.jl")
 include("./PostProcessing/Plotting.jl")
 export load, save, makeInstanceDict, translateEnum
 export shapeFunction, shapeFunctionDeriv, dimDot, dimNorm
-export inclusiveComparison
+export inclusiveComparison, IntegrationP
 export compStruct, intAngle, extAngle, rot3D, makeTypeDict, subTypeTree
 export getSegVector, calcSelfForce, calcSegSegForce
 export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
 export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
 export AbstractDistribution, Zeros, Rand, Randn, Regular
-export AbstractCrystalStruct, BCC, FCC, HCP
+export AbstractCrystalStruct, BCC, FCC, HCP, MaterialP
 export AbstractMobility, mobBCC, mobFCC, mobHCP
 export AbstractIntegrator, CustomTrapezoid
 export AbstractMesh, RegularCuboidMesh, AbstractShapeFunction
@@ -44,7 +44,8 @@ export makeSegment,
     loopDistribution,
     makeConnect,
     checkNetwork,
-    getSegmentIdx!
+    getSegmentIdx!,
+    SlipSystem
 export loadCSV, loadParams, loadDln, loadSlipSys
 
 export saveParams

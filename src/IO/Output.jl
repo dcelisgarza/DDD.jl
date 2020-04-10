@@ -1,8 +1,8 @@
 JSON.lower(t::T) where {T<:Union{AbstractCrystalStruct, AbstractMobility, AbstractIntegrator, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution}} = string(t)
 JSON.lower(t::nodeType) = Int(t)
 
-function save(filename::AbstractString, args...)
-    open(filename, "w") do io
+function save(filename::AbstractString, args...; mode::AbstractString = "w")
+    open(filename, mode) do io
         JSON.print(io, args)
     end
 end

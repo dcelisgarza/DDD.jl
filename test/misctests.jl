@@ -18,6 +18,30 @@ makeNetwork!(network, loops)
 # par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
 # @btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
 
+output = "../outputs/dln/sampleDln.JSON"
+# , intParams, slipSystems, loops
+save(output, dlnParams, matParams, intParams, slipSystems, loops)
+dict = load(output)
+[dict[4][1] dict[4][2] dict[4][3] dict[4][4] dict[4][5] dict[4][6]]
+
+
+zip(dict[4][:])
+
+compStruct(intParams, intParams2)
+eval(dict[1]["mobility"][1:(end - 2)])
+
+dict[end][1] = translateEnum(nodeType, dict[end][1], "label")
+dict[end][2] = translateEnum(nodeType, dict[end][2], "label")
+
+replaceslip = readdlm(slipsys,',')
+
+ss = SlipSystem(name = "BCC", slipPlane = replaceslip[:,1:3], bVec = replaceslip[:,4:6])
+
+"../data/slipSystems/SlipSystems.JSON"
+save("../data/slipSystems/SlipSystems.JSON", ss)
+
+
+
 # import JSON: lower
 # # JSON.lower(t::T) where {T<:AbstractCrystalStruct} = string(t)
 # # JSON.lower(t::T) where {T<:AbstractMobility} = string(t)
@@ -26,31 +50,6 @@ makeNetwork!(network, loops)
 # # JSON.lower(t::T) where {T<:AbstractDlnStr} = string(t)
 # # JSON.lower(t::T) where {T<:AbstractDistribution} = string(t)
 # JSON.lower(t::T) where {T<:Union{AbstractCrystalStruct, AbstractMobility, AbstractIntegrator, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution}} = string(t)
-
-output = "../outputs/dln/sampleDln.JSON"
-# , intParams, slipSystems, loops
-save(output, dlnParams, matParams, intParams, slipSystems, loops)
-dict = load(output)
-dict[end][1] = translateEnum(nodeType, dict[end][1], "label")
-dict[end][2] = translateEnum(nodeType, dict[end][2], "label")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 testing = "../outputs/dln/test3.JSON"
 open(testing, "w") do io
@@ -62,10 +61,8 @@ for i = 1:length(in["label"])
     in["label"][i] = labels[in["label"][i]]
 end
 
-
 save(output, network, dlnParams, matParams)
 load(output)
-
 
 insts = instances(nodeType)
 labels = Dict{String, nodeType}()

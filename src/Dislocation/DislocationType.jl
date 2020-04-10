@@ -84,6 +84,30 @@ struct mobFCC <: AbstractMobility end
 struct mobHCP <: AbstractMobility end
 """
 ```
+struct SlipSystem{
+    T1 <: AbstractString,
+    T2 <: AbstractArray{<:Float64, N} where {N},
+}
+    name::T1
+    slipPlane::T2
+    bVec::T2
+```
+Slip systems.
+"""
+struct SlipSystem{
+    T1 <: AbstractString,
+    T2 <: AbstractArray{<:Float64, N} where {N},
+}
+    name::T1
+    slipPlane::T2
+    bVec::T2
+    function SlipSystem(; name, slipPlane, bVec)
+        new{typeof(name), typeof(slipPlane)}(name, slipPlane, bVec)
+    end
+end
+
+"""
+```
 DislocationP{
     T1 <: Float64,
     T2 <: Int64,
@@ -136,7 +160,29 @@ struct DislocationP{
     climbDrag::T1
     lineDrag::T1
     mobility::T4
-
+    """
+    ```
+    function DislocationP(;
+        coreRad,
+        coreRadMag,
+        minSegLen,
+        maxSegLen,
+        minArea,
+        maxArea,
+        maxConnect,
+        remesh,
+        collision,
+        separation,
+        virtualRemesh,
+        edgeDrag,
+        screwDrag,
+        climbDrag,
+        lineDrag,
+        mobility,
+    )
+    ```
+    Constructor.
+    """
     function DislocationP(;
         coreRad,
         coreRadMag,

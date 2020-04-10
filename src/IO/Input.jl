@@ -71,53 +71,62 @@ function loadDln(df::DataFrame, slipSystems::AbstractArray{<:Real, N} where {N})
     return sources
 end
 
-function dlnLoadParams(df::DataFrame)
+function dlnLoadParams(dict::Dict{T1, T2}) where {T1, T2}
+
     mobDict = makeTypeDict(AbstractMobility)
-    dlnLoadParams = DislocationP(
-        coreRad = convert(Float64, df[1, :coreRad]),
-        coreRadMag = convert(Float64, df[1, :coreRadMag]),
-        minSegLen = convert(Float64, df[1, :minSegLen]),
-        maxSegLen = convert(Float64, df[1, :maxSegLen]),
-        minArea = convert(Float64, df[1, :minArea]),
-        maxArea = convert(Float64, df[1, :maxArea]),
-        maxConnect = convert(Int64, df[1, :maxConnect]),
-        remesh = df[1, :remesh],
-        collision = df[1, :collision],
-        separation = df[1, :separation],
-        virtualRemesh = df[1, :virtualRemesh],
-        edgeDrag = convert(Float64, df[1, :edgeDrag]),
-        screwDrag = convert(Float64, df[1, :screwDrag]),
-        climbDrag = convert(Float64, df[1, :climbDrag]),
-        lineDrag = convert(Float64, df[1, :lineDrag]),
-        mobility = mobDict[df[1, :mobility]],
+
+    dlnParams = DislocationP(
+        coreRad = convert(Float64, dict["coreRad"]),
+        coreRadMag = convert(Float64, dict["coreRadMag"]),
+        minSegLen = convert(Float64, dict["minSegLen"]),
+        maxSegLen = convert(Float64, dict["maxSegLen"]),
+        minArea = convert(Float64, dict["minArea"]),
+        maxArea = convert(Float64, dict["maxArea"]),
+        maxConnect = convert(Int64, dict["maxConnect"]),
+        remesh = dict["remesh"],
+        collision = dict["collision"],
+        separation = dict["separation"],
+        virtualRemesh = dict["virtualRemesh"],
+        edgeDrag = convert(Float64, dict["edgeDrag"]),
+        screwDrag = convert(Float64, dict["screwDrag"]),
+        climbDrag = convert(Float64, dict["climbDrag"]),
+        lineDrag = convert(Float64, dict["lineDrag"]),
+        mobility = mobDict[dict["mobility"]],
     )
+
     return dlnLoadParams
 end
 
-function matLoadParams(df::DataFrame)
-    strucDict = makeTypeDict(AbstractCrystalStruct)
+function matLoadParams(dict::Dict{T1, T2}) where {T1, T2}
+
+    matStruct = makeTypeDict(AbstractCrystalStruct)
+
     matParams = MaterialP(
-        μ = convert(Float64, df[1, :μ]),
-        μMag = convert(Float64, df[1, :μMag]),
-        ν = convert(Float64, df[1, :ν]),
-        E = convert(Float64, df[1, :E]),
-        crystalStruct = strucDict[df[1, :crystalStruct]],
+        μ = convert(Float64, dict["μ"]),
+        μMag = convert(Float64, dict["μMag"]),
+        ν = convert(Float64, dict["ν"]),
+        E = convert(Float64, dict["E"]),
+        crystalStruct = matStruct[dict["crystalStruct"]],
     )
+
     return matParams
 end
 
-function intLoadParams(df::DataFrame)
+function intLoadParams(dict::Dict{T1, T2}) where {T1, T2}
+
     integDict = makeTypeDict(AbstractIntegrator)
+
     intParams = IntegrationP(
-        dt = convert(Float64, df[1, :dt]),
-        tmin = convert(Float64, df[1, :tmin]),
-        tmax = convert(Float64, df[1, :tmax]),
-        method = integDict[df[1, :method]],
-        abstol = convert(Float64, df[1, :abstol]),
-        reltol = convert(Float64, df[1, :reltol]),
-        time = convert(Float64, df[1, :time]),
-        step = convert(Int64, df[1, :step]),
+        dt = convert(Float64, dict["dt"]),
+        tmin = convert(Float64, dict["tmin"]),
+        tmax = convert(Float64, dict["tmax"]),
+        method = integDict[dict["method"]],
+        abstol = convert(Float64, dict["abstol"]),
+        reltol = convert(Float64, dict["reltol"]),
+        time = convert(Float64, dict["time"]),
+        step = convert(Int64, dict["step"]),
     )
+
     return intParams
 end
 
