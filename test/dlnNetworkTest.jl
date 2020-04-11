@@ -1,18 +1,20 @@
 using DDD
 using Test
 
-import DelimitedFiles: readdlm
 import LinearAlgebra: dot, cross, norm
 import Statistics: mean
 import Random: seed!
+
+import DDD: segEdge, segEdgeN, segScrew, makeSegment, idxLabel, idxCond, dataCond, coordIdx, coordLbl, inclusiveComparison
 cd(@__DIR__)
 
 @testset "Generate single segments" begin
-    inFilename = "../data/slipSystems/bcc.csv"
-    data = readdlm(inFilename, ',', Float64)
+    fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
+    dictSlipSystem = load(fileSlipSystem)
+    slipSystems = loadSlipSystem(dictSlipSystem[1])
     slipSysInt = 1
-    slipPlane = data[slipSysInt, 1:3]
-    bVec = data[slipSysInt, 4:6]
+    slipPlane = slipSystems.slipPlane[1,:]
+    bVec = slipSystems.bVec[1,:]
     edge = makeSegment(segEdge(), slipPlane, bVec)
     edgeN = makeSegment(segEdgeN(), slipPlane, bVec)
     screw = makeSegment(segScrew(), slipPlane, bVec)
@@ -90,11 +92,19 @@ end
 end
 
 @testset "Loop generation" begin
-    slipfile = "../data/slipSystems/bcc.csv"
-    loopfile = "../inputs/dln/sampleDln.csv"
-    slipSystems = readdlm(slipfile, ',')
-    df = loadCSV(loopfile; header = 1, transpose = true)
-    loops = loadDln(df, slipSystems)
+
+    slipfile = "../data/slipSystems/SlipSystems.JSON"
+    loopfile = "../inputs/dln/sampleDislocation.JSON"
+
+    dictSlipSystem = load(slipfile)
+    slipSystems = loadSlipSystem(dictSlipSystem[1])
+
+    dictDislocationLoop = load(loopfile)
+    loops = zeros(DislocationLoop, length(dictDislocationLoop))
+    for i in eachindex(loops)
+        loops[i] =
+            loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+    end
     # Check that the midpoint of the loops is at (0,0,0)
     for i in eachindex(loops)
         @test mean(loops[i].coord) <

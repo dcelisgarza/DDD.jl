@@ -1,52 +1,33 @@
 module DDD
 
-using CSV,
-    DataFrames,
-    LinearAlgebra,
-    DelimitedFiles,
-    Plots,
-    Statistics,
-    InteractiveUtils
-import Base:
-    zero, isequal, isless, convert, ==, *, /, length, getindex, eachindex, push!, iterate
+using LinearAlgebra, Plots, Statistics, InteractiveUtils, JSON
+
+import Base: zero, isequal, isless, convert, ==, *, /, length, getindex
+import Base: eachindex, push!, iterate
 
 include("./Misc/Misc.jl")
+# Miscelaneous.
+export makeTypeDict, compStruct, intAngle, extAngle, rot3D
 include("./Integration/CustomIntegration.jl")
 include("./Material/MaterialBase.jl")
 include("./Dislocation/DislocationBase.jl")
+# Distributions.
+export AbstractDistribution, Zeros, Rand, Randn, Regular
+# Dislocation types.
+export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
+export DislocationLoop, DislocationNetwork
+# Dislocation functions.
+export makeNetwork, makeNetwork!, checkNetwork, loopDistribution
 include("./FEM/FEMBase.jl")
+export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")
 include("./IO/IOBase.jl")
+# Imports.
+export load, loadDislocationP, loadMaterialP, loadIntegrationP
+export loadSlipSystem, loadDislocationLoop, loadParams
+export loadDislocationLoop, loadNetwork
+# Export.
+export save
 include("./PostProcessing/Plotting.jl")
-export shapeFunction, shapeFunctionDeriv, dimDot, dimNorm
-export inclusiveComparison
-export compStruct, intAngle, extAngle, rot3D, makeTypeDict, subTypeTree
-export getSegVector, calcSelfForce, calcSegSegForce
-export nodeType, loopSides, AbstractDlnSeg, segNone, segEdge, segEdgeN, segScrew
-export segMixed, AbstractDlnStr, loopPrism, loopShear, loopMixed, loopDln
-export AbstractDistribution, Zeros, Rand, Randn, Regular
-export AbstractCrystalStruct, BCC, FCC, HCP
-export AbstractMobility, mobBCC, mobFCC, mobHCP
-export AbstractIntegrator, CustomTrapezoid
-export AbstractMesh, RegularCuboidMesh, AbstractShapeFunction
-export AbstractShapeFunction3D, AbstractShapeFunction2D
-export LinearQuadrangle3D, LinearQuadrangle2D
-export hatStress
-export DislocationP, DislocationNetwork
-export coordLbl, coordIdx, idxLabel, idxCond, dataCond
-export makeSegment,
-    makeLoop,
-    DislocationLoop,
-    makeNetwork,
-    makeNetwork!,
-    loopDistribution,
-    makeConnect,
-    checkNetwork,
-    getSegmentIdx!
-export loadCSV, loadParams, loadDln, loadSlipSys
-
-export saveParams
-
 export plotNodes, plotNodes!
-
 end # module

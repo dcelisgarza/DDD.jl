@@ -1,5 +1,5 @@
 #=
-    This is a place for code that was written and is now deleted. Placed here in case it can be revived for the future.
+    This is a place for code that was written and is now unused and probably won't be reused. Placed here just in case.
 =#
 
 """

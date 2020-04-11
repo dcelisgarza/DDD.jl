@@ -4,31 +4,27 @@ function makeLoop(
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
-    segType::T3,
-    segLen::T4,
+    segLen::T3,
     slipSystem::T2,
-    _slipPlane::T5,
-    _bVec::T5,
-    label::T6,
-    buffer::T7,
-    range::T5,
-    dist::T8,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T4,
+    dist::T7,
 ) where {
     T1 <: loopDln,
     T2 <: Int64,
-    T3 <: segNone,
-    T4 <: Float64,
-    T5 <: AbstractArray{<:Float64, N} where {N},
-    T6 <: Vector{nodeType},
-    T7 <: Float64,
-    T8 <: AbstractDistribution,
+    T3 <: Float64,
+    T4 <: AbstractArray{<:Float64, N} where {N},
+    T5 <: Vector{nodeType},
+    T6 <: Float64,
+    T7 <: AbstractDistribution,
 }
 
     nodeTotal = 0
-    numSegType = length(segType)
     links = zeros(Int64, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
-    seg = zeros(numSegType, 3)
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
 
@@ -36,7 +32,6 @@ function makeLoop(
         numSides,
         nodeSide,
         numLoops,
-        segType,
         segLen,
         slipSystem,
         links,
@@ -53,32 +48,27 @@ end
 """
 ```
 makeLoop(
-    loopType::T1,   # Type of loop.
-    numSides::T2,   # Number of sides in loop, must be even.
-    nodeSide::T2,   # Nodes per side.
-    numLoops::T2,   # Number of loops in initial network.
-    segType::T3,    # Type of segments in loop (future-proofing).
-    segLen::T4,     # Lengths of half the segments in loop, why `numSides` must be even.
-    slipSystem::T2, # Index of the loop's slip system.
-    _slipPlane::T5, # Slip plane vector.
-    _bVec::T5,      # Burgers vector.
-    label::T6,      # Labels, length must be equal to `numSides * nodeSide`.
-    buffer::T7,     # Buffer distance to prevent overlap.
-    range::T8,      # Spatial range of `dist`, defines the space occupied by the loops in the network.
-    dist::T9,       # Spatial distribution of loops in `range`.
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
 ) where {
-    T1 <: AbstractDlnStr, # Dislocation structure.
+    T1 <: AbstractDlnStr,
     T2 <: Int64,
-    T3 <: AbstractDlnSeg, # Dislocation segment type.
-    T4 <: Union{
-        T where {T <: Float64},
-        AbstractArray{<:Float64, N} where {N}
-    },
-    T5 <: AbstractArray{<:Float64, N} where {N},
-    T6 <: Vector{nodeType}, # Dislocation node enumerated type.
-    T7 <: Float64,
-    T8 <: AbstractArray{<:Float64, N} where {N},
-    T9 <: AbstractDistribution, # Spatial distribution type, defines the loops' spatial distribution in the network.
+    T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T4 <: AbstractArray{<:Float64, N} where {N},
+    T5 <: Vector{nodeType},
+    T6 <: Float64,
+    T7 <: AbstractArray{<:Float64, N} where {N},
+    T8 <: AbstractDistribution,
 }
 ```
 Constructor function for [`DislocationLoop`](@ref). See [`AbstractDlnStr`](@ref), [`AbstractDlnSeg`](@ref), [`nodeType`](@ref), [`AbstractDistribution`](@ref) for further details.
@@ -88,33 +78,29 @@ function makeLoop(
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
-    segType::T3,
-    segLen::T4,
+    segLen::T3,
     slipSystem::T2,
-    _slipPlane::T5,
-    _bVec::T5,
-    label::T6,
-    buffer::T7,
-    range::T8,
-    dist::T9,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
 ) where {
     T1 <: AbstractDlnStr,
     T2 <: Int64,
-    T3 <: AbstractDlnSeg,
-    T4 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
-    T5 <: AbstractArray{<:Float64, N} where {N},
-    T6 <: Vector{nodeType},
-    T7 <: Float64,
-    T8 <: AbstractArray{<:Float64, N} where {N},
-    T9 <: AbstractDistribution,
+    T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T4 <: AbstractArray{<:Float64, N} where {N},
+    T5 <: Vector{nodeType},
+    T6 <: Float64,
+    T7 <: AbstractArray{<:Float64, N} where {N},
+    T8 <: AbstractDistribution,
 }
 
     nodeTotal = numSides * nodeSide
     lSegLen = length(segLen)
-    @assert length(label) == nodeTotal
-    @assert length(segType) == 1
-    @assert mod(numSides, 2) == 0
-    @assert lSegLen == Int(numSides / 2)
+    @assert length(label) == nodeTotal "makeLoop: All $nodeTotal nodes must be labelled. There are only $(length(label)) labels currently defined."
+    @assert lSegLen == nodeTotal "makeLoop: All $nodeTotal segments must have their lengths defined. There are only $lSegLen lengths currently defined."
 
     _slipPlane = _slipPlane ./ norm(_slipPlane)
     _bVec = _bVec ./ norm(_bVec)
@@ -171,7 +157,6 @@ function makeLoop(
         numSides,
         nodeSide,
         numLoops,
-        segType,
         segLen,
         slipSystem,
         links,
@@ -206,7 +191,7 @@ function makeNetwork(
     maxConnect::Integer = 4,
     args...;
     memBuffer::Integer = 10,
-    checkConsistency::Bool = false,
+    checkConsistency::Bool = true,
     kw...,
 )
     nodeTotal::Integer = 0

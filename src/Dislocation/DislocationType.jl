@@ -84,6 +84,34 @@ struct mobFCC <: AbstractMobility end
 struct mobHCP <: AbstractMobility end
 """
 ```
+struct SlipSystem{
+    T1 <: AbstractString,
+    T2 <: AbstractArray{<:Float64, N} where {N},
+}
+    name::T1
+    slipPlane::T2
+    bVec::T2
+```
+Slip systems.
+"""
+struct SlipSystem{
+    T1 <: AbstractCrystalStruct,
+    T2 <: AbstractArray{<:Float64, N} where {N},
+}
+    crystalStruct::T1
+    slipPlane::T2
+    bVec::T2
+    function SlipSystem(; crystalStruct, slipPlane, bVec)
+        new{typeof(crystalStruct), typeof(slipPlane)}(
+            crystalStruct,
+            slipPlane,
+            bVec,
+        )
+    end
+end
+
+"""
+```
 DislocationP{
     T1 <: Float64,
     T2 <: Int64,
@@ -189,80 +217,67 @@ end # DislocationP
 
 """
 ```
-DislocationLoop{
+struct DislocationLoop{
     T1 <: AbstractDlnStr,
     T2 <: Int64,
-    T3 <: Union{
-        T where {T <: AbstractDlnSeg},
-        AbstractArray{<:AbstractDlnSeg, N} where {N},
-    },
-    T4 <: Union{
-        T where {T <: Float64},
-        AbstractArray{<:Float64, N} where {N}
-    },
-    T5 <: Union{Int64, AbstractArray{<:Int64, N} where {N}},
-    T6 <: AbstractArray{<:Int64, N} where {N},
-    T7 <: AbstractArray{<:Float64, N} where {N},
-    T8 <: Vector{<:nodeType},
-    T9 <: Float64,
-    T10 <: AbstractDistribution,
+    T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T4 <: Union{T where {T <: Int64}, AbstractArray{<:Int64, N} where {N}},
+    T5 <: AbstractArray{<:Int64, N} where {N},
+    T6 <: AbstractArray{<:Float64, N} where {N},
+    T7 <: Vector{<:nodeType},
+    T8 <: Float64,
+    T9 <: AbstractDistribution,
 }
+
     loopType::T1
     numSides::T2
     nodeSide::T2
     numLoops::T2
-    segType::T3
-    segLen::T4
-    slipSystem::T5  # Slip system/systems of segments.
-    links::T6       # Link matrix for dislocation nodes.
-    slipPlane::T7   # Slip planes of all segments in loop.
-    bVec::T7        # Burgers vector of all segments in loop.
-    coord::T7       # Coords of all nodes in loop.
-    label::T8
-    buffer::T9
-    range::T7
-    dist::T10
+    segLen::T3
+    slipSystem::T4
+    links::T5
+    slipPlane::T6
+    bVec::T6
+    coord::T6
+    label::T7
+    buffer::T8
+    range::T6
+    dist::T9
 ```
 Dislocation loop structure generated via the constructor [`makeLoop`](@ref).
 """
 struct DislocationLoop{
     T1 <: AbstractDlnStr,
     T2 <: Int64,
-    T3 <: Union{
-        T where {T <: AbstractDlnSeg},
-        AbstractArray{<:AbstractDlnSeg, N} where {N},
-    },
-    T4 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
-    T5 <: Union{T where {T <: Int64}, AbstractArray{<:Int64, N} where {N}},
-    T6 <: AbstractArray{<:Int64, N} where {N},
-    T7 <: AbstractArray{<:Float64, N} where {N},
-    T8 <: Vector{<:nodeType},
-    T9 <: Float64,
-    T10 <: AbstractDistribution,
+    T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
+    T4 <: Union{T where {T <: Int64}, AbstractArray{<:Int64, N} where {N}},
+    T5 <: AbstractArray{<:Int64, N} where {N},
+    T6 <: AbstractArray{<:Float64, N} where {N},
+    T7 <: Vector{<:nodeType},
+    T8 <: Float64,
+    T9 <: AbstractDistribution,
 }
 
     loopType::T1
     numSides::T2
     nodeSide::T2
     numLoops::T2
-    segType::T3
-    segLen::T4
-    slipSystem::T5
-    links::T6
-    slipPlane::T7
-    bVec::T7
-    coord::T7
-    label::T8
-    buffer::T9
-    range::T7
-    dist::T10
+    segLen::T3
+    slipSystem::T4
+    links::T5
+    slipPlane::T6
+    bVec::T6
+    coord::T6
+    label::T7
+    buffer::T8
+    range::T6
+    dist::T9
 
     function DislocationLoop(;
         loopType,
         numSides,
         nodeSide,
         numLoops,
-        segType,
         segLen,
         slipSystem,
         _slipPlane,
@@ -276,7 +291,6 @@ struct DislocationLoop{
         numSides,
         nodeSide,
         numLoops,
-        segType,
         segLen,
         slipSystem,
         links,
@@ -291,7 +305,6 @@ struct DislocationLoop{
             numSides,
             nodeSide,
             numLoops,
-            segType,
             segLen,
             slipSystem,
             _slipPlane,
@@ -305,7 +318,6 @@ struct DislocationLoop{
         new{
             typeof(loopType),
             typeof(numSides),
-            typeof(segType),
             typeof(segLen),
             typeof(slipSystem),
             typeof(links),
@@ -318,7 +330,6 @@ struct DislocationLoop{
             numSides,
             nodeSide,
             numLoops,
-            segType,
             segLen,
             slipSystem,
             links,
