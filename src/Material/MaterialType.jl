@@ -35,7 +35,7 @@ struct MaterialP{T1 <: Float64, T2 <: AbstractCrystalStruct}
 
     function MaterialP(; μ, μMag, ν, E, crystalStruct)
         omνInv = 1 / (1 - ν)
-        νomνInv = ν*omνInv
+        νomνInv = ν * omνInv
         μ4π = μ / (4π)
         μ8π = μ4π / 2
         μ4πν = μ4π * omνInv

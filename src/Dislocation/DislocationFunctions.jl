@@ -135,6 +135,7 @@ At a high level this works by creating a local coordinate frame using the line d
     bVec = network.bVec[idx[:, 1], :]
     node1 = coord[idx[:, 2], :]
     node2 = coord[idx[:, 3], :]
+    SegSegForce = zeros(numSegs, 3, 2)
 
     if parallel
         # Threadid parallelisation + parallelised reduction.
@@ -185,10 +186,10 @@ At a high level this works by creating a local coordinate frame using the line d
                 sum(TSegSegForce[:, start:stop, :, :], dims = 1)[1, :, :, :],
             )
         end
-        SegSegForce = getproperty.(TSegSegForce2, :value)
+        # This allows type inference and reduces memory allocation.
+        SegSegForce .= getproperty.(TSegSegForce2, :value)
     else
         # Serial execution.
-        SegSegForce = zeros(numSegs, 3, 2)
         @fastmath @inbounds for i = 1:numSegs
             b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
             n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
@@ -293,7 +294,6 @@ end
     c = dot(t1, t2)
     cSq = c * c
     omcSq = 1 - cSq
-
     if omcSq > eps(Float32)
 
         omcSqI = 1 / omcSq
@@ -411,9 +411,9 @@ end
         tmp1 = μ4πνd * t2ct1db2 * t1db1
         V15 = @. -tmp1 * t1ct2ct1
 
-        tmp1 = @. μ4πν * t2ct1db2 * t1ct2
-        V16 = @. -tmp1 * t2db1
-        V17 = @. -tmp1 * t1db1
+        tmpVec1 = @. μ4πν * t2ct1db2 * t1ct2
+        V16 = @. -tmpVec1 * t2db1
+        V17 = @. -tmpVec1 * t1db1
 
         Fint1 = integ[3] - y2 * integ[1]
         Fint2 = integ[4] - y2 * integ[2]
@@ -506,9 +506,9 @@ end
         tmp1 = μ4πνd * t2ct1cb1dt1 * t1db2
         V15 = @. tmp1 * t2ct1
 
-        tmp1 = @. μ4πν * t1ct2db1 * t2ct1
-        V16 = @. tmp1 * t2db2
-        V17 = @. tmp1 * t1db2
+        tmpVec1 = @. μ4πν * t1ct2db1 * t2ct1
+        V16 = @. tmpVec1 * t2db2
+        V17 = @. tmpVec1 * t1db2
 
         Fint1 = x2 * integ[1] - integ[2]
         Fint2 = x2 * integ[2] - integ[5]
@@ -720,7 +720,7 @@ end
     magn21mSq = dot(n21m, n21m)
     magn22mSq = dot(n22m, n22m)
 
-    if magDiffSq > eps(Float64) * (magn21mSq + magn22mSq)
+    if magDiffSq > eps(Float32) * (magn21mSq + magn22mSq)
         missing, missing, Fnode1Core, Fnode2Core = calcSegSegForce(
             aSq,
             μ4π,
@@ -851,7 +851,7 @@ end
     magn11mSq = dot(n11m, n11m)
     magn12mSq = dot(n12m, n12m)
 
-    if magDiffSq > eps(Float64) * (magn11mSq + magn12mSq)
+    if magDiffSq > eps(Float32) * (magn11mSq + magn12mSq)
         missing, missing, Fnode3Core, Fnode4Core = calcSegSegForce(
             aSq,
             μ4π,

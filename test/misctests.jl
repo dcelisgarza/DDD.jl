@@ -1,6 +1,25 @@
-using Revise
+using Revise, BenchmarkTools
 using DDD
 cd(@__DIR__)
+
+function plotNodesMakie(network::DislocationNetwork, args...; kw...)
+    idx = findall(x -> x != -1, network.label)
+    coord = network.coord
+    fig = Scene()
+    meshscatter!(coord, args...; kw...)
+    for i in idx
+        n1 = network.links[i, 1]
+        n2 = network.links[i, 2]
+        lines!(
+            coord[[n1, n2], 1],
+            coord[[n1, n2], 2],
+            coord[[n1, n2], 3],
+            args...;
+            kw...,
+        )
+    end
+    return fig
+end
 
 fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
 fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
@@ -32,26 +51,8 @@ pentagon = DislocationLoop(
 )
 
 makeNetwork!(network, pentagon)
-using Makie
 
-function plotNodesMakie(network::DislocationNetwork, args...; kw...)
-    idx = findall(x -> x != -1, network.label)
-    coord = network.coord
-    fig = Scene()
-    meshscatter!(coord, args...; kw...)
-    for i in idx
-        n1 = network.links[i, 1]
-        n2 = network.links[i, 2]
-        lines!(
-            coord[[n1, n2], 1],
-            coord[[n1, n2], 2],
-            coord[[n1, n2], 3],
-            args...;
-            kw...,
-        )
-    end
-    return fig
-end
+using Makie
 
 fig = plotNodes(
     network,
@@ -70,49 +71,70 @@ scene1 = plotNodesMakie(
     color = :black,
 )
 
-# self = calcSelfForce(dlnParams, matParams, network)
-# @btime calcSelfForce(dlnParams, matParams, network)
-# par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
-# @btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
+self = calcSelfForce(dlnParams, matParams, network)
+@time calcSelfForce(dlnParams, matParams, network)
+par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+@time calcSegSegForce(dlnParams, matParams, network; parallel = true)
 
-fileDump = "../outputs/dump/sampleDump.JSON"
-save(fileDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
-simulation = load(fileDump)
-dlnParams2 = loadDislocationP(simulation[1])
-matParams2 = loadMaterialP(simulation[2])
-intParams2 = loadIntegrationP(simulation[3])
-slipSystems2 = loadSlipSystem(simulation[4])
-dislocationLoop2 = zeros(DislocationLoop, length(simulation[5]))
-for i in eachindex(dislocationLoop2)
-    dislocationLoop2[i] = loadDislocationLoop(simulation[5][i], slipSystems2)
-end
-compStruct(dlnParams, dlnParams2)
-compStruct(matParams, matParams2)
-compStruct(intParams, intParams2)
-compStruct(slipSystems, slipSystems2)
-compStruct(dislocationLoop, dislocationLoop2)
+μ = matParams.μ
+ν = matParams.ν
+μ4π = matParams.μ4π
+μ8π = matParams.μ8π
+μ4πν = matParams.μ4πν
+aSq = dlnParams.coreRadSq
+μ8πaSq = aSq * μ8π
+μ4πνaSq = aSq * μ4πν
 
-fileDislocationNetwork = "../outputs/dln/sampleNetwork.JSON"
-save(fileDislocationNetwork, network)
-networkDict = load(fileDislocationNetwork)
+idx = network.segIdx
+coord = network.coord
+bVec = network.bVec[idx[:, 1], :]
+node1 = coord[idx[:, 2], :]
+node2 = coord[idx[:, 3], :]
 
-network2 = loadNetwork(fileDislocationNetwork)
-compStruct(network, network2; verbose=true)
-network
+b1 = (bVec[1, 1], bVec[1, 2], bVec[1, 3])
+n11 = (node1[1, 1], node1[1, 2], node1[1, 3])
+n12 = (node2[1, 1], node2[1, 2], node2[1, 3])
+
+b2 = (bVec[2, 1], bVec[2, 2], bVec[2, 3])
+n21 = (node1[2, 1], node1[2, 2], node1[2, 3])
+n22 = (node2[2, 1], node2[2, 2], node2[2, 3])
 
 
+Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+    aSq,
+    μ4π,
+    μ8π,
+    μ8πaSq,
+    μ4πν,
+    μ4πνaSq,
+    b1,
+    n11,
+    n12,
+    b2,
+    n21,
+    n22,
+)
+
+b1 = (bVec[1, 1], bVec[1, 2], bVec[1, 3])
+n11 = (0.0, 0.0, 0.0)
+n12 = (1.0, 0.0, 0.0)
+
+b2 = (bVec[2, 1], bVec[2, 2], bVec[2, 3])
+n21 = (0.0, 1.00000001, 0.000000001)
+n22 = (2.0, 1.0, 0.0)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-network2
+Fnode1, Fnode2, Fnode3, Fnode4 = calcParSegSegForce(
+    aSq,
+    μ4π,
+    μ8π,
+    μ8πaSq,
+    μ4πν,
+    μ4πνaSq,
+    b1,
+    n11,
+    n12,
+    b2,
+    n21,
+    n22,
+)
