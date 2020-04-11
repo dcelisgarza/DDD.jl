@@ -1,40 +1,44 @@
-JSON.lower(t::T) where {T<:Union{AbstractCrystalStruct, AbstractMobility, AbstractIntegrator, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution}} = string(t)
+"""
+```
+JSON.lower(
+    t::T,
+) where {
+    T <: Union{
+        AbstractCrystalStruct,
+        AbstractMobility,
+        AbstractIntegrator,
+        AbstractDlnSeg,
+        AbstractDlnStr,
+        AbstractDistribution,
+    },
+} = string(t)
+
+JSON.lower(t::nodeType) = Int(t)
+```
+Extensions to `JSON.lower` for custom types. Allows these variables to be serialised properly.
+"""
+JSON.lower(
+    t::T,
+) where {
+    T <: Union{
+        AbstractCrystalStruct,
+        AbstractMobility,
+        AbstractIntegrator,
+        AbstractDlnSeg,
+        AbstractDlnStr,
+        AbstractDistribution,
+    },
+} = string(t)
 JSON.lower(t::nodeType) = Int(t)
 
+"""
+```
+save(filename::AbstractString, args...; mode::AbstractString = "w")
+```
+Wrapper for `JSON.print` to a file, `args` are the variables or structures you want to save.
+"""
 function save(filename::AbstractString, args...; mode::AbstractString = "w")
     open(filename, mode) do io
         JSON.print(io, args)
     end
-end
-
-"""
-Pushes data to a dataframe for saving later.
-"""
-function pushToDataFrame!(
-    df,
-    data::Union{DislocationP, MaterialP, IntegrationP},
-)
-    fieldNames = fieldnames(typeof(data))
-    for fieldName in fieldNames
-        push!(df, (fieldName, getproperty(data, fieldName)))
-    end
-    return df
-end # pushToDataFrame
-"""
-Saves simulation parameters.
-"""
-function saveParams(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
-    intParams::IntegrationP,
-    filename::AbstractString;
-    delim::Char = ',',
-)
-    df = DataFrame(var = Any[], val = Any[])
-
-    pushToDataFrame!(df, dlnParams)
-    pushToDataFrame!(df, matParams)
-    pushToDataFrame!(df, intParams)
-
-    CSV.write(filename, df; delim = delim, writeheader = false)
 end

@@ -5,13 +5,20 @@ gr()
 cd(@__DIR__)
 
 @testset "Plot nodes" begin
-    params = "../inputs/simParams/sampleParams.csv"
-    slipsys = "../data/slipSystems/bcc.csv"
-    source = "../inputs/dln/sampleDln.csv"
-    dlnParams, matParams, intParams, slipSystems, loops =
-        loadParams(params, slipsys, source)
-    network = zero(DislocationNetwork)
-    makeNetwork!(network, loops)
+    # Load and create.
+    fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
+    fileDislocationLoop = "../inputs/dln/sampleDislocation.JSON"
+    dictSlipSystem = load(fileSlipSystem)
+    slipSystems = loadSlipSystem(dictSlipSystem[1])
+    # There can be multiple dislocations per simulation parameters.
+    dictDislocationLoop = load(fileDislocationLoop)
+    loops = zeros(DislocationLoop, length(dictDislocationLoop))
+    for i in eachindex(loops)
+        loops[i] =
+            loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+    end
+    network = makeNetwork(loops)
+
     function sumNodes(loops)
         totalNodes = 0
         for i in eachindex(loops)

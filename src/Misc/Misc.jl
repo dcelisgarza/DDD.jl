@@ -133,9 +133,7 @@ false
 """
 function compStruct(arg1, arg2; verbose::Bool = false)
     if typeof(arg1) != typeof(arg2)
-        @warn "compStruct: Variables have different types:
-            typeof(arg1) = $(typeof(arg1))
-            typeof(arg2) = $(typeof(arg2))"
+        !verbose ? nothing : @warn "compStruct: Variables have different types:\n\ttypeof(arg1) = $(typeof(arg1))\n\ttypeof(arg2) = $(typeof(arg2))"
         return false
     end
     names = fieldnames(typeof(arg1))
@@ -144,7 +142,7 @@ function compStruct(arg1, arg2; verbose::Bool = false)
         result = getproperty(arg1, i) == getproperty(arg2, i)
         if result == false
             flag = false
-            verbose ? println("Structures differ in field: $(i).") : nothing
+            !verbose ? nothing : @warn "Structures differ in field: $(i)." 
         end
     end
     return flag

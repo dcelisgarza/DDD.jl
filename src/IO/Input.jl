@@ -1,8 +1,23 @@
+"""
+```
+load(filename::AbstractString)
+```
+Wrapper for `JSON.parsefile(filename)`.
+"""
 function load(filename::AbstractString)
     dict = JSON.parsefile(filename)
     return dict
 end
 
+"""
+```
+function loadDislocationLoop(
+    dict::Dict{T1, T2} where {T1, T2},
+    slipSystem::SlipSystem,
+)
+```
+Loads initial dislocation structure out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationLoop`](@ref).
+"""
 function loadDislocationLoop(
     dict::Dict{T1, T2} where {T1, T2},
     slipSystem::SlipSystem,
@@ -14,8 +29,8 @@ function loadDislocationLoop(
     slipPlane = slipSystem.slipPlane
     bVec = slipSystem.bVec
 
-    range = zeros(Float64, 2,3)
-    for i in 1:3
+    range = zeros(Float64, 2, 3)
+    for i = 1:3
         range[:, i] = convert.(Int64, dict["range"][i])
     end
 
@@ -37,6 +52,12 @@ function loadDislocationLoop(
     return dislocationLoop
 end
 
+"""
+```
+loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
+```
+Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialP`](@ref).
+"""
 function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
@@ -52,6 +73,12 @@ function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
     return materialP
 end
 
+"""
+```
+loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
+```
+Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationP`](@ref).
+"""
 function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
@@ -70,6 +97,12 @@ function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
     return integrationP
 end
 
+"""
+```
+loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
+```
+Loads slip systems out of a dictionary loaded from a JSON file. Returns a variable of type [`SlipSystem`](@ref).
+"""
 function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
@@ -89,6 +122,12 @@ function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
     return slipSystem
 end
 
+"""
+```
+loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
+```
+Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationP`](@ref).
+"""
 function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
 
     mobDict = makeTypeDict(AbstractMobility)
@@ -115,6 +154,18 @@ function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
     return dislocationP
 end
 
+"""
+```
+loadParams(
+    fileDislocationP::AbstractString,
+    fileMaterialP::AbstractString,
+    fileIntegrationP::AbstractString,
+    fileSlipSystem::AbstractString,
+    fileDislocationLoop::AbstractString,
+)
+```
+Loads simulation parameters out of a dictionary loaded from a JSON file. Returns a tuple of variable types ([`DislocationP`](@ref), [`MaterialP`](@ref), [`IntegrationP`](@ref), [`SlipSystem`](@ref), [`DislocationLoop`](@ref)) or vectors of those types.
+"""
 function loadParams(
     fileDislocationP::AbstractString,
     fileMaterialP::AbstractString,
@@ -122,7 +173,7 @@ function loadParams(
     fileSlipSystem::AbstractString,
     fileDislocationLoop::AbstractString,
 )
-
+    # We use JSON arrays because it lets us dump a variable number of args into a single JSON file. To keep things gonsistent we use them always. Hence the indices here.
     dictDislocationP = load(fileDislocationP)
     dislocationP = loadDislocationP(dictDislocationP[1])
 
@@ -134,7 +185,7 @@ function loadParams(
 
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem[1])
-
+    # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = load(fileDislocationLoop)
     dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
     for i in eachindex(dislocationLoop)
@@ -144,3 +195,57 @@ function loadParams(
 
     return dislocationP, materialP, integrationP, slipSystems, dislocationLoop
 end # function
+
+"""
+```
+loadNetwork(fileDislocationNetwork::AbstractString)
+```
+Loads a dislocation network from a JSON file.
+"""
+function loadNetwork(fileDislocationNetwork::AbstractString)
+    dict = load(fileDislocationNetwork)[1]
+
+    lenLinks = length(dict["links"][1])
+    lenCoord = length(dict["coord"][1])
+    maxConnect = convert.(Int64, dict["maxConnect"])
+
+    links = zeros(Int64, lenLinks, 2)
+    slipPlane = zeros(Float64, lenLinks, 3)
+    bVec = zeros(Float64, lenLinks, 3)
+    coord = zeros(Float64, lenCoord, 3)
+    connectivity = zeros(Int64, lenLinks, 2 * maxConnect + 1)
+    linksConnect = zeros(Int64, lenLinks, 2)
+    segIdx = zeros(Int64, lenLinks, 3)
+
+    for i = 1:2
+        links[:, i] = convert.(Int64, dict["links"][i])
+        linksConnect[:, i] = convert.(Int64, dict["linksConnect"][i])
+    end
+
+    @inbounds @simd for i = 1:3
+        slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
+        bVec[:, i] = convert.(Float64, dict["bVec"][i])
+        coord[:, i] = convert.(Float64, dict["coord"][i])
+        segIdx[:, i] = convert.(Float64, dict["segIdx"][i])
+    end
+
+    @inbounds @simd for i = 1:9
+        connectivity[:, i] = convert.(Int64, dict["connectivity"][i])
+    end
+
+    dislocationNetwork = DislocationNetwork(
+        links = links,
+        slipPlane = slipPlane,
+        bVec = bVec,
+        coord = coord,
+        label = nodeType.(dict["label"]),
+        numNode = convert.(Int64, dict["numNode"]),
+        numSeg = convert.(Int64, dict["numSeg"]),
+        maxConnect = maxConnect,
+    )
+    dislocationNetwork.linksConnect = linksConnect
+    dislocationNetwork.connectivity = connectivity
+    dislocationNetwork.segIdx = segIdx
+
+    return dislocationNetwork
+end

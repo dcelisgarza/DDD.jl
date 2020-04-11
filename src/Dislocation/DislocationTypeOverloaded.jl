@@ -7,7 +7,7 @@ isless(x::nodeType, y::Real) = isless(Integer(x), y)
 convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
 zero(::Type{nodeType}) = -1
 getindex(x::nodeType, i::Integer) = i == 1 ? Int(x) : throw(BoundsError())
-iterate(x::nodeType, i=1) = (length(x) < i ? nothing : (x[i], i + 1))
+iterate(x::nodeType, i = 1) = (length(x) < i ? nothing : (x[i], i + 1))
 length(x::nodeType) = 1
 
 """

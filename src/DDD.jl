@@ -7,24 +7,25 @@ import Base: eachindex, push!, iterate
 
 include("./Misc/Misc.jl")
 # Miscelaneous.
-export makeTypeDict
+export makeTypeDict, compStruct, intAngle, extAngle, rot3D
 include("./Integration/CustomIntegration.jl")
 include("./Material/MaterialBase.jl")
 include("./Dislocation/DislocationBase.jl")
 # Distributions.
-export AbstractDistribution, Zeros, Rand
+export AbstractDistribution, Zeros, Rand, Randn, Regular
 # Dislocation types.
-export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear,
+export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
 export DislocationLoop, DislocationNetwork
 # Dislocation functions.
-export makeNetwork, makeNetwork!
+export makeNetwork, makeNetwork!, checkNetwork, loopDistribution
 include("./FEM/FEMBase.jl")
+export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")
 include("./IO/IOBase.jl")
 # Imports.
 export load, loadDislocationP, loadMaterialP, loadIntegrationP
 export loadSlipSystem, loadDislocationLoop, loadParams
-export loadDislocationLoop
+export loadDislocationLoop, loadNetwork
 # Export.
 export save
 include("./PostProcessing/Plotting.jl")
