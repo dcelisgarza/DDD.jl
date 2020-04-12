@@ -200,7 +200,7 @@ end # function
 ```
 loadNetwork(fileDislocationNetwork::AbstractString)
 ```
-Loads a dislocation network from a JSON file.
+Loads a dislocation network from a JSON file. Returns a [`DislocationNetwork`](@ref).
 """
 function loadNetwork(fileDislocationNetwork::AbstractString)
     dict = load(fileDislocationNetwork)[1]

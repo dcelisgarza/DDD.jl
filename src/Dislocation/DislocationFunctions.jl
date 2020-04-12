@@ -1,3 +1,13 @@
+"""
+```
+function calcSelfForce(
+    dlnParams::DislocationP,
+    matParams::MaterialP,
+    network::DislocationNetwork,
+)
+```
+Calculates the self-interaction force felt by two nodes in a segment. Naturally the forces are equal and opposite to each other.
+"""
 @inline function calcSelfForce(
     dlnParams::DislocationP,
     matParams::MaterialP,
