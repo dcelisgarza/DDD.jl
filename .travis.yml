@@ -11,6 +11,9 @@ julia:
   - 1.4
   - nightly
 jobs:
+  allow_failures:
+    - julia: nightly
+  fast_finish: true
   include:
     - stage: "Documentation"
       julia: 1.4
@@ -19,10 +22,6 @@ jobs:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
-    - stage: "Testing"
-        allow_failures:
-          - julia: nightly
-        fast_finish: true
 notifications:
   email: false
 after_success:
