@@ -4,11 +4,12 @@ makedocs(;
     modules=[DDD],
     format=Documenter.HTML(),
     pages=[
-        "Index" => "index.md",
+        "DDD.jl"=>"intro.md",
         "Types" => "types.md",
         "IO" => "io.md",
         "Plotting" => "plotting.md",
         "Discrete Dislocation Dynamics" => "theory.md",
+        "Index" => "index.md",
     ],
     repo="https://github.com/dcelisgarza/DDD.jl/blob/{commit}{path}#L{line}",
     sitename="DDD.jl",

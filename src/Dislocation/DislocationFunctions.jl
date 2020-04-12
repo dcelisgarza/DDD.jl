@@ -99,7 +99,8 @@ end
 
 """
 !!! Note
-    This function is based on the SegSegForces function by A. Arsenlis et al. It is optimised for speed and reusability.
+
+    This function is based on the SegSegForces function by A. Arsenlis et al. It is optimised for speed and reusability. It has also been locally parallelised.
 ```
 ```
  It implements the analytical solution of the force between two dislocation segments. Details are found in Appendix A.1. in ["Enabling Strain Hardening Simulations with Dislocation Dynamics" by A. Arsenlis et al.](https://doi.org/10.1088%2F0965-0393%2F15%2F6%2F001)

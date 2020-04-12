@@ -1,8 +1,10 @@
 # DDD.jl
 
-```@index
+```@contents
+Pages = ["intro.md"]
+Depth = 4
 ```
 
-```@autodocs
-Modules = [DDD]
+## Index
+```@index
 ```
