@@ -22,7 +22,7 @@ function makeLoop(
     T7 <: AbstractDistribution,
 }
 
-    nodeTotal = 0
+    nodeTotal::Int64 = 0
     links = zeros(Int64, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
     slipPlane = zeros(0, 3)
@@ -195,7 +195,7 @@ function makeNetwork(
     kw...,
 )
     nodeTotal::Integer = 0
-    lims = zeros(Float64, 2, 3)
+    lims = zeros(2, 3)
     # Allocate memory.
     @inbounds for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
@@ -284,7 +284,7 @@ function makeNetwork!(
     kw...,
 )
     nodeTotal::Integer = 0
-    lims = zeros(Float64, 2, 3)
+    lims = zeros(2, 3)
     network.maxConnect = maxConnect
     # Allocate memory.
     @inbounds for i in eachindex(sources)
@@ -476,7 +476,7 @@ function checkNetwork(network::DislocationNetwork)
     error("Non-empty entries of connectivity should be the same as the non-empty entries of links.")
 
     bVec = network.bVec
-    bSum = zeros(Float64, 3)
+    bSum = zeros(3)
     @inbounds for i in idx
         iLinkBuffer = zeros(Int64, 0)
         col = connectivity[i, 1]

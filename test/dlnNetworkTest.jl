@@ -5,7 +5,17 @@ import LinearAlgebra: dot, cross, norm
 import Statistics: mean
 import Random: seed!
 
-import DDD: segEdge, segEdgeN, segScrew, makeSegment, idxLabel, idxCond, dataCond, coordIdx, coordLbl, inclusiveComparison
+import DDD:
+    segEdge,
+    segEdgeN,
+    segScrew,
+    makeSegment,
+    idxLabel,
+    idxCond,
+    dataCond,
+    coordIdx,
+    coordLbl,
+    inclusiveComparison
 cd(@__DIR__)
 
 @testset "Generate single segments" begin
@@ -13,8 +23,8 @@ cd(@__DIR__)
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem[1])
     slipSysInt = 1
-    slipPlane = slipSystems.slipPlane[1,:]
-    bVec = slipSystems.bVec[1,:]
+    slipPlane = slipSystems.slipPlane[1, :]
+    bVec = slipSystems.bVec[1, :]
     edge = makeSegment(segEdge(), slipPlane, bVec)
     edgeN = makeSegment(segEdgeN(), slipPlane, bVec)
     screw = makeSegment(segScrew(), slipPlane, bVec)
@@ -32,8 +42,8 @@ end
     numNode = 10
     numSeg = 20
     links = zeros(Int64, numSeg, 2)
-    bVec = zeros(Float64, numSeg, 3)
-    slipPlane = zeros(Float64, numSeg, 3)
+    bVec = zeros(numSeg, 3)
+    slipPlane = zeros(numSeg, 3)
     coord = zeros(numNode, 3)
     label = zeros(nodeType, numNode)
     lenLinks = size(links, 1)
@@ -102,8 +112,7 @@ end
     dictDislocationLoop = load(loopfile)
     loops = zeros(DislocationLoop, length(dictDislocationLoop))
     for i in eachindex(loops)
-        loops[i] =
-            loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+        loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
     end
     # Check that the midpoint of the loops is at (0,0,0)
     for i in eachindex(loops)
@@ -153,14 +162,14 @@ end
     @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
     @test network.label[(1 + end - nodeLoop):end] == loops[end].label
     network2 = DislocationNetwork(
-        links=zeros(Int64, 1, 2),
-        slipPlane=zeros(1, 3),
-        bVec=zeros(1, 3),
-        coord=zeros(1, 3),
-        label=zeros(nodeType, 1),
-        numNode=convert(Int64, 0),
-        numSeg=convert(Int64, 0),
-        maxConnect=convert(Int64,0)
+        links = zeros(Int64, 1, 2),
+        slipPlane = zeros(1, 3),
+        bVec = zeros(1, 3),
+        coord = zeros(1, 3),
+        label = zeros(nodeType, 1),
+        numNode = convert(Int64, 0),
+        numSeg = convert(Int64, 0),
+        maxConnect = convert(Int64, 0),
     )
     makeNetwork!(network2, loops)
     @test compStruct(network, network2)

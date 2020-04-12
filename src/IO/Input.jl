@@ -29,7 +29,7 @@ function loadDislocationLoop(
     slipPlane = slipSystem.slipPlane
     bVec = slipSystem.bVec
 
-    range = zeros(Float64, 2, 3)
+    range = zeros(2, 3)
     for i = 1:3
         range[:, i] = convert.(Int64, dict["range"][i])
     end
@@ -210,9 +210,9 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     maxConnect = convert.(Int64, dict["maxConnect"])
 
     links = zeros(Int64, lenLinks, 2)
-    slipPlane = zeros(Float64, lenLinks, 3)
-    bVec = zeros(Float64, lenLinks, 3)
-    coord = zeros(Float64, lenCoord, 3)
+    slipPlane = zeros(lenLinks, 3)
+    bVec = zeros(lenLinks, 3)
+    coord = zeros(lenCoord, 3)
     connectivity = zeros(Int64, lenLinks, 2 * maxConnect + 1)
     linksConnect = zeros(Int64, lenLinks, 2)
     segIdx = zeros(Int64, lenLinks, 3)
