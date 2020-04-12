@@ -17,5 +17,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/dcelisgarza/DDD.jl",
+    repo="github.com/dcelisgarza/DDD.jl.git",
 )
