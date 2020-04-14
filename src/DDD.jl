@@ -18,7 +18,7 @@ export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
 export DislocationLoop, DislocationNetwork
 # Dislocation functions.
 export makeNetwork, makeNetwork!, checkNetwork, loopDistribution, calcSelfForce
-export calcSegSegForce, calcParSegSegForce
+export calcSegSegForce, calcParSegSegForce, calcSegForce
 include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")

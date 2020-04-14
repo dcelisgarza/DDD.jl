@@ -73,8 +73,36 @@ scene1 = plotNodesMakie(
 
 self = calcSelfForce(dlnParams, matParams, network)
 @time calcSelfForce(dlnParams, matParams, network)
-par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+remo = calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @time calcSegSegForce(dlnParams, matParams, network; parallel = true)
+tot = calcSegForce(dlnParams, matParams, network; parallel = true)
+@time calcSegSegForce(dlnParams, matParams, network; parallel = true)
+
+
+idx = network.segIdx
+coord = network.coord
+bVec = network.bVec[idx[:, 1], :]
+node1 = coord[idx[:, 2], :]
+node2 = coord[idx[:, 3], :]
+
+
+
+test = [1 1 1; 2 2 2; 3 3 3]
+test2 = [1;2;3]
+test[1,:]
+test * test2
+
+test .* test2
+cross(vec(sum(test .* test2, dims=1)), test2)
+
+
+a = tot[1][:,:]
+b = tot[2][:,:]
+@btime 0.5*(a+b)
+@btime 0.5*(tot[1][:,:] + tot[2][:,:])
+@btime test = (tot[1][:,:], tot[2][:,:])
+@btime mean(test)
+@btime mean(tot[:])
 
 μ = matParams.μ
 ν = matParams.ν

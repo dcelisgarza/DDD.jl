@@ -3,18 +3,39 @@
 ```
 Calculate the Peach-Koehler force on segments.
 """
-function pkForce(
-    dlnFE::DislocationFEMCorrective,
+function calcPKForce(
     mesh::RegularCuboidMesh,
-    segments::AbstractArray{<:Float64, N} where {N},
-) end
+    dlnFEM::DislocationFEMCorrective,
+    network::DislocationNetwork,
+)
+    # Un normalised segment vectors.
+    numSeg = network.numSeg
+    idx = network.segIdx
+    coord = network.coord
+    bVec = network.bVec[idx[:, 1], :]
+    node1 = coord[idx[:, 2], :]
+    node2 = coord[idx[:, 3], :]
+    tVec = node2 - node1
+    midNode = 0.5 * (node1 + node2)
+    PKForce = zeros(numSeg, 3)
+
+    @simd for i = 1:numSeg
+        x0 = midNode[i, :]
+        b = bVec[i, :]
+        t = tVec[i, :]
+        σ_hat = calc_σ_hat(mesh, dlnFEM, x0)
+        PKForce[i, :] = (σ_hat * b) × t
+    end
+
+    return PKForce
+end
 
 """
 ```
 ```
 Calculate the reaction from a dislocation.
 """
-function hatStress(
+function calc_σ_hat(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
     x0::AbstractArray{<:Float64, N} where {N},
@@ -27,7 +48,7 @@ function hatStress(
     w = 1 / mesh.sizeElem[1]  # 1 / width
     h = 1 / mesh.sizeElem[2]  # 1 / height
     d = 1 / mesh.sizeElem[3]  # 1 / depth
-    sizeMesh = mesh.SizeMesh
+    sizeMesh = mesh.sizeMesh
     C = mesh.stiffTensor
     label = mesh.label
     coord = mesh.coord
@@ -39,13 +60,13 @@ function hatStress(
     z = x0[3]
 
     # Stress tensor.
-    # sigma[1,:] = σ_xx
-    # sigma[2,:] = σ_yy
-    # sigma[3,:] = σ_zz
-    # sigma[4,:] = σ_xy = σ_yx
-    # sigma[5,:] = σ_xz = σ_xz
-    # sigma[6,:] = σ_yz = σ_zy
-    sigma = zeros(6)
+    # σ[1,:] = σ_xx
+    # σ[2,:] = σ_yy
+    # σ[3,:] = σ_zz
+    # σ[4,:] = σ_xy = σ_yx
+    # σ[5,:] = σ_xz = σ_xz
+    # σ[6,:] = σ_yz = σ_zy
+    σ = zeros(6)
     B = zeros(6, 24)
     U = zeros(24)
 
@@ -111,5 +132,5 @@ function hatStress(
         U[idx - 0] = uHat[idx3 - 0]
     end
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
-    sigma = C * B * U
+    σ = C * B * U
 end

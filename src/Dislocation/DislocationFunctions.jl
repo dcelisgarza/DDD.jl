@@ -1,3 +1,22 @@
+function calcSegForce(
+    dlnParams::DislocationP,
+    matParams::MaterialP,
+    network::DislocationNetwork;
+    # mesh::RegularCuboidMesh,
+    # dlnFEM::DislocationFEMCorrective;
+    parallel::Bool = true,
+)
+
+    # pkForce = pkForce(mesh, dlnFEM, network)
+    selfForce = calcSelfForce(dlnParams, matParams, network)
+    segSegForce =
+        calcSegSegForce(dlnParams, matParams, network; parallel = parallel)
+
+    segForce = selfForce .+ segSegForce
+
+    return segForce
+end
+
 """
 ```
 function calcSelfForce(
@@ -140,23 +159,23 @@ At a high level this works by creating a local coordinate frame using the line d
     μ4πνaSq = aSq * μ4πν
 
     # Un normalised segment vectors.
-    numSegs = network.numSeg
+    numSeg = network.numSeg
     idx = network.segIdx
     coord = network.coord
     bVec = network.bVec[idx[:, 1], :]
     node1 = coord[idx[:, 2], :]
     node2 = coord[idx[:, 3], :]
-    SegSegForce = zeros(numSegs, 3, 2)
+    SegSegForce = zeros(numSeg, 3, 2)
 
     if parallel
         # Threadid parallelisation + parallelised reduction.
         # Uses a lot more memory but is faster than the other two.
-        TSegSegForce = zeros(Threads.nthreads(), numSegs, 3, 2)
-        @fastmath @inbounds Threads.@threads for i = 1:numSegs
+        TSegSegForce = zeros(Threads.nthreads(), numSeg, 3, 2)
+        @fastmath @inbounds Threads.@threads for i = 1:numSeg
             b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
             n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
             n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-            @simd for j = (i + 1):numSegs
+            @simd for j = (i + 1):numSeg
                 b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
                 n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
                 n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
@@ -186,11 +205,11 @@ At a high level this works by creating a local coordinate frame using the line d
 
         nthreads = Threads.nthreads()
         TSegSegForce2 =
-            [Threads.Atomic{Float64}(0.0) for i = 1:(numSegs * 3 * 2)]
-        TSegSegForce2 = reshape(TSegSegForce2, numSegs, 3, 2)
+            [Threads.Atomic{Float64}(0.0) for i = 1:(numSeg * 3 * 2)]
+        TSegSegForce2 = reshape(TSegSegForce2, numSeg, 3, 2)
         @fastmath @inbounds Threads.@threads for tid = 1:nthreads
-            start = 1 + ((tid - 1) * numSegs) ÷ nthreads
-            stop = (tid * numSegs) ÷ nthreads
+            start = 1 + ((tid - 1) * numSeg) ÷ nthreads
+            stop = (tid * numSeg) ÷ nthreads
             domain = start:stop
             Threads.atomic_add!.(
                 TSegSegForce2[start:stop, :, :],
@@ -201,11 +220,11 @@ At a high level this works by creating a local coordinate frame using the line d
         SegSegForce .= getproperty.(TSegSegForce2, :value)
     else
         # Serial execution.
-        @fastmath @inbounds for i = 1:numSegs
+        @fastmath @inbounds for i = 1:numSeg
             b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
             n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
             n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-            @simd for j = (i + 1):numSegs
+            @simd for j = (i + 1):numSeg
                 b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
                 n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
                 n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
@@ -233,18 +252,18 @@ At a high level this works by creating a local coordinate frame using the line d
     end
 
     ### Atomic add parallelisation, slow as heck on a single processor.
-    # TSegSegForce = [Threads.Atomic{Float64}(0.0) for i = 1:(numSegs * 3 * 2)]
-    # TSegSegForce = reshape(TSegSegForce, numSegs, 3, 2)
+    # TSegSegForce = [Threads.Atomic{Float64}(0.0) for i = 1:(numSeg * 3 * 2)]
+    # TSegSegForce = reshape(TSegSegForce, numSeg, 3, 2)
     # nthreads = Base.Threads.nthreads()
     # @fastmath @inbounds Threads.@threads for tid = 1:nthreads
-    #     start = 1 + ((tid - 1) * numSegs) ÷ nthreads
-    #     stop = (tid * numSegs) ÷ nthreads
+    #     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
+    #     stop = (tid * numSeg) ÷ nthreads
     #     domain = start:stop
     #     for i = start:stop
     #         b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
     #         n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
     #         n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-    #         for j = (i + 1):numSegs
+    #         for j = (i + 1):numSeg
     #             b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
     #             n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
     #             n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
@@ -272,7 +291,7 @@ At a high level this works by creating a local coordinate frame using the line d
     # end
     # SegSegForce = getproperty.(TSegSegForce, :value)
 
-    return SegSegForce
+    return SegSegForce[:, :, 1], SegSegForce[:, :, 2]
 end
 @inline function calcSegSegForce(
     aSq::T1,

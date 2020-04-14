@@ -11,7 +11,7 @@ Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If
     All coordinate vectors must be of equal length.
 [`shapeFunctionDeriv`](@ref) are the 1st order derivatives of the shape functions.
 """
-function shapeFunction(
+@inline function shapeFunction(
     shape::LinearQuadrangle3D,
     x::Float64,
     y::Float64,
@@ -39,7 +39,7 @@ function shapeFunction(
 
     return N
 end
-function shapeFunction(
+@inline function shapeFunction(
     shape::LinearQuadrangle3D,
     x::AbstractVector{<:Float64},
     y::AbstractVector{<:Float64},
@@ -89,7 +89,7 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
 !!! note
     All coordinate vectors must be of equal length.
 """
-function shapeFunctionDeriv(
+@inline function shapeFunctionDeriv(
     shape::LinearQuadrangle3D,
     x::Float64,
     y::Float64,
@@ -137,7 +137,7 @@ function shapeFunctionDeriv(
     return dNdS
 end
 
-function shapeFunctionDeriv(
+@inline function shapeFunctionDeriv(
     shape::LinearQuadrangle3D,
     x::AbstractVector{<:Float64},
     y::AbstractVector{<:Float64},
