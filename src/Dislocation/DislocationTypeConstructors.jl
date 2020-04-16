@@ -209,6 +209,7 @@ function makeNetwork(
         bVec = zeros(nodeBuffer, 3),
         coord = zeros(nodeBuffer, 3),
         label = zeros(nodeType, nodeBuffer),
+        segForce = zeros(Float64, nodeBuffer, 3),
         numNode = nodeTotal,
         numSeg = nodeTotal,
     )
@@ -425,7 +426,7 @@ function makeConnect!(network::DislocationNetwork)
     lenLinks = size(links, 1)
     connectivity = zeros(Int64, lenLinks, 1 + 2 * maxConnect)
     linksConnect = zeros(Int64, lenLinks, 2)
-    @inbounds for i in idx
+    @inbounds @simd for i in idx
         # links[idx, :] yields the nodes involved in the link
         n1 = links[i, 1] # Node 1, it is the row of the coord matrix
         n2 = links[i, 2] # Node 2

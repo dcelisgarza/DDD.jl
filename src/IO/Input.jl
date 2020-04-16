@@ -208,7 +208,6 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     lenLinks = length(dict["links"][1])
     lenCoord = length(dict["coord"][1])
     maxConnect = convert.(Int64, dict["maxConnect"])
-
     links = zeros(Int64, lenLinks, 2)
     slipPlane = zeros(lenLinks, 3)
     bVec = zeros(lenLinks, 3)
@@ -216,6 +215,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     connectivity = zeros(Int64, lenLinks, 2 * maxConnect + 1)
     linksConnect = zeros(Int64, lenLinks, 2)
     segIdx = zeros(Int64, lenLinks, 3)
+    segForce = zeros(lenLinks, 3)
 
     for i = 1:2
         links[:, i] = convert.(Int64, dict["links"][i])
@@ -226,7 +226,8 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
         bVec[:, i] = convert.(Float64, dict["bVec"][i])
         coord[:, i] = convert.(Float64, dict["coord"][i])
-        segIdx[:, i] = convert.(Float64, dict["segIdx"][i])
+        segIdx[:, i] = convert.(Int64, dict["segIdx"][i])
+        segForce[:, i] = convert.(Float64, dict["segForce"][i])
     end
 
     @inbounds @simd for i = 1:9
@@ -239,6 +240,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         bVec = bVec,
         coord = coord,
         label = nodeType.(dict["label"]),
+        segForce = segForce,
         numNode = convert.(Int64, dict["numNode"]),
         numSeg = convert.(Int64, dict["numSeg"]),
         maxConnect = maxConnect,

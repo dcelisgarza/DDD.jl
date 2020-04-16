@@ -69,6 +69,7 @@ zero(::Type{DislocationNetwork}) = DislocationNetwork(
     bVec = zeros(0, 3),
     coord = zeros(0, 3),
     label = zeros(nodeType, 0),
+    segForce = zeros(0, 3),
     numNode = convert(Int64, 0),
     numSeg = convert(Int64, 0),
     maxConnect = convert(Int64, 0),
@@ -79,5 +80,6 @@ function push!(network::DislocationNetwork, n::Int64)
     network.bVec = [network.bVec; zeros(n, 3)]
     network.coord = [network.coord; zeros(n, 3)]
     network.label = [network.label; zeros(nodeType, n)]
+    network.segForce = [network.segForce; zeros(n, 3)]
     return network
 end
