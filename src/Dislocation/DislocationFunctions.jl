@@ -169,37 +169,37 @@ At a high level this works by creating a local coordinate frame using the line d
 
     if parallel
         # Threadid parallelisation + parallelised reduction.
-        # Uses a lot more memory but is faster than the other two.
         TSegSegForce = zeros(Threads.nthreads(), numSeg, 3, 2)
-        @fastmath @inbounds Threads.@threads for i = 1:numSeg
-            b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
-            n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
-            n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-            @simd for j = (i + 1):numSeg
-                b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
-                n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
-                n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
+        @fastmath @inbounds @sync for i = 1:numSeg
+            Threads.@spawn begin
+                b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
+                n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
+                n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
+                @simd for j = (i + 1):numSeg
+                    b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
+                    n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
+                    n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
 
-                Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-                    aSq,
-                    μ4π,
-                    μ8π,
-                    μ8πaSq,
-                    μ4πν,
-                    μ4πνaSq,
-                    b1,
-                    n11,
-                    n12,
-                    b2,
-                    n21,
-                    n22,
-                )
+                    Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+                        aSq,
+                        μ4π,
+                        μ8π,
+                        μ8πaSq,
+                        μ4πν,
+                        μ4πνaSq,
+                        b1,
+                        n11,
+                        n12,
+                        b2,
+                        n21,
+                        n22,
+                    )
 
-                TSegSegForce[Threads.threadid(), i, :, 1] .+= Fnode1
-                TSegSegForce[Threads.threadid(), j, :, 1] .+= Fnode3
-                TSegSegForce[Threads.threadid(), i, :, 2] .+= Fnode2
-                TSegSegForce[Threads.threadid(), j, :, 2] .+= Fnode4
-
+                    TSegSegForce[Threads.threadid(), i, :, 1] .+= Fnode1
+                    TSegSegForce[Threads.threadid(), j, :, 1] .+= Fnode3
+                    TSegSegForce[Threads.threadid(), i, :, 2] .+= Fnode2
+                    TSegSegForce[Threads.threadid(), j, :, 2] .+= Fnode4
+                end
             end
         end
 
@@ -207,14 +207,21 @@ At a high level this works by creating a local coordinate frame using the line d
         TSegSegForce2 =
             [Threads.Atomic{Float64}(0.0) for i = 1:(numSeg * 3 * 2)]
         TSegSegForce2 = reshape(TSegSegForce2, numSeg, 3, 2)
-        @fastmath @inbounds Threads.@threads for tid = 1:nthreads
-            start = 1 + ((tid - 1) * numSeg) ÷ nthreads
-            stop = (tid * numSeg) ÷ nthreads
-            domain = start:stop
-            Threads.atomic_add!.(
-                TSegSegForce2[start:stop, :, :],
-                sum(TSegSegForce[:, start:stop, :, :], dims = 1)[1, :, :, :],
-            )
+        @fastmath @inbounds @sync for tid = 1:nthreads
+            Threads.@spawn begin
+                start = 1 + ((tid - 1) * numSeg) ÷ nthreads
+                stop = (tid * numSeg) ÷ nthreads
+                domain = start:stop
+                Threads.atomic_add!.(
+                    TSegSegForce2[start:stop, :, :],
+                    sum(TSegSegForce[:, start:stop, :, :], dims = 1)[
+                        1,
+                        :,
+                        :,
+                        :,
+                    ],
+                )
+            end
         end
         # This allows type inference and reduces memory allocation.
         SegSegForce .= getproperty.(TSegSegForce2, :value)

@@ -72,11 +72,17 @@ scene1 = plotNodesMakie(
 )
 
 self = calcSelfForce(dlnParams, matParams, network)
-@time calcSelfForce(dlnParams, matParams, network)
+@btime calcSelfForce(dlnParams, matParams, network)
 remo = calcSegSegForce(dlnParams, matParams, network; parallel = true)
-@time calcSegSegForce(dlnParams, matParams, network; parallel = true)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
 tot = calcSegForce(dlnParams, matParams, network; parallel = true)
-@time calcSegSegForce(dlnParams, matParams, network; parallel = true)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+
+par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+
+maximum.(par .- ser)
+minimum.(par .- ser)
 
 
 idx = network.segIdx
@@ -85,6 +91,9 @@ bVec = network.bVec[idx[:, 1], :]
 node1 = coord[idx[:, 2], :]
 node2 = coord[idx[:, 3], :]
 
+@btime tuple = (coord[idx[:, 2], :], coord[idx[:, 3], :])
+@btime mean((node1, node2))
+@btime 0.5*(node1+node2)
 
 
 test = [1 1 1; 2 2 2; 3 3 3]
