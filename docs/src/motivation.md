@@ -1,5 +1,4 @@
-# DDD.jl Documentation
-
+# Motivation
 `DDD.jl` was created with the aim to make 3D discrete dislocation dynamics research more tractable, transparent and productive.
 
 ## Objectives
@@ -53,36 +52,41 @@ Dislocation dynamics is notoriously impenetrable due to the wide range of techni
   - standardised IO (input-output)
   - plug and play
 
-## Likely candidates.
+## Possible Languages for Implementation
 Historically, two languages that have reigned supreme in the field of scientific computing `Fortran` and `C`, however with the advent of object-oriented programming, and interpreted languages that list has expanded. Here we offer some likely candidates to build our code. Some of which have been used in the past to create dislocation dynamics codes of different ilks.
 
 ### Fortran (f90+)
 #### Advantages
 It is performant, readable, modular, open-source, highly abstracted, natively parallelisable (compiler dependent), and safe through the use of `intent()` inside functions. Documentation for the language itself is available on the f90 standard practices site and there is a sizeable knowledge base found in StackExchange and the Intel Fortran forums.
+
 #### Disadvantages
 It lacks interactivity, metaprogramming (aside from preprocessor macros), and a proper internal standard library. BLAS and LAPACK are as close to a standard library as Fortran gets, but they have to be installed and linked to at compilation time. Furthermore, different compilers break portability, in some cases what is performant code in one compiler is bad code in another. It also has nothing in the way of native testing and documenting, but there are Python tools to do so.
 
 ### C
 #### Advantages
 It is performant, small, modular, open-source and compilers are highly standardised. There is no shortage of documentation for `C` all accross the internet.
+
 #### Disadvantages
-On top of lacking what `Fortran` also lacks, it has the added wrinkle of pointer arithmetic. Which is, famously, the cause of most `C` bugs. Some of which lead to obvious problems like segmentation faults and `NaN` values. Others are more quite a bit more insidious and opaque, such as pointer dereferencing and subtle function side effects. It also lends itself to memory leaks if the user does not manage memory properly, such bugs are hard to track, reproduce and often catastrophic because nobody notices memory leaks until they starts affecting other processes. Some very well-known bugs and exploits in commercial software such as Windows have been thanks to memory leaks, often going undiscovered for years and through multiple versions. `C` also doesn't offer anything in the way of abstraction other than structures.
+On top of lacking what `Fortran` also lacks, it has the added wrinkle of pointer arithmetic. Which is famously the cause of most `C` bugs. The best case scenario for such bugs lead to obvious problems like segmentation faults and `NaN` values. However, more insidious and opaque bugs are not uncommon in complex code, examples include pointer dereferencing, function side effects and memory leaks. Such bugs are hard to track, reproduce and at times catastrophic. Some very well-known bugs and exploits in commercial software such as Windows have been thanks to memory leaks and pointer dereferencing, often going undiscovered for years and through multiple versions. `C` also doesn't offer anything in the way of abstraction other than structures.
 
 ### C++
 #### Advantages
 It has an extensive standard library of optimised algorithms and data structures, all of which are excellently documented. It is open-source and its compilers are also highly standardised (though not as much as `C`). It also offers serious metaprogramming capabilities, and can be made to be very performant *if used correctly*, sometimes more so than a naïve C implementation. There are extensive knowledge bases of C++ but the problem is often in deciphering how one may adapt the posted solution to their specific situation.
+
 #### Disadvantages
 It is *extremely* is verbose, very difficult to learn and use correctly, opaque and unintuitive (`new` v.s. `malloc()`, `del` vs `free()`, namespaces). It mitigates some of the problems of C at the cost of runtime performance and added program complexity. It also tends to make debugging user defined code more difficult because one has to trawl through verbose, complicated syntax. It also requires external libraries to be installed and linked to during compilation.
 
 ### Python
 #### Advantages
 The golden child of interpreted languages is readable, easy to use, open-source, standardised, portable and interactive. It also has an even more extensive standard library than `C++`. Its vibrant package ecosystem ensures there are packages for every need and frees the user from worrying about external dependencies because they are taken care of by the package installer either automatically or by printing the command required to install the dependency. It has native documentation, testing and benchmarking capabilities. The language has an extremely high level of abstraction and is rapidly evolving, improving and expanding. Package documentation tends to be the gold standard for documentation across all languages by virtue of the sheer number of users and contributors. There is also an extensive knowledge base throughout the internet where solutions to problems have most likely already been posted about and found, if not, one can make a post and have their question answered rather quickly.
+
 #### Disadvantages
 It is not performant without serious modification like using `Cython` or by standard-breaking practices to use the JIT (just in time compiler) offered by `numba`. Packages such as `numpy` and `scipy` help in this regard, but more often than not, the number crunching is done via calls to `C`, `CUDA` and `Fortran` routines through wrappers or direct external calls. Python can also get somewhat verbose, particularly when using a few packages where namespaces must be distinguished by aliases. Standalone executables are much larger than they would be in other languages.
 
 ### Matlab
 #### Advantages
 Is readable, easy to use, standardised and interactive. It has native testing, documentation and benchmarking capabilities. The documentation for in-built functions is excellent. It offers limited object oriented capabilities, usually more than enough.
+
 #### Disadvantages
 It is closed-source and proprietary. Worse, many of the toolboxes and specialised features are not standard and require additional purchase. Furthermore, the knowledge base for specific questions is limited to the Mathworks forums where only people with Mathworks accounts may post. Increasingly, `Matlab` offers less and less in comparison to `Python`. Pretty much all of the performance issues are shared by both languages, but `Python` is free, open-source and has a massive community developing packages and adding functionality.
 
@@ -99,6 +103,7 @@ Furthermore, `Julia` can be used as both, a statically typed or dynamically type
 Another aspect that `Julia` offers that none of the others do is the ability to look at the different stages of compilation. This lets developers and users identify areas where the code might suffer a runtime bottleneck before even running it. There are also extensive profiling, debugging and benchmarking tools that provide timing and memory allocation information. Out of the languages mentioned, `Julia` is the easiest to write performant code in.
 
 If this weren't enough, there is also native support for CPU and GPU parallelisation both local and distributed, as well as the ability to call external languages with a single interface. Its metaprogramming capabilities are on par with `C++` but much more concise and less impactful on compilation time.
+
 #### Disadvantages
 Multiple dispatch can be abused by new users and may negatively impact performance. Precompilation time for packages and the "time to first plot" can be relatively long.
 
