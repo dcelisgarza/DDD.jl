@@ -3,7 +3,7 @@ using DDD
 cd(@__DIR__)
 
 function plotNodesMakie(network::DislocationNetwork, args...; kw...)
-    idx = findall(x -> x != -1, network.label)
+    idx = findall(x -> x != 0, network.label)
     coord = network.coord
     fig = Scene()
     meshscatter!(coord, args...; kw...)
@@ -39,7 +39,7 @@ pentagon = DislocationLoop(
     loopType = loopPrism(),
     numSides = 5,
     nodeSide = 1,
-    numLoops = 10,
+    numLoops = 1,
     segLen = 10 * ones(5),
     slipSystem = 3,
     _slipPlane = slipSystems.slipPlane[3, :],
@@ -50,7 +50,19 @@ pentagon = DislocationLoop(
     dist = Rand(),
 )
 
-makeNetwork!(network, pentagon)
+network = makeNetwork(pentagon; memBuffer = 1)
+
+links[i, :],
+slipPlane[i, :],
+bVec[i, :],
+coord[i, :],
+label[i, :],
+nodeForce[i, :],
+nodeVel[i, :],
+connectivity[i, :],
+linksConnect[i, :],
+segIdx[i, :] = network[1]
+
 
 using Makie
 

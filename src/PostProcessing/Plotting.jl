@@ -1,5 +1,5 @@
 function plotNodes(network::DislocationNetwork, args...; kw...)
-    idx = idxLabel(network, -1; condition = !=)
+    idx = findall(x -> x != -1, network.label)
     coord = network.coord
     fig = plot()
     for i in idx
@@ -22,7 +22,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
 end
 
 function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
-    idx = idxLabel(network, -1; condition = !=)
+    idx = findall(x -> x != -1, network.label)
     coord = network.coord
     for i in idx
         n1 = network.links[i, 1]
@@ -90,7 +90,7 @@ end
 
 #=
 function plotNodesMakie(network::DislocationNetwork, args...; kw...)
-    idx = idxLabel(network, -1; condition = !=)
+    idx = findall(x -> x != -1, loop.label)
     coord = network.coord
     fig = Scene()
     meshscatter!(coord, args...; kw...)
@@ -109,7 +109,7 @@ function plotNodesMakie(network::DislocationNetwork, args...; kw...)
 end
 
 function plotNodesMakie!(fig, network::DislocationNetwork, args...; kw...)
-    idx = idxLabel(network, -1; condition = !=)
+    idx = findall(x -> x != 0, loop.label)
     coord = network.coord
     meshscatter!(coord, args...; kw...)
     for i in idx

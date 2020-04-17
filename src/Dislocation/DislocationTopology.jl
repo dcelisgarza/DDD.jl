@@ -1,4 +1,34 @@
 """
+Replaces node id with the last valid node. Cleans up links and
+"""
+function removeNode(network::DislocationNetwork, id::Int64)
+    links = network.links
+    slipPlane = network.slipPlane
+    bVec = network.bVec
+    coord = network.coord
+    label = network.label
+    nodeForce = network.nodeForce
+    connectivity = network.connectivity
+
+    firstUndef = findfirst(x -> x == -1, label)
+    if firstUndef == nothing
+        # @warn "Need to allocate memory. Needs to be implemented."
+    elseif id < firstUndef - 1
+        linksID,
+        slipPlaneID,
+        bVecID,
+        coordID,
+        labelID,
+        nodeForceID,
+        nodeVelID,
+        connectivityID,
+        linksConnectID,
+        segIdxID = network[id]
+    else
+    end
+end
+
+"""
 Merges and cleans up the information in `network.connectivity` and `network.links` for the nodes that will be merged. This is such that there are no repeated entries, self-links or double links.
 """
 function mergeNode(
@@ -29,17 +59,14 @@ function mergeNode(
 
     # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.
     @inbounds @simd for i = 1:nodeGoneConnect
-        connect1 = connectivity[nodeGone, 2*i]
-        connect2 = connectivity[nodeGone, 2*i+1]
+        connect1 = connectivity[nodeGone, 2 * i]
+        connect2 = connectivity[nodeGone, 2 * i + 1]
         links[connect1, connect2] = nodeKept
         linksConnect[connect1, connect2] = nodeKeptConnect + i
     end
 
-    # Remove from connectivity.
-    connectivity[nodeGone, 1:2*nodeGoneConnect + 1] .= 0
     removeNode(network, nodeGone)
     # mergenode27
-
 
 end
 
@@ -59,7 +86,7 @@ function coarsenMesh(
     tiny = eps(Float64)
 
     label = network.label
-    idx = findall(x -> x == 0, label)
+    idx = findall(x -> x == 1, label)
     links = network.links
     connectivity = network.links
     linksConnect = network.linksConnect

@@ -2,12 +2,12 @@
 Dislocation nodes have labels that change how they are treated by the simulation. There are only given types of nodes so these labels may only take on predefined values and error for anything else.
 ```
 @enum nodeType begin
-    undef = -1  # Undefined node, value at initialisation.
-    intMob = 0  # Internal mobile node.
-    intFix = 1  # Internal fixed node.
-    srfMob = 2  # Mobile surface node.
-    srfFix = 3  # Fixed surface node.
-    ext = 4     # External node.
+    undef = 0  # Undefined node, value at initialisation.
+    intMob = 1  # Internal mobile node.
+    intFix = 2  # Internal fixed node.
+    srfMob = 3  # Mobile surface node.
+    srfFix = 4  # Fixed surface node.
+    ext = 5     # External node.
 end
 ```
 """
