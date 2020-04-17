@@ -1,10 +1,54 @@
-function mergeNode end
+"""
+Merges and cleans up the information in `network.connectivity` and `network.links` for the nodes that will be merged. This is such that there are no repeated entries, self-links or double links.
+"""
+function mergeNode(
+    network::DislocationNetwork,
+    nodeKept::Int64,
+    nodeGone::Int64,
+)
+
+    # Return if both nodes to be merged are the same.
+    @assert nodeKept != nodeGone throw(ArgumentError("mergeNode: nodeKept = nodeGone = $nodeKept. Cannot merge a node with itself"))
+
+    links = network.links
+    coord = network.coord
+    nodeForce = network.nodeForce
+    connectivity = network.connectivity
+    linksConnect = network.linksConnect
+
+    nodeKeptConnect = connectivity[nodeKept, 1]
+    nodeGoneConnect = connectivity[nodeGone, 1]
+    totalConnect = nodeKeptConnect + nodeGoneConnect
+
+    # Pass connections from nodeGone to nodeKept.
+    connectivity[
+        nodeKept,
+        (2 * (nodeKeptConnect + 1)):(2 * (nodeGoneConnect + 1)),
+    ] = connectivity[nodeGone, 2:(2 * nodeGoneConnect + 1)]
+    connectivity[nodeKeptConnect, 1] = totalConnect
+
+    # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.
+    @inbounds @simd for i = 1:nodeGoneConnect
+        connect1 = connectivity[nodeGone, 2*i]
+        connect2 = connectivity[nodeGone, 2*i+1]
+        links[connect1, connect2] = nodeKept
+        linksConnect[connect1, connect2] = nodeKeptConnect + i
+    end
+
+    # Remove from connectivity.
+    connectivity[nodeGone, 1:2*nodeGoneConnect + 1] .= 0
+    removeNode(network, nodeGone)
+    # mergenode27
+
+
+end
+
 function splitNode end
 
 function coarsenMesh(
     dlnParams::DislocationP,
     matParams::MaterialP,
-    network::DislocationNetwork;
+    network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
@@ -80,6 +124,8 @@ function coarsenMesh(
         # Coarsen if the area is less than the minimum allowed area and the area is shrinking. Or if the length of link 1 or link 2 less than the minimum area. Else do continue to the next iteration.
         areaSq < minArea && dareaSqdt < 0 || r1 < minSegLen || r2 < minSegLen ?
         nothing : continue
+
+        # remesh 60
     end
 
 end
@@ -87,7 +133,7 @@ end
 function refineMesh(
     dlnParams::DislocationP,
     matParams::MaterialP,
-    network::DislocationNetwork;
+    network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
@@ -98,7 +144,7 @@ end
 function remeshNetwork(
     dlnParams::DislocationP,
     matParams::MaterialP,
-    network::DislocationNetwork;
+    network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
@@ -107,7 +153,7 @@ function remeshNetwork(
 function remeshInternal(
     dlnParams::DislocationP,
     matParams::MaterialP,
-    network::DislocationNetwork;
+    network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
@@ -118,7 +164,7 @@ end
 function remeshSurface(
     dlnParams::DislocationP,
     matParams::MaterialP,
-    network::DislocationNetwork;
+    network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
