@@ -10,7 +10,7 @@ function removeNode(network::DislocationNetwork, id::Int64)
     nodeForce = network.nodeForce
     connectivity = network.connectivity
 
-    firstUndef = findfirst(x -> x == -1, label)
+    firstUndef = findfirst(x -> x == 0, label)
     if firstUndef == nothing
         # @warn "Need to allocate memory. Needs to be implemented."
     elseif id < firstUndef - 1
@@ -108,7 +108,7 @@ function coarsenMesh(
         link2_nodeNotInLink = links[i, posNotInLink2] # Node i is connected to this node as part of link 2.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source.
-        label[link1_nodeNotInLink] == 1 && label[link2_nodeNotInLink] == 1 ?
+        label[link1_nodeNotInLink] == 2 && label[link2_nodeNotInLink] == 2 ?
         continue : nothing
 
         # Coordinate of node i

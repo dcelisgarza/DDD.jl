@@ -217,7 +217,7 @@ function makeNetwork(
     network.maxConnect = maxConnect
 
     nodeTotal = 0
-    initIdx = findfirst(x -> x == -1, network.label)
+    initIdx = findfirst(x -> x == 0, network.label)
     initIdx == nothing ? initIdx = 0 : nothing
     @inbounds for i in eachindex(sources)
         # Indices.
@@ -292,7 +292,7 @@ function makeNetwork!(
     @inbounds for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
-    available = findfirst(x -> x == -1, network.label)
+    available = findfirst(x -> x == 0, network.label)
     if available == nothing
         push!(network, nodeTotal)
     else
@@ -301,7 +301,7 @@ function makeNetwork!(
     end
 
     nodeTotal = 0
-    initIdx = findfirst(x -> x == -1, network.label)
+    initIdx = findfirst(x -> x == 0, network.label)
     initIdx == nothing ? initIdx = 0 : nothing
     @inbounds for i in eachindex(sources)
         # Indices.
@@ -468,7 +468,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
 """
 function checkNetwork(network::DislocationNetwork)
     label = network.label
-    idx = findall(x -> x != -1, label)
+    idx = findall(x -> x != 0, label)
     links = network.links
     connectivity = network.connectivity
     linksConnect = network.linksConnect
@@ -557,7 +557,7 @@ function getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
     segIdx = zeros(Int64, size(links, 1), 3)
-    idx = findall(x -> x != -1, label)
+    idx = findall(x -> x != 0, label)
     numSeg::Integer = 0
     for i in idx
         n1 = links[i, 1]

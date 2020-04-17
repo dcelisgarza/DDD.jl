@@ -51,7 +51,7 @@ end
     [bVec[i, :] = [i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
     [slipPlane[i, :] = -[i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
     lenLabel = length(label)
-    [label[i + 1] = mod(i, 6) - 1 for i = 0:(lenLabel - 1)]
+    [label[i + 1] = mod(i, 6) for i = 0:(lenLabel - 1)]
     [
         coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel])
         for i = 1:length(label)
@@ -68,14 +68,14 @@ end
         numSeg = convert(Int64, numSeg),
         maxConnect = convert(Int64, 0),
     )
-    @test isequal(network.label[1], -1)
-    @test isequal(-1, network.label[1])
-    @test -1 == network.label[1]
+    @test isequal(network.label[1], 0)
+    @test isequal(0, network.label[1])
+    @test 0 == network.label[1]
     @test -2.0 < network.label[1]
     rnd = rand(-1:numNode)
     @test idxLabel(network, rnd) == findall(x -> x == rnd, label)
     @test coordLbl(network, rnd) == coord[findall(x -> x == rnd, label), :]
-    @test idxCond(network, :label, inclusiveComparison, 0, 1) == [2; 3; 8; 9]
+    @test idxCond(network, :label, inclusiveComparison, 0, 1) == [1; 2; 7; 8]
     @test idxCond(network, :label, rnd; condition = <=) ==
           findall(x -> x <= rnd, label)
     rnd = rand(1:numSeg)
@@ -206,7 +206,7 @@ end
 @testset "Overloaded type functions" begin
     var = segEdge()
     @test length(var) == 1
-    @test zero(nodeType) == -1
+    @test zero(nodeType) == 0
     loop = zero(DislocationLoop)
     @test length(loop) == 1
     @test loop[1] == loop

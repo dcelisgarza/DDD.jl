@@ -12,12 +12,12 @@ end
 ```
 """
 @enum nodeType begin
-    none = -1
-    intMob = 0
-    intFix = 1
-    srfMob = 2
-    srfFix = 3
-    ext = 4
+    none = 0
+    intMob = 1
+    intFix = 2
+    srfMob = 3
+    srfFix = 4
+    ext = 5
 end
 """
 There are different types of segments. Edge segments are orthogonal to the Burgers vector; screw segments are parallel to the Burgers vector; mixed segments are anything in between. Segment type can be easily inferred during runtime. These are mainly used for multiple dispatch purposes.
