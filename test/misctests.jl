@@ -44,34 +44,38 @@ pentagon = DislocationLoop(
     slipSystem = 3,
     _slipPlane = slipSystems.slipPlane[3, :],
     _bVec = slipSystems.bVec[3, :],
-    label = nodeType[0; 0; 0; 0; 0],
+    label = nodeType[1; 2; 1; 2; 1],
     buffer = 0.0,
     range = Float64[-100 -100 -100; 100 100 100],
     dist = Rand(),
 )
 
-network = makeNetwork(pentagon; memBuffer = 1)
 
-links[i, :],
-slipPlane[i, :],
-bVec[i, :],
-coord[i, :],
-label[i, :],
-nodeForce[i, :],
-nodeVel[i, :],
-connectivity[i, :],
-linksConnect[i, :],
-segIdx[i, :] = network[1]
 
+network1 = makeNetwork(pentagon; memBuffer = 1)
+network2 = makeNetwork(pentagon; memBuffer = 1)
+
+removeNode!(network2, 5)
+fig = plotNodes(network2)
+plotNodes!(fig, network1)
 
 using Makie
 
 fig = plotNodes(
-    network,
+    network2,
     m = 1,
     l = 3,
     linecolor = :black,
     markercolor = :black,
+    legend = false,
+)
+
+plotNodes!(fig,
+    network1,
+    m = 1,
+    l = 3,
+    linecolor = :red,
+    markercolor = :red,
     legend = false,
 )
 

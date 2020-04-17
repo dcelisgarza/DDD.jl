@@ -209,7 +209,7 @@ function makeNetwork(
         bVec = zeros(nodeBuffer, 3),
         coord = zeros(nodeBuffer, 3),
         label = zeros(nodeType, nodeBuffer),
-        nodeForce = zeros(Float64, nodeBuffer, 3),
+        segForce = zeros(Float64, nodeBuffer, 3),
         nodeVel = zeros(Float64, nodeBuffer, 3),
         numNode = nodeTotal,
         numSeg = nodeTotal,

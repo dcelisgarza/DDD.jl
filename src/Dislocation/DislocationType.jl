@@ -2,7 +2,7 @@
 Dislocation nodes have labels that change how they are treated by the simulation. There are only given types of nodes so these labels may only take on predefined values and error for anything else.
 ```
 @enum nodeType begin
-    undef = 0  # Undefined node, value at initialisation.
+    none = 0  # Undefined node, value at initialisation.
     intMob = 1  # Internal mobile node.
     intFix = 2  # Internal fixed node.
     srfMob = 3  # Mobile surface node.
@@ -358,7 +358,7 @@ DislocationNetwork{
     bVec::T2
     coord::T2
     label::T3
-    nodeForce::T2
+    segForce::T2
     nodeVel::T2
     numNode::T4 = 0     # Total number of nodes in network.
     numSeg::T4 = 0      # Total number of segs in network.
@@ -380,7 +380,7 @@ mutable struct DislocationNetwork{
     bVec::T2
     coord::T2
     label::T3
-    nodeForce::T2
+    segForce::T2
     nodeVel::T2
     numNode::T4
     numSeg::T4
@@ -395,7 +395,7 @@ mutable struct DislocationNetwork{
         bVec,
         coord,
         label,
-        nodeForce,
+        segForce,
         nodeVel,
         numNode = 0,
         numSeg = 0,
@@ -413,7 +413,7 @@ mutable struct DislocationNetwork{
             bVec,
             coord,
             label,
-            nodeForce,
+            segForce,
             nodeVel,
             numNode,
             numSeg,

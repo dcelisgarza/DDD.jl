@@ -1,37 +1,44 @@
 """
 Replaces node id with the last valid node. Cleans up links and
 """
-function removeNode(network::DislocationNetwork, id::Int64)
+function removeNode!(network::DislocationNetwork, i::Integer)
     links = network.links
-    slipPlane = network.slipPlane
-    bVec = network.bVec
     coord = network.coord
     label = network.label
-    nodeForce = network.nodeForce
+    nodeVel = network.nodeVel
     connectivity = network.connectivity
 
+    # Find the first uninitiated node.
     firstUndef = findfirst(x -> x == 0, label)
-    if firstUndef == nothing
-        # @warn "Need to allocate memory. Needs to be implemented."
-    elseif id < firstUndef - 1
-        linksID,
-        slipPlaneID,
-        bVecID,
-        coordID,
-        labelID,
-        nodeForceID,
-        nodeVelID,
-        connectivityID,
-        linksConnectID,
-        segIdxID = network[id]
-    else
+    # If there are no undefined nodes the index of the last valid entry is the length of label. If there are undefinied nodes it is the node before the first undefined node.
+    firstUndef == nothing ? lastEntry = length(label) :
+    lastEntry = firstUndef - 1
+
+    if i < lastEntry
+        coord[i, :] .= coord[lastEntry, :]
+        label[i, :] .= label[lastEntry]
+        nodeVel[i, :] .= nodeVel[lastEntry, :]
+        connectivity[i, :] .= connectivity[lastEntry, :]
+        # Change the link
+        @inbounds @simd for j = 1:connectivity[i, 1]
+            links[connectivity[i, 2 * j], connectivity[i, 2 * j + 1]] = i
+        end
     end
+
+    # Remove node from network.
+    coord[lastEntry, :] .= 0
+    label[lastEntry, :] .= 0
+    nodeVel[lastEntry, :] .= 0
+    connectivity[lastEntry, :] .= 0
+    network.numNode -= 1
+
+    return network
 end
 
 """
 Merges and cleans up the information in `network.connectivity` and `network.links` for the nodes that will be merged. This is such that there are no repeated entries, self-links or double links.
 """
-function mergeNode(
+function mergeNode!(
     network::DislocationNetwork,
     nodeKept::Int64,
     nodeGone::Int64,
@@ -42,7 +49,7 @@ function mergeNode(
 
     links = network.links
     coord = network.coord
-    nodeForce = network.nodeForce
+    segForce = network.segForce
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
@@ -65,7 +72,7 @@ function mergeNode(
         linksConnect[connect1, connect2] = nodeKeptConnect + i
     end
 
-    removeNode(network, nodeGone)
+    removeNode!(network, nodeGone)
     # mergenode27
 
 end
@@ -90,7 +97,7 @@ function coarsenMesh(
     links = network.links
     connectivity = network.links
     linksConnect = network.linksConnect
-    nodeForce = network.nodeForce
+    segForce = network.segForce
     nodeVel = network.nodeVel
 
     @inbounds for i in idx
