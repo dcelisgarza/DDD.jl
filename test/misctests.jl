@@ -2,6 +2,24 @@ using Revise, BenchmarkTools
 using DDD
 cd(@__DIR__)
 
+
+function myFunc!(a, b)
+    check = rand(1:10, 10)
+    for i in 1:10
+        check[i] < 5 ? nothing : continue
+        i -= 1
+        println(check[i+1], " ", i)
+    end
+    return a, b
+end
+
+a = 0
+b = 0
+a, b = myFunc!(a, b)
+
+a
+b
+
 function plotNodesMakie(network::DislocationNetwork, args...; kw...)
     idx = findall(x -> x != 0, network.label)
     coord = network.coord

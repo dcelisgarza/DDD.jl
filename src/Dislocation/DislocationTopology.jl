@@ -1,51 +1,50 @@
 """
 Replaces node id with the last valid node. Cleans up links and
 """
-function removeNode!(network::DislocationNetwork, i::Integer)
+function removeNode!(network::DislocationNetwork, nodeKept::Integer, nodeGone::Integer)
     links = network.links
     coord = network.coord
     label = network.label
     nodeVel = network.nodeVel
     connectivity = network.connectivity
 
-    # Find the first uninitiated node.
+    # Find the first undefined node.
+    # If there are no undefined nodes, the index of the last defined node is the length of label, else the last defined node is one before the first undefined one.
     firstUndef = findfirst(x -> x == 0, label)
-    # If there are no undefined nodes the index of the last valid entry is the length of label. If there are undefinied nodes it is the node before the first undefined node.
-    firstUndef == nothing ? lastEntry = length(label) :
-    lastEntry = firstUndef - 1
+    firstUndef == nothing ? lastNode = length(label) : lastNode = firstUndef - 1
 
-    if i < lastEntry
-        coord[i, :] .= coord[lastEntry, :]
-        label[i, :] .= label[lastEntry]
-        nodeVel[i, :] .= nodeVel[lastEntry, :]
-        connectivity[i, :] .= connectivity[lastEntry, :]
+    # The node that is gone is replaced by the last node.
+    if nodeGone < lastNode
+        coord[nodeGone, :] .= coord[lastNode, :]
+        label[nodeGone] .= label[lastNode]
+        nodeVel[nodeGone, :] .= nodeVel[lastNode, :]
+        connectivity[nodeGone, :] .= connectivity[lastNode, :]
         # Change the link
-        @inbounds @simd for j = 1:connectivity[i, 1]
-            links[connectivity[i, 2 * j], connectivity[i, 2 * j + 1]] = i
+        for j in 1:connectivity[nodeGone, 1]
+            links[connectivity[nodeGone, 2 * j], connectivity[nodeGone, 2 * j + 1]] = nodeGone
         end
     end
 
-    # Remove node from network.
-    coord[lastEntry, :] .= 0
-    label[lastEntry, :] .= 0
-    nodeVel[lastEntry, :] .= 0
-    connectivity[lastEntry, :] .= 0
+    # Zero out the last node.
+    coord[lastNode, :] .= 0
+    label[lastNode] = 0
+    nodeVel[lastNode, :] .= 0
+    connectivity[lastNode, :] .= 0
     network.numNode -= 1
 
-    return network
+    # If the remaining node was the last node, change its index to the removed node.
+    nodeKept == lastNode ? nodeKept = nodeGone : nothing
+
+    return network, nodeKept
 end
 
 """
 Merges and cleans up the information in `network.connectivity` and `network.links` for the nodes that will be merged. This is such that there are no repeated entries, self-links or double links.
 """
-function mergeNode!(
-    network::DislocationNetwork,
-    nodeKept::Int64,
-    nodeGone::Int64,
-)
+function mergeNode!(network::DislocationNetwork, nodeKept::Int64, nodeGone::Int64)
 
     # Return if both nodes to be merged are the same.
-    @assert nodeKept != nodeGone throw(ArgumentError("mergeNode: nodeKept = nodeGone = $nodeKept. Cannot merge a node with itself"))
+    nodeKept == nodeGone && return
 
     links = network.links
     coord = network.coord
@@ -58,23 +57,36 @@ function mergeNode!(
     totalConnect = nodeKeptConnect + nodeGoneConnect
 
     # Pass connections from nodeGone to nodeKept.
-    connectivity[
-        nodeKept,
-        (2 * (nodeKeptConnect + 1)):(2 * (nodeGoneConnect + 1)),
-    ] = connectivity[nodeGone, 2:(2 * nodeGoneConnect + 1)]
+    connectivity[nodeKept, (2 * (nodeKeptConnect + 1)):(2 * (nodeGoneConnect + 1))] =
+        connectivity[nodeGone, 2:(2 * nodeGoneConnect + 1)]
     connectivity[nodeKeptConnect, 1] = totalConnect
 
     # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.
-    @inbounds @simd for i = 1:nodeGoneConnect
-        connect1 = connectivity[nodeGone, 2 * i]
-        connect2 = connectivity[nodeGone, 2 * i + 1]
-        links[connect1, connect2] = nodeKept
-        linksConnect[connect1, connect2] = nodeKeptConnect + i
+    for i in 1:nodeGoneConnect
+        link = connectivity[nodeGone, 2 * i]        # Link id for nodeGone
+        colLink = connectivity[nodeGone, 2 * i + 1] # Position of links where link appears.
+        links[link, colLink] = nodeKept             # Replace nodeGone with nodeKept.
+        linksConnect[link, colLink] = nodeKeptConnect + i # Increase connectivity of nodeKept.
     end
 
-    removeNode!(network, nodeGone)
-    # mergenode27
+    # Remove node and update nodeKept.
+    network, nodeKept = removeNode!(network, nodeGone)
 
+    # Delete self links of nodeKept.
+    for i in 1:nodeKeptConnect - 1
+        link = connectivity[nodeKept, 2 * i]        # Link id for nodeKept
+        colLink = connectivity[nodeKept, 2 * i + 1] # Position of links where link appears.
+        colNotLink = 3 - colLink # The column of the other node in the position of link in links.
+        nodeNotLink = links[link, colNotLink]       # Other node in the link.
+
+        nodeKept == nodeNotLink ? removeLink!(network, link) : continue
+        i -= 1
+    end
+    # mergenodes 46
+
+end
+
+function removeLink!(network::DislocationNetwork, link::Integer)
 end
 
 function splitNode end
@@ -100,23 +112,22 @@ function coarsenMesh(
     segForce = network.segForce
     nodeVel = network.nodeVel
 
-    @inbounds for i in idx
+    for i in idx
         connectivity[i, 1] != 2 ? continue : nothing
         link1 = connectivity[i, 2]  # Node i in link 1
         link2 = connectivity[i, 4]  # Node i in link 2
 
-        posInLink1 = connectivity[i, 3] # Position of node i in link 1
-        posInLink2 = connectivity[i, 5] # Position of node i in link 2
+        colInLink1 = connectivity[i, 3] # Column of node i in link 1
+        colInLink2 = connectivity[i, 5] # Column of node i in link 2
 
-        posNotInLink1 = 3 - posInLink1 # Node i is connected via link 1 to the node that is in this column in links.
-        posNotInLink2 = 3 - posInLink2 # Node i is connected via link 2 to the node that is in this column in links.
+        colNotInLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
+        colNotInLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
 
-        link1_nodeNotInLink = links[i, posNotInLink1] # Node i is connected to this node as part of link 1.
-        link2_nodeNotInLink = links[i, posNotInLink2] # Node i is connected to this node as part of link 2.
+        link1_nodeNotInLink = links[i, colNotInLink1] # Node i is connected to this node as part of link 1.
+        link2_nodeNotInLink = links[i, colNotInLink2] # Node i is connected to this node as part of link 2.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source.
-        label[link1_nodeNotInLink] == 2 && label[link2_nodeNotInLink] == 2 ?
-        continue : nothing
+        label[link1_nodeNotInLink] == 2 && label[link2_nodeNotInLink] == 2 ? continue : nothing
 
         # Coordinate of node i
         iCoord = coord[i, :]
@@ -156,8 +167,7 @@ function coarsenMesh(
         dareaSqdt += r0 * (r0 - r1) * (r0 - r2) * (dr0dt - dr3dt)
 
         # Coarsen if the area is less than the minimum allowed area and the area is shrinking. Or if the length of link 1 or link 2 less than the minimum area. Else do continue to the next iteration.
-        areaSq < minArea && dareaSqdt < 0 || r1 < minSegLen || r2 < minSegLen ?
-        nothing : continue
+        areaSq < minArea && dareaSqdt < 0 || r1 < minSegLen || r2 < minSegLen ? nothing : continue
 
         # remesh 60
     end
