@@ -4,7 +4,7 @@ makeInstanceDict(valType::DataType)
 ```
 Make a dictionary of enumerated variable instances. Helps in translating JSON files.
 """
-function makeInstanceDict(valType::DataType)
+@inline function makeInstanceDict(valType::DataType)
     insts = instances(valType)
     dict = Dict{String, valType}()
     for inst in insts
@@ -23,11 +23,7 @@ translateEnum(
 ```
 Translates the string name of enumerated types to the actual Julia type.
 """
-function translateEnum(
-    valType::DataType,
-    dict::Dict{T1, T2},
-    key::T3,
-) where {T1, T2, T3}
+@inline function translateEnum(valType::DataType, dict::Dict{T1, T2}, key::T3) where {T1, T2, T3}
     instanceDict = makeInstanceDict(valType)
     for i in eachindex(dict[key])
         dict[key][i] = instanceDict[dict[key][i]]
@@ -37,7 +33,7 @@ end
 
 """
 ```
-subTypeTree(t, level = 1, dict = Dict(); cutoff = 0)
+subTypeTree(t; dict = Dict(), level = 1, cutoff = 0)
 ```
 Create subtype dictionary. . Adapted from https://github.com/JuliaLang/julia/issues/24741
 """
@@ -51,7 +47,7 @@ end
 
 """
 ```
-function makeTypeDict(valType::DataType)
+makeTypeDict(valType::DataType)
 ```
 Inputs contain strings that correspond to DDD data types. This function atuomatically creates a dictionary for all concrete subtypes of a given `valType`.
 
@@ -69,7 +65,7 @@ Dict{String,Any} with 4 entries:
   "MyStruct2()"     => MyStruct2()
 ```
 """
-function makeTypeDict(valType::DataType; cutoff = 1)
+@inline function makeTypeDict(valType::DataType; cutoff = 1)
     primitive = subTypeTree(valType; cutoff = cutoff)
     dict = Dict{String, Any}()
     for (key, val) in primitive
@@ -86,7 +82,7 @@ end
 
 """
 ```
-inclusiveComparison(data, args...)
+inclusiveComparison(data, args...)::Bool
 ```
 Compare data to a tuple, return `true` if it is equal to any arg, `false` if it is not equal to any.
 
@@ -99,7 +95,7 @@ julia> inclusiveComparison(23.246, 1.5, 4, 5, "f")
 false
 ```
 """
-function inclusiveComparison(data, args...)::Bool
+@inline function inclusiveComparison(data, args...)::Bool
     for i in eachindex(args)
         if data == args[i]
             return true
@@ -110,7 +106,7 @@ end
 
 """
 ```
-compStruct(arg1, arg2; verbose::Bool=false)
+compStruct(arg1, arg2; verbose::Bool = false)
 ```
 Function that compares values of the fields of two variables `arg1` and `arg2` with the same structure. If `verbose = true`, it will print which fields are different from each other.
 
@@ -131,9 +127,10 @@ julia> compStruct(1, [1]; verbose = true)
 false
 ```
 """
-function compStruct(arg1, arg2; verbose::Bool = false)
+@inline function compStruct(arg1, arg2; verbose::Bool = false)
     if typeof(arg1) != typeof(arg2)
-        !verbose ? nothing : @warn "compStruct: Variables have different types:\n\ttypeof(arg1) = $(typeof(arg1))\n\ttypeof(arg2) = $(typeof(arg2))"
+        !verbose ? nothing :
+        @warn "compStruct: Variables have different types:\n\ttypeof(arg1) = $(typeof(arg1))\n\ttypeof(arg2) = $(typeof(arg2))"
         return false
     end
     names = fieldnames(typeof(arg1))
@@ -142,7 +139,7 @@ function compStruct(arg1, arg2; verbose::Bool = false)
         result = getproperty(arg1, i) == getproperty(arg2, i)
         if result == false
             flag = false
-            !verbose ? nothing : @warn "Structures differ in field: $(i)." 
+            !verbose ? nothing : @warn "Structures differ in field: $(i)."
         end
     end
     return flag
@@ -150,28 +147,32 @@ end
 
 """
 ```
-intAngle(n::Int64)
+intAngle(n::Integer)
 ```
 Calculates the interior angle of a regular polygon with `n` sides.
 """
-function intAngle(n::Int64)
+@inline function intAngle(n::Integer)
     return (n - 2) * π / n
 end
 
 """
 ```
-extAngle(n::Int64)
+extAngle(n::Integer)
 ```
 Calculates the exterior angle of a regular polygon with `n` sides.
 """
-function extAngle(n::Int64)
+@inline function extAngle(n::Integer)
     return π - intAngle(n)
 end
 
 """
 ```
-rot3D(xyz::Vector{<:Real}, uvw::Vector{<:Real}, abc::Vector{<:Real},
-    θ::Real)
+rot3D(
+    xyz::AbstractVector{T1},
+    uvw::AbstractVector{T2},
+    abc::AbstractVector{T3},
+    θ::T4,
+) where {T1, T2, T3, T4}
 ```
 Rotate point `xyz` about the line with direction vector `uvw` that crosses the point `abc` by the angle `θ`. Further details found [here](https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions).
 
@@ -196,17 +197,16 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
 ```
 """
 function rot3D(
-    xyz::AbstractVector{<:Real},
-    uvw::AbstractVector{<:Real},
-    abc::AbstractVector{<:Real},
-    θ::Real,
-)
-
+    xyz::AbstractVector{T1},
+    uvw::AbstractVector{T2},
+    abc::AbstractVector{T3},
+    θ::T4,
+) where {T1, T2, T3, T4}
     isapprox(norm(uvw), 1.0) ? nothing : uvw ./= norm(uvw)
 
     cosθ = cos(θ)
     onemcosθ = 1 - cosθ
-    sintheta = sin(θ)
+    sinθ = sin(θ)
     xyzDOTuvw = dot(xyz, uvw)
 
     return [
@@ -215,38 +215,46 @@ function rot3D(
             uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)
         ) * onemcosθ +
         xyz[1] * cosθ +
-        sintheta * (
-            -abc[3] * uvw[2] + abc[2] * uvw[3] - uvw[3] * xyz[2] +
-            uvw[2] * xyz[3]
-        )
+        sinθ * (-abc[3] * uvw[2] + abc[2] * uvw[3] - uvw[3] * xyz[2] + uvw[2] * xyz[3])
         (
             abc[2] * (uvw[1] * uvw[1] + uvw[3] * uvw[3]) -
             uvw[2] * (abc[1] * uvw[1] + abc[3] * uvw[3] - xyzDOTuvw)
         ) * onemcosθ +
         xyz[2] * cosθ +
-        sintheta *
-        (abc[3] * uvw[1] - abc[1] * uvw[3] + uvw[3] * xyz[1] - uvw[1] * xyz[3])
+        sinθ * (abc[3] * uvw[1] - abc[1] * uvw[3] + uvw[3] * xyz[1] - uvw[1] * xyz[3])
         (
             abc[3] * (uvw[1] * uvw[1] + uvw[2] * uvw[2]) -
             uvw[3] * (abc[1] * uvw[1] + abc[2] * uvw[2] - xyzDOTuvw)
         ) * onemcosθ +
         xyz[3] * cosθ +
-        sintheta * (
-            -abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] +
-            uvw[1] * xyz[2]
-        )
+        sinθ * (-abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] + uvw[1] * xyz[2])
     ]
 end
+
+"""
+```
+dimDot(
+    x::AbstractArray{T1, N},
+    y::AbstractArray{T2, N};
+    dim::Integer = 2,
+) where {T1, T2, N}
+```
+Perform dot product along dimension `dim` of an array, returns a vector of dot products.
+"""
 function dimDot(
-    x::AbstractArray{<:T, N} where {N},
-    y::AbstractArray{<:T, N} where {N};
-    dims::Integer = 2,
-) where {T}
-    return sum(x .* y, dims = dims)
+    x::AbstractArray{T1, N},
+    y::AbstractArray{T2, N};
+    dim::Integer = 2,
+) where {T1, T2, N}
+    return sum(x .* y, dims = dim)
 end
-function dimNorm(
-    x::AbstractArray{<:T, N} where {N};
-    dims::Integer = 2,
-) where {T}
-    return sqrt.(dimDot(x, x; dims = dims))
+
+"""
+```
+dimNorm(x::AbstractArray{T, N}; dim::Integer = 2) where {T, N}
+```
+Calculate norms along dimension `dim` of an array, returns a vector of norms.
+"""
+function dimNorm(x::AbstractArray{T, N}; dim::Integer = 2) where {T, N}
+    return sqrt.(dimDot(x, x; dims = dim))
 end

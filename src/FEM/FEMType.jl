@@ -14,7 +14,7 @@ abstract type AbstractShapeFunction2D <: AbstractShapeFunction end
 struct LinearQuadrangle3D <:AbstractShapeFunction3D end
 struct LinearQuadrangle2D <:AbstractShapeFunction2D end
 ```
-Abstract types for different shape functions.
+Shape function types.
 """
 abstract type AbstractShapeFunction end
 abstract type AbstractShapeFunction3D <: AbstractShapeFunction end
@@ -22,9 +22,25 @@ abstract type AbstractShapeFunction2D <: AbstractShapeFunction end
 struct LinearQuadrangle3D <: AbstractShapeFunction3D end
 struct LinearQuadrangle2D <: AbstractShapeFunction2D end
 
+"""
+```
 struct RegularCuboidMesh{
-    T1 <: AbstractArray{<:Int64, N} where {N},
-    T2 <: AbstractArray{<:Float64, N} where {N},
+    T1 <: AbstractArray{T3, N} where {T3, N},
+    T2 <: AbstractArray{T4, N} where {T4, N},
+}
+    label::T1
+    sizeElem::T2
+    sizeMesh::T2
+    stiffTensor::T2
+    coord::T2
+    vertices::T2
+end
+```
+Cuboid mesh structure.
+"""
+struct RegularCuboidMesh{
+    T1 <: AbstractArray{T3, N} where {T3, N},
+    T2 <: AbstractArray{T4, N} where {T4, N},
 }
     label::T1
     sizeElem::T2

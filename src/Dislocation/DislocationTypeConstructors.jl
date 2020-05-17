@@ -123,15 +123,10 @@ function makeLoop(
 
     θ = extAngle(numSides)
     rseg = zeros(3)
-    @inbounds for i = 1:numSides
+    @inbounds for i in 1:numSides
         idx = (i - 1) * nodeSide
-        rseg = rot3D(
-            seg[mod(i - 1, lSegLen) + 1, :],
-            rotAxis,
-            zeros(3),
-            θ * (i - 1),
-        )
-        for j = 1:nodeSide
+        rseg = rot3D(seg[mod(i - 1, lSegLen) + 1, :], rotAxis, zeros(3), θ * (i - 1))
+        for j in 1:nodeSide
             if i == j == 1
                 coord[1, :] = zeros(3)
                 slipPlane = [slipPlane; _slipPlane']
@@ -148,7 +143,7 @@ function makeLoop(
     coord .-= mean(coord, dims = 1)
 
     # Links
-    @inbounds for j = 1:(nodeTotal - 1)
+    @inbounds for j in 1:(nodeTotal - 1)
         links[j, :] = [j; 1 + j]
     end
     links[nodeTotal, :] = [nodeTotal; 1]
@@ -226,28 +221,19 @@ function makeNetwork(
         numLoops = sources[i].numLoops
         numNodes = numLoops * nodesLoop
         disp = loopDistribution(sources[i].dist, numLoops, args...; kw...)
-        limits!(
-            lims,
-            mean(sources[i].segLen),
-            sources[i].range,
-            sources[i].buffer,
-        )
-        for j = 1:numLoops
+        limits!(lims, mean(sources[i].segLen), sources[i].range, sources[i].buffer)
+        for j in 1:numLoops
             idxi = idx + (j - 1) * nodesLoop
             idxf = idxi + nodesLoop - 1
             # Prepare to distribute sources.
             network.links[idxi:idxf, :] =
                 sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
-            network.slipPlane[idxi:idxf, :] .=
-                sources[i].slipPlane[1:nodesLoop, :]
+            network.slipPlane[idxi:idxf, :] .= sources[i].slipPlane[1:nodesLoop, :]
             network.bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
             network.coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
             # Move loop.
-            network.coord[idxi:idxf, :] .= translatePoints(
-                sources[i].coord[1:nodesLoop, :],
-                lims,
-                disp[j, :],
-            )
+            network.coord[idxi:idxf, :] .=
+                translatePoints(sources[i].coord[1:nodesLoop, :], lims, disp[j, :])
             network.label[idxi:idxf, :] .= sources[i].label[1:nodesLoop, :]
             nodeTotal += nodesLoop
         end
@@ -310,28 +296,19 @@ function makeNetwork!(
         numLoops = sources[i].numLoops
         numNodes = numLoops * nodesLoop
         disp = loopDistribution(sources[i].dist, numLoops, args...; kw...)
-        limits!(
-            lims,
-            mean(sources[i].segLen),
-            sources[i].range,
-            sources[i].buffer,
-        )
-        for j = 1:numLoops
+        limits!(lims, mean(sources[i].segLen), sources[i].range, sources[i].buffer)
+        for j in 1:numLoops
             idxi = idx + (j - 1) * nodesLoop
             idxf = idxi + nodesLoop - 1
             # Prepare to distribute sources.
             network.links[idxi:idxf, :] =
                 sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
-            network.slipPlane[idxi:idxf, :] .=
-                sources[i].slipPlane[1:nodesLoop, :]
+            network.slipPlane[idxi:idxf, :] .= sources[i].slipPlane[1:nodesLoop, :]
             network.bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
             network.coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
             # Move loop.
-            network.coord[idxi:idxf, :] .= translatePoints(
-                sources[i].coord[1:nodesLoop, :],
-                lims,
-                disp[j, :],
-            )
+            network.coord[idxi:idxf, :] .=
+                translatePoints(sources[i].coord[1:nodesLoop, :], lims, disp[j, :])
             network.label[idxi:idxf, :] .= sources[i].label[1:nodesLoop, :]
             nodeTotal += nodesLoop
         end
@@ -382,8 +359,8 @@ function limits!(
     range::AbstractArray{<:Float64, N2},
     buffer::Float64,
 ) where {N1, N2}
-    @inbounds for i = 1:size(lims, 2)
-        for j = 1:size(lims, 1)
+    @inbounds for i in 1:size(lims, 2)
+        for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
         end
     end
@@ -405,8 +382,8 @@ function translatePoints(
     lims::AbstractArray{<:Float64, N1},
     disp::AbstractArray{<:Float64, N2},
 ) where {N1, N2}
-    @inbounds for i = 1:size(coord, 2)
-        for j = 1:size(coord, 1)
+    @inbounds for i in 1:size(coord, 2)
+        for j in 1:size(coord, 1)
             coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
         end
     end
@@ -484,9 +461,8 @@ function checkNetwork(network::DislocationNetwork)
         col = connectivity[i, 1]
 
         # Check for zero Burgers vectors.
-        norm(bVec[i, :]) < eps(eltype(bVec)) ?
-        error("Burgers vector must be non-zero.
-norm(bVec) = $(norm(bVec[i,:]))") : nothing
+        norm(bVec[i, :]) < eps(eltype(bVec)) ? error("Burgers vector must be non-zero.
+                                       norm(bVec) = $(norm(bVec[i,:]))") : nothing
 
         # Trailing columns must be zero.
         sum(connectivity[i, (2 * (col + 1)):end]) != 0 ?
@@ -498,7 +474,7 @@ norm(bVec) = $(norm(bVec[i,:]))") : nothing
         bSum .= 0
         # No repeated links.
         neighbours = -ones(Int64, col)
-        for j = 1:col
+        for j in 1:col
             j2 = 2 * j
 
             iLink = connectivity[i, j2]     # Link ID.
@@ -509,7 +485,7 @@ norm(bVec) = $(norm(bVec[i,:]))") : nothing
             push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
 
             # Check that node does not appear twice in connectivity.
-            for k = (j + 1):col
+            for k in (j + 1):col
                 connectivity[i, j2] == connectivity[i, 2 * k] ?
                 error("Node $(i) cannot appear twice in connectivity, $(connectivity[i, j2])") :
                 nothing
@@ -546,8 +522,7 @@ neighbours = $(neighbours)") :
         links[$(i), :] = $(links[i,:])
         linksConnect[$(i),:] = $(linksConnect[i,:])
         connectivity[$(links[i,1]), :] = $(connectivity[links[i,1], :])
-        connectivity[$(links[i,2]), :] = $(connectivity[links[i,2], :])") :
-        nothing
+        connectivity[$(links[i,2]), :] = $(connectivity[links[i,2], :])") : nothing
     end
 
     return true

@@ -9,8 +9,7 @@ function calcSegForce(
 
     # pkForce = pkForce(mesh, dlnFEM, network)
     selfForce = calcSelfForce(dlnParams, matParams, network)
-    segSegForce =
-        calcSegSegForce(dlnParams, matParams, network; parallel = parallel)
+    segSegForce = calcSegSegForce(dlnParams, matParams, network; parallel = parallel)
 
     segForce = selfForce .+ segSegForce
 
@@ -62,7 +61,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     torTot = zeros(numSeg)
     lonCore = zeros(numSeg)
 
-    @fastmath @inbounds @simd for i = 1:numSeg
+    @fastmath @inbounds @simd for i in 1:numSeg
         # Finding the norm of each line vector.
         tVecSq = tVec[i, 1]^2 + tVec[i, 2]^2 + tVec[i, 3]^2
         L[i] = sqrt(tVecSq)
@@ -74,17 +73,13 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         tVec[i, 2] *= Linv[i]
         tVec[i, 3] *= Linv[i]
         # Screw component, scalar projection of bVec onto t.
-        bScrew[i] =
-            bVec[i, 1] * tVec[i, 1] +
-            bVec[i, 2] * tVec[i, 2] +
-            bVec[i, 3] * tVec[i, 3]
+        bScrew[i] = bVec[i, 1] * tVec[i, 1] + bVec[i, 2] * tVec[i, 2] + bVec[i, 3] * tVec[i, 3]
         # Edge component, vector rejection of bVec onto t.
         bEdgeVec[i, 1] = bVec[i, 1] - bScrew[i] * tVec[i, 1]
         bEdgeVec[i, 2] = bVec[i, 2] - bScrew[i] * tVec[i, 2]
         bEdgeVec[i, 3] = bVec[i, 3] - bScrew[i] * tVec[i, 3]
         # Finding the norm squared of each edge component.
-        bEdgeSq[i] =
-            sqrt(bEdgeVec[i, 1]^2 + bEdgeVec[i, 2]^2 + bEdgeVec[i, 3]^2)
+        bEdgeSq[i] = sqrt(bEdgeVec[i, 1]^2 + bEdgeVec[i, 2]^2 + bEdgeVec[i, 3]^2)
         #=
         A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
         553?595: gives this expression in appendix A p590
@@ -170,12 +165,12 @@ At a high level this works by creating a local coordinate frame using the line d
     if parallel
         # Threadid parallelisation + parallelised reduction.
         TSegSegForce = zeros(Threads.nthreads(), numSeg, 3, 2)
-        @fastmath @inbounds @sync for i = 1:numSeg
+        @fastmath @inbounds @sync for i in 1:numSeg
             Threads.@spawn begin
                 b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
                 n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
                 n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-                @simd for j = (i + 1):numSeg
+                @simd for j in (i + 1):numSeg
                     b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
                     n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
                     n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
@@ -204,22 +199,16 @@ At a high level this works by creating a local coordinate frame using the line d
         end
 
         nthreads = Threads.nthreads()
-        TSegSegForce2 =
-            [Threads.Atomic{Float64}(0.0) for i = 1:(numSeg * 3 * 2)]
+        TSegSegForce2 = [Threads.Atomic{Float64}(0.0) for i in 1:(numSeg * 3 * 2)]
         TSegSegForce2 = reshape(TSegSegForce2, numSeg, 3, 2)
-        @fastmath @inbounds @sync for tid = 1:nthreads
+        @fastmath @inbounds @sync for tid in 1:nthreads
             Threads.@spawn begin
                 start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                 stop = (tid * numSeg) ÷ nthreads
                 domain = start:stop
                 Threads.atomic_add!.(
                     TSegSegForce2[start:stop, :, :],
-                    sum(TSegSegForce[:, start:stop, :, :], dims = 1)[
-                        1,
-                        :,
-                        :,
-                        :,
-                    ],
+                    sum(TSegSegForce[:, start:stop, :, :], dims = 1)[1, :, :, :],
                 )
             end
         end
@@ -227,11 +216,11 @@ At a high level this works by creating a local coordinate frame using the line d
         SegSegForce .= getproperty.(TSegSegForce2, :value)
     else
         # Serial execution.
-        @fastmath @inbounds for i = 1:numSeg
+        @fastmath @inbounds for i in 1:numSeg
             b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
             n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
             n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
-            @simd for j = (i + 1):numSeg
+            @simd for j in (i + 1):numSeg
                 b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
                 n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
                 n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
@@ -600,20 +589,8 @@ end
         ) .* t2N
 
     else
-        Fnode1, Fnode2, Fnode3, Fnode4 = calcParSegSegForce(
-            aSq,
-            μ4π,
-            μ8π,
-            μ8πaSq,
-            μ4πν,
-            μ4πνaSq,
-            b1,
-            n11,
-            n12,
-            b2,
-            n21,
-            n22,
-        )
+        Fnode1, Fnode2, Fnode3, Fnode4 =
+            calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
     end
 
     return Fnode1, Fnode2, Fnode3, Fnode4
@@ -641,8 +618,7 @@ end
     flip::Bool = false
 
     # half of the cotangent of critical θ
-    hCotanθc =
-        sqrt((1 - sqrt(eps(Float64)) * 1.01) / (sqrt(eps(Float64)) * 1.01)) / 2
+    hCotanθc = sqrt((1 - sqrt(eps(Float64)) * 1.01) / (sqrt(eps(Float64)) * 1.01)) / 2
 
     t2 = @. n22 - n21
     t2N = 1 / norm(t2)
@@ -725,8 +701,7 @@ end
     tmp = t1db1 * t1db2
     tmpVec1 = @. tmp * nd
     tmpVec2 = @. b2ct1dnd * b1ct1
-    V1 = @. μ4πν * (nddb1 * b2ct1ct1 + b2ct1db1 * ndct1 - tmpVec2) -
-            μ4π * tmpVec1
+    V1 = @. μ4πν * (nddb1 * b2ct1ct1 + b2ct1db1 * ndct1 - tmpVec2) - μ4π * tmpVec1
 
     tmp = (μ4πν - μ4π) * t1db1
     V2 = @. tmp * b2ct1ct1
@@ -758,37 +733,13 @@ end
     magn22mSq = dot(n22m, n22m)
 
     if magDiffSq > eps(Float32) * (magn21mSq + magn22mSq)
-        missing, missing, Fnode1Core, Fnode2Core = calcSegSegForce(
-            aSq,
-            μ4π,
-            μ8π,
-            μ8πaSq,
-            μ4πν,
-            μ4πνaSq,
-            b2,
-            n21,
-            n21m,
-            b1,
-            n11,
-            n12,
-        )
+        missing, missing, Fnode1Core, Fnode2Core =
+            calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b2, n21, n21m, b1, n11, n12)
         Fnode1 = @. Fnode1 + Fnode1Core
         Fnode2 = @. Fnode2 + Fnode2Core
 
-        missing, missing, Fnode1Core, Fnode2Core = calcSegSegForce(
-            aSq,
-            μ4π,
-            μ8π,
-            μ8πaSq,
-            μ4πν,
-            μ4πνaSq,
-            b2,
-            n22m,
-            n22,
-            b1,
-            n11,
-            n12,
-        )
+        missing, missing, Fnode1Core, Fnode2Core =
+            calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b2, n22m, n22, b1, n11, n12)
         Fnode1 = @. Fnode1 + Fnode1Core
         Fnode2 = @. Fnode2 + Fnode2Core
     end
@@ -859,8 +810,7 @@ end
     tmp = t2db2 * t2db1
     tmpVec1 = @. tmp * nd
     tmpVec2 = @. b1ct2dnd * b2ct2
-    V1 = @. μ4πν * (nddb2 * b1ct2ct2 + b1ct2db2 * ndct2 - tmpVec2) -
-            μ4π * tmpVec2
+    V1 = @. μ4πν * (nddb2 * b1ct2ct2 + b1ct2db2 * ndct2 - tmpVec2) - μ4π * tmpVec2
 
     tmp = (μ4πν - μ4π) * t2db2
     V2 = @. tmp * b1ct2ct2
@@ -889,37 +839,13 @@ end
     magn12mSq = dot(n12m, n12m)
 
     if magDiffSq > eps(Float32) * (magn11mSq + magn12mSq)
-        missing, missing, Fnode3Core, Fnode4Core = calcSegSegForce(
-            aSq,
-            μ4π,
-            μ8π,
-            μ8πaSq,
-            μ4πν,
-            μ4πνaSq,
-            b1,
-            n11,
-            n11m,
-            b2,
-            n21,
-            n22,
-        )
+        missing, missing, Fnode3Core, Fnode4Core =
+            calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n11m, b2, n21, n22)
         Fnode3 = @. Fnode3 + Fnode3Core
         Fnode4 = @. Fnode4 + Fnode4Core
 
-        missing, missing, Fnode3Core, Fnode4Core = calcSegSegForce(
-            aSq,
-            μ4π,
-            μ8π,
-            μ8πaSq,
-            μ4πν,
-            μ4πνaSq,
-            b1,
-            n12m,
-            n12,
-            b2,
-            n21,
-            n22,
-        )
+        missing, missing, Fnode3Core, Fnode4Core =
+            calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n12m, n12, b2, n21, n22)
         Fnode3 = @. Fnode3 + Fnode3Core
         Fnode4 = @. Fnode4 + Fnode4Core
     end
@@ -932,12 +858,7 @@ end
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-@inline function ParSegSegInteg(
-    aSq_dSq::T1,
-    aSq_dSqI::T1,
-    x::T1,
-    y::T1,
-) where {T1 <: Float64}
+@inline function ParSegSegInteg(aSq_dSq::T1, aSq_dSqI::T1, x::T1, y::T1) where {T1 <: Float64}
 
     xpy = x + y
     xmy = x - y

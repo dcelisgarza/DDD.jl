@@ -10,11 +10,7 @@ struct CustomTrapezoid <: AbstractIntegrator end
 
 """
 ```
-IntegrationP{
-    T1 <: Float64,
-    T2 <: AbstractIntegrator,
-    T3 <: Int64,
-}
+mutable struct IntegrationP{T1, T2, T3}
     dt::T1
     tmin::T1
     tmax::T1
@@ -23,14 +19,11 @@ IntegrationP{
     reltol::T1
     time::T1
     step::T3
+end
 ```
 This structure contains the integration parameters for the simulation.
 """
-mutable struct IntegrationP{
-    T1 <: Float64,
-    T2 <: AbstractIntegrator,
-    T3 <: Int64,
-}
+mutable struct IntegrationP{T1, T2, T3}
     dt::T1
     tmin::T1
     tmax::T1

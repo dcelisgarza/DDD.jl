@@ -11,9 +11,9 @@ JSON.lower(
         AbstractDlnStr,
         AbstractDistribution,
     },
-} = string(t)
+}
 
-JSON.lower(t::nodeType) = Int(t)
+JSON.lower(t::nodeType)
 ```
 Extensions to `JSON.lower` for custom types. Allows these variables to be serialised properly.
 """

@@ -1,22 +1,13 @@
 """
 ```
-shapeFunction(
-    shape<:AbstractShapeFunction,
-    x::Union{Float64, AbstractVector{<:Float64}},
-    y::Union{Float64, AbstractVector{<:Float64}},
-    z::Union{Float64, AbstractVector{<:Float64}}
+shapeFunction(shape<:AbstractShapeFunction, x, y, z)
 ```
 Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If `x,y,z` are floats returns a vector of length `N`, different shape functons have different numbers of nodes. If given vectors, returns an array of size `(N, length(x))`.
 !!! note
     All coordinate vectors must be of equal length.
 [`shapeFunctionDeriv`](@ref) are the 1st order derivatives of the shape functions.
 """
-@inline function shapeFunction(
-    shape::LinearQuadrangle3D,
-    x::Float64,
-    y::Float64,
-    z::Float64,
-)
+@inline function shapeFunction(shape::LinearQuadrangle3D, x, y, z)
     # N[n](x,y,z) := shape function n.
     N = zeros(8)
     omx = 1 - x
@@ -41,20 +32,20 @@ Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If
 end
 @inline function shapeFunction(
     shape::LinearQuadrangle3D,
-    x::AbstractVector{<:Float64},
-    y::AbstractVector{<:Float64},
-    z::AbstractVector{<:Float64},
-)
+    x::AbstractVector{T1},
+    y::AbstractVector{T2},
+    z::AbstractVector{T3},
+) where {T1, T2, T3}
     @assert length(x) == length(y) == length(z)
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
     N = zeros(8, length(x))
-    omx::Float64 = 0
-    omy::Float64 = 0
-    omz::Float64 = 0
-    opx::Float64 = 0
-    opy::Float64 = 0
-    opz::Float64 = 0
-    @inbounds for i in eachindex(x)
+    omx::T1 = 0
+    omy::T2 = 0
+    omz::T3 = 0
+    opx::T1 = 0
+    opy::T2 = 0
+    opz::T3 = 0
+    @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
         omz = 1 - z[i]
@@ -79,22 +70,13 @@ end
 
 """
 ```
-shapeFunctionDeriv(
-    shape<:AbstractShapeFunction,
-    x::Union{Float64, AbstractVector{<:Float64}},
-    y::Union{Float64, AbstractVector{<:Float64}},
-    z::Union{Float64, AbstractVector{<:Float64}}
+shapeFunctionDeriv(shape<:AbstractShapeFunction, x, y, z)
 ```
 Returns the first order derivative of the shape functions, [`shapeFunction`](@ref), of type `typeof(shape) <: AbstractShapeFunction`. If `x,y,z` are floats returns a 2D array of size `(N, 3)`. If given vectors, returns a 3D array of size `(N, 3, length(x))`.
 !!! note
     All coordinate vectors must be of equal length.
 """
-@inline function shapeFunctionDeriv(
-    shape::LinearQuadrangle3D,
-    x::Float64,
-    y::Float64,
-    z::Float64,
-)
+@inline function shapeFunctionDeriv(shape::LinearQuadrangle3D, x, y, z)
     # dNdS[n, x](x,y,z) := x'th derivative of shape function n.
     # dNdS[n, x](x,y,z) = dN[a, b] / dx
     dNdS = zeros(8, 3)
@@ -136,24 +118,23 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
 
     return dNdS
 end
-
 @inline function shapeFunctionDeriv(
     shape::LinearQuadrangle3D,
-    x::AbstractVector{<:Float64},
-    y::AbstractVector{<:Float64},
-    z::AbstractVector{<:Float64},
-)
+    x::AbstractVector{T1},
+    y::AbstractVector{T2},
+    z::AbstractVector{T3},
+) where {T1, T2, T3}
     @assert length(x) == length(y) == length(z)
     # dNdS[n, x, p](x,y,z) := x'th derivative of shape function n for point p.
     # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
     dNdS = zeros(8, 3, length(x))
-    omx::Float64 = 0
-    omy::Float64 = 0
-    omz::Float64 = 0
-    opx::Float64 = 0
-    opy::Float64 = 0
-    opz::Float64 = 0
-    @inbounds for i in eachindex(x)
+    omx::T1 = 0
+    omy::T2 = 0
+    omz::T3 = 0
+    opx::T1 = 0
+    opy::T2 = 0
+    opz::T3 = 0
+    @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
         omz = 1 - z[i]

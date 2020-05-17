@@ -94,19 +94,12 @@ struct SlipSystem{
 ```
 Slip systems.
 """
-struct SlipSystem{
-    T1 <: AbstractCrystalStruct,
-    T2 <: AbstractArray{<:Float64, N} where {N},
-}
+struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{<:Float64, N} where {N}}
     crystalStruct::T1
     slipPlane::T2
     bVec::T2
     function SlipSystem(; crystalStruct, slipPlane, bVec)
-        new{typeof(crystalStruct), typeof(slipPlane)}(
-            crystalStruct,
-            slipPlane,
-            bVec,
-        )
+        new{typeof(crystalStruct), typeof(slipPlane)}(crystalStruct, slipPlane, bVec)
     end
 end
 
@@ -140,12 +133,7 @@ DislocationP{
 ```
 Dislocation parameters structure. See [`AbstractMobility`](@ref) for more details.
 """
-struct DislocationP{
-    T1 <: Float64,
-    T2 <: Int64,
-    T3 <: Bool,
-    T4 <: AbstractMobility,
-}
+struct DislocationP{T1 <: Float64, T2 <: Int64, T3 <: Bool, T4 <: AbstractMobility}
 
     coreRad::T1
     coreRadSq::T1
@@ -184,16 +172,10 @@ struct DislocationP{
         mobility,
     )
 
-        coreRad == minSegLen == maxSegLen == 0 ? nothing :
-        @assert coreRad < minSegLen < maxSegLen
+        coreRad == minSegLen == maxSegLen == 0 ? nothing : @assert coreRad < minSegLen < maxSegLen
         minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
         coreRadSq = coreRad^2
-        new{
-            typeof(coreRad),
-            typeof(maxConnect),
-            typeof(remesh),
-            typeof(mobility),
-        }(
+        new{typeof(coreRad), typeof(maxConnect), typeof(remesh), typeof(mobility)}(
             coreRad,
             coreRadSq,
             coreRadMag,

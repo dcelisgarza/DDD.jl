@@ -39,6 +39,30 @@ function removeNode!(network::DislocationNetwork, nodeKept::Integer, nodeGone::I
 end
 
 """
+```
+removeLink!(network::DislocationNetwork, link::Integer)
+```
+Removes link and its information from network.
+"""
+function removeLink!(network::DislocationNetwork, link::Integer)
+    links = network.links
+    coord = network.coord
+    label = network.label
+    nodeVel = network.nodeVel
+    connectivity = network.connectivity
+    linksConnect = network.linksConnect
+
+    @assert link > size(links, 1) "link $link not found."
+
+    # Delete linkid from connectivity.
+    node1 = links[link, 1]
+    connectGone1 = linksConnect[link, 1]
+    # mergenodes 142
+
+
+end
+
+"""
 Merges and cleans up the information in `network.connectivity` and `network.links` for the nodes that will be merged. This is such that there are no repeated entries, self-links or double links.
 """
 function mergeNode!(network::DislocationNetwork, nodeKept::Int64, nodeGone::Int64)
@@ -86,8 +110,7 @@ function mergeNode!(network::DislocationNetwork, nodeKept::Int64, nodeGone::Int6
 
 end
 
-function removeLink!(network::DislocationNetwork, link::Integer)
-end
+
 
 function splitNode end
 

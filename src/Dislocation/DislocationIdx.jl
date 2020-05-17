@@ -23,11 +23,7 @@ idxLabel(network::DislocationNetwork, label::Integer; condition::Function = ==)
 ```
 Find indices for dislocations whose `label` meets `condition(x, label)`.
 """
-function idxLabel(
-    network::DislocationNetwork,
-    label::Integer;
-    condition::Function = ==,
-)
+function idxLabel(network::DislocationNetwork, label::Integer; condition::Function = ==)
     return findall(x -> condition(x, label), network.label)
 end
 """
@@ -80,12 +76,7 @@ idxCond(network::DislocationNetwork, fieldname::Symbol, idxComp::Integer,
 ```
 Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxComp], val)`. It errors if the fieldname provided does not have a column `idxComp`.
 """
-function idxCond(
-    network::DislocationNetwork,
-    fieldname::Symbol,
-    condition::Function,
-    args...,
-)
+function idxCond(network::DislocationNetwork, fieldname::Symbol, condition::Function, args...)
     return findall(x -> condition(x, args...), getproperty(network, fieldname))
 end
 function idxCond(
@@ -110,10 +101,7 @@ function idxCond(
     val::Real;
     condition::Function = ==,
 )
-    return findall(
-        x -> condition(x, val),
-        getproperty(network, fieldname)[:, idxComp],
-    )
+    return findall(x -> condition(x, val), getproperty(network, fieldname)[:, idxComp])
 end
 """
 Related functions: `idxCond`

@@ -1,3 +1,9 @@
+"""
+```
+plotNodes(network::DislocationNetwork, args...; kw...)
+```
+Plots dislocation network as nodes connected by segments. Returns a new figure. See [`plotNodes!`](@ref) for mutating version.
+"""
 function plotNodes(network::DislocationNetwork, args...; kw...)
     idx = findall(x -> x != 0, network.label)
     coord = network.coord
@@ -21,6 +27,12 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
     return fig
 end
 
+"""
+```
+plotNodes!(fig, network::DislocationNetwork, args...; kw...)
+```
+Updates figure to plot dislocation network as nodes connected by segments. See [`plotNodes`](@ref) for non-mutating version.
+"""
 function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     idx = findall(x -> x != 0, network.label)
     coord = network.coord
@@ -43,6 +55,12 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     return fig
 end
 
+"""
+```
+plotNodes(loop::DislocationLoop, args...; kw...)
+```
+Plots dislocation network as nodes connected by segments. Returns a new figure. See [`plotNodes!`](@ref) for mutating version.
+"""
 function plotNodes(loop::DislocationLoop, args...; kw...)
     idx = findall(x -> x != 0, loop.label)
     coord = loop.coord
@@ -66,6 +84,12 @@ function plotNodes(loop::DislocationLoop, args...; kw...)
     return fig
 end
 
+"""
+```
+plotNodes!(fig, loop::DislocationLoop, args...; kw...)
+```
+Updates figure to plot dislocation network as nodes connected by segments. See [`plotNodes`](@ref) for non-mutating version.
+"""
 function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     idx = findall(x -> x != 0, loop.label)
     coord = loop.coord

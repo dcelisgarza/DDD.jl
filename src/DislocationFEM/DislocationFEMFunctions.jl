@@ -1,7 +1,16 @@
 """
 ```
+calcPKForce(
+    mesh::RegularCuboidMesh,
+    dlnFEM::DislocationFEMCorrective,
+    network::DislocationNetwork,
+)
 ```
 Calculate the Peach-Koehler force on segments.
+
+``
+f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{l}
+``
 """
 function calcPKForce(
     mesh::RegularCuboidMesh,

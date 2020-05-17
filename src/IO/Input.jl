@@ -18,10 +18,7 @@ function loadDislocationLoop(
 ```
 Loads initial dislocation structure out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationLoop`](@ref).
 """
-function loadDislocationLoop(
-    dict::Dict{T1, T2} where {T1, T2},
-    slipSystem::SlipSystem,
-)
+function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::SlipSystem)
 
     dlnTypes = makeTypeDict(AbstractDlnStr)
     distributions = makeTypeDict(AbstractDistribution)
@@ -30,7 +27,7 @@ function loadDislocationLoop(
     bVec = slipSystem.bVec
 
     range = zeros(2, 3)
-    for i = 1:3
+    for i in 1:3
         range[:, i] = convert.(Int64, dict["range"][i])
     end
 
@@ -113,10 +110,7 @@ function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
             Float64,
             [dict["slipPlane"][1] dict["slipPlane"][2] dict["slipPlane"][3]],
         ),
-        bVec = convert.(
-            Float64,
-            [dict["bVec"][1] dict["bVec"][2] dict["bVec"][3]],
-        ),
+        bVec = convert.(Float64, [dict["bVec"][1] dict["bVec"][2] dict["bVec"][3]]),
     )
 
     return slipSystem
@@ -189,8 +183,7 @@ function loadParams(
     dictDislocationLoop = load(fileDislocationLoop)
     dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
     for i in eachindex(dislocationLoop)
-        dislocationLoop[i] =
-            loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+        dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
     end
 
     return dislocationP, materialP, integrationP, slipSystems, dislocationLoop
@@ -218,21 +211,21 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     segForce = zeros(lenLinks, 3)
     nodeVel = zeros(lenLinks, 3)
 
-    for i = 1:2
+    for i in 1:2
         links[:, i] = convert.(Int64, dict["links"][i])
         linksConnect[:, i] = convert.(Int64, dict["linksConnect"][i])
     end
 
-    @inbounds @simd for i = 1:3
+    @inbounds @simd for i in 1:3
         slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
         bVec[:, i] = convert.(Float64, dict["bVec"][i])
         coord[:, i] = convert.(Float64, dict["coord"][i])
         segIdx[:, i] = convert.(Int64, dict["segIdx"][i])
         segForce[:, i] = convert.(Float64, dict["segForce"][i])
-        nodeVel[:,i] = convert.(Float64, dict["nodeVel"][i])
+        nodeVel[:, i] = convert.(Float64, dict["nodeVel"][i])
     end
 
-    @inbounds @simd for i = 1:9
+    @inbounds @simd for i in 1:9
         connectivity[:, i] = convert.(Int64, dict["connectivity"][i])
     end
 

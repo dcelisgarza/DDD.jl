@@ -5,23 +5,25 @@ struct BCC <: AbstractCrystalStruct end
 struct FCC <: AbstractCrystalStruct end
 struct HCP <: AbstractCrystalStruct end
 ```
-Crystal structures.
+Crystal structure types.
 """
 abstract type AbstractCrystalStruct end
 struct BCC <: AbstractCrystalStruct end
 struct FCC <: AbstractCrystalStruct end
 struct HCP <: AbstractCrystalStruct end
+
 """
 ```
-MaterialP{T1 <: Float64, T2 <: AbstractCrystalStruct}
+struct MaterialP{T1, T2}
     μ::T1
     μMag::T1
     ν::T1
     E::T1
     crystalStruct::T2
+end
 ```
 """
-struct MaterialP{T1 <: Float64, T2 <: AbstractCrystalStruct}
+struct MaterialP{T1, T2}
     μ::T1
     μMag::T1
     ν::T1
