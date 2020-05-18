@@ -147,21 +147,21 @@ end
 
 """
 ```
-intAngle(n::Integer)
+intAngle(n::Int)
 ```
 Calculates the interior angle of a regular polygon with `n` sides.
 """
-@inline function intAngle(n::Integer)
+@inline function intAngle(n::Int)
     return (n - 2) * π / n
 end
 
 """
 ```
-extAngle(n::Integer)
+extAngle(n::Int)
 ```
 Calculates the exterior angle of a regular polygon with `n` sides.
 """
-@inline function extAngle(n::Integer)
+@inline function extAngle(n::Int)
     return π - intAngle(n)
 end
 
@@ -236,7 +236,7 @@ end
 dimDot(
     x::AbstractArray{T1, N},
     y::AbstractArray{T2, N};
-    dim::Integer = 2,
+    dim::Int = 2,
 ) where {T1, T2, N}
 ```
 Perform dot product along dimension `dim` of an array, returns a vector of dot products.
@@ -244,17 +244,17 @@ Perform dot product along dimension `dim` of an array, returns a vector of dot p
 function dimDot(
     x::AbstractArray{T1, N},
     y::AbstractArray{T2, N};
-    dim::Integer = 2,
+    dim::Int = 2,
 ) where {T1, T2, N}
     return sum(x .* y, dims = dim)
 end
 
 """
 ```
-dimNorm(x::AbstractArray{T, N}; dim::Integer = 2) where {T, N}
+dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
 ```
 Calculate norms along dimension `dim` of an array, returns a vector of norms.
 """
-function dimNorm(x::AbstractArray{T, N}; dim::Integer = 2) where {T, N}
+function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
     return sqrt.(dimDot(x, x; dims = dim))
 end

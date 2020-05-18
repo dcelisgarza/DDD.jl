@@ -41,13 +41,18 @@ end
 
 """
 ```
+calc_σ_hat(
+    mesh::RegularCuboidMesh,
+    dlnFEM::DislocationFEMCorrective,
+    x0::AbstractArray{T, N} where {T, N},
+)
 ```
 Calculate the reaction from a dislocation.
 """
 function calc_σ_hat(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
-    x0::AbstractArray{<:Float64, N} where {N},
+    x0::AbstractArray{T, N} where {T, N},
 )
 
     # These are just aliases to reduce verbosity, they don't impact performance.

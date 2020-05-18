@@ -1,12 +1,12 @@
-isequal(x::Real, y::nodeType) = isequal(x, Integer(y))
-isequal(x::nodeType, y::Real) = isequal(Integer(x), y)
-isless(x::Real, y::nodeType) = isless(x, Integer(y))
-isless(x::nodeType, y::Real) = isless(Integer(x), y)
-==(x::nodeType, y::Real) = isequal(Integer(x), y)
-==(x::Real, y::nodeType) = isequal(x, Integer(y))
-convert(::Type{nodeType}, x::Real) = nodeType(Integer(x))
+isequal(x::Real, y::nodeType) = isequal(x, Int(y))
+isequal(x::nodeType, y::Real) = isequal(Int(x), y)
+isless(x::Real, y::nodeType) = isless(x, Int(y))
+isless(x::nodeType, y::Real) = isless(Int(x), y)
+==(x::nodeType, y::Real) = isequal(Int(x), y)
+==(x::Real, y::nodeType) = isequal(x, Int(y))
+convert(::Type{nodeType}, x::Real) = nodeType(Int(x))
 zero(::Type{nodeType}) = 0
-getindex(x::nodeType, i::Integer) = i == 1 ? Int(x) : throw(BoundsError())
+getindex(x::nodeType, i::Int) = i == 1 ? Int(x) : throw(BoundsError())
 iterate(x::nodeType, i = 1) = (length(x) < i ? nothing : (x[i], i + 1))
 length(x::nodeType) = 1
 
@@ -17,30 +17,30 @@ makeSegment(type::AbstractDlnSeg, slipPlane::Vector{T}, bVec::Vector{T})
 ```
 Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
-function makeSegment(type::segEdge, slipPlane::Vector{T}, bVec::Vector{T}) where {T <: Float64}
+function makeSegment(type::segEdge, slipPlane::Vector{T}, bVec::Vector{T}) where {T}
     edge = cross(slipPlane, bVec)
     return edge ./ norm(edge)
 end
-function makeSegment(type::segEdgeN, slipPlane::Vector{T}, bVec::Vector{T}) where {T <: Float64}
+function makeSegment(type::segEdgeN, slipPlane::Vector{T}, bVec::Vector{T}) where {T}
     return slipPlane ./ norm(slipPlane)
 end
-function makeSegment(type::segScrew, slipPlane::Vector{T}, bVec::Vector{T}) where {T <: Float64}
+function makeSegment(type::segScrew, slipPlane::Vector{T}, bVec::Vector{T}) where {T}
     return bVec ./ norm(bVec)
 end
 length(::T) where {T <: AbstractDlnSeg} = 1
 
 # Dislocationloop.
 length(::DislocationLoop) = 1
-getindex(x::DislocationLoop, i::Integer) = i == 1 ? x : throw(BoundsError())
+getindex(x::DislocationLoop, i::Int) = i == 1 ? x : throw(BoundsError())
 eachindex(x::DislocationLoop) = 1
 function zero(::Type{DislocationLoop})
     DislocationLoop(
         loopType = loopDln(),
-        numSides = convert(Int64, 0),
-        nodeSide = convert(Int64, 0),
-        numLoops = convert(Int64, 0),
+        numSides = convert(Int, 0),
+        nodeSide = convert(Int, 0),
+        numLoops = convert(Int, 0),
         segLen = convert(Float64, 0),
-        slipSystem = convert(Int64, 0),
+        slipSystem = convert(Int, 0),
         _slipPlane = zeros(0, 3),
         _bVec = zeros(0, 3),
         label = zeros(nodeType, 0),
@@ -52,19 +52,19 @@ end
 
 # DislocationNetwork
 zero(::Type{DislocationNetwork}) = DislocationNetwork(
-    links = zeros(Int64, 0, 2),
+    links = zeros(Int, 0, 2),
     slipPlane = zeros(0, 3),
     bVec = zeros(0, 3),
     coord = zeros(0, 3),
     label = zeros(nodeType, 0),
     segForce = zeros(0, 3),
     nodeVel = zeros(0, 3),
-    numNode = convert(Int64, 0),
-    numSeg = convert(Int64, 0),
-    maxConnect = convert(Int64, 0),
+    numNode = convert(Int, 0),
+    numSeg = convert(Int, 0),
+    maxConnect = convert(Int, 0),
 )
-function push!(network::DislocationNetwork, n::Int64)
-    network.links = [network.links; zeros(Int64, n, 2)]
+function push!(network::DislocationNetwork, n::Int)
+    network.links = [network.links; zeros(Int, n, 2)]
     network.slipPlane = [network.slipPlane; zeros(n, 3)]
     network.bVec = [network.bVec; zeros(n, 3)]
     network.coord = [network.coord; zeros(n, 3)]
@@ -73,7 +73,7 @@ function push!(network::DislocationNetwork, n::Int64)
     network.nodeVel = [network.nodeVel; zeros(n, 3)]
     return network
 end
-function getindex(network::DislocationNetwork, i::Integer)
+function getindex(network::DislocationNetwork, i::Int)
 
     return network.links[i, :],
     network.slipPlane[i, :],

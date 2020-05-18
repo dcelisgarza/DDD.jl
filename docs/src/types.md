@@ -25,12 +25,22 @@ RegularCuboidMesh
 
 ## Dislocation
 ```@docs
+nodeType
 
+AbstractDlnSeg
+
+AbstractDlnStr
+
+AbstractDistribution
+
+AbstractMobility
+
+SlipSystem
 ```
 
 ## Dislocation-FEM
 ```@docs
-
+DislocationFEMCorrective
 ```
 
 ## Composite Types

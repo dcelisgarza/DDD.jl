@@ -14,7 +14,7 @@ function makeLoop(
     dist::T7,
 ) where {
     T1 <: loopDln,
-    T2 <: Int64,
+    T2 <: Int,
     T3 <: Float64,
     T4 <: AbstractArray{<:Float64, N} where {N},
     T5 <: Vector{nodeType},
@@ -22,8 +22,8 @@ function makeLoop(
     T7 <: AbstractDistribution,
 }
 
-    nodeTotal::Int64 = 0
-    links = zeros(Int64, nodeTotal, 2)
+    nodeTotal::Int = 0
+    links = zeros(Int, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
@@ -62,7 +62,7 @@ makeLoop(
     dist::T8,
 ) where {
     T1 <: AbstractDlnStr,
-    T2 <: Int64,
+    T2 <: Int,
     T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
     T4 <: AbstractArray{<:Float64, N} where {N},
     T5 <: Vector{nodeType},
@@ -88,7 +88,7 @@ function makeLoop(
     dist::T8,
 ) where {
     T1 <: AbstractDlnStr,
-    T2 <: Int64,
+    T2 <: Int,
     T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
     T4 <: AbstractArray{<:Float64, N} where {N},
     T5 <: Vector{nodeType},
@@ -112,7 +112,7 @@ function makeLoop(
         rotAxis = _bVec
     end
 
-    links = zeros(Int64, nodeTotal, 2)
+    links = zeros(Int, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
@@ -172,8 +172,8 @@ makeNetwork(
             DislocationLoop,
             AbstractVector{<:DislocationLoop}
         }, # Dislocation structures.
-    maxConnect::Integer = 4,
-    memBuffer::Integer = 10, # Buffer for memory allocation. The code will allocate the total number of nodes times `memBuffer` to reduce dynamic memory allocation during runtime.
+    maxConnect::Int = 4,
+    memBuffer::Int = 10, # Buffer for memory allocation. The code will allocate the total number of nodes times `memBuffer` to reduce dynamic memory allocation during runtime.
     args...;
     checkConsistency::Bool = false, # Check the consistency of the network.
     kw...,
@@ -183,23 +183,23 @@ Constructor for [`DislocationNetwork`](@ref), see [`makeNetwork!`](@ref) for in-
 """
 function makeNetwork(
     sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
-    maxConnect::Integer = 4,
+    maxConnect::Int = 4,
     args...;
-    memBuffer::Integer = 10,
+    memBuffer::Int = 10,
     checkConsistency::Bool = true,
     kw...,
 )
-    nodeTotal::Integer = 0
+    nodeTotal::Int = 0
     lims = zeros(2, 3)
     # Allocate memory.
     @inbounds for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
 
-    nodeBuffer::Integer = nodeTotal * memBuffer
+    nodeBuffer::Int = nodeTotal * memBuffer
 
     network = DislocationNetwork(
-        links = zeros(Int64, nodeBuffer, 2),
+        links = zeros(Int, nodeBuffer, 2),
         slipPlane = zeros(nodeBuffer, 3),
         bVec = zeros(nodeBuffer, 3),
         coord = zeros(nodeBuffer, 3),
@@ -255,7 +255,7 @@ makeNetwork!(
         DislocationLoop,
         AbstractVector{<:DislocationLoop}
     },
-    maxConnect::Integer = 4,
+    maxConnect::Int = 4,
     args...;
     checkConsistency::Bool = false,
     kw...,
@@ -266,12 +266,12 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`makeNetwork`](@ref)
 function makeNetwork!(
     network::DislocationNetwork,
     sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
-    maxConnect::Integer = 4,
+    maxConnect::Int = 4,
     args...;
     checkConsistency::Bool = false,
     kw...,
 )
-    nodeTotal::Integer = 0
+    nodeTotal::Int = 0
     lims = zeros(2, 3)
     network.maxConnect = maxConnect
     # Allocate memory.
@@ -325,20 +325,20 @@ end
 
 """
 ```
-loopDistribution(dist<:AbstractDistribution, n::Integer, args...; kw...)
+loopDistribution(dist<:AbstractDistribution, n::Int, args...; kw...)
 ```
 Returns `n` points according to the concrete subtype of [`AbstractDistribution`](@ref) given. Overload this function with new concrete subtypes and custom distributions. This and [`limits!`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
 """
-function loopDistribution(dist::Zeros, n::Integer, args...; kw...)
+function loopDistribution(dist::Zeros, n::Int, args...; kw...)
     return zeros(n, 3)
 end
-function loopDistribution(dist::Rand, n::Integer, args...; kw...)
+function loopDistribution(dist::Rand, n::Int, args...; kw...)
     return rand(n, 3)
 end
-function loopDistribution(dist::Randn, n::Integer, args...; kw...)
+function loopDistribution(dist::Randn, n::Int, args...; kw...)
     return randn(n, 3)
 end
-function loopDistribution(dist::Regular, n::Integer, args...; kw...)
+function loopDistribution(dist::Regular, n::Int, args...; kw...)
     error("loopDistribution: regular distribution yet not implemented")
 end
 
@@ -402,8 +402,8 @@ function makeConnect!(network::DislocationNetwork)
 
     idx = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
     lenLinks = size(links, 1)
-    connectivity = zeros(Int64, lenLinks, 1 + 2 * maxConnect)
-    linksConnect = zeros(Int64, lenLinks, 2)
+    connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
+    linksConnect = zeros(Int, lenLinks, 2)
     @inbounds @simd for i in idx
         # links[idx, :] yields the nodes involved in the link
         n1 = links[i, 1] # Node 1, it is the row of the coord matrix
@@ -457,7 +457,7 @@ function checkNetwork(network::DislocationNetwork)
     bVec = network.bVec
     bSum = zeros(3)
     @inbounds for i in idx
-        iLinkBuffer = zeros(Int64, 0)
+        iLinkBuffer = zeros(Int, 0)
         col = connectivity[i, 1]
 
         # Check for zero Burgers vectors.
@@ -473,7 +473,7 @@ function checkNetwork(network::DislocationNetwork)
         # Burgers vector conservation.
         bSum .= 0
         # No repeated links.
-        neighbours = -ones(Int64, col)
+        neighbours = -ones(Int, col)
         for j in 1:col
             j2 = 2 * j
 
@@ -531,9 +531,9 @@ end
 function getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
-    segIdx = zeros(Int64, size(links, 1), 3)
+    segIdx = zeros(Int, size(links, 1), 3)
     idx = findall(x -> x != 0, label)
-    numSeg::Integer = 0
+    numSeg::Int = 0
     for i in idx
         n1 = links[i, 1]
         n2 = links[i, 2]

@@ -2,6 +2,7 @@
 
 ## Dislocation
 ```@docs
+
 ```
 
 ## FEM
@@ -13,9 +14,9 @@ shapeFunctionDeriv
 
 ## Dislocation FEM
 ```@docs
-DislocationFEMCorrective
-
 calcPKForce
+
+calc_σ_hat
 ```
 
 ## Miscelaneous

@@ -19,34 +19,34 @@ end
 """
 Related functions: [`coordLbl`](@ref)
 ```
-idxLabel(network::DislocationNetwork, label::Integer; condition::Function = ==)
+idxLabel(network::DislocationNetwork, label::Int; condition::Function = ==)
 ```
 Find indices for dislocations whose `label` meets `condition(x, label)`.
 """
-function idxLabel(network::DislocationNetwork, label::Integer; condition::Function = ==)
+function idxLabel(network::DislocationNetwork, label::Int; condition::Function = ==)
     return findall(x -> condition(x, label), network.label)
 end
 """
 Related functions: [`idxLabel`](@ref)
 ```
-coordLbl(network::DislocationNetwork, label::Integer)
+coordLbl(network::DislocationNetwork, label::Int)
 ```
 Get coordinates for the nodes with a given label (node type).
 """
-function coordLbl(network::DislocationNetwork, label::Integer)
+function coordLbl(network::DislocationNetwork, label::Int)
     return network.coord[idxLabel(network, label), :]
 end
 """
 ```
 coordIdx(network::DislocationNetwork,
-    index::Union{Integer,AbstractArray{<:Integer, N}) where {N}
+    index::Union{Int,AbstractArray{<:Int, N}) where {N}
 ```
 Get coordinates for the node(s) that with the `index` or vector of indices
 provided.
 """
 function coordIdx(
     network::DislocationNetwork,
-    index::Union{Integer, AbstractArray{<:Integer, N}},
+    index::Union{Int, AbstractArray{<:Int, N}},
 ) where {N}
     return network.coord[index, :]
 end
@@ -71,7 +71,7 @@ idxCond(network::DislocationNetwork, fieldname::Symbol, val::Real;
 ```
 Find index/indices of node whose `fieldname`, `(:links, :bVec, :slipPlane, :coord, :label, :numNode, :numSeg)`, meets `condition(fieldname, val)`. If `fieldName` is multidimensional it will return `CartesianIndex`.
 ```
-idxCond(network::DislocationNetwork, fieldname::Symbol, idxComp::Integer,
+idxCond(network::DislocationNetwork, fieldname::Symbol, idxComp::Int,
     val::Real; condition::Function = ==)
 ```
 Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxComp], val)`. It errors if the fieldname provided does not have a column `idxComp`.
@@ -97,7 +97,7 @@ end
 function idxCond(
     network::DislocationNetwork,
     fieldname::Symbol,
-    idxComp::Integer,
+    idxComp::Int,
     val::Real;
     condition::Function = ==,
 )
@@ -111,7 +111,7 @@ dataCond(network::DislocationNetwork, dataField::Symbol, val::Real;
 ```
 Get the data whose `dataField`, `(:links, :bVec, :slipPlane, :coord, :label, :numNode, :numSeg)`, meets the `condition(dataField, val)`. If `dataField` is multidimensional it will use `CartesianIndex` to find it.
 ```
-dataCond(network::DislocationNetwork, dataField::Symbol, idxComp::Integer,
+dataCond(network::DislocationNetwork, dataField::Symbol, idxComp::Int,
     val::Real; condition::Function = ==)
 ```
 Get the data whose `dataField`, meets the `condition(dataField[:,idxComp], val)`. It errors if the fieldname provided does not have a column `idxComp`.
@@ -122,7 +122,7 @@ dataCond(network::DislocationNetwork, dataField::Symbol, condField::Symbol,
 Get the data from `dataField` that corresponds to the `condField` (from the same pool as `dataField`) that meets the `condition(condField, val)`. If `condField` is multidimensional it will use `CartesianIndex` in its search. `dataField` and `condField` must have the same number of rows.
 ```
 dataCond(network::DislocationNetwork, dataField::Symbol, condField::Symbol,
-    idxComp::Integer, val::Real; condition::Function = ==)
+    idxComp::Int, val::Real; condition::Function = ==)
 ```
 Get the data from `dataField` that corresponds to the `condField` that meets the `condition(condField[:, idxComp], val)`. `dataField` and `condField` must have the same number of rows.
 """
@@ -139,7 +139,7 @@ end
 function dataCond(
     network::DislocationNetwork,
     dataField::Symbol,
-    idxComp::Integer,
+    idxComp::Int,
     val::Real;
     condition::Function = ==,
 )
@@ -168,7 +168,7 @@ function dataCond(
     network::DislocationNetwork,
     dataField::Symbol,
     condField::Symbol,
-    idxComp::Integer,
+    idxComp::Int,
     val::Real;
     condition::Function = ==,
 )

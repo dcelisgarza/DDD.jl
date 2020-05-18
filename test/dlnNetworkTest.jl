@@ -41,7 +41,7 @@ end
     cnd = [==, >=, <=, <, >, !=]
     numNode = 10
     numSeg = 20
-    links = zeros(Int64, numSeg, 2)
+    links = zeros(Int, numSeg, 2)
     bVec = zeros(numSeg, 3)
     slipPlane = zeros(numSeg, 3)
     coord = zeros(numNode, 3)
@@ -64,9 +64,9 @@ end
         label = label,
         segForce = zeros(size(coord)),
         nodeVel = zeros(size(coord)),
-        numNode = convert(Int64, numNode),
-        numSeg = convert(Int64, numSeg),
-        maxConnect = convert(Int64, 0),
+        numNode = convert(Int, numNode),
+        numSeg = convert(Int, numSeg),
+        maxConnect = convert(Int, 0),
     )
     @test isequal(network.label[1], 0)
     @test isequal(0, network.label[1])
@@ -164,16 +164,16 @@ end
     @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
     @test network.label[(1 + end - nodeLoop):end] == loops[end].label
     network2 = DislocationNetwork(
-        links = zeros(Int64, 1, 2),
+        links = zeros(Int, 1, 2),
         slipPlane = zeros(1, 3),
         bVec = zeros(1, 3),
         coord = zeros(1, 3),
         label = zeros(nodeType, 1),
         segForce = zeros(1, 3),
         nodeVel = zeros(1, 3),
-        numNode = convert(Int64, 0),
-        numSeg = convert(Int64, 0),
-        maxConnect = convert(Int64, 0),
+        numNode = convert(Int, 0),
+        numSeg = convert(Int, 0),
+        maxConnect = convert(Int, 0),
     )
     makeNetwork!(network2, loops)
     @test compStruct(network, network2)

@@ -19,6 +19,7 @@ end
     srfFix = 4
     ext = 5
 end
+
 """
 There are different types of segments. Edge segments are orthogonal to the Burgers vector; screw segments are parallel to the Burgers vector; mixed segments are anything in between. Segment type can be easily inferred during runtime. These are mainly used for multiple dispatch purposes.
 ```
@@ -36,6 +37,7 @@ struct segEdge <: AbstractDlnSeg end
 struct segEdgeN <: AbstractDlnSeg end
 struct segScrew <: AbstractDlnSeg end
 struct segMixed <: AbstractDlnSeg end
+
 """
 Dislocation structures have different classifications. Prismatic loops are made up only of edge segments with the same slip system; shear loops are made up of a mixture of segment types with the same slip system; jogs and kinks are steps not contained in the slip plane.
 ```
@@ -54,6 +56,7 @@ struct loopMixed <: AbstractDlnStr end
 struct loopDln <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
+
 """
 ```
 abstract type AbstractDistribution end
@@ -69,6 +72,7 @@ struct Zeros <: AbstractDistribution end
 struct Rand <: AbstractDistribution end
 struct Randn <: AbstractDistribution end
 struct Regular <: AbstractDistribution end
+
 """
 ```
 abstract type AbstractMobility end
@@ -82,19 +86,18 @@ abstract type AbstractMobility end
 struct mobBCC <: AbstractMobility end
 struct mobFCC <: AbstractMobility end
 struct mobHCP <: AbstractMobility end
+
 """
 ```
-struct SlipSystem{
-    T1 <: AbstractString,
-    T2 <: AbstractArray{<:Float64, N} where {N},
-}
-    name::T1
+struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
+    crystalStruct::T1
     slipPlane::T2
     bVec::T2
+end
 ```
 Slip systems.
 """
-struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{<:Float64, N} where {N}}
+struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
     crystalStruct::T1
     slipPlane::T2
     bVec::T2
@@ -107,7 +110,7 @@ end
 ```
 DislocationP{
     T1 <: Float64,
-    T2 <: Int64,
+    T2 <: Int,
     T3 <: Bool,
     T4 <: AbstractMobility,
 }
@@ -133,7 +136,7 @@ DislocationP{
 ```
 Dislocation parameters structure. See [`AbstractMobility`](@ref) for more details.
 """
-struct DislocationP{T1 <: Float64, T2 <: Int64, T3 <: Bool, T4 <: AbstractMobility}
+struct DislocationP{T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
 
     coreRad::T1
     coreRadSq::T1
@@ -201,10 +204,10 @@ end # DislocationP
 ```
 struct DislocationLoop{
     T1 <: AbstractDlnStr,
-    T2 <: Int64,
+    T2 <: Int,
     T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
-    T4 <: Union{T where {T <: Int64}, AbstractArray{<:Int64, N} where {N}},
-    T5 <: AbstractArray{<:Int64, N} where {N},
+    T4 <: Union{T where {T <: Int}, AbstractArray{<:Int, N} where {N}},
+    T5 <: AbstractArray{<:Int, N} where {N},
     T6 <: AbstractArray{<:Float64, N} where {N},
     T7 <: Vector{<:nodeType},
     T8 <: Float64,
@@ -230,10 +233,10 @@ Dislocation loop structure generated via the constructor [`makeLoop`](@ref).
 """
 struct DislocationLoop{
     T1 <: AbstractDlnStr,
-    T2 <: Int64,
+    T2 <: Int,
     T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
-    T4 <: Union{T where {T <: Int64}, AbstractArray{<:Int64, N} where {N}},
-    T5 <: AbstractArray{<:Int64, N} where {N},
+    T4 <: Union{T where {T <: Int}, AbstractArray{<:Int, N} where {N}},
+    T5 <: AbstractArray{<:Int, N} where {N},
     T6 <: AbstractArray{<:Float64, N} where {N},
     T7 <: Vector{<:nodeType},
     T8 <: Float64,
@@ -329,11 +332,11 @@ end
 """
 ```
 DislocationNetwork{
-    T1 <: AbstractArray{<:Int64, N} where {N},
+    T1 <: AbstractArray{<:Int, N} where {N},
     T2 <: AbstractArray{<:Float64, N} where {N},
     T3 <: Vector{nodeType},
-    T4 <: Int64,
-    T5 <: Integer,
+    T4 <: Int,
+    T5 <: Int,
 }
     links::T1
     slipPlane::T2
@@ -352,10 +355,10 @@ DislocationNetwork{
 Dislocation Network structure. See [`DislocationLoop`](@ref), [`makeNetwork`](@ref) and [`makeNetwork!`](@ref) for further details.
 """
 mutable struct DislocationNetwork{
-    T1 <: AbstractArray{<:Int64, N} where {N},
+    T1 <: AbstractArray{<:Int, N} where {N},
     T2 <: AbstractArray{<:Float64, N} where {N},
     T3 <: Vector{nodeType},
-    T4 <: Int64,
+    T4 <: Int,
 }
     links::T1
     slipPlane::T2

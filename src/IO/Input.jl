@@ -28,16 +28,16 @@ function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::Slip
 
     range = zeros(2, 3)
     for i in 1:3
-        range[:, i] = convert.(Int64, dict["range"][i])
+        range[:, i] = convert.(Int, dict["range"][i])
     end
 
     dislocationLoop = DislocationLoop(
         loopType = dlnTypes[dict["loopType"]],
-        numSides = convert(Int64, dict["numSides"]),
-        nodeSide = convert(Int64, dict["nodeSide"]),
-        numLoops = convert(Int64, dict["numLoops"]),
+        numSides = convert(Int, dict["numSides"]),
+        nodeSide = convert(Int, dict["nodeSide"]),
+        numLoops = convert(Int, dict["numLoops"]),
         segLen = convert.(Float64, dict["segLen"]),
-        slipSystem = convert.(Int64, dict["slipSystem"]),
+        slipSystem = convert.(Int, dict["slipSystem"]),
         _slipPlane = convert.(Float64, slipPlane[dict["slipSystem"], 1:3]),
         _bVec = convert.(Float64, bVec[dict["slipSystem"], 1:3]),
         label = nodeType.(dict["label"]),
@@ -88,7 +88,7 @@ function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
         abstol = convert(Float64, dict["abstol"]),
         reltol = convert(Float64, dict["reltol"]),
         time = convert(Float64, dict["time"]),
-        step = convert(Int64, dict["step"]),
+        step = convert(Int, dict["step"]),
     )
 
     return integrationP
@@ -133,7 +133,7 @@ function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
         maxSegLen = convert(Float64, dict["maxSegLen"]),
         minArea = convert(Float64, dict["minArea"]),
         maxArea = convert(Float64, dict["maxArea"]),
-        maxConnect = convert(Int64, dict["maxConnect"]),
+        maxConnect = convert(Int, dict["maxConnect"]),
         remesh = dict["remesh"],
         collision = dict["collision"],
         separation = dict["separation"],
@@ -200,33 +200,33 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
 
     lenLinks = length(dict["links"][1])
     lenCoord = length(dict["coord"][1])
-    maxConnect = convert.(Int64, dict["maxConnect"])
-    links = zeros(Int64, lenLinks, 2)
+    maxConnect = convert.(Int, dict["maxConnect"])
+    links = zeros(Int, lenLinks, 2)
     slipPlane = zeros(lenLinks, 3)
     bVec = zeros(lenLinks, 3)
     coord = zeros(lenCoord, 3)
-    connectivity = zeros(Int64, lenLinks, 2 * maxConnect + 1)
-    linksConnect = zeros(Int64, lenLinks, 2)
-    segIdx = zeros(Int64, lenLinks, 3)
+    connectivity = zeros(Int, lenLinks, 2 * maxConnect + 1)
+    linksConnect = zeros(Int, lenLinks, 2)
+    segIdx = zeros(Int, lenLinks, 3)
     segForce = zeros(lenLinks, 3)
     nodeVel = zeros(lenLinks, 3)
 
     for i in 1:2
-        links[:, i] = convert.(Int64, dict["links"][i])
-        linksConnect[:, i] = convert.(Int64, dict["linksConnect"][i])
+        links[:, i] = convert.(Int, dict["links"][i])
+        linksConnect[:, i] = convert.(Int, dict["linksConnect"][i])
     end
 
     @inbounds @simd for i in 1:3
         slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
         bVec[:, i] = convert.(Float64, dict["bVec"][i])
         coord[:, i] = convert.(Float64, dict["coord"][i])
-        segIdx[:, i] = convert.(Int64, dict["segIdx"][i])
+        segIdx[:, i] = convert.(Int, dict["segIdx"][i])
         segForce[:, i] = convert.(Float64, dict["segForce"][i])
         nodeVel[:, i] = convert.(Float64, dict["nodeVel"][i])
     end
 
     @inbounds @simd for i in 1:9
-        connectivity[:, i] = convert.(Int64, dict["connectivity"][i])
+        connectivity[:, i] = convert.(Int, dict["connectivity"][i])
     end
 
     dislocationNetwork = DislocationNetwork(
@@ -237,8 +237,8 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         label = nodeType.(dict["label"]),
         segForce = segForce,
         nodeVel = nodeVel,
-        numNode = convert.(Int64, dict["numNode"]),
-        numSeg = convert.(Int64, dict["numSeg"]),
+        numNode = convert.(Int, dict["numNode"]),
+        numSeg = convert.(Int, dict["numSeg"]),
         maxConnect = maxConnect,
     )
     dislocationNetwork.linksConnect = linksConnect

@@ -1,10 +1,6 @@
 # Post Processing
 ```@docs
-plotNodes(network::DislocationNetwork, args...; kw...)
+plotNodes
 
-plotNodes!(fig, network::DislocationNetwork, args...; kw...)
-
-plotNodes(loop::DislocationLoop, args...; kw...)
-
-plotNodes!(fig, loop::DislocationLoop, args...; kw...)
+plotNodes!
 ```

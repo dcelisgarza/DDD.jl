@@ -1,7 +1,7 @@
 """
 Replaces node id with the last valid node. Cleans up links and
 """
-function removeNode!(network::DislocationNetwork, nodeKept::Integer, nodeGone::Integer)
+function removeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
     links = network.links
     coord = network.coord
     label = network.label
@@ -40,11 +40,11 @@ end
 
 """
 ```
-removeLink!(network::DislocationNetwork, link::Integer)
+removeLink!(network::DislocationNetwork, link::Int)
 ```
 Removes link and its information from network.
 """
-function removeLink!(network::DislocationNetwork, link::Integer)
+function removeLink!(network::DislocationNetwork, link::Int)
     links = network.links
     coord = network.coord
     label = network.label
@@ -65,7 +65,7 @@ end
 """
 Merges and cleans up the information in `network.connectivity` and `network.links` for the nodes that will be merged. This is such that there are no repeated entries, self-links or double links.
 """
-function mergeNode!(network::DislocationNetwork, nodeKept::Int64, nodeGone::Int64)
+function mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
 
     # Return if both nodes to be merged are the same.
     nodeKept == nodeGone && return

@@ -4,7 +4,7 @@ using Test
 cd(@__DIR__)
 
 @testset "Geometry" begin
-    arr = Int64[3; 4; 6]
+    arr = Int[3; 4; 6]
     @test isapprox(intAngle(arr[1]), π / 3)
     @test isapprox(intAngle(arr[2]), π / 2)
     @test isapprox(intAngle(arr[3]), 2π / 3)
