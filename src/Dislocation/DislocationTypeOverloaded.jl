@@ -42,7 +42,7 @@ length(::DislocationLoop) = 1
 getindex(x::DislocationLoop, i::Int) = i == 1 ? x : throw(BoundsError())
 eachindex(x::DislocationLoop) = 1
 function zero(::Type{DislocationLoop})
-    DislocationLoop(
+    DislocationLoop(;
         loopType = loopDln(),
         numSides = convert(Int, 0),
         nodeSide = convert(Int, 0),

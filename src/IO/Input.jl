@@ -31,7 +31,7 @@ function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::Slip
         range[:, i] = convert.(Int, dict["range"][i])
     end
 
-    dislocationLoop = DislocationLoop(
+    dislocationLoop = DislocationLoop(;
         loopType = dlnTypes[dict["loopType"]],
         numSides = convert(Int, dict["numSides"]),
         nodeSide = convert(Int, dict["nodeSide"]),

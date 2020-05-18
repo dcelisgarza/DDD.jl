@@ -1,5 +1,6 @@
+## Primitives
 """
-Dislocation nodes have labels that change how they are treated by the simulation. There are only given types of nodes so these labels may only take on predefined values and error for anything else.
+Dislocation nodes have labels that change how they are treated by the simulation. There are only certain types of nodes so these labels may only take on predefined values. Adding new nodes requires adding new entries to the enumerated type.
 ```
 @enum nodeType begin
     none = 0  # Undefined node, value at initialisation.
@@ -87,6 +88,8 @@ struct mobBCC <: AbstractMobility end
 struct mobFCC <: AbstractMobility end
 struct mobHCP <: AbstractMobility end
 
+## Structures
+
 """
 ```
 struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
@@ -97,23 +100,22 @@ end
 ```
 Slip systems.
 """
-struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
+struct SlipSystem{T1, T2}
     crystalStruct::T1
     slipPlane::T2
     bVec::T2
-    function SlipSystem(; crystalStruct, slipPlane, bVec)
-        new{typeof(crystalStruct), typeof(slipPlane)}(crystalStruct, slipPlane, bVec)
-    end
+end
+function SlipSystem(;
+    crystalStruct::T1,
+    slipPlane::T2,
+    bVec::T2,
+) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
+    SlipSystem(crystalStruct, slipPlane, bVec)
 end
 
 """
 ```
-DislocationP{
-    T1 <: Float64,
-    T2 <: Int,
-    T3 <: Bool,
-    T4 <: AbstractMobility,
-}
+DislocationP{T1, T2, T3, T4}
     # Size.
     coreRad::T1     # Core radius.
     coreRadMag::T1  # Magnitude of core Radius.
@@ -154,7 +156,11 @@ struct DislocationP{T1, T2, T3, T4}
     climbDrag::T1
     lineDrag::T1
     mobility::T4
-end # DislocationP
+end
+"""
+```
+```
+"""
 function DislocationP(;
     coreRad::T1,
     coreRadMag::T1,
@@ -178,7 +184,7 @@ function DislocationP(;
     minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
     coreRadSq = coreRad^2
 
-    return DislocationP(
+    DislocationP(
         coreRad,
         coreRadSq,
         coreRadMag,
@@ -246,8 +252,9 @@ struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     range::T6
     dist::T9
 end
-
-function DislocationLoop(;
+"""
+```
+DislocationLoop(;
     loopType::T1,
     numSides::T2,
     nodeSide::T2,
@@ -266,37 +273,175 @@ function DislocationLoop(;
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
     T5 <: AbstractVector{nodeType},
-    T6 <: Real,
+    T6 <: Float64,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: AbstractDistribution,
+}
+```
+Generic named constructor for dislocation loop. Calls other constructors that dispatch on `loopType`.
+"""
+@inline function DislocationLoop(;
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
+    T6 <: Float64,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
 }
 
-    numSides,
-    nodeSide,
-    numLoops,
-    segLen,
-    slipSystem,
-    links,
-    slipPlane,
-    bVec,
-    coord,
-    label,
-    buffer,
-    range,
-    dist, = makeLoop(
+    DislocationLoop(
+        loopType;
+        numSides = numSides,
+        nodeSide = nodeSide,
+        numLoops = numLoops,
+        segLen = segLen,
+        slipSystem = slipSystem,
+        _slipPlane = _slipPlane,
+        _bVec = _bVec,
+        label = label,
+        buffer = buffer,
+        range = range,
+        dist = dist,
+    )
+end
+
+@inline function DislocationLoop(
+    loopType::T1;
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
+) where {
+    T1 <: loopDln,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
+    T6 <: Float64,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: AbstractDistribution,
+}
+
+    nodeTotal::Int = 0
+    links = zeros(Int, nodeTotal, 2)
+    coord = zeros(nodeTotal, 3)
+    slipPlane = zeros(0, 3)
+    bVec = zeros(0, 3)
+
+    DislocationLoop(
         loopType,
         numSides,
         nodeSide,
         numLoops,
         segLen,
         slipSystem,
-        _slipPlane,
-        _bVec,
+        links,
+        slipPlane,
+        bVec,
+        coord,
         label,
         buffer,
         range,
         dist,
     )
+end
+
+@inline function DislocationLoop(
+    loopType::T1;
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
+    T6 <: Float64,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: AbstractDistribution,
+}
+
+    nodeTotal = numSides * nodeSide
+    lSegLen = length(segLen)
+    @assert length(label) == nodeTotal "makeLoop: All $nodeTotal nodes must be labelled. There are only $(length(label)) labels currently defined."
+    @assert lSegLen == nodeTotal "makeLoop: All $nodeTotal segments must have their lengths defined. There are only $lSegLen lengths currently defined."
+
+    _slipPlane = _slipPlane ./ norm(_slipPlane)
+    _bVec = _bVec ./ norm(_bVec)
+
+    rotAxis = zeros(eltype(_slipPlane), 3)
+    if typeof(loopType) == loopShear
+        rotAxis = _slipPlane
+    elseif typeof(loopType) == loopPrism
+        rotAxis = _bVec
+    end
+
+    links = zeros(Int, nodeTotal, 2)
+    coord = zeros(nodeTotal, 3)
+    slipPlane = zeros(0, 3)
+    bVec = zeros(0, 3)
+    seg = zeros(lSegLen, 3)
+    @inbounds for i in eachindex(segLen)
+        seg[i, :] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
+    end
+
+    θ = extAngle(numSides)
+    rseg = zeros(3)
+    @inbounds for i in 1:numSides
+        idx = (i - 1) * nodeSide
+        rseg = rot3D(seg[mod(i - 1, lSegLen) + 1, :], rotAxis, zeros(3), θ * (i - 1))
+        for j in 1:nodeSide
+            if i == j == 1
+                coord[1, :] = zeros(3)
+                slipPlane = [slipPlane; _slipPlane']
+                bVec = [bVec; _bVec']
+                continue
+            end
+            if idx + j <= nodeTotal
+                coord[idx + j, :] += coord[idx + j - 1, :] + rseg
+                slipPlane = [slipPlane; _slipPlane']
+                bVec = [bVec; _bVec']
+            end
+        end
+    end
+    coord .-= mean(coord, dims = 1)
+
+    # Links
+    @inbounds for j in 1:(nodeTotal - 1)
+        links[j, :] = [j; 1 + j]
+    end
+    links[nodeTotal, :] = [nodeTotal; 1]
 
     DislocationLoop(
         loopType,
@@ -356,7 +501,7 @@ mutable struct DislocationNetwork{T1, T2, T3, T4, T5}
     linksConnect::T5
     segIdx::T5
 end # DislocationNetwork
-function DislocationNetwork(;
+@inline function DislocationNetwork(;
     links::T1,
     slipPlane::T2,
     bVec::T2,
@@ -413,7 +558,7 @@ DislocationNetwork(
 ```
 Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) for in-place version.
 """
-function DislocationNetwork(
+@inline function DislocationNetwork(
     sources::T1,
     maxConnect::T2 = 4,
     args...;
@@ -509,7 +654,7 @@ DislocationNetwork!(
 ```
 In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`](@ref) for constructor.
 """
-function DislocationNetwork!(
+@inline function DislocationNetwork!(
     network::T1,
     sources::T2,
     maxConnect::T3 = 4,

@@ -43,7 +43,7 @@ DislocationNetwork!(network2, dislocationLoop; memBuffer = 1)
 compStruct(network, network2; verbose = true)
 
 pentagon = DislocationLoop(
-    loopType = loopPrism(),
+    loopPrism();
     numSides = 5,
     nodeSide = 1,
     numLoops = 1,

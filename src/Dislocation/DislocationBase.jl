@@ -1,5 +1,5 @@
 include("DislocationType.jl")
 include("DislocationIdx.jl")
-include("DislocationTypeConstructors.jl")
+include("DislocationTypeAux.jl")
 include("DislocationTypeOverloaded.jl")
 include("DislocationFunctions.jl")
