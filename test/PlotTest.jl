@@ -17,7 +17,7 @@ cd(@__DIR__)
         loops[i] =
             loadDislocationLoop(dictDislocationLoop[i], slipSystems)
     end
-    network = makeNetwork(loops)
+    network = DislocationNetwork(loops)
 
     function sumNodes(loops)
         totalNodes = 0

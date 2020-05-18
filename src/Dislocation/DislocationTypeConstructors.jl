@@ -167,164 +167,6 @@ end
 
 """
 ```
-makeNetwork(
-    sources::Union{
-            DislocationLoop,
-            AbstractVector{<:DislocationLoop}
-        }, # Dislocation structures.
-    maxConnect::Int = 4,
-    memBuffer::Int = 10, # Buffer for memory allocation. The code will allocate the total number of nodes times `memBuffer` to reduce dynamic memory allocation during runtime.
-    args...;
-    checkConsistency::Bool = false, # Check the consistency of the network.
-    kw...,
-)
-```
-Constructor for [`DislocationNetwork`](@ref), see [`makeNetwork!`](@ref) for in-place version.
-"""
-function makeNetwork(
-    sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
-    maxConnect::Int = 4,
-    args...;
-    memBuffer::Int = 10,
-    checkConsistency::Bool = true,
-    kw...,
-)
-    nodeTotal::Int = 0
-    lims = zeros(2, 3)
-    # Allocate memory.
-    @inbounds for i in eachindex(sources)
-        nodeTotal += sources[i].numLoops * length(sources[i].label)
-    end
-
-    nodeBuffer::Int = nodeTotal * memBuffer
-
-    network = DislocationNetwork(
-        links = zeros(Int, nodeBuffer, 2),
-        slipPlane = zeros(nodeBuffer, 3),
-        bVec = zeros(nodeBuffer, 3),
-        coord = zeros(nodeBuffer, 3),
-        label = zeros(nodeType, nodeBuffer),
-        segForce = zeros(Float64, nodeBuffer, 3),
-        nodeVel = zeros(Float64, nodeBuffer, 3),
-        numNode = nodeTotal,
-        numSeg = nodeTotal,
-    )
-    network.maxConnect = maxConnect
-
-    nodeTotal = 0
-    initIdx = findfirst(x -> x == 0, network.label)
-    initIdx == nothing ? initIdx = 0 : nothing
-    @inbounds for i in eachindex(sources)
-        # Indices.
-        idx = initIdx + nodeTotal
-        nodesLoop = length(sources[i].label)
-        numLoops = sources[i].numLoops
-        numNodes = numLoops * nodesLoop
-        disp = loopDistribution(sources[i].dist, numLoops, args...; kw...)
-        limits!(lims, mean(sources[i].segLen), sources[i].range, sources[i].buffer)
-        for j in 1:numLoops
-            idxi = idx + (j - 1) * nodesLoop
-            idxf = idxi + nodesLoop - 1
-            # Prepare to distribute sources.
-            network.links[idxi:idxf, :] =
-                sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
-            network.slipPlane[idxi:idxf, :] .= sources[i].slipPlane[1:nodesLoop, :]
-            network.bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
-            network.coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
-            # Move loop.
-            network.coord[idxi:idxf, :] .=
-                translatePoints(sources[i].coord[1:nodesLoop, :], lims, disp[j, :])
-            network.label[idxi:idxf, :] .= sources[i].label[1:nodesLoop, :]
-            nodeTotal += nodesLoop
-        end
-    end
-
-    getSegmentIdx!(network)
-    makeConnect!(network)
-
-    checkConsistency ? checkNetwork(network) : nothing
-
-    return network
-end
-
-"""
-```
-makeNetwork!(
-    network::DislocationNetwork,
-    sources::Union{
-        DislocationLoop,
-        AbstractVector{<:DislocationLoop}
-    },
-    maxConnect::Int = 4,
-    args...;
-    checkConsistency::Bool = false,
-    kw...,
-)
-```
-In-place constructor for [`DislocationNetwork`](@ref), see [`makeNetwork`](@ref) for constructor.
-"""
-function makeNetwork!(
-    network::DislocationNetwork,
-    sources::Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
-    maxConnect::Int = 4,
-    args...;
-    checkConsistency::Bool = false,
-    kw...,
-)
-    nodeTotal::Int = 0
-    lims = zeros(2, 3)
-    network.maxConnect = maxConnect
-    # Allocate memory.
-    @inbounds for i in eachindex(sources)
-        nodeTotal += sources[i].numLoops * length(sources[i].label)
-    end
-    available = findfirst(x -> x == 0, network.label)
-    if available == nothing
-        push!(network, nodeTotal)
-    else
-        check = length(network.label) - (available - 1) - nodeTotal
-        check < 0 ? push!(network, -check) : nothing
-    end
-
-    nodeTotal = 0
-    initIdx = findfirst(x -> x == 0, network.label)
-    initIdx == nothing ? initIdx = 0 : nothing
-    @inbounds for i in eachindex(sources)
-        # Indices.
-        idx = initIdx + nodeTotal
-        nodesLoop = length(sources[i].label)
-        numLoops = sources[i].numLoops
-        numNodes = numLoops * nodesLoop
-        disp = loopDistribution(sources[i].dist, numLoops, args...; kw...)
-        limits!(lims, mean(sources[i].segLen), sources[i].range, sources[i].buffer)
-        for j in 1:numLoops
-            idxi = idx + (j - 1) * nodesLoop
-            idxf = idxi + nodesLoop - 1
-            # Prepare to distribute sources.
-            network.links[idxi:idxf, :] =
-                sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
-            network.slipPlane[idxi:idxf, :] .= sources[i].slipPlane[1:nodesLoop, :]
-            network.bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
-            network.coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
-            # Move loop.
-            network.coord[idxi:idxf, :] .=
-                translatePoints(sources[i].coord[1:nodesLoop, :], lims, disp[j, :])
-            network.label[idxi:idxf, :] .= sources[i].label[1:nodesLoop, :]
-            nodeTotal += nodesLoop
-        end
-    end
-    network.numNode += nodeTotal
-
-    getSegmentIdx!(network)
-    makeConnect!(network)
-
-    checkConsistency ? checkNetwork(network) : nothing
-
-    return network
-end
-
-"""
-```
 loopDistribution(dist<:AbstractDistribution, n::Int, args...; kw...)
 ```
 Returns `n` points according to the concrete subtype of [`AbstractDistribution`](@ref) given. Overload this function with new concrete subtypes and custom distributions. This and [`limits!`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
@@ -425,6 +267,34 @@ function makeConnect!(network::DislocationNetwork)
 
     network.connectivity = connectivity
     network.linksConnect = linksConnect
+
+    return network
+end
+function makeConnect(links, maxConnect)
+    idx = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
+    lenLinks = size(links, 1)
+    connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
+    linksConnect = zeros(Int, lenLinks, 2)
+    @inbounds @simd for i in idx
+        # links[idx, :] yields the nodes involved in the link
+        n1 = links[i, 1] # Node 1, it is the row of the coord matrix
+        n2 = links[i, 2] # Node 2
+
+        connectivity[n1, 1] += 1 # Num of other nodes node n1 is connected to.
+        connectivity[n2, 1] += 1 # Num of other nodes node n2 is connected to.
+
+        tmp1 = 2 * connectivity[n1, 1]
+        tmp2 = 2 * connectivity[n2, 1]
+
+        # i = linkID. 1, 2 are the first and second nodes in link with linkID
+        connectivity[n1, tmp1:(tmp1 + 1)] = [i, 1]
+        connectivity[n2, tmp2:(tmp2 + 1)] = [i, 2]
+
+        linksConnect[i, 1] = connectivity[n1, 1]
+        linksConnect[i, 2] = connectivity[n2, 1]
+    end
+
+    return connectivity, linksConnect
 
     return network
 end
@@ -546,4 +416,19 @@ function getSegmentIdx!(network::DislocationNetwork)
     network.segIdx = segIdx
 
     return network
+end
+
+function getSegmentIdx(links, label)
+    segIdx = zeros(Int, size(links, 1), 3)
+    idx = findall(x -> x != 0, label)
+    numSeg::Int = 0
+    for i in idx
+        n1 = links[i, 1]
+        n2 = links[i, 2]
+        (label[n1] == 4 || label[n2] == 4) ? continue : nothing
+        numSeg += 1
+        segIdx[numSeg, :] = [i, n1, n2]
+    end
+
+    return numSeg, segIdx
 end

@@ -15,9 +15,9 @@ include("./Dislocation/DislocationBase.jl")
 export AbstractDistribution, Zeros, Rand, Randn, Regular
 # Dislocation types.
 export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
-export DislocationLoop, DislocationNetwork
+export DislocationLoop, DislocationNetwork, DislocationNetwork!
 # Dislocation functions.
-export makeNetwork, makeNetwork!, checkNetwork, loopDistribution, calcSelfForce
+export checkNetwork, loopDistribution, calcSelfForce
 export calcSegSegForce, calcParSegSegForce, calcSegForce
 # Topology
 export removeNode!

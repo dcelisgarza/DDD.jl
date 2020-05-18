@@ -229,7 +229,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         connectivity[:, i] = convert.(Int, dict["connectivity"][i])
     end
 
-    dislocationNetwork = DislocationNetwork(
+    dislocationNetwork = DislocationNetwork(;
         links = links,
         slipPlane = slipPlane,
         bVec = bVec,
@@ -240,10 +240,10 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         numNode = convert.(Int, dict["numNode"]),
         numSeg = convert.(Int, dict["numSeg"]),
         maxConnect = maxConnect,
+        linksConnect = linksConnect,
+        connectivity = connectivity,
+        segIdx = segIdx,
     )
-    dislocationNetwork.linksConnect = linksConnect
-    dislocationNetwork.connectivity = connectivity
-    dislocationNetwork.segIdx = segIdx
 
     return dislocationNetwork
 end

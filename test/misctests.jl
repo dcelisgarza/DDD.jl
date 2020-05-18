@@ -2,48 +2,31 @@ using Revise, BenchmarkTools
 using DDD
 cd(@__DIR__)
 
-
-function myFunc!(a, b)
-    check = rand(1:10, 10)
-    for i in 1:10
-        check[i] < 5 ? nothing : continue
-        i -= 1
-        println(check[i+1], " ", i)
-    end
-    return a, b
-end
-
-a = 0
-b = 0
-a, b = myFunc!(a, b)
-
-a
-b
-
-function plotNodesMakie(network::DislocationNetwork, args...; kw...)
-    idx = findall(x -> x != 0, network.label)
-    coord = network.coord
-    fig = Scene()
-    meshscatter!(coord, args...; kw...)
-    for i in idx
-        n1 = network.links[i, 1]
-        n2 = network.links[i, 2]
-        lines!(
-            coord[[n1, n2], 1],
-            coord[[n1, n2], 2],
-            coord[[n1, n2], 3],
-            args...;
-            kw...,
-        )
-    end
-    return fig
-end
+#
+# function plotNodesMakie(network::DislocationNetwork, args...; kw...)
+#     idx = findall(x -> x != 0, network.label)
+#     coord = network.coord
+#     fig = Scene()
+#     meshscatter!(coord, args...; kw...)
+#     for i in idx
+#         n1 = network.links[i, 1]
+#         n2 = network.links[i, 2]
+#         lines!(
+#             coord[[n1, n2], 1],
+#             coord[[n1, n2], 2],
+#             coord[[n1, n2], 3],
+#             args...;
+#             kw...,
+#         )
+#     end
+#     return fig
+# end
 
 fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
 fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
 fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
 fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
-fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+fileDislocationLoop = "../inputs/dln/sampleDislocation.JSON"
 dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileDislocationP,
     fileMaterialP,
@@ -52,6 +35,12 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileDislocationLoop,
 )
 network = makeNetwork(dislocationLoop; memBuffer = 1)
+makeNetwork!(network, dislocationLoop; memBuffer = 1)
+network2 = DislocationNetwork(dislocationLoop; memBuffer = 1)
+DislocationNetwork!(network2, dislocationLoop; memBuffer = 1)
+
+
+compStruct(network, network2; verbose = true)
 
 pentagon = DislocationLoop(
     loopType = loopPrism(),

@@ -16,7 +16,7 @@ cd(@__DIR__)
         fileSlipSystem,
         fileDislocationLoop,
     )
-    network = makeNetwork(dislocationLoop)
+    network = DislocationNetwork(dislocationLoop)
     # Dump simulation.
     paramDump = "../outputs/dump/sampleDump.JSON"
     save(

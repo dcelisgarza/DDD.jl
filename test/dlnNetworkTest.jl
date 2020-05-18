@@ -124,12 +124,12 @@ end
     # Populate a dislocation network with the loops.
     # Test one branch of memory allocation.
     network = zero(DislocationNetwork)
-    makeNetwork!(network, loops[1])
+    DislocationNetwork!(network, loops[1])
     @test network.numNode ==
           loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
     # Test other branch of memory allocation.
     network = zero(DislocationNetwork)
-    makeNetwork!(network, loops)
+    DislocationNetwork!(network, loops)
     function sumNodes(loops)
         totalNodes = 0
         for i in eachindex(loops)
@@ -175,9 +175,9 @@ end
         numSeg = convert(Int, 0),
         maxConnect = convert(Int, 0),
     )
-    makeNetwork!(network2, loops)
+    DislocationNetwork!(network2, loops)
     @test compStruct(network, network2)
-    network3 = makeNetwork(loops)
+    network3 = DislocationNetwork(loops)
     @test network.links == network3.links[1:totalNodes, :]
     @test network.slipPlane == network3.slipPlane[1:totalNodes, :]
     @test network.bVec == network3.bVec[1:totalNodes, :]
