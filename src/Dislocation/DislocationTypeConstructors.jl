@@ -89,11 +89,11 @@ function makeLoop(
 ) where {
     T1 <: AbstractDlnStr,
     T2 <: Int,
-    T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
-    T4 <: AbstractArray{<:Float64, N} where {N},
-    T5 <: Vector{nodeType},
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
     T6 <: Float64,
-    T7 <: AbstractArray{<:Float64, N} where {N},
+    T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
 }
 

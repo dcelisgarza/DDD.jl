@@ -246,6 +246,7 @@ struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     range::T6
     dist::T9
 end
+
 function DislocationLoop(;
     loopType::T1,
     numSides::T2,
@@ -264,13 +265,10 @@ function DislocationLoop(;
     T2 <: Int,
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{<:nodeType},
+    T5 <: AbstractVector{nodeType},
     T6 <: Real,
     T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: Union{
-        T where {T <: AbstractDistribution},
-        AbstractArray{T, N} where {T <: AbstractDistribution, N},
-    },
+    T8 <: AbstractDistribution,
 }
 
     numSides,
