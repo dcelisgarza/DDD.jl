@@ -136,8 +136,7 @@ DislocationP{
 ```
 Dislocation parameters structure. See [`AbstractMobility`](@ref) for more details.
 """
-struct DislocationP{T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
-
+struct DislocationP{T1, T2, T3, T4}
     coreRad::T1
     coreRadSq::T1
     coreRadMag::T1
@@ -155,9 +154,33 @@ struct DislocationP{T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility
     climbDrag::T1
     lineDrag::T1
     mobility::T4
+end # DislocationP
+function DislocationP(;
+    coreRad::T1,
+    coreRadMag::T1,
+    minSegLen::T1,
+    maxSegLen::T1,
+    minArea::T1,
+    maxArea::T1,
+    maxConnect::T2,
+    remesh::T3,
+    collision::T3,
+    separation::T3,
+    virtualRemesh::T3,
+    edgeDrag::T1,
+    screwDrag::T1,
+    climbDrag::T1,
+    lineDrag::T1,
+    mobility::T4,
+) where {T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
 
-    function DislocationP(;
+    coreRad == minSegLen == maxSegLen == 0 ? nothing : @assert coreRad < minSegLen < maxSegLen
+    minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
+    coreRadSq = coreRad^2
+
+    return DislocationP(
         coreRad,
+        coreRadSq,
         coreRadMag,
         minSegLen,
         maxSegLen,
@@ -174,31 +197,7 @@ struct DislocationP{T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility
         lineDrag,
         mobility,
     )
-
-        coreRad == minSegLen == maxSegLen == 0 ? nothing : @assert coreRad < minSegLen < maxSegLen
-        minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
-        coreRadSq = coreRad^2
-        new{typeof(coreRad), typeof(maxConnect), typeof(remesh), typeof(mobility)}(
-            coreRad,
-            coreRadSq,
-            coreRadMag,
-            minSegLen,
-            maxSegLen,
-            minArea,
-            maxArea,
-            maxConnect,
-            remesh,
-            collision,
-            separation,
-            virtualRemesh,
-            edgeDrag,
-            screwDrag,
-            climbDrag,
-            lineDrag,
-            mobility,
-        )
-    end # constructor
-end # DislocationP
+end # constructor
 
 """
 ```

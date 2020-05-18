@@ -12,19 +12,27 @@ length(x::nodeType) = 1
 
 """
 ```
-makeSegment(type::AbstractDlnSeg, slipPlane::Vector{T}, bVec::Vector{T})
-    where {T<:Float64}
+makeSegment(type::AbstractDlnSeg, slipPlane::AbstractVector{T}, bVec::AbstractVector{T})
+    where {T}
 ```
 Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
-function makeSegment(type::segEdge, slipPlane::Vector{T}, bVec::Vector{T}) where {T}
+function makeSegment(type::segEdge, slipPlane::AbstractVector{T}, bVec::AbstractVector{T}) where {T}
     edge = cross(slipPlane, bVec)
     return edge ./ norm(edge)
 end
-function makeSegment(type::segEdgeN, slipPlane::Vector{T}, bVec::Vector{T}) where {T}
+function makeSegment(
+    type::segEdgeN,
+    slipPlane::AbstractVector{T},
+    bVec::AbstractVector{T},
+) where {T}
     return slipPlane ./ norm(slipPlane)
 end
-function makeSegment(type::segScrew, slipPlane::Vector{T}, bVec::Vector{T}) where {T}
+function makeSegment(
+    type::segScrew,
+    slipPlane::AbstractVector{T},
+    bVec::AbstractVector{T},
+) where {T}
     return bVec ./ norm(bVec)
 end
 length(::T) where {T <: AbstractDlnSeg} = 1
