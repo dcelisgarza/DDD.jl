@@ -230,18 +230,7 @@ struct DislocationLoop{
 ```
 Dislocation loop structure generated via the constructor [`makeLoop`](@ref).
 """
-struct DislocationLoop{
-    T1 <: AbstractDlnStr,
-    T2 <: Int,
-    T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
-    T4 <: Union{T where {T <: Int}, AbstractArray{<:Int, N} where {N}},
-    T5 <: AbstractArray{<:Int, N} where {N},
-    T6 <: AbstractArray{<:Float64, N} where {N},
-    T7 <: Vector{<:nodeType},
-    T8 <: Float64,
-    T9 <: AbstractDistribution,
-}
-
+struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     loopType::T1
     numSides::T2
     nodeSide::T2
@@ -256,8 +245,47 @@ struct DislocationLoop{
     buffer::T8
     range::T6
     dist::T9
+end
+function DislocationLoop(;
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{<:nodeType},
+    T6 <: Real,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: Union{
+        T where {T <: AbstractDistribution},
+        AbstractArray{T, N} where {T <: AbstractDistribution, N},
+    },
+}
 
-    function DislocationLoop(;
+    numSides,
+    nodeSide,
+    numLoops,
+    segLen,
+    slipSystem,
+    links,
+    slipPlane,
+    bVec,
+    coord,
+    label,
+    buffer,
+    range,
+    dist, = makeLoop(
         loopType,
         numSides,
         nodeSide,
@@ -272,6 +300,8 @@ struct DislocationLoop{
         dist,
     )
 
+    DislocationLoop(
+        loopType,
         numSides,
         nodeSide,
         numLoops,
@@ -284,48 +314,8 @@ struct DislocationLoop{
         label,
         buffer,
         range,
-        dist, = makeLoop(
-            loopType,
-            numSides,
-            nodeSide,
-            numLoops,
-            segLen,
-            slipSystem,
-            _slipPlane,
-            _bVec,
-            label,
-            buffer,
-            range,
-            dist,
-        )
-
-        new{
-            typeof(loopType),
-            typeof(numSides),
-            typeof(segLen),
-            typeof(slipSystem),
-            typeof(links),
-            typeof(slipPlane),
-            typeof(label),
-            typeof(buffer),
-            typeof(dist),
-        }(
-            loopType,
-            numSides,
-            nodeSide,
-            numLoops,
-            segLen,
-            slipSystem,
-            links,
-            slipPlane,
-            bVec,
-            coord,
-            label,
-            buffer,
-            range,
-            dist,
-        )
-    end
+        dist,
+    )
 end
 
 """
@@ -353,12 +343,7 @@ DislocationNetwork{
 ```
 Dislocation Network structure. See [`DislocationLoop`](@ref), [`makeNetwork`](@ref) and [`makeNetwork!`](@ref) for further details.
 """
-mutable struct DislocationNetwork{
-    T1 <: AbstractArray{<:Int, N} where {N},
-    T2 <: AbstractArray{<:Float64, N} where {N},
-    T3 <: Vector{nodeType},
-    T4 <: Int,
-}
+mutable struct DislocationNetwork{T1, T2, T3, T4, T5}
     links::T1
     slipPlane::T2
     bVec::T2
@@ -369,11 +354,34 @@ mutable struct DislocationNetwork{
     numNode::T4
     numSeg::T4
     maxConnect::T4
-    connectivity::T1
-    linksConnect::T1
-    segIdx::T1
+    connectivity::T5
+    linksConnect::T5
+    segIdx::T5
+end # DislocationNetwork
+function DislocationNetwork(;
+    links::T1,
+    slipPlane::T2,
+    bVec::T2,
+    coord::T2,
+    label::T3,
+    segForce::T2,
+    nodeVel::T2,
+    numNode::T4 = 0,
+    numSeg::T4 = 0,
+    maxConnect::T4 = 0,
+) where {
+    T1 <: AbstractArray{T, N} where {T, N},
+    T2 <: AbstractArray{T, N} where {T, N},
+    T3 <: AbstractVector{nodeType},
+    T4 <: Int,
+}
 
-    function DislocationNetwork(;
+    @assert size(links, 2) == 2
+    @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
+    @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
+    @assert size(coord, 1) == size(label, 1)
+
+    DislocationNetwork(
         links,
         slipPlane,
         bVec,
@@ -381,27 +389,11 @@ mutable struct DislocationNetwork{
         label,
         segForce,
         nodeVel,
-        numNode = 0,
-        numSeg = 0,
-        maxConnect = 0,
+        numNode,
+        numSeg,
+        maxConnect,
+        zeros(Int, 0, 0),
+        zeros(Int, 0, 0),
+        zeros(Int, 0, 0),
     )
-
-        @assert size(links, 2) == 2
-        @assert size(bVec, 2) == size(slipPlane, 2) == size(coord, 2) == 3
-        @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
-        @assert size(coord, 1) == size(label, 1)
-
-        new{typeof(links), typeof(bVec), typeof(label), typeof(numNode)}(
-            links,
-            slipPlane,
-            bVec,
-            coord,
-            label,
-            segForce,
-            nodeVel,
-            numNode,
-            numSeg,
-            maxConnect,
-        )
-    end # Constructor
-end # DislocationNetwork
+end # Constructor
