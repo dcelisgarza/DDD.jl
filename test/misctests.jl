@@ -15,6 +15,28 @@ end
 var = test(rand(10))
 changetest!(var)
 
+function woko(a, b, c)
+    a+b+c
+end
+
+function woko(a,b)
+    a+b
+end
+
+function woko(func::Function, args...)
+    woko(args...).*func(args...)
+end
+
+function web(symb, args...)
+    eval(symb)(args...)
+end
+
+web(:woko,(rand),2,1)
+
+methods(web)
+
+woko(woko, 1,2)
+
 var
 
 
