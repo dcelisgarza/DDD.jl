@@ -2,45 +2,7 @@ using Revise, BenchmarkTools
 using DDD
 cd(@__DIR__)
 
-mutable struct test
-    array
-end
 
-function changetest!(test::test)
-    tmp = test.array
-    tmp[1] = 0
-    a = 5
-    return a
-end
-var = test(rand(10))
-changetest!(var)
-
-function woko(a, b, c)
-    a+b+c
-end
-
-function woko(a,b)
-    a+b
-end
-
-function woko(func::Function, args...)
-    woko(args...).*func(args...)
-end
-
-function web(symb, args...)
-    eval(symb)(args...)
-end
-
-web(:woko,(rand),2,1)
-
-methods(web)
-
-woko(woko, 1,2)
-
-var
-
-
-var
 # using Makie
 # function plotNodesMakie(network::DislocationNetwork, args...; kw...)
 #     idx = findall(x -> x != 0, network.label)
