@@ -32,28 +32,9 @@ mutable struct IntegrationP{T1, T2, T3}
     reltol::T1
     time::T1
     step::T3
-
-    function IntegrationP(;
-        dt,
-        tmin,
-        tmax,
-        method,
-        abstol = 1e-6,
-        reltol = 1e-6,
-        time = 0.0,
-        step = 0,
-    )
-        new{typeof(dt), typeof(method), typeof(step)}(
-            dt,
-            tmin,
-            tmax,
-            method,
-            abstol,
-            reltol,
-            time,
-            step,
-        )
-    end
+end
+function IntegrationP(; dt, tmin, tmax, method, abstol = 1e-6, reltol = 1e-6, time = 0.0, step = 0)
+    IntegrationP(dt, tmin, tmax, method, abstol, reltol, time, step)
 end
 
 # function zero(::Type{IntegrationP})

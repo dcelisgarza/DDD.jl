@@ -2,7 +2,7 @@ using Revise, BenchmarkTools
 using DDD
 cd(@__DIR__)
 
-#
+# using Makie
 # function plotNodesMakie(network::DislocationNetwork, args...; kw...)
 #     idx = findall(x -> x != 0, network.label)
 #     coord = network.coord
@@ -26,7 +26,7 @@ fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
 fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
 fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
 fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
-fileDislocationLoop = "../inputs/dln/sampleDislocation.JSON"
+fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
 dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileDislocationP,
     fileMaterialP,
@@ -34,13 +34,8 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileSlipSystem,
     fileDislocationLoop,
 )
-network = makeNetwork(dislocationLoop; memBuffer = 1)
-makeNetwork!(network, dislocationLoop; memBuffer = 1)
-network2 = DislocationNetwork(dislocationLoop; memBuffer = 1)
-DislocationNetwork!(network2, dislocationLoop; memBuffer = 1)
 
-
-compStruct(network, network2; verbose = true)
+network = DislocationNetwork(dislocationLoop; memBuffer = 1)
 
 pentagon = DislocationLoop(
     loopPrism();
@@ -57,25 +52,27 @@ pentagon = DislocationLoop(
     dist = Rand(),
 )
 
+DislocationNetwork!(network, pentagon; memBuffer = 1)
 
-
-network1 = makeNetwork(pentagon; memBuffer = 1)
-network2 = makeNetwork(pentagon; memBuffer = 1)
-
-removeNode!(network2, 5)
-fig = plotNodes(network2)
-plotNodes!(fig, network1)
-
-using Makie
-
+using Plots
+plotly()
 fig = plotNodes(
-    network2,
+    network,
     m = 1,
     l = 3,
     linecolor = :black,
     markercolor = :black,
     legend = false,
 )
+
+
+
+# removeNode!(network2, 5)
+# fig = plotNodes(network2)
+# plotNodes!(fig, network1)
+
+# using Makie
+
 
 plotNodes!(fig,
     network1,

@@ -34,27 +34,15 @@ struct MaterialP{T1, T2}
     μ8π::T1
     μ4πν::T1
     crystalStruct::T2
-
-    function MaterialP(; μ, μMag, ν, E, crystalStruct)
-        omνInv = 1 / (1 - ν)
-        νomνInv = ν * omνInv
-        μ4π = μ / (4π)
-        μ8π = μ4π / 2
-        μ4πν = μ4π * omνInv
-        new{typeof(μ), typeof(crystalStruct)}(
-            μ,
-            μMag,
-            ν,
-            E,
-            omνInv,
-            νomνInv,
-            μ4π,
-            μ8π,
-            μ4πν,
-            crystalStruct,
-        )
-    end # constructor
-end # MaterialP
+end
+@inline function MaterialP(; μ, μMag, ν, E, crystalStruct::AbstractCrystalStruct)
+    omνInv = 1 / (1 - ν)
+    νomνInv = ν * omνInv
+    μ4π = μ / (4π)
+    μ8π = μ4π / 2
+    μ4πν = μ4π * omνInv
+    MaterialP(μ, μMag, ν, E, omνInv, νomνInv, μ4π, μ8π, μ4πν, crystalStruct)
+end
 
 # function zero(::Type{MaterialP})
 #     return MaterialP(0.0, 0.0, 0.0, :empty)

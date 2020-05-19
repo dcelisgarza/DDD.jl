@@ -32,19 +32,19 @@ Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If
 end
 @inline function shapeFunction(
     shape::LinearQuadrangle3D,
-    x::AbstractVector{T1},
-    y::AbstractVector{T2},
-    z::AbstractVector{T3},
-) where {T1, T2, T3}
+    x::AbstractVector{T},
+    y::AbstractVector{T},
+    z::AbstractVector{T},
+) where {T}
     @assert length(x) == length(y) == length(z)
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
     N = zeros(8, length(x))
-    omx::T1 = 0
-    omy::T2 = 0
-    omz::T3 = 0
-    opx::T1 = 0
-    opy::T2 = 0
-    opz::T3 = 0
+    omx::T = 0
+    omy::T = 0
+    omz::T = 0
+    opx::T = 0
+    opy::T = 0
+    opz::T = 0
     @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
@@ -120,20 +120,20 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
 end
 @inline function shapeFunctionDeriv(
     shape::LinearQuadrangle3D,
-    x::AbstractVector{T1},
-    y::AbstractVector{T2},
-    z::AbstractVector{T3},
-) where {T1, T2, T3}
+    x::AbstractVector{T},
+    y::AbstractVector{T},
+    z::AbstractVector{T},
+) where {T}
     @assert length(x) == length(y) == length(z)
     # dNdS[n, x, p](x,y,z) := x'th derivative of shape function n for point p.
     # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
     dNdS = zeros(8, 3, length(x))
-    omx::T1 = 0
-    omy::T2 = 0
-    omz::T3 = 0
-    opx::T1 = 0
-    opy::T2 = 0
-    opz::T3 = 0
+    omx::T = 0
+    omy::T = 0
+    omz::T = 0
+    opx::T = 0
+    opy::T = 0
+    opz::T = 0
     @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]

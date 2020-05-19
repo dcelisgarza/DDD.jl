@@ -12,23 +12,24 @@ Calculate the Peach-Koehler force on segments.
 f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{l}
 ``
 """
-function calcPKForce(
+@inline function calcPKForce(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
     network::DislocationNetwork,
 )
-    # Un normalised segment vectors.
+    # Unroll constants.
     numSeg = network.numSeg
     idx = network.segIdx
     coord = network.coord
     bVec = network.bVec[idx[:, 1], :]
     node1 = coord[idx[:, 2], :]
     node2 = coord[idx[:, 3], :]
-    tVec = node2 - node1
-    midNode = 0.5 * (node1 + node2)
-    PKForce = zeros(numSeg, 3)
+    tVec = node2 - node1            # Line vector.
+    midNode = 0.5 * (node1 + node2) # Midpoint of segment.
+    PKForce = zeros(numSeg, 3)      # Vector of PK force.
 
-    @simd for i = 1:numSeg
+    # Loop over segments.
+    @inbounds @simd for i in 1:numSeg
         x0 = midNode[i, :]
         b = bVec[i, :]
         t = tVec[i, :]
@@ -49,25 +50,25 @@ calc_σ_hat(
 ```
 Calculate the reaction from a dislocation.
 """
-function calc_σ_hat(
+@inline function calc_σ_hat(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
     x0::AbstractArray{T, N} where {T, N},
 )
 
-    # These are just aliases to reduce verbosity, they don't impact performance.
-    mx = mesh.numElem[1]    # num elem in x
-    my = mesh.numElem[2]    # num elem in y
-    mz = mesh.numElem[3]    # num elem in z
-    w = 1 / mesh.sizeElem[1]  # 1 / width
-    h = 1 / mesh.sizeElem[2]  # 1 / height
-    d = 1 / mesh.sizeElem[3]  # 1 / depth
+    # Unroll structure.
+    mx = mesh.numElem[1]        # num elem in x
+    my = mesh.numElem[2]        # num elem in y
+    mz = mesh.numElem[3]        # num elem in z
+    w = 1 / mesh.sizeElem[1]    # 1 / width
+    h = 1 / mesh.sizeElem[2]    # 1 / height
+    d = 1 / mesh.sizeElem[3]    # 1 / depth
     sizeMesh = mesh.sizeMesh
     C = mesh.stiffTensor
     label = mesh.label
     coord = mesh.coord
 
-    Uhat = dlnFEM.uHat
+    uHat = dlnFEM.uHat
 
     x = x0[1]
     y = x0[2]
@@ -113,18 +114,18 @@ function calc_σ_hat(
         ds3dz = 1/d
     =#
     ds1dx = 2 * w
-    dx2dy = 2 * h
-    dx3dz = 2 * d
+    ds2dy = 2 * h
+    ds3dz = 2 * d
     s1 = ds1dx * (x - xc)
-    s2 = dx2dy * (y - yc)
-    s3 = dx3dz * (z - zc)
+    s2 = ds2dy * (y - yc)
+    s3 = ds3dz * (z - zc)
 
     dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), s1, s2, s3)
     dNdS[:, 1] .*= ds1dx
     dNdS[:, 2] .*= ds2dy
     dNdS[:, 3] .*= ds3dz
 
-    @inbounds for i = 1:size(dNdS, 1)
+    @inbounds for i in 1:size(dNdS, 1)
         # Indices calculated once for performance.
         idx1 = 3 * i
         idx2 = 3 * (i - 1)

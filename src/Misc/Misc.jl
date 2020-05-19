@@ -7,7 +7,7 @@ Make a dictionary of enumerated variable instances. Helps in translating JSON fi
 @inline function makeInstanceDict(valType::DataType)
     insts = instances(valType)
     dict = Dict{String, valType}()
-    for inst in insts
+    @inbounds @simd for inst in insts
         push!(dict, string(inst) => inst)
     end
     return dict
@@ -25,7 +25,7 @@ Translates the string name of enumerated types to the actual Julia type.
 """
 @inline function translateEnum(valType::DataType, dict::Dict{T1, T2}, key::T3) where {T1, T2, T3}
     instanceDict = makeInstanceDict(valType)
-    for i in eachindex(dict[key])
+    @inbounds @simd for i in eachindex(dict[key])
         dict[key][i] = instanceDict[dict[key][i]]
     end
     return dict
@@ -68,7 +68,7 @@ Dict{String,Any} with 4 entries:
 @inline function makeTypeDict(valType::DataType; cutoff = 1)
     primitive = subTypeTree(valType; cutoff = cutoff)
     dict = Dict{String, Any}()
-    for (key, val) in primitive
+    @inbounds for (key, val) in primitive
         strSubType = string(key) * "()"
         push!(dict, strSubType => key())
         if strSubType[1:4] == "DDD."
@@ -96,7 +96,7 @@ false
 ```
 """
 @inline function inclusiveComparison(data, args...)::Bool
-    for i in eachindex(args)
+    @inbounds @simd for i in eachindex(args)
         if data == args[i]
             return true
         end
@@ -135,8 +135,8 @@ false
     end
     names = fieldnames(typeof(arg1))
     flag::Bool = true
-    for i in names
-        result = getproperty(arg1, i) == getproperty(arg2, i)
+    @inbounds @simd for name in names
+        result = getproperty(arg1, name) == getproperty(arg2, name)
         if result == false
             flag = false
             !verbose ? nothing : @warn "Structures differ in field: $(i)."
@@ -151,9 +151,7 @@ intAngle(n::Int)
 ```
 Calculates the interior angle of a regular polygon with `n` sides.
 """
-@inline function intAngle(n::Int)
-    return (n - 2) * π / n
-end
+intAngle(n::Int) = (n - 2) * π / n
 
 """
 ```
@@ -161,9 +159,7 @@ extAngle(n::Int)
 ```
 Calculates the exterior angle of a regular polygon with `n` sides.
 """
-@inline function extAngle(n::Int)
-    return π - intAngle(n)
-end
+extAngle(n::Int) = π - intAngle(n)
 
 """
 ```
@@ -196,13 +192,13 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
  -0.9999999999999999
 ```
 """
-function rot3D(
-    xyz::AbstractVector{T1},
-    uvw::AbstractVector{T2},
-    abc::AbstractVector{T3},
-    θ::T4,
-) where {T1, T2, T3, T4}
-    isapprox(norm(uvw), 1.0) ? nothing : uvw ./= norm(uvw)
+@inline function rot3D(
+    xyz::T1,
+    uvw::T1,
+    abc::T1,
+    θ::T2,
+) where {T1 <: AbstractVector{T} where {T}, T2}
+    isapprox(norm(uvw), 1) ? nothing : uvw ./= norm(uvw)
 
     cosθ = cos(θ)
     onemcosθ = 1 - cosθ
@@ -241,7 +237,7 @@ dimDot(
 ```
 Perform dot product along dimension `dim` of an array, returns a vector of dot products.
 """
-function dimDot(
+@inline function dimDot(
     x::AbstractArray{T1, N},
     y::AbstractArray{T2, N};
     dim::Int = 2,
@@ -255,6 +251,6 @@ dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
 ```
 Calculate norms along dimension `dim` of an array, returns a vector of norms.
 """
-function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
+@inline function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
     return sqrt.(dimDot(x, x; dims = dim))
 end

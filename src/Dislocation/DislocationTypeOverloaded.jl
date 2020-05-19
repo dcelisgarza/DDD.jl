@@ -17,18 +17,22 @@ makeSegment(type::AbstractDlnSeg, slipPlane::AbstractVector{T}, bVec::AbstractVe
 ```
 Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
-function makeSegment(type::segEdge, slipPlane::AbstractVector{T}, bVec::AbstractVector{T}) where {T}
+@inline function makeSegment(
+    type::segEdge,
+    slipPlane::AbstractVector{T},
+    bVec::AbstractVector{T},
+) where {T}
     edge = cross(slipPlane, bVec)
     return edge ./ norm(edge)
 end
-function makeSegment(
+@inline function makeSegment(
     type::segEdgeN,
     slipPlane::AbstractVector{T},
     bVec::AbstractVector{T},
 ) where {T}
     return slipPlane ./ norm(slipPlane)
 end
-function makeSegment(
+@inline function makeSegment(
     type::segScrew,
     slipPlane::AbstractVector{T},
     bVec::AbstractVector{T},

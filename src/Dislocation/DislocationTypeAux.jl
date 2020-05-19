@@ -6,18 +6,11 @@ loopDistribution(dist<:AbstractDistribution, n::Int, args...; kw...)
 ```
 Returns `n` points according to the concrete subtype of [`AbstractDistribution`](@ref) given. Overload this function with new concrete subtypes and custom distributions. This and [`limits!`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
 """
-function loopDistribution(dist::Zeros, n::Int, args...; kw...)
-    return zeros(n, 3)
-end
-function loopDistribution(dist::Rand, n::Int, args...; kw...)
-    return rand(n, 3)
-end
-function loopDistribution(dist::Randn, n::Int, args...; kw...)
-    return randn(n, 3)
-end
-function loopDistribution(dist::Regular, n::Int, args...; kw...)
+loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(n, 3)
+loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(n, 3)
+loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(n, 3)
+loopDistribution(dist::Regular, n::Int, args...; kw...) =
     error("loopDistribution: regular distribution yet not implemented")
-end
 
 """
 ```
@@ -30,7 +23,7 @@ limits!(
 ```
 Calculate the spatial limits a dislocation will occupy. This and [`loopDistribution`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
 """
-function limits!(
+@inline function limits!(
     lims::T1,
     segLen::T2,
     range::T1,
@@ -54,7 +47,7 @@ translatePoints(
 ```
 Translate dislocation node coordinates `coord` inside the spatial bounds of `lims` (calculated in [`limits!`](@ref)) according to the displacement `disp` (calculated in [`loopDistribution`](@ref)). Used to distribute sources inside a domain in [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
 """
-function translatePoints(
+@inline function translatePoints(
     coord::T1,
     lims::T1,
     disp::T2,
@@ -77,7 +70,7 @@ makeConnect(
 ```
 Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. It also contains the segments in which it's involved. `linksConnect` is the connectivity of each link. This is called from [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
 """
-function makeConnect(
+@inline function makeConnect(
     links::T1,
     maxConnect::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
@@ -119,7 +112,7 @@ makeConnect!(network::DislocationNetwork)
 ```
 In-place version of [`makeConnect`](@ref).
 """
-function makeConnect!(network::DislocationNetwork)
+@inline function makeConnect!(network::DislocationNetwork)
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
 
     links = network.links
@@ -156,7 +149,7 @@ getSegmentIdx(
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
 ```
 """
-function getSegmentIdx(
+@inline function getSegmentIdx(
     links::T1,
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
@@ -184,7 +177,7 @@ end
 getSegmentIdx!(network::DislocationNetwork)
 ```
 """
-function getSegmentIdx!(network::DislocationNetwork)
+@inline function getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
 
@@ -220,7 +213,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
 1. consistency betwen `connectivity` and `linksConnect`
 
 """
-function checkNetwork(network::DislocationNetwork)
+@inline function checkNetwork(network::DislocationNetwork)
     label = network.label
     idx = findall(x -> x != 0, label)
     links = network.links
