@@ -87,7 +87,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int)
 
     # Find the first undefined linkGone.
     firstUndef = findfirst(x -> x == 0, linkGone[:, 1])
-    # If there are no undefined links, the index of the last defined node is the length of label, else the last defined node is one before the first undefined one.
+    # If there are no undefined links, the index of the last defined node is the length of label, else if it is in the bulk the last defined link is one before the first undefined link, else it is the first entry.
     firstUndef == nothing ? lastLink = length(linkGone[:, 1]) :
     lastLink = maximum((firstUndef - 1, 1))
 
@@ -103,9 +103,9 @@ function removeLink!(network::DislocationNetwork, linkGone::Int)
         connectivity[node2, connect2] = linkGone
     end
 
-    links[lastLink,:] .= 0
-    segForce[lastLink,:] .= 0
-    linksConnect[lastLink,:] .= 0
+    links[lastLink, :] .= 0
+    segForce[lastLink, :] .= 0
+    linksConnect[lastLink, :] .= 0
 
     return network
 end
@@ -143,7 +143,7 @@ function mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
 
     # Find the first undefined node.
     firstUndef = findfirst(x -> x == 0, label)
-    # If there are no undefined nodes, the index of the last defined node is the length of label, else the last defined node is one before the first undefined one.
+    # If there are no undefined nodes, the index of the last defined node is the length of label, else if it is in the bulk the last defined node is one before the first undefined node, else it is the first entry.
     firstUndef == nothing ? lastNode = length(label) : lastNode = maximum((firstUndef - 1, 1))
 
     # Remove node and update nodeKept.
