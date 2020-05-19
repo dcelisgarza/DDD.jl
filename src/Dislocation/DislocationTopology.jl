@@ -1,17 +1,13 @@
 """
 Replaces node id with the last valid node. Cleans up links and
 """
-function removeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
+function removeNode!(network::DislocationNetwork, lastNode::Int, nodeGone::Int)
     links = network.links
     coord = network.coord
     label = network.label
     nodeVel = network.nodeVel
     connectivity = network.connectivity
-
-    # Find the first undefined node.
-    # If there are no undefined nodes, the index of the last defined node is the length of label, else the last defined node is one before the first undefined one.
-    firstUndef = findfirst(x -> x == 0, label)
-    firstUndef == nothing ? lastNode = length(label) : lastNode = firstUndef - 1
+    numNode = network.numNode
 
     # The node that is gone is replaced by the last node.
     if nodeGone < lastNode
@@ -30,12 +26,36 @@ function removeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
     label[lastNode] = 0
     nodeVel[lastNode, :] .= 0
     connectivity[lastNode, :] .= 0
-    network.numNode -= 1
+    numNode -= 1
 
-    # If the remaining node was the last node, change its index to the removed node.
-    nodeKept == lastNode ? nodeKept = nodeGone : nothing
+    return network
+end
 
-    return network, nodeKept
+function removeConnection!(network::DislocationNetwork, node::Int, connectGone::Int)
+    connectivity = network.connectivity
+    linksConnect = network.linksConnect
+
+    # The connectivity is the index of the last connection.
+    lastConnect = connectivity[node, 1]
+    lst = 2 * lastConnect
+
+    # Remove entry from linksConnect because data for that link no longer exists.
+    idx = 2 * connectGone
+    link1 = connectivity[node, idx]
+    link2 = connectivity[node, idx + 1]
+    linksConnect[link1, link2] = 0
+
+    # Replace the deleted connection with the last connection and update linksConnect.
+    if lastConnect > connectGone
+        connectivity[node, idx:(idx + 1)] = connectivity[node, lst:(lst + 1)]
+        linksConnect[link1, link2] = connectGone
+    end
+
+    # Change connectivity to reflect the fact that there is one less connection.
+    connectivity[node, 1] = lastConnect - 1
+    connectivity[node, lst:(lst + 1)] .= 0
+
+    return network
 end
 
 """
@@ -44,22 +64,50 @@ removeLink!(network::DislocationNetwork, link::Int)
 ```
 Removes link and its information from network.
 """
-function removeLink!(network::DislocationNetwork, link::Int)
+function removeLink!(network::DislocationNetwork, linkGone::Int)
     links = network.links
     coord = network.coord
     label = network.label
     nodeVel = network.nodeVel
     connectivity = network.connectivity
     linksConnect = network.linksConnect
+    segForce = network.segForce
 
-    @assert link > size(links, 1) "link $link not found."
+    @assert linkGone > size(links, 1) "removeLink!: link $linkGone not found."
 
-    # Delete linkid from connectivity.
-    node1 = links[link, 1]
-    connectGone1 = linksConnect[link, 1]
-    # mergenodes 142
+    # Delete linkGone from connectivity.
+    node1 = links[linkGone, 1]
+    node2 = links[linkGone, 2]
+    connectGone1 = linksConnect[linkGone, 1]
+    connectGone2 = linksConnect[linkGone, 2]
+    removeConnection!(network, node1, connectGone1)
+    removeConnection!(network, node2, connectGone2)
 
+    @assert dot(linksConnect[linkGone, :], linksConnect[linkGone, :]) != 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
+    # Find the first undefined linkGone.
+    firstUndef = findfirst(x -> x == 0, linkGone[:, 1])
+    # If there are no undefined links, the index of the last defined node is the length of label, else the last defined node is one before the first undefined one.
+    firstUndef == nothing ? lastLink = length(linkGone[:, 1]) :
+    lastLink = maximum((firstUndef - 1, 1))
+
+    if linkGone < lastLink
+        links[linkGone, :] = links[lastLink, :]
+        segForce[linkGone, :] = segForce[lastLink, :]
+        linksConnect[linkGone, :] = linksConnect[lastLink, :]
+        node1 = links[linkGone, 1]
+        node2 = links[linkGone, 2]
+        connect1 = 2 * linksConnect[linkGone, 1]
+        connect2 = 2 * linksConnect[linkGone, 2]
+        connectivity[node1, connect1] = linkGone
+        connectivity[node2, connect2] = linkGone
+    end
+
+    links[lastLink,:] .= 0
+    segForce[lastLink,:] .= 0
+    linksConnect[lastLink,:] .= 0
+
+    return network
 end
 
 """
@@ -93,11 +141,19 @@ function mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
         linksConnect[link, colLink] = nodeKeptConnect + i # Increase connectivity of nodeKept.
     end
 
+    # Find the first undefined node.
+    firstUndef = findfirst(x -> x == 0, label)
+    # If there are no undefined nodes, the index of the last defined node is the length of label, else the last defined node is one before the first undefined one.
+    firstUndef == nothing ? lastNode = length(label) : lastNode = maximum((firstUndef - 1, 1))
+
     # Remove node and update nodeKept.
-    network, nodeKept = removeNode!(network, nodeGone)
+    removeNode!(network, lastNode, nodeGone)
+
+    # If the remaining node was the last node, change its index to the removed node.
+    nodeKept == lastNode ? nodeKept = nodeGone : nothing
 
     # Delete self links of nodeKept.
-    for i in 1:nodeKeptConnect - 1
+    for i in 1:(nodeKeptConnect - 1)
         link = connectivity[nodeKept, 2 * i]        # Link id for nodeKept
         colLink = connectivity[nodeKept, 2 * i + 1] # Position of links where link appears.
         colNotLink = 3 - colLink # The column of the other node in the position of link in links.
@@ -109,8 +165,6 @@ function mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
     # mergenodes 46
 
 end
-
-
 
 function splitNode end
 

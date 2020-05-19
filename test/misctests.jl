@@ -2,6 +2,23 @@ using Revise, BenchmarkTools
 using DDD
 cd(@__DIR__)
 
+mutable struct test
+    array
+end
+
+function changetest!(test::test)
+    tmp = test.array
+    tmp[1] = 0
+    a = 5
+    return a
+end
+var = test(rand(10))
+changetest!(var)
+
+var
+
+
+var
 # using Makie
 # function plotNodesMakie(network::DislocationNetwork, args...; kw...)
 #     idx = findall(x -> x != 0, network.label)
