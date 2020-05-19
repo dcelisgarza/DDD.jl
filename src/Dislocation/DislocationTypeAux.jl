@@ -1,3 +1,5 @@
+## Distributions
+
 """
 ```
 loopDistribution(dist<:AbstractDistribution, n::Int, args...; kw...)
@@ -29,11 +31,11 @@ limits!(
 Calculate the spatial limits a dislocation will occupy. This and [`loopDistribution`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
 """
 function limits!(
-    lims::AbstractArray{<:Float64, N1},
-    segLen::Float64,
-    range::AbstractArray{<:Float64, N2},
-    buffer::Float64,
-) where {N1, N2}
+    lims::T1,
+    segLen::T2,
+    range::T1,
+    buffer::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
     @inbounds for i in 1:size(lims, 2)
         for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
@@ -44,49 +46,59 @@ end
 
 """
 ```
-function translatePoints(
-    coord::AbstractArray{<:Float64, N1},
-    lims::AbstractArray{<:Float64, N1},
-    disp::AbstractArray{<:Float64, N2},
-) where {N1, N2}
+translatePoints(
+    coord::T1,
+    lims::T1,
+    disp::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
 ```
 Translate dislocation node coordinates `coord` inside the spatial bounds of `lims` (calculated in [`limits!`](@ref)) according to the displacement `disp` (calculated in [`loopDistribution`](@ref)). Used to distribute sources inside a domain in [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
 """
 function translatePoints(
-    coord::AbstractArray{<:Float64, N1},
-    lims::AbstractArray{<:Float64, N1},
-    disp::AbstractArray{<:Float64, N2},
-) where {N1, N2}
+    coord::T1,
+    lims::T1,
+    disp::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
     @inbounds for i in 1:size(coord, 2)
-        for j in 1:size(coord, 1)
+        @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
         end
     end
     return coord
 end
 
+## Auxiliary matrices.
 """
 ```
-makeConnect!(network::DislocationNetwork)
+makeConnect(
+    links::T1,
+    maxConnect::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractArray{T, N}}
 ```
-Creates `connectivity` and `linksConnect` matrices in-place. `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. It also contains the segments in which it's involved. `linksConnect` is the running total of the number of other nodes each node is connected to, will probably be deleted in the future. This is called from [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
+Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. It also contains the segments in which it's involved. `linksConnect` is the connectivity of each link. This is called from [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
 """
-function makeConnect!(network::DislocationNetwork)
-    links = network.links
-    maxConnect = network.maxConnect
+function makeConnect(
+    links::T1,
+    maxConnect::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
 
-    idx = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
+    # Indices of defined links.
+    idx = findall(x -> x != 0, links[:, 1])
     lenLinks = size(links, 1)
     connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
     linksConnect = zeros(Int, lenLinks, 2)
+
+    # Loop through indices.
     @inbounds @simd for i in idx
-        # links[idx, :] yields the nodes involved in the link
-        n1 = links[i, 1] # Node 1, it is the row of the coord matrix
-        n2 = links[i, 2] # Node 2
+        # Node 1, it is the row of the coord matrix.
+        n1 = links[i, 1]
+        n2 = links[i, 2]
 
-        connectivity[n1, 1] += 1 # Num of other nodes node n1 is connected to.
-        connectivity[n2, 1] += 1 # Num of other nodes node n2 is connected to.
+        # Num of other nodes node n1 is connected to.
+        connectivity[n1, 1] += 1
+        connectivity[n2, 1] += 1
 
+        # Next column for n1 in connectivity.
         tmp1 = 2 * connectivity[n1, 1]
         tmp2 = 2 * connectivity[n2, 1]
 
@@ -94,6 +106,38 @@ function makeConnect!(network::DislocationNetwork)
         connectivity[n1, tmp1:(tmp1 + 1)] = [i, 1]
         connectivity[n2, tmp2:(tmp2 + 1)] = [i, 2]
 
+        # Connectivity of the nodes in link i.
+        linksConnect[i, 1] = connectivity[n1, 1]
+        linksConnect[i, 2] = connectivity[n2, 1]
+    end
+
+    return connectivity, linksConnect
+end
+"""
+```
+makeConnect!(network::DislocationNetwork)
+```
+In-place version of [`makeConnect`](@ref).
+"""
+function makeConnect!(network::DislocationNetwork)
+    # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
+
+    links = network.links
+    maxConnect = network.maxConnect
+
+    idx = findall(x -> x != 0, links[:, 1])
+    lenLinks = size(links, 1)
+    connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
+    linksConnect = zeros(Int, lenLinks, 2)
+    @inbounds @simd for i in idx
+        n1 = links[i, 1]
+        n2 = links[i, 2]
+        connectivity[n1, 1] += 1
+        connectivity[n2, 1] += 1
+        tmp1 = 2 * connectivity[n1, 1]
+        tmp2 = 2 * connectivity[n2, 1]
+        connectivity[n1, tmp1:(tmp1 + 1)] = [i, 1]
+        connectivity[n2, tmp2:(tmp2 + 1)] = [i, 2]
         linksConnect[i, 1] = connectivity[n1, 1]
         linksConnect[i, 2] = connectivity[n2, 1]
     end
@@ -103,35 +147,65 @@ function makeConnect!(network::DislocationNetwork)
 
     return network
 end
-function makeConnect(links, maxConnect)
-    idx = findall(x -> x != 0, links[:, 1]) # Indices of defined links.
-    lenLinks = size(links, 1)
-    connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
-    linksConnect = zeros(Int, lenLinks, 2)
-    @inbounds @simd for i in idx
-        # links[idx, :] yields the nodes involved in the link
-        n1 = links[i, 1] # Node 1, it is the row of the coord matrix
-        n2 = links[i, 2] # Node 2
 
-        connectivity[n1, 1] += 1 # Num of other nodes node n1 is connected to.
-        connectivity[n2, 1] += 1 # Num of other nodes node n2 is connected to.
+"""
+```
+getSegmentIdx(
+    links::T1,
+    label::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
+```
+"""
+function getSegmentIdx(
+    links::T1,
+    label::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
 
-        tmp1 = 2 * connectivity[n1, 1]
-        tmp2 = 2 * connectivity[n2, 1]
+    segIdx = zeros(Int, size(links, 1), 3)  # Indexing matrix.
+    idx = findall(x -> x != 0, label)       # Find all defined nodes.
+    numSeg::Int = 0 # Number of segments.
 
-        # i = linkID. 1, 2 are the first and second nodes in link with linkID
-        connectivity[n1, tmp1:(tmp1 + 1)] = [i, 1]
-        connectivity[n2, tmp2:(tmp2 + 1)] = [i, 2]
-
-        linksConnect[i, 1] = connectivity[n1, 1]
-        linksConnect[i, 2] = connectivity[n2, 1]
+    # Loop through indices.
+    for i in idx
+        # Nodes.
+        n1 = links[i, 1]
+        n2 = links[i, 2]
+        # Skip external nodes.
+        (label[n1] == 4 || label[n2] == 4) ? continue : nothing
+        numSeg += 1 # Increment index.
+        # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
+        segIdx[numSeg, :] = [i, n1, n2]
     end
 
-    return connectivity, linksConnect
+    return numSeg, segIdx
+end
+"""
+```
+getSegmentIdx!(network::DislocationNetwork)
+```
+"""
+function getSegmentIdx!(network::DislocationNetwork)
+    links = network.links
+    label = network.label
+
+    segIdx = zeros(Int, size(links, 1), 3)
+    idx = findall(x -> x != 0, label)
+    numSeg::Int = 0
+    for i in idx
+        n1 = links[i, 1]
+        n2 = links[i, 2]
+        (label[n1] == 4 || label[n2] == 4) ? continue : nothing
+        numSeg += 1
+        segIdx[numSeg, :] = [i, n1, n2]
+    end
+
+    network.numSeg = numSeg
+    network.segIdx = segIdx
 
     return network
 end
 
+## Check integrity.
 """
 ```
 checkNetwork(network::DislocationNetwork)
@@ -229,39 +303,4 @@ neighbours = $(neighbours)") :
     end
 
     return true
-end
-
-function getSegmentIdx!(network::DislocationNetwork)
-    links = network.links
-    label = network.label
-    segIdx = zeros(Int, size(links, 1), 3)
-    idx = findall(x -> x != 0, label)
-    numSeg::Int = 0
-    for i in idx
-        n1 = links[i, 1]
-        n2 = links[i, 2]
-        (label[n1] == 4 || label[n2] == 4) ? continue : nothing
-        numSeg += 1
-        segIdx[numSeg, :] = [i, n1, n2]
-    end
-
-    network.numSeg = numSeg
-    network.segIdx = segIdx
-
-    return network
-end
-
-function getSegmentIdx(links, label)
-    segIdx = zeros(Int, size(links, 1), 3)
-    idx = findall(x -> x != 0, label)
-    numSeg::Int = 0
-    for i in idx
-        n1 = links[i, 1]
-        n2 = links[i, 2]
-        (label[n1] == 4 || label[n2] == 4) ? continue : nothing
-        numSeg += 1
-        segIdx[numSeg, :] = [i, n1, n2]
-    end
-
-    return numSeg, segIdx
 end

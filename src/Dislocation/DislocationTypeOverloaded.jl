@@ -81,8 +81,7 @@ function push!(network::DislocationNetwork, n::Int)
     network.nodeVel = [network.nodeVel; zeros(n, 3)]
     return network
 end
-function getindex(network::DislocationNetwork, i::Int)
-
+function getindex(network::DislocationNetwork, i::Int...)
     return network.links[i, :],
     network.slipPlane[i, :],
     network.bVec[i, :],

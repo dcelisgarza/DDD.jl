@@ -89,7 +89,6 @@ struct mobFCC <: AbstractMobility end
 struct mobHCP <: AbstractMobility end
 
 ## Structures
-
 """
 ```
 struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
@@ -159,7 +158,26 @@ struct DislocationP{T1, T2, T3, T4}
 end
 """
 ```
+DislocationP(;
+    coreRad::T1,
+    coreRadMag::T1,
+    minSegLen::T1,
+    maxSegLen::T1,
+    minArea::T1,
+    maxArea::T1,
+    maxConnect::T2,
+    remesh::T3,
+    collision::T3,
+    separation::T3,
+    virtualRemesh::T3,
+    edgeDrag::T1,
+    screwDrag::T1,
+    climbDrag::T1,
+    lineDrag::T1,
+    mobility::T4,
+) where {T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
 ```
+Keyword constructor for [`DislocationP`](@ref).
 """
 function DislocationP(;
     coreRad::T1,
@@ -203,38 +221,28 @@ function DislocationP(;
         lineDrag,
         mobility,
     )
-end # constructor
+end
 
 """
 ```
-struct DislocationLoop{
-    T1 <: AbstractDlnStr,
-    T2 <: Int,
-    T3 <: Union{T where {T <: Float64}, AbstractArray{<:Float64, N} where {N}},
-    T4 <: Union{T where {T <: Int}, AbstractArray{<:Int, N} where {N}},
-    T5 <: AbstractArray{<:Int, N} where {N},
-    T6 <: AbstractArray{<:Float64, N} where {N},
-    T7 <: Vector{<:nodeType},
-    T8 <: Float64,
-    T9 <: AbstractDistribution,
-}
-
-    loopType::T1
-    numSides::T2
-    nodeSide::T2
-    numLoops::T2
-    segLen::T3
-    slipSystem::T4
-    links::T5
-    slipPlane::T6
-    bVec::T6
-    coord::T6
-    label::T7
-    buffer::T8
-    range::T6
-    dist::T9
+struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
+    loopType::T1    # Loop type.
+    numSides::T2    # Number of sides per loop.
+    nodeSide::T2    # Number of nodes per side.
+    numLoops::T2    # Number of loops to generate.
+    segLen::T3      # Segment lengths.
+    slipSystem::T4  # Slip system.
+    links::T5       # Links matrix.
+    slipPlane::T6   # Slip plane for each link.
+    bVec::T6        # Burgers vector for each link.
+    coord::T6       # Coordinates of each node.
+    label::T7       # Label of each node.
+    buffer::T8      # Mean distance buffer separating each loop centre.
+    range::T6       # Distribution range of generated loops.
+    dist::T9        # Distribution of genrated loops.
+end
 ```
-Dislocation loop structure generated via the constructor [`makeLoop`](@ref).
+Dislocation loop structure.
 """
 struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     loopType::T1
@@ -278,7 +286,7 @@ DislocationLoop(;
     T8 <: AbstractDistribution,
 }
 ```
-Generic named constructor for dislocation loop. Calls other constructors that dispatch on `loopType`.
+Generic keyword constructor for dislocation loop. Calls other constructors that dispatch on `loopType`.
 """
 @inline function DislocationLoop(;
     loopType::T1,
@@ -318,8 +326,8 @@ Generic named constructor for dislocation loop. Calls other constructors that di
         range = range,
         dist = dist,
     )
-end
 
+end
 @inline function DislocationLoop(
     loopType::T1;
     numSides::T2,
@@ -367,7 +375,6 @@ end
         dist,
     )
 end
-
 @inline function DislocationLoop(
     loopType::T1;
     numSides::T2,
@@ -392,54 +399,73 @@ end
     T8 <: AbstractDistribution,
 }
 
-    nodeTotal = numSides * nodeSide
-    lSegLen = length(segLen)
-    @assert length(label) == nodeTotal "makeLoop: All $nodeTotal nodes must be labelled. There are only $(length(label)) labels currently defined."
-    @assert lSegLen == nodeTotal "makeLoop: All $nodeTotal segments must have their lengths defined. There are only $lSegLen lengths currently defined."
+    nodeTotal = numSides * nodeSide # Calculate total number of nodes for memory allocation.
+    numSegLen = length(segLen) # Number of segment lengths.
 
+    # Validate input.
+    @assert length(label) == nodeTotal "makeLoop: All $nodeTotal nodes must be labelled. There are only $(length(label)) labels currently defined."
+    @assert numSegLen == nodeTotal "makeLoop: All $nodeTotal segments must have their lengths defined. There are only $numSegLen lengths currently defined."
+
+    # Normalise vectors.
     _slipPlane = _slipPlane ./ norm(_slipPlane)
     _bVec = _bVec ./ norm(_bVec)
 
+    # Pick rotation axis for segments.
     rotAxis = zeros(eltype(_slipPlane), 3)
+    # Shear loops rotate around slip plane vector. They have screw, mixed and edge segments.
     if typeof(loopType) == loopShear
         rotAxis = _slipPlane
+        # Prismatic loops rotate around Burgers vector. All segments are edge.
     elseif typeof(loopType) == loopPrism
+        rotAxis = _bVec
+        # Catch all.
+    else
+        @warn "makeLoop: rotation axis for $(typeof(loopType)) not defined, defaulting to prismatic loop."
         rotAxis = _bVec
     end
 
+    # Allocate arrays.
     links = zeros(Int, nodeTotal, 2)
     coord = zeros(nodeTotal, 3)
-    slipPlane = zeros(0, 3)
-    bVec = zeros(0, 3)
-    seg = zeros(lSegLen, 3)
+    slipPlane = repeat(_slipPlane', numSegLen)
+    bVec = repeat(_bVec', numSegLen)
+    seg = zeros(numSegLen, 3)
+
+    # Create initial segments.
     @inbounds for i in eachindex(segLen)
         seg[i, :] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
 
-    θ = extAngle(numSides)
-    rseg = zeros(3)
+    θ = extAngle(numSides)  # External angle of a regular polygon with numSides.
+    rseg = zeros(3)         # Rotated segment.
+
+    # Loop over polygon's sides.
     @inbounds for i in 1:numSides
+        # Index for side i.
         idx = (i - 1) * nodeSide
-        rseg = rot3D(seg[mod(i - 1, lSegLen) + 1, :], rotAxis, zeros(3), θ * (i - 1))
+        # Rotate segments by external angle of polygon to make polygonal loop.
+        rseg = rot3D(seg[mod(i - 1, numSegLen) + 1, :], rotAxis, zeros(3), θ * (i - 1))
+        # DO NOT add @simd, this loop works by adding rseg to the previous coordinate to make the loop. Loop over the nodes per side.
         for j in 1:nodeSide
+            # Count first node once.
             if i == j == 1
-                coord[1, :] = zeros(3)
-                slipPlane = [slipPlane; _slipPlane']
-                bVec = [bVec; _bVec']
+                coord[1, :] = zeros(3)  # Initial coordinate is on the origin.
                 continue
             end
             if idx + j <= nodeTotal
+                # Add segment vector to previous coordinate.
                 coord[idx + j, :] += coord[idx + j - 1, :] + rseg
-                slipPlane = [slipPlane; _slipPlane']
-                bVec = [bVec; _bVec']
             end
         end
     end
-    coord .-= mean(coord, dims = 1)
 
-    # Links
-    @inbounds for j in 1:(nodeTotal - 1)
-        links[j, :] = [j; 1 + j]
+    # Find centre of the loop and make it zero.
+    meanCoord = mean(coord, dims = 1)
+    coord .-= meanCoord
+
+    # Create links matrix.
+    @inbounds @simd for j in 1:(nodeTotal - 1)
+        links[j, :] = [j; j + 1]
     end
     links[nodeTotal, :] = [nodeTotal; 1]
 
@@ -500,7 +526,33 @@ mutable struct DislocationNetwork{T1, T2, T3, T4, T5}
     connectivity::T5
     linksConnect::T5
     segIdx::T5
-end # DislocationNetwork
+end
+"""
+```
+DislocationNetwork(;
+    links::T1,
+    slipPlane::T2,
+    bVec::T2,
+    coord::T2,
+    label::T3,
+    segForce::T2,
+    nodeVel::T2,
+    numNode::T4 = 0,
+    numSeg::T4 = 0,
+    maxConnect::T4 = 0,
+    connectivity::T5 = zeros(Int, 0, 0),
+    linksConnect::T5 = zeros(Int, 0, 0),
+    segIdx::T5 = zeros(Int, 0, 0),
+) where {
+    T1 <: AbstractArray{T, N} where {T, N},
+    T2 <: AbstractArray{T, N} where {T, N},
+    T3 <: AbstractVector{nodeType},
+    T4 <: Int,
+    T5 <: AbstractArray{Int, N} where {N},
+}
+```
+Generic keyword constructor for [`DislocationNetwork`](@ref).
+"""
 @inline function DislocationNetwork(;
     links::T1,
     slipPlane::T2,
@@ -543,8 +595,7 @@ end # DislocationNetwork
         linksConnect,
         segIdx,
     )
-end # Constructor
-
+end
 """
 ```
 DislocationNetwork(
@@ -566,15 +617,18 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
     checkConsistency::T3 = true,
     kw...,
 ) where {T1 <: Union{DislocationLoop, AbstractVector{<:DislocationLoop}}, T2 <: Int, T3 <: Bool}
+
+    # Initialisation.
     nodeTotal::Int = 0
     lims = zeros(2, 3)
-    # Allocate memory.
+    # Calculate node total.
     @inbounds for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
-
+    # Memory buffer.
     nodeBuffer::Int = nodeTotal * memBuffer
 
+    # Allocate memory.
     links = zeros(Int, nodeBuffer, 2)
     slipPlane = zeros(nodeBuffer, 3)
     bVec = zeros(nodeBuffer, 3)
@@ -585,38 +639,43 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
     numNode = nodeTotal
     numSeg = nodeTotal
 
-    maxConnect = maxConnect
-
     nodeTotal = 0
-    initIdx = findfirst(x -> x == 0, label)
-    initIdx == nothing ? initIdx = 0 : nothing
     @inbounds for i in eachindex(sources)
         # Indices.
-        idx = initIdx + nodeTotal
-        nodesLoop = length(sources[i].label)
-        numLoops = sources[i].numLoops
-        numNodes = numLoops * nodesLoop
+        idx = 1 + nodeTotal
+        nodesLoop = length(sources[i].label)    # Number of nodes in a loop from sources[i].
+        numLoops = sources[i].numLoops          # Number loops to generate from sources[i].
+        numNodes = numLoops * nodesLoop         # Number of nodes in a loop from sources[i].
+        # Calculate spatial distribution for sources[i].
         disp = loopDistribution(sources[i].dist, numLoops, args...; kw...)
+        # Calculate spatial limits of the loops generated by sources[i].
         limits!(lims, mean(sources[i].segLen), sources[i].range, sources[i].buffer)
+        # Loop through the number of loops generated from sources[i].
         for j in 1:numLoops
+            # Initial and final indices of the nodes in sources[i].
             idxi = idx + (j - 1) * nodesLoop
             idxf = idxi + nodesLoop - 1
-            # Prepare to distribute sources.
-            links[idxi:idxf, :] = sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
+            # Add links from sources[i] to links and adjust by the total number of nodes in the network.
+            links[idxi:idxf, :] = sources[i].links[1:nodesLoop, :] .+ nodeTotal
+            # Pass slip plane, burgers vector, coordinates and labels from sources[i] to network.
             slipPlane[idxi:idxf, :] .= sources[i].slipPlane[1:nodesLoop, :]
             bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
             coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
-            # Move loop.
+            label[idxi:idxf] .= sources[i].label[1:nodesLoop]
+            # Translate loops according to the previously calcualted displacements and limits.
             coord[idxi:idxf, :] .=
                 translatePoints(sources[i].coord[1:nodesLoop, :], lims, disp[j, :])
-            label[idxi:idxf, :] .= sources[i].label[1:nodesLoop, :]
+            # Add nodes in the loop to the total number of nodes.
             nodeTotal += nodesLoop
         end
     end
 
+    # Calculate number of segments and indexing matrix.
     numSeg, segIdx = getSegmentIdx(links, label)
+    # Generate connectivity and linksConnect matrix.
     connectivity, linksConnect = makeConnect(links, maxConnect)
 
+    # Create network.
     network = DislocationNetwork(
         links,
         slipPlane,
@@ -633,10 +692,11 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
         segIdx,
     )
 
+    # Check that the network is generated properly.
     checkConsistency ? checkNetwork(network) : nothing
 
     return network
-end # Constructor
+end
 
 """
 ```
@@ -667,26 +727,31 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
     T3 <: Int,
     T4 <: Bool,
 }
+    # For comments see DislocationNetwork. It is a 1-to-1 translation except that this one modifies the network in-place.
+
     nodeTotal::Int = 0
     lims = zeros(2, 3)
     network.maxConnect = maxConnect
-    # Allocate memory.
     @inbounds for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
+
+    # Allocate memory.
     available = findfirst(x -> x == 0, network.label)
+    # If there's memory available.
     if available == nothing
         push!(network, nodeTotal)
+    # If there's no memory, calculate how much is neaded to add the extra data.
     else
         check = length(network.label) - (available - 1) - nodeTotal
         check < 0 ? push!(network, -check) : nothing
     end
 
+    initIdx::Int = 1
     nodeTotal = 0
-    initIdx = findfirst(x -> x == 0, network.label)
-    initIdx == nothing ? initIdx = 0 : nothing
+    first = findfirst(x -> x == 0, network.label)
+    first == nothing ? initIdx = 1 : initIdx = first
     @inbounds for i in eachindex(sources)
-        # Indices.
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
         numLoops = sources[i].numLoops
@@ -696,16 +761,14 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
         for j in 1:numLoops
             idxi = idx + (j - 1) * nodesLoop
             idxf = idxi + nodesLoop - 1
-            # Prepare to distribute sources.
             network.links[idxi:idxf, :] =
                 sources[i].links[1:nodesLoop, :] .+ (nodeTotal + initIdx - 1)
             network.slipPlane[idxi:idxf, :] .= sources[i].slipPlane[1:nodesLoop, :]
             network.bVec[idxi:idxf, :] .= sources[i].bVec[1:nodesLoop, :]
             network.coord[idxi:idxf, :] .= sources[i].coord[1:nodesLoop, :]
-            # Move loop.
+            network.label[idxi:idxf] .= sources[i].label[1:nodesLoop]
             network.coord[idxi:idxf, :] .=
                 translatePoints(sources[i].coord[1:nodesLoop, :], lims, disp[j, :])
-            network.label[idxi:idxf, :] .= sources[i].label[1:nodesLoop, :]
             nodeTotal += nodesLoop
         end
     end
