@@ -82,7 +82,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
     bVec = network.bVec
     slipPlane = network.slipPlane
 
-    @assert linkGone < Base.size(links, 1) "removeLink!: link $linkGone not found."
+    @assert linkGone <= Base.size(links, 1) "removeLink!: link $linkGone not found."
 
     # Delete linkGone from connectivity for both nodes in the link.
     node1 = links[linkGone, 1]

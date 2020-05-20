@@ -58,11 +58,23 @@ pentagon = DislocationLoop(
 DislocationNetwork!(network, pentagon; memBuffer = 1)
 
 using Plots
-plotly()
+gr()
 
 network = DislocationNetwork(pentagon; memBuffer = 1)
 network2 = deepcopy(network)
-mergeNode!(network2, 1, 2)
+
+
+
+
+
+
+
+
+
+
+
+
+mergeNode!(network2, 1, 3)
 fig = plotNodes(
     network,
     m = 1,
@@ -71,14 +83,13 @@ fig = plotNodes(
     markercolor = :red,
     legend = false,
 )
-display(fig)
 plotNodes!(
     fig,
     network2,
     m = 1,
     l = 3,
-    linecolor = :green,
-    markercolor = :green,
+    linecolor = :blue,
+    markercolor = :blue,
     legend = false,
 )
 
