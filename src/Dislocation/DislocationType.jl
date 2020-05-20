@@ -719,7 +719,7 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
     sources::T2,
     maxConnect::T3 = 4,
     args...;
-    checkConsistency::T4 = false,
+    checkConsistency::T4 = true,
     kw...,
 ) where {
     T1 <: DislocationNetwork,

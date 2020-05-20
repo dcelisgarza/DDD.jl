@@ -2,7 +2,7 @@ using Revise, BenchmarkTools, Plots
 # using plotlyjs
 # https://github.com/sglyon/ORCA.jl/issues/8#issuecomment-629049679
 # https://stackoverflow.com/a/48509426
-plotlyjs()
+
 using DDD
 cd(@__DIR__)
 
@@ -40,7 +40,7 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileDislocationLoop,
 )
 
-network = DislocationNetwork(dislocationLoop; memBuffer = 1)
+network = DislocationNetwork(dislocationLoop; memBuffer = 10)
 
 pentagon = DislocationLoop(
     loopPrism();
@@ -48,54 +48,29 @@ pentagon = DislocationLoop(
     nodeSide = 1,
     numLoops = 5,
     segLen = 10 * ones(5),
-    slipSystem = 3,
-    _slipPlane = slipSystems.slipPlane[3, :],
-    _bVec = slipSystems.bVec[3, :],
+    slipSystem = 4,
+    _slipPlane = slipSystems.slipPlane[4, :],
+    _bVec = slipSystems.bVec[4, :],
     label = nodeType[1; 2; 1; 2; 1],
     buffer = 0.0,
     range = Float64[-100 -100 -100; 100 100 100],
     dist = Rand(),
 )
+# network = DislocationNetwork(pentagon; memBuffer = 5)
+DislocationNetwork!(network, pentagon)
 
-DislocationNetwork!(network, pentagon; memBuffer = 1)
-network = DislocationNetwork(pentagon; memBuffer = 1)
 network2 = deepcopy(network)
+mergeNode!(network2, 147, 23)
 
-mergeNode!(network2, 57, 160)
-fig = plotNodes(
-    network,
-    m = 1,
-    l = 3,
-    linecolor = :red,
-    markercolor = :red,
-    legend = false,
-)
-plotNodes!(
-    fig,
-    network2,
-    m = 1,
-    l = 3,
-    linecolor = :blue,
-    markercolor = :blue,
-    legend = false,
-)
+plotlyjs()
+fig = plotNodes(network, m = 1, l = 3, linecolor = :red, markercolor = :red, legend = false, size=(750,750))
+plotNodes!(fig, network2, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
-plotNodes!(fig,
-    network1,
-    m = 1,
-    l = 3,
-    linecolor = :red,
-    markercolor = :red,
-    legend = false,
-)
 
-scene1 = plotNodesMakie(
-    network,
-    linewidth = 2,
-    markersize = 0.5,
-    strokecolor = :black,
-    color = :black,
-)
+plotNodes!(fig, network1, m = 1, l = 3, linecolor = :red, markercolor = :red, legend = false)
+
+scene1 =
+    plotNodesMakie(network, linewidth = 2, markersize = 0.5, strokecolor = :black, color = :black)
 
 self = calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
@@ -119,23 +94,23 @@ node2 = coord[idx[:, 3], :]
 
 @btime tuple = (coord[idx[:, 2], :], coord[idx[:, 3], :])
 @btime mean((node1, node2))
-@btime 0.5*(node1+node2)
+@btime 0.5 * (node1 + node2)
 
 
 test = [1 1 1; 2 2 2; 3 3 3]
-test2 = [1;2;3]
-test[1,:]
+test2 = [1; 2; 3]
+test[1, :]
 test * test2
 
 test .* test2
-cross(vec(sum(test .* test2, dims=1)), test2)
+cross(vec(sum(test .* test2, dims = 1)), test2)
 
 
-a = tot[1][:,:]
-b = tot[2][:,:]
-@btime 0.5*(a+b)
-@btime 0.5*(tot[1][:,:] + tot[2][:,:])
-@btime test = (tot[1][:,:], tot[2][:,:])
+a = tot[1][:, :]
+b = tot[2][:, :]
+@btime 0.5 * (a + b)
+@btime 0.5 * (tot[1][:, :] + tot[2][:, :])
+@btime test = (tot[1][:, :], tot[2][:, :])
 @btime mean(test)
 @btime mean(tot[:])
 
@@ -163,20 +138,8 @@ n21 = (node1[2, 1], node1[2, 2], node1[2, 3])
 n22 = (node2[2, 1], node2[2, 2], node2[2, 3])
 
 
-Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-    aSq,
-    μ4π,
-    μ8π,
-    μ8πaSq,
-    μ4πν,
-    μ4πνaSq,
-    b1,
-    n11,
-    n12,
-    b2,
-    n21,
-    n22,
-)
+Fnode1, Fnode2, Fnode3, Fnode4 =
+    calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
 
 b1 = (bVec[1, 1], bVec[1, 2], bVec[1, 3])
 n11 = (0.0, 0.0, 0.0)
@@ -187,17 +150,5 @@ n21 = (0.0, 1.00000001, 0.000000001)
 n22 = (2.0, 1.0, 0.0)
 
 
-Fnode1, Fnode2, Fnode3, Fnode4 = calcParSegSegForce(
-    aSq,
-    μ4π,
-    μ8π,
-    μ8πaSq,
-    μ4πν,
-    μ4πνaSq,
-    b1,
-    n11,
-    n12,
-    b2,
-    n21,
-    n22,
-)
+Fnode1, Fnode2, Fnode3, Fnode4 =
+    calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
