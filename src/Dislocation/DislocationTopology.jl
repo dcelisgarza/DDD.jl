@@ -17,12 +17,12 @@ Replaces node id with the last valid node. Cleans up links and
     # The if nodeGone is not the last node in the relevant arrays, replace it by lastNode.
     if nodeGone < lastNode
         coord[nodeGone, :] .= coord[lastNode, :]
-        label[nodeGone] .= label[lastNode]
+        label[nodeGone] = label[lastNode]
         nodeVel[nodeGone, :] .= nodeVel[lastNode, :]
         connectivity[nodeGone, :] .= connectivity[lastNode, :]
         # Change the link
-        for j in 1:connectivity[nodeGone, 1]
-            links[connectivity[nodeGone, 2 * j], connectivity[nodeGone, 2 * j + 1]] = nodeGone
+        for j = 1:connectivity[nodeGone, 1]
+            links[connectivity[nodeGone, 2*j], connectivity[nodeGone, 2*j+1]] = nodeGone
         end
     end
 
@@ -48,19 +48,19 @@ end
     # Remove entry from linksConnect.
     idx = 2 * connectGone
     link1 = connectivity[nodeKept, idx]
-    link2 = connectivity[nodeKept, idx + 1]
+    link2 = connectivity[nodeKept, idx+1]
     linksConnect[link1, link2] = 0
 
     # If the connectGone is not the last connection that was made, replace it by the last connection.
     if connectGone < lastConnect
-        connectivity[nodeKept, idx:(idx + 1)] = connectivity[nodeKept, lst:(lst + 1)]
-        linksConnect[link1, link2] = connectGone
+        connectivity[nodeKept, idx:(idx+1)] = connectivity[nodeKept, lst:(lst+1)]
+        linksConnect[connectivity[nodeKept, idx], connectivity[nodeKept, idx+1]] = connectGone
     end
 
     # Change connectivity to reflect that nodeKept has one less connection.
     connectivity[nodeKept, 1] = lastConnect - 1
     # Remove the last connection since lastConnect was either replaced by connectGone above, or already was the last connection.
-    connectivity[nodeKept, lst:(lst + 1)] .= 0
+    connectivity[nodeKept, lst:(lst+1)] .= 0
 
     return network
 end
@@ -71,7 +71,7 @@ removeLink!(network::DislocationNetwork, link::Int)
 ```
 Removes link and its information from network.
 """
-@inline function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = missing)
+function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = missing)
     links = network.links
     coord = network.coord
     label = network.label
@@ -79,22 +79,25 @@ Removes link and its information from network.
     connectivity = network.connectivity
     linksConnect = network.linksConnect
     segForce = network.segForce
+    bVec = network.bVec
+    slipPlane = network.slipPlane
 
-    @assert linkGone > size(links, 1) "removeLink!: link $linkGone not found."
+    @assert linkGone < Base.size(links, 1) "removeLink!: link $linkGone not found."
 
     # Delete linkGone from connectivity for both nodes in the link.
     node1 = links[linkGone, 1]
-    node2 = links[linkGone, 2]
     connectGone1 = linksConnect[linkGone, 1]
-    connectGone2 = linksConnect[linkGone, 2]
     removeConnection!(network, node1, connectGone1)
+
+    node2 = links[linkGone, 2]
+    connectGone2 = linksConnect[linkGone, 2]
     removeConnection!(network, node2, connectGone2)
 
-    @assert linksConnect[linkGone, :]' * linksConnect[linkGone, :] != 0 "removeLink!: link $linkGone still has connections and should not be deleted."
+    @assert linksConnect[linkGone, :]' * linksConnect[linkGone, :] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     if ismissing(lastLink)
-        firstUndef = findfirst(x -> x == 0, linkGone[:, 1])
-        firstUndef == nothing ? lastLink = length(linkGone[:, 1]) :
+        firstUndef = findfirst(x -> x == 0, links[:, 1])
+        firstUndef == nothing ? lastLink = length(links[:, 1]) :
         lastLink = maximum((firstUndef - 1, 1))
     end
 
@@ -103,6 +106,8 @@ Removes link and its information from network.
         links[linkGone, :] = links[lastLink, :]
         segForce[linkGone, :] = segForce[lastLink, :]
         linksConnect[linkGone, :] = linksConnect[lastLink, :]
+        bVec[linkGone, :] = bVec[lastLink, :]
+        slipPlane[linkGone, :] = slipPlane[lastLink, :]
         node1 = links[linkGone, 1]
         node2 = links[linkGone, 2]
         connect1 = 2 * linksConnect[linkGone, 1]
@@ -115,21 +120,23 @@ Removes link and its information from network.
     links[lastLink, :] .= 0
     segForce[lastLink, :] .= 0
     linksConnect[lastLink, :] .= 0
+    bVec[lastLink, :] .= 0
+    slipPlane[lastLink, :] .= 0
 
     return network
 end
 
-@inline function removeUpdate(
+function removeUpdate(
     filter::AbstractVector{T},
     kept::Int,
     gone::Int,
     func::Function,
-    network::network,
+    network::DislocationNetwork,
 ) where {T}
     # Find the first zero value in the filter (zero is undefined).
     firstZero = findfirst(x -> x == 0, filter)
     # If there are no zero values, return the last entry which is the length of filter. Else if it is between the first and last entry return the last non-zero value. Else return the first entry.
-    firstZero == nothing ? last = length(label) : last = maximum((firstZero - 1, 1))
+    firstZero == nothing ? last = length(filter) : last = maximum((firstZero - 1, 1))
     # Apply the function.
     func(network, gone, last)
     # The data that corresponded to index gone now holds the values that corresponded to index last. If indices kept and last are equal, the values that corresponded to index kept are now found at index gone, so we must we change the value of index kept to the value of index gone.
@@ -148,24 +155,26 @@ Merges and cleans up the information in `network.connectivity` and `network.link
 
     links = network.links
     coord = network.coord
+    label = network.label
     segForce = network.segForce
     connectivity = network.connectivity
     linksConnect = network.linksConnect
     nodeVel = network.nodeVel
+    bVec = network.bVec
 
     nodeKeptConnect = connectivity[nodeKept, 1]
     nodeGoneConnect = connectivity[nodeGone, 1]
     totalConnect = nodeKeptConnect + nodeGoneConnect
 
     # Pass connections from nodeGone to nodeKept.
-    connectivity[nodeKept, (2 * (nodeKeptConnect + 1)):(2 * (nodeGoneConnect + 1))] =
-        connectivity[nodeGone, 2:(2 * nodeGoneConnect + 1)]
-    connectivity[nodeKeptConnect, 1] = totalConnect
+    connectivity[nodeKept, (2*(nodeKeptConnect+1)):(2*totalConnect+1)] =
+        connectivity[nodeGone, 2:(2*nodeGoneConnect+1)]
+    connectivity[nodeKept, 1] = totalConnect
 
     # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.
-    for i in 1:nodeGoneConnect
-        link = connectivity[nodeGone, 2 * i]        # Link id for nodeGone
-        colLink = connectivity[nodeGone, 2 * i + 1] # Position of links where link appears.
+    for i = 1:nodeGoneConnect
+        link = connectivity[nodeGone, 2*i]        # Link id for nodeGone
+        colLink = connectivity[nodeGone, 2*i+1] # Position of links where link appears.
         links[link, colLink] = nodeKept             # Replace nodeGone with nodeKept.
         linksConnect[link, colLink] = nodeKeptConnect + i # Increase connectivity of nodeKept.
     end
@@ -174,31 +183,35 @@ Merges and cleans up the information in `network.connectivity` and `network.link
     nodeKept = removeUpdate(label, nodeKept, nodeGone, removeNode!, network)
 
     # Delete self links of nodeKept.
-    for i in 1:(nodeKeptConnect - 1)
-        link = connectivity[nodeKept, 2 * i]        # Link id for nodeKept
-        colLink = connectivity[nodeKept, 2 * i + 1] # Position of links where link appears.
+    i = 1
+    while i < connectivity[nodeKept, 1]
+        link = connectivity[nodeKept, 2*i]        # Link id for nodeKept
+        colLink = connectivity[nodeKept, 2*i+1] # Position of links where link appears.
         colNotLink = 3 - colLink # The column of the other node in the position of link in links.
         nodeNotLink = links[link, colNotLink]       # Other node in the link.
-
-        nodeKept == nodeNotLink ? removeLink!(network, link) : continue
-        i -= 1
+        nodeKept == nodeNotLink ? removeLink!(network, link) : i += 1
     end
 
     # Delete duplicate links.
-    for i in 1:(nodeKeptConnect - 1)
-        link1 = connectivity[nodeKept, 2 * i]           # Link id for nodeKept
-        colLink1 = connectivity[nodeKept, 2 * i + 1]    # Position of links where link appears.
+    i = 1
+    while i < connectivity[nodeKept, 1]
+        link1 = connectivity[nodeKept, 2*i]           # Link id for nodeKept
+        colLink1 = connectivity[nodeKept, 2*i+1]    # Position of links where link appears.
         colNotLink1 = 3 - colLink1 # The column of the other node in the position of link in links.
         nodeNotLink1 = links[link1, colNotLink1]        # Other node in the link.
         # Same but for the next entry.
-        for j in (i + 1):nodeKeptConnect
-            link2 = connectivity[nodeKept, 2 * j]
-            colLink2 = connectivity[nodeKept, 2 * j + 1]
+        j = i + 1
+        while j <= connectivity[nodeKept, 1]
+            link2 = connectivity[nodeKept, 2*j]
+            colLink2 = connectivity[nodeKept, 2*j+1]
             colNotLink2 = 3 - colLink2
             nodeNotLink2 = links[link2, colNotLink2]
 
             # Continue to next iteration if no duplicate links are found.
-            nodeNotLink1 != nodeNotLink2 ? continue : nothing
+            if nodeNotLink1 != nodeNotLink2
+                j += 1
+                continue
+            end
 
             # Fix Burgers vector.
             # If the nodes are on different ends of a link, conservation of Burgers vector in a loop requires we subtract contributions from the two links involved. Else we add them.
@@ -237,10 +250,13 @@ Merges and cleans up the information in `network.connectivity` and `network.link
             i -= 1
             break
         end
+        i += 1
     end
 
     # If nodeKept has no connections remove it.
     connectivity[nodeKept, 1] == 0 ? removeNode!(network, nodeKept) : nothing
+
+    return network
 end
 
 function splitNode end
@@ -249,8 +265,8 @@ function coarsenMesh(
     dlnParams::DislocationP,
     matParams::MaterialP,
     network::DislocationNetwork,
-    mesh::RegularCuboidMesh,
-    dlnFEM::DislocationFEMCorrective;
+    # mesh::RegularCuboidMesh,
+    # dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
 )
     minArea = dlnParams.minArea^2
@@ -328,6 +344,7 @@ function coarsenMesh(
 
 end
 
+#=
 function refineMesh(
     dlnParams::DislocationP,
     matParams::MaterialP,
@@ -369,3 +386,4 @@ function remeshSurface(
 )
 
 end
+=#

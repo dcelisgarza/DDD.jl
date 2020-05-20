@@ -1,5 +1,4 @@
 ## Distributions
-
 """
 ```
 loopDistribution(dist<:AbstractDistribution, n::Int, args...; kw...)
@@ -29,8 +28,9 @@ Calculate the spatial limits a dislocation will occupy. This and [`loopDistribut
     range::T1,
     buffer::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
-    @inbounds for i in 1:size(lims, 2)
-        for j in 1:size(lims, 1)
+
+    @inbounds for i in 1:Base.size(lims, 2)
+        for j in 1:Base.size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
         end
     end
@@ -52,8 +52,8 @@ Translate dislocation node coordinates `coord` inside the spatial bounds of `lim
     lims::T1,
     disp::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
-    @inbounds for i in 1:size(coord, 2)
-        @simd for j in 1:size(coord, 1)
+    @inbounds for i in 1:Base.size(coord, 2)
+        @simd for j in 1:Base.size(coord, 1)
             coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
         end
     end
@@ -77,7 +77,7 @@ Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the 
 
     # Indices of defined links.
     idx = findall(x -> x != 0, links[:, 1])
-    lenLinks = size(links, 1)
+    lenLinks = Base.size(links, 1)
     connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
     linksConnect = zeros(Int, lenLinks, 2)
 
@@ -119,7 +119,7 @@ In-place version of [`makeConnect`](@ref).
     maxConnect = network.maxConnect
 
     idx = findall(x -> x != 0, links[:, 1])
-    lenLinks = size(links, 1)
+    lenLinks = Base.size(links, 1)
     connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
     linksConnect = zeros(Int, lenLinks, 2)
     @inbounds @simd for i in idx
@@ -154,7 +154,7 @@ getSegmentIdx(
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
 
-    segIdx = zeros(Int, size(links, 1), 3)  # Indexing matrix.
+    segIdx = zeros(Int, Base.size(links, 1), 3)  # Indexing matrix.
     idx = findall(x -> x != 0, label)       # Find all defined nodes.
     numSeg::Int = 0 # Number of segments.
 
@@ -181,7 +181,7 @@ getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
 
-    segIdx = zeros(Int, size(links, 1), 3)
+    segIdx = zeros(Int, Base.size(links, 1), 3)
     idx = findall(x -> x != 0, label)
     numSeg::Int = 0
     for i in idx

@@ -9,6 +9,7 @@ zero(::Type{nodeType}) = 0
 getindex(x::nodeType, i::Int) = i == 1 ? Int(x) : throw(BoundsError())
 iterate(x::nodeType, i = 1) = (length(x) < i ? nothing : (x[i], i + 1))
 length(x::nodeType) = 1
+size(x::nodeType) = 1
 
 """
 ```

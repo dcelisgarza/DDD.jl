@@ -37,6 +37,8 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
 )
 
 network = DislocationNetwork(dislocationLoop; memBuffer = 1)
+test = zeros(2,3)
+size(test,convert(Int,1))
 
 pentagon = DislocationLoop(
     loopPrism();
@@ -57,22 +59,28 @@ DislocationNetwork!(network, pentagon; memBuffer = 1)
 
 using Plots
 plotly()
+
+network = DislocationNetwork(pentagon; memBuffer = 1)
+network2 = deepcopy(network)
+mergeNode!(network2, 1, 2)
 fig = plotNodes(
     network,
     m = 1,
     l = 3,
-    linecolor = :black,
-    markercolor = :black,
+    linecolor = :red,
+    markercolor = :red,
     legend = false,
 )
-
-
-
-# removeNode!(network2, 5)
-# fig = plotNodes(network2)
-# plotNodes!(fig, network1)
-
-# using Makie
+display(fig)
+plotNodes!(
+    fig,
+    network2,
+    m = 1,
+    l = 3,
+    linecolor = :green,
+    markercolor = :green,
+    legend = false,
+)
 
 
 plotNodes!(fig,

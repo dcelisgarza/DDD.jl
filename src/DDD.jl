@@ -20,7 +20,7 @@ export DislocationLoop, DislocationNetwork, DislocationNetwork!
 export checkNetwork, loopDistribution, calcSelfForce
 export calcSegSegForce, calcParSegSegForce, calcSegForce
 # Topology
-export removeNode!
+export removeNode!, mergeNode!
 include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")
