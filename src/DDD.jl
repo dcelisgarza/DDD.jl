@@ -3,7 +3,7 @@ module DDD
 using LinearAlgebra, Plots, Statistics, InteractiveUtils, JSON
 
 import Base: zero, isequal, isless, convert, ==, *, /, length, getindex
-import Base: eachindex, push!, iterate
+import Base: eachindex, push!, iterate, size
 
 include("./Misc/Misc.jl")
 # Miscelaneous.

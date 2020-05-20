@@ -161,7 +161,7 @@ Merges and cleans up the information in `network.connectivity` and `network.link
     linksConnect = network.linksConnect
     nodeVel = network.nodeVel
     bVec = network.bVec
-
+    
     nodeKeptConnect = connectivity[nodeKept, 1]
     nodeGoneConnect = connectivity[nodeGone, 1]
     totalConnect = nodeKeptConnect + nodeGoneConnect

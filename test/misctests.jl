@@ -1,4 +1,8 @@
-using Revise, BenchmarkTools
+using Revise, BenchmarkTools, Plots
+# using plotlyjs
+# https://github.com/sglyon/ORCA.jl/issues/8#issuecomment-629049679
+# https://stackoverflow.com/a/48509426
+plotlyjs()
 using DDD
 cd(@__DIR__)
 
@@ -37,14 +41,12 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
 )
 
 network = DislocationNetwork(dislocationLoop; memBuffer = 1)
-test = zeros(2,3)
-size(test,convert(Int,1))
 
 pentagon = DislocationLoop(
     loopPrism();
     numSides = 5,
     nodeSide = 1,
-    numLoops = 1,
+    numLoops = 5,
     segLen = 10 * ones(5),
     slipSystem = 3,
     _slipPlane = slipSystems.slipPlane[3, :],
@@ -56,25 +58,10 @@ pentagon = DislocationLoop(
 )
 
 DislocationNetwork!(network, pentagon; memBuffer = 1)
-
-using Plots
-gr()
-
 network = DislocationNetwork(pentagon; memBuffer = 1)
 network2 = deepcopy(network)
 
-
-
-
-
-
-
-
-
-
-
-
-mergeNode!(network2, 1, 3)
+mergeNode!(network2, 57, 160)
 fig = plotNodes(
     network,
     m = 1,
@@ -92,7 +79,6 @@ plotNodes!(
     markercolor = :blue,
     legend = false,
 )
-
 
 plotNodes!(fig,
     network1,
