@@ -1,13 +1,26 @@
 """
-Replaces node id with the last valid node. Cleans up links and
+```
+removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = missing)
+```
+In-place remove `nodeGone`. If `nodeGone` is *not* the last node, this replaces the entries corresponding to `nodeGone` with `lastNode`. Else it simply zeros out the entries corresponding to `lastNode`. This also decreases `numNode` by one. If `lastNode` is missing, this function finds it.
+
+Modifies
+```
+network.links
+network.coord
+network.label
+network.nodeVel
+network.numNode
+network.connectivity
+```
 """
 @inline function removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = missing)
     links = network.links
     coord = network.coord
     label = network.label
     nodeVel = network.nodeVel
-    connectivity = network.connectivity
     numNode = network.numNode
+    connectivity = network.connectivity
 
     if ismissing(lastNode)
         firstUndef = findfirst(x -> x == 0, label)
@@ -21,22 +34,34 @@ Replaces node id with the last valid node. Cleans up links and
         nodeVel[nodeGone, :] .= nodeVel[lastNode, :]
         connectivity[nodeGone, :] .= connectivity[lastNode, :]
         # Change the link
-        for j = 1:connectivity[nodeGone, 1]
-            links[connectivity[nodeGone, 2*j], connectivity[nodeGone, 2*j+1]] = nodeGone
+        @simd for j = 1:connectivity[nodeGone, 1]
+            idx = 2 * j
+            links[connectivity[nodeGone, idx], connectivity[nodeGone, idx+1]] = nodeGone
         end
     end
 
-    # Reduce the number of nodes to reflect that there is one less node in the network.
-    numNode -= 1
-    # Remove the last node from the arrays since nodeGone was either replaced by lastNode above, or already was the last node.
+    # Remove the last node from the arrays since nodeGone was either replaced by lastNode above, or already was the last node. Reduce the number of nodes by one.
     coord[lastNode, :] .= 0
     label[lastNode] = 0
     nodeVel[lastNode, :] .= 0
+    numNode -= 1
     connectivity[lastNode, :] .= 0
 
     return network
 end
 
+"""
+```
+removeConnection!(network::DislocationNetwork, nodeKept::Int, connectGone::Int)
+```
+In-place remove `connectGone` from the entries corresponding to `nodeKept`. If `connectGone` is not the last connection, it gets replaced by the last connection. Else it simply zeroes out the entries corresponding to `connectGone`. Also reduces the number of connections by one.
+
+Modifies
+```
+network.connectivity
+network.linksConnect
+```
+"""
 @inline function removeConnection!(network::DislocationNetwork, nodeKept::Int, connectGone::Int)
     connectivity = network.connectivity
     linksConnect = network.linksConnect
@@ -58,8 +83,8 @@ end
     end
 
     # Change connectivity to reflect that nodeKept has one less connection.
-    connectivity[nodeKept, 1] = lastConnect - 1
     # Remove the last connection since lastConnect was either replaced by connectGone above, or already was the last connection.
+    connectivity[nodeKept, 1] -= 1
     connectivity[nodeKept, lst:(lst+1)] .= 0
 
     return network
@@ -67,22 +92,37 @@ end
 
 """
 ```
-removeLink!(network::DislocationNetwork, link::Int)
+removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = missing)
 ```
-Removes link and its information from network.
+In-place remove `linkGone` with the last valid link. If `linkGone` is *not* the last link, this replaces the entries corresponding to `linkGone` with `lastLink`. Else it simply zeros out the entries corresponding to `lastLink`. This also decreases `numSeg` by one. If `lastLink` is missing, this function finds it.
+
+Modifies
+```
+network.links
+network.slipPlane
+network.bVec
+network.coord
+network.label
+network.segForce
+network.nodeVel
+network.numSeg
+network.connectivity
+network.linksConnect
+```
 """
 function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = missing)
     links = network.links
+    slipPlane = network.slipPlane
+    bVec = network.bVec
     coord = network.coord
     label = network.label
+    segForce = network.segForce
     nodeVel = network.nodeVel
+    numSeg = network.numSeg
     connectivity = network.connectivity
     linksConnect = network.linksConnect
-    segForce = network.segForce
-    bVec = network.bVec
-    slipPlane = network.slipPlane
 
-    @assert linkGone <= Base.size(links, 1) "removeLink!: link $linkGone not found."
+    @assert linkGone <= size(links, 1) "removeLink!: link $linkGone not found."
 
     # Delete linkGone from connectivity for both nodes in the link.
     node1 = links[linkGone, 1]
@@ -93,6 +133,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
     connectGone2 = linksConnect[linkGone, 2]
     removeConnection!(network, node2, connectGone2)
 
+    # Remove link that no longer appears in connectivity and doesn't connect any nodes.
     @assert linksConnect[linkGone, :]' * linksConnect[linkGone, :] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     if ismissing(lastLink)
@@ -104,10 +145,10 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
     # If the linkGone is not the last link, replace it with lastLink.
     if linkGone < lastLink
         links[linkGone, :] = links[lastLink, :]
+        slipPlane[linkGone, :] = slipPlane[lastLink, :]
+        bVec[linkGone, :] = bVec[lastLink, :]
         segForce[linkGone, :] = segForce[lastLink, :]
         linksConnect[linkGone, :] = linksConnect[lastLink, :]
-        bVec[linkGone, :] = bVec[lastLink, :]
-        slipPlane[linkGone, :] = slipPlane[lastLink, :]
         node1 = links[linkGone, 1]
         node2 = links[linkGone, 2]
         connect1 = 2 * linksConnect[linkGone, 1]
@@ -118,14 +159,27 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
 
     # Remove the last link from the arrays since linkGone was either replaced by lastLink above, or already was the last link.
     links[lastLink, :] .= 0
-    segForce[lastLink, :] .= 0
-    linksConnect[lastLink, :] .= 0
-    bVec[lastLink, :] .= 0
     slipPlane[lastLink, :] .= 0
+    bVec[lastLink, :] .= 0
+    segForce[lastLink, :] .= 0
+    numSeg -= 1
+    linksConnect[lastLink, :] .= 0
 
     return network
 end
 
+"""
+```
+removeUpdate(
+    filter::AbstractVector{T},
+    kept::Int,
+    gone::Int,
+    func::Function,
+    network::DislocationNetwork,
+) where {T}
+```
+Removes entries in `network` corresponding to `gone` according to `func`. It uses `filter` to find the last entry. Also updates `kept` in case the entries corresponding to `kept` were moved to where the entries corresponding to `gone` used to be. Modifies whatever fields `func` modifies and returns `kept`.
+"""
 function removeUpdate(
     filter::AbstractVector{T},
     kept::Int,
@@ -146,22 +200,25 @@ function removeUpdate(
 end
 
 """
-Merges and cleans up the information in `network.connectivity` and `network.links` for the nodes that will be merged. This is such that there are no repeated entries, self-links or double links.
+```
+mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
+```
+Merges `nodeGone` into `nodeKept`. After calling this function there are no repeated entries, self-links or double links.
 """
 @inline function mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
-
     # Return if both nodes to be merged are the same.
     nodeKept == nodeGone && return
 
     links = network.links
+    slipPlane = network.slipPlane
+    bVec = network.bVec
     coord = network.coord
     label = network.label
     segForce = network.segForce
+    nodeVel = network.nodeVel
     connectivity = network.connectivity
     linksConnect = network.linksConnect
-    nodeVel = network.nodeVel
-    bVec = network.bVec
-    
+
     nodeKeptConnect = connectivity[nodeKept, 1]
     nodeGoneConnect = connectivity[nodeGone, 1]
     totalConnect = nodeKeptConnect + nodeGoneConnect
@@ -182,24 +239,27 @@ Merges and cleans up the information in `network.connectivity` and `network.link
     # Remove node from network and update index of nodeKept in case it changed.
     nodeKept = removeUpdate(label, nodeKept, nodeGone, removeNode!, network)
 
+    # Warning: connectivity can be updated by removeLink!().
     # Delete self links of nodeKept.
     i = 1
     while i < connectivity[nodeKept, 1]
-        link = connectivity[nodeKept, 2*i]        # Link id for nodeKept
+        link = connectivity[nodeKept, 2*i]      # Link id for nodeKept
         colLink = connectivity[nodeKept, 2*i+1] # Position of links where link appears.
         colNotLink = 3 - colLink # The column of the other node in the position of link in links.
-        nodeNotLink = links[link, colNotLink]       # Other node in the link.
+        nodeNotLink = links[link, colNotLink]   # Other node in the link.
+        # If nodeKept and nodeNotLink are the same, this is a self-link, therefore delete. Else increase counter.
         nodeKept == nodeNotLink ? removeLink!(network, link) : i += 1
     end
 
+    # Warning: connectivity can be updated by removeUpdate().
     # Delete duplicate links.
     i = 1
     while i < connectivity[nodeKept, 1]
-        link1 = connectivity[nodeKept, 2*i]           # Link id for nodeKept
+        link1 = connectivity[nodeKept, 2*i]         # Link id for nodeKept
         colLink1 = connectivity[nodeKept, 2*i+1]    # Position of links where link appears.
         colNotLink1 = 3 - colLink1 # The column of the other node in the position of link in links.
-        nodeNotLink1 = links[link1, colNotLink1]        # Other node in the link.
-        # Same but for the next entry.
+        nodeNotLink1 = links[link1, colNotLink1]    # Other node in the link.
+        # Same but for the next link.
         j = i + 1
         while j <= connectivity[nodeKept, 1]
             link2 = connectivity[nodeKept, 2*j]
@@ -219,9 +279,9 @@ Merges and cleans up the information in `network.connectivity` and `network.link
             bVec[link1, :] += bVec[link2, :]
 
             # Fix slip plane.
-            # Line direction and velocity of the link being removed.
+            # Line direction and velocity of the resultant dislocation.
             t = coord[nodeKept, :] - coord[nodeNotLink1, :]
-            v = nodeVel[nodeKept, :] - nodeVel[nodeNotLink1, :]
+            v = nodeVel[nodeKept, :] + nodeVel[nodeNotLink1, :]
 
             # Burgers vector and potential new slip plane.
             b = bVec[link1, :]

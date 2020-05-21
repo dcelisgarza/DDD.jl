@@ -1,8 +1,27 @@
 # Functions
 
 ## Dislocation
-```@docs
 
+### Segment Forces
+```@docs
+calcSelfForce
+
+calcSegSegForce
+
+calcSegForce
+```
+
+### Dislocation Topology
+```@docs
+removeNode!
+
+removeConnection!
+
+removeLink!
+
+removeUpdate
+
+mergeNode!
 ```
 
 ## FEM
@@ -12,7 +31,7 @@ shapeFunction
 shapeFunctionDeriv
 ```
 
-## Dislocation FEM
+## Dislocation FEM Coupling
 ```@docs
 calcPKForce
 

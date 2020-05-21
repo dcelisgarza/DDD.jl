@@ -1,3 +1,15 @@
+"""
+```
+calcSegForce(
+    dlnParams::DislocationP,
+    matParams::MaterialP,
+    network::DislocationNetwork;
+    # mesh::RegularCuboidMesh,
+    # dlnFEM::DislocationFEMCorrective;
+    parallel::Bool = true,
+)
+```
+"""
 function calcSegForce(
     dlnParams::DislocationP,
     matParams::MaterialP,
@@ -18,7 +30,7 @@ end
 
 """
 ```
-function calcSelfForce(
+calcSelfForce(
     dlnParams::DislocationP,
     matParams::MaterialP,
     network::DislocationNetwork,
