@@ -19,7 +19,6 @@ network.connectivity
     coord = network.coord
     label = network.label
     nodeVel = network.nodeVel
-    numNode = network.numNode
     connectivity = network.connectivity
 
     if ismissing(lastNode)
@@ -44,7 +43,7 @@ network.connectivity
     coord[lastNode, :] .= 0
     label[lastNode] = 0
     nodeVel[lastNode, :] .= 0
-    numNode -= 1
+    network.numNode -= 1
     connectivity[lastNode, :] .= 0
 
     return network
@@ -118,7 +117,6 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
     label = network.label
     segForce = network.segForce
     nodeVel = network.nodeVel
-    numSeg = network.numSeg
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
@@ -162,7 +160,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
     slipPlane[lastLink, :] .= 0
     bVec[lastLink, :] .= 0
     segForce[lastLink, :] .= 0
-    numSeg -= 1
+    network.numSeg -= 1
     linksConnect[lastLink, :] .= 0
 
     return network
@@ -209,6 +207,8 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     # Return if both nodes to be merged are the same.
     nodeKept == nodeGone && return
 
+    @assert nodeKept <= network.numNode && nodeGone <= network.numNode "mergeNode!: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
+
     links = network.links
     slipPlane = network.slipPlane
     bVec = network.bVec
@@ -224,6 +224,10 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     totalConnect = nodeKeptConnect + nodeGoneConnect
 
     # Pass connections from nodeGone to nodeKept.
+    if size(connectivity, 2) < 2 * totalConnect + 1
+        network.connectivity = hcat(network.connectivity, zeros(Int, length(label), 2 * totalConnect + 1 - size(network.connectivity, 2)))
+        connectivity = network.connectivity
+    end
     connectivity[nodeKept, (2*(nodeKeptConnect+1)):(2*totalConnect+1)] =
         connectivity[nodeGone, 2:(2*nodeGoneConnect+1)]
     connectivity[nodeKept, 1] = totalConnect
@@ -288,9 +292,9 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
             if dot(n1, n1) > eps(eltype(n1)) # non-screw
-                slipPlane[nodeKept, :] = n1 ./ norm(n1)
+                slipPlane[link1, :] = n1 / norm(n1)
             elseif dot(n2, n2) > eps(eltype(n2)) # screw
-                slipPlane[nodeKept, :] = n2 ./ norm(n2)
+                slipPlane[link1, :] = n2 / norm(n2)
             end
 
             # Remove link2 from network and update the index of link1 in case it changed.

@@ -46,7 +46,7 @@ pentagon = DislocationLoop(
     loopPrism();
     numSides = 5,
     nodeSide = 1,
-    numLoops = 5,
+    numLoops = 2,
     segLen = 10 * ones(5),
     slipSystem = 4,
     _slipPlane = slipSystems.slipPlane[4, :],
@@ -56,14 +56,36 @@ pentagon = DislocationLoop(
     range = Float64[-100 -100 -100; 100 100 100],
     dist = Rand(),
 )
-# network = DislocationNetwork(pentagon; memBuffer = 5)
-DislocationNetwork!(network, pentagon)
-
+network = DislocationNetwork(pentagon; memBuffer = 1)
+# DislocationNetwork!(network, pentagon)
 network2 = deepcopy(network)
-mergeNode!(network2, 147, 23)
+
+network2.coord = [
+    -38.9526 -15.6253 -70.0006
+    -44.416 -7.63875 -72.5237
+    -51.8751 -6.78528 -65.9181
+    -51.0216 -14.2443 -59.3125
+    -43.0351 -19.7078 -61.8356
+    -20.9647 26.5869 85.4687
+    -26.4281 34.5734 82.9456
+    -33.8872 35.4269 89.5512
+    -33.0337 27.9679 96.1568
+    -25.0472 22.5044 93.6336
+];
+
+
+mergeNode!(network2, 5, 10)
 
 plotlyjs()
-fig = plotNodes(network, m = 1, l = 3, linecolor = :red, markercolor = :red, legend = false, size=(750,750))
+fig = plotNodes(
+    network2,
+    m = 1,
+    l = 3,
+    linecolor = :red,
+    markercolor = :red,
+    legend = false,
+    size = (750, 750),
+)
 plotNodes!(fig, network2, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
 

@@ -139,7 +139,7 @@ false
         result = getproperty(arg1, name) == getproperty(arg2, name)
         if result == false
             flag = false
-            !verbose ? nothing : @warn "Structures differ in field: $(i)."
+            !verbose ? nothing : @warn "Structures differ in field: $(name)."
         end
     end
     return flag
