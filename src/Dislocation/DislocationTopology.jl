@@ -22,8 +22,7 @@ network.connectivity
     connectivity = network.connectivity
 
     if ismissing(lastNode)
-        firstUndef = findfirst(x -> x == 0, label)
-        firstUndef == nothing ? lastNode = length(label) : lastNode = maximum((firstUndef - 1, 1))
+        lastNode = maximum((network.numNode, 1))
     end
 
     # The if nodeGone is not the last node in the relevant arrays, replace it by lastNode.
@@ -135,9 +134,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
     @assert linksConnect[linkGone, :]' * linksConnect[linkGone, :] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     if ismissing(lastLink)
-        firstUndef = findfirst(x -> x == 0, links[:, 1])
-        firstUndef == nothing ? lastLink = length(links[:, 1]) :
-        lastLink = maximum((firstUndef - 1, 1))
+        lastLink = maximum((network.numSeg, 1))
     end
 
     # If the linkGone is not the last link, replace it with lastLink.
@@ -168,37 +165,6 @@ end
 
 """
 ```
-removeUpdate(
-    filter::AbstractVector{T},
-    kept::Int,
-    gone::Int,
-    func::Function,
-    network::DislocationNetwork,
-) where {T}
-```
-Removes entries in `network` corresponding to `gone` according to `func`. It uses `filter` to find the last entry. Also updates `kept` in case the entries corresponding to `kept` were moved to where the entries corresponding to `gone` used to be. Modifies whatever fields `func` modifies and returns `kept`.
-"""
-function removeUpdate(
-    filter::AbstractVector{T},
-    kept::Int,
-    gone::Int,
-    func::Function,
-    network::DislocationNetwork,
-) where {T}
-    # Find the first zero value in the filter (zero is undefined).
-    firstZero = findfirst(x -> x == 0, filter)
-    # If there are no zero values, return the last entry which is the length of filter. Else if it is between the first and last entry return the last non-zero value. Else return the first entry.
-    firstZero == nothing ? last = length(filter) : last = maximum((firstZero - 1, 1))
-    # Apply the function.
-    func(network, gone, last)
-    # The data that corresponded to index gone now holds the values that corresponded to index last. If indices kept and last are equal, the values that corresponded to index kept are now found at index gone, so we must we change the value of index kept to the value of index gone.
-    kept == last ? kept = gone : nothing
-
-    return kept
-end
-
-"""
-```
 mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
 ```
 Merges `nodeGone` into `nodeKept`. After calling this function there are no repeated entries, self-links or double links.
@@ -225,7 +191,10 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
 
     # Pass connections from nodeGone to nodeKept.
     if size(connectivity, 2) < 2 * totalConnect + 1
-        network.connectivity = hcat(network.connectivity, zeros(Int, length(label), 2 * totalConnect + 1 - size(network.connectivity, 2)))
+        network.connectivity = hcat(
+            network.connectivity,
+            zeros(Int, length(label), 2 * totalConnect + 1 - size(network.connectivity, 2)),
+        )
         connectivity = network.connectivity
     end
     connectivity[nodeKept, (2*(nodeKeptConnect+1)):(2*totalConnect+1)] =
@@ -241,7 +210,9 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     end
 
     # Remove node from network and update index of nodeKept in case it changed.
-    nodeKept = removeUpdate(label, nodeKept, nodeGone, removeNode!, network)
+    lastNode = maximum((network.numNode, 1))
+    removeNode!(network, nodeGone, lastNode)
+    nodeKept == lastNode ? nodeKept = nodeGone : nothing
 
     # Warning: connectivity can be updated by removeLink!().
     # Delete self links of nodeKept.
@@ -255,7 +226,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
         nodeKept == nodeNotLink ? removeLink!(network, link) : i += 1
     end
 
-    # Warning: connectivity can be updated by removeUpdate().
+    # Warning: connectivity can be updated in the while loop.
     # Delete duplicate links.
     i = 1
     while i < connectivity[nodeKept, 1]
@@ -284,11 +255,20 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
 
             # Fix slip plane.
             # Line direction and velocity of the resultant dislocation.
-            t = coord[nodeKept, :] - coord[nodeNotLink1, :]
-            v = nodeVel[nodeKept, :] + nodeVel[nodeNotLink1, :]
+            t = @SVector [
+                coord[nodeKept, 1] - coord[nodeNotLink1, 1],
+                coord[nodeKept, 2] - coord[nodeNotLink1, 2],
+                coord[nodeKept, 3] - coord[nodeNotLink1, 3],
+            ]
+
+            v = @SVector [
+                nodeVel[nodeKept, 1] + nodeVel[nodeNotLink1, 1],
+                nodeVel[nodeKept, 2] + nodeVel[nodeNotLink1, 2],
+                nodeVel[nodeKept, 3] + nodeVel[nodeNotLink1, 3],
+            ]
 
             # Burgers vector and potential new slip plane.
-            b = bVec[link1, :]
+            b = @SVector [bVec[link1, 1], bVec[link1, 2], bVec[link1, 3]]
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
             if dot(n1, n1) > eps(eltype(n1)) # non-screw
@@ -298,16 +278,20 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             end
 
             # Remove link2 from network and update the index of link1 in case it changed.
-            link1 = removeUpdate(links[:, 1], link1, link2, removeLink!, network)
+            lastLink = maximum((network.numSeg, 1))
+            removeLink!(network, link2, lastLink)
+            link1 == lastLink ? link1 = link2 : nothing
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
-            b = bVec[link1, :]
+            b = @SVector [bVec[link1, 1], bVec[link1, 2], bVec[link1, 3]]
             if isapprox(dot(b, b), 0)
                 removeLink!(network, link1)
                 # If the node that was connected to nodeKept has no connections, remove it from the network and update the index of nodeKept in case it changed.
-                connectivity[nodeNotLink1, 1] == 0 ?
-                nodeKept = removeUpdate(label, nodeKept, nodeNotLink1, removeNode!, network) :
-                nothing
+                if connectivity[nodeNotLink1, 1] == 0
+                    lastNode = maximum((network.numNode, 1))
+                    removeNode!(network, nodeNotLink1, lastNode)
+                    nodeKept == lastNode ? nodeKept = nodeNotLink1 : nothing
+                end
             end
 
             # Since there was a change in the configuration, we check for duplicates again.

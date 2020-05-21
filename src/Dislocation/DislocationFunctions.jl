@@ -58,7 +58,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     numSeg = network.numSeg
     # Un normalised segment vectors.
     bVec = network.bVec[idx[:, 1], :]
-    tVec = @. coord[idx[:, 3], :] - coord[idx[:, 2], :]
+    tVec = coord[idx[:, 3], :] - coord[idx[:, 2], :]
 
     # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
     L = zeros(numSeg)
@@ -105,7 +105,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
         LaMa[i] = La[i] - a
         # Torsional component of core self interaction.
-        tor[i] = @. μ4π *
+        tor[i] = μ4π *
            bScrew[i] *
            (
                nuOmNuInv * (log((La[i] + L[i]) / a) - 2 * LaMa[i] * Linv[i]) -
