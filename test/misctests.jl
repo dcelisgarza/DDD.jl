@@ -72,6 +72,7 @@ network2.coord = [
     -33.0337 27.9679 96.1568
     -25.0472 22.5044 93.6336
 ];
+mergeNode!(network2, 1, 3)
 @time mergeNode!(network2, 1, 3)
 
 @allocated mergeNode!(network2, 1, 3)
@@ -99,6 +100,8 @@ end
 c = foo2(test2, test1)
 d = cross(test2, test1)
 
+
+
 c == d
 
 cross(test1,c)
@@ -124,10 +127,31 @@ scene1 =
     plotNodesMakie(network, linewidth = 2, markersize = 0.5, strokecolor = :black, color = :black)
 
 self = calcSelfForce(dlnParams, matParams, network)
+@allocated calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
-remo = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+par = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+@allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+ser = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+@allocated calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
-tot = calcSegForce(dlnParams, matParams, network; parallel = true)
+tser = calcSegForce(dlnParams, matParams, network; parallel = false)
+@allocated calcSegForce(dlnParams, matParams, network; parallel = false)
+@btime calcSegForce(dlnParams, matParams, network; parallel = false)
+tpar = calcSegForce(dlnParams, matParams, network; parallel = true)
+@allocated calcSegForce(dlnParams, matParams, network; parallel = true)
+@btime calcSegForce(dlnParams, matParams, network; parallel = true)
+isapprox.(par, ser)
+isapprox.(tser .- ser, self)
+
+
+@btime calcSelfForce(dlnParams, matParams, network)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+@btime calcSegForce(dlnParams, matParams, network; parallel = false)
+
+
+
+remo.-tot
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
 par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
