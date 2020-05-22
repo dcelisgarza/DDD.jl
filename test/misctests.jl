@@ -59,7 +59,6 @@ pentagon = DislocationLoop(
 network = DislocationNetwork(pentagon; memBuffer = 1)
 # DislocationNetwork!(network, pentagon)
 network2 = deepcopy(network)
-
 network2.coord = [
     -38.9526 -15.6253 -70.0006
     -44.416 -7.63875 -72.5237
@@ -73,6 +72,7 @@ network2.coord = [
     -25.0472 22.5044 93.6336
 ];
 mergeNode!(network2, 1, 3)
+
 @time mergeNode!(network2, 1, 3)
 
 @allocated mergeNode!(network2, 1, 3)
@@ -129,20 +129,27 @@ scene1 =
 self = calcSelfForce(dlnParams, matParams, network)
 @allocated calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
+
 par = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+
 ser = calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
+
 tser = calcSegForce(dlnParams, matParams, network; parallel = false)
 @allocated calcSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegForce(dlnParams, matParams, network; parallel = false)
+
 tpar = calcSegForce(dlnParams, matParams, network; parallel = true)
 @allocated calcSegForce(dlnParams, matParams, network; parallel = true)
 @btime calcSegForce(dlnParams, matParams, network; parallel = true)
+
 isapprox.(par, ser)
+isapprox.(tser, tpar)
 isapprox.(tser .- ser, self)
+isapprox.(tpar .- ser, self)
 
 
 @btime calcSelfForce(dlnParams, matParams, network)

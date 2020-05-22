@@ -104,7 +104,7 @@ function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
-    slipSystem = SlipSystem(
+    slipSystem = SlipSystem(;
         crystalStruct = crystalStruct[dict["crystalStruct"]],
         slipPlane = convert.(
             Float64,

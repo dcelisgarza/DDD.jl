@@ -3,16 +3,19 @@ module DDD
 using LinearAlgebra, Plots, Statistics, InteractiveUtils, JSON, StaticArrays
 
 import Base: zero, isequal, isless, convert, ==, *, /, length, getindex
-import Base: eachindex, push!, iterate, size
+import Base: eachindex, push!, iterate, size, show
 
 include("./Misc/Misc.jl")
 # Miscelaneous.
 export makeTypeDict, compStruct, intAngle, extAngle, rot3D
 include("./Integration/CustomIntegration.jl")
+export IntegrationP, CustomTrapezoid
 include("./Material/MaterialBase.jl")
+export MaterialP, AbstractCrystalStruct, BCC, FCC, HCP
 include("./Dislocation/DislocationBase.jl")
+export DislocationP
 # Distributions.
-export AbstractDistribution, Zeros, Rand, Randn, Regular
+export AbstractDistribution, Zeros, Rand, Randn, Regular, mobBCC
 # Dislocation types.
 export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
 export DislocationLoop, DislocationNetwork, DislocationNetwork!
