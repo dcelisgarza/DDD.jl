@@ -220,7 +220,7 @@ Perform dot product along dimension `dim` of an array, returns a vector of dot p
     y::AbstractArray{T2,N};
     dim::Int = 2,
 ) where {T1,T2,N}
-    return sum(x .* y, dims = dim)
+    return vec(sum(x .* y, dims = dim))
 end
 
 """
@@ -230,5 +230,5 @@ dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
 Calculate norms along dimension `dim` of an array, returns a vector of norms.
 """
 @inline function dimNorm(x::AbstractArray{T,N}; dim::Int = 2) where {T,N}
-    return sqrt.(dimDot(x, x; dims = dim))
+    return vec(sqrt.(dimDot(x, x; dim = dim)))
 end

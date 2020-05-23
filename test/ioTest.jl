@@ -19,14 +19,7 @@ cd(@__DIR__)
     network = DislocationNetwork(dislocationLoop)
     # Dump simulation.
     paramDump = "../outputs/simParams/sampleDump.JSON"
-    save(
-        paramDump,
-        dlnParams,
-        matParams,
-        intParams,
-        slipSystems,
-        dislocationLoop,
-    )
+    save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
     networkDump = "../outputs/dln/sampleNetwork.JSON"
     save(networkDump, network)
     # Reload simulation.
@@ -37,8 +30,7 @@ cd(@__DIR__)
     slipSystems2 = loadSlipSystem(simulation[4])
     dislocationLoop2 = zeros(DislocationLoop, length(simulation[5]))
     for i in eachindex(dislocationLoop2)
-        dislocationLoop2[i] =
-            loadDislocationLoop(simulation[5][i], slipSystems2)
+        dislocationLoop2[i] = loadDislocationLoop(simulation[5][i], slipSystems2)
     end
     network2 = loadNetwork(networkDump)
     # Ensure the data is all the same.
@@ -50,13 +42,19 @@ cd(@__DIR__)
     @test compStruct(network, network2; verbose = true)
 
     vars = (dlnParams, matParams, intParams, slipSystems, dislocationLoop, network)
+    try
+        show.(vars)
+        @test true
+    catch err
+        @test false
+    end
+    try
+        show(nodeType(1))
+        @test true
+    catch err
+        @test false
+    end
     @test hasmethod(show, Tuple{typeof(vars)})
     @test hasmethod(show, Tuple{nodeType})
     @test hasmethod(show, Tuple{AbstractVector{nodeType}})
-    # rm(paramDump)
-    # rm(networkDump)
 end
-
-# C:\Users\Daniel Celis Garza\.julia\dev\DDD\outputs\simParams\sampleDump.JSON
-#
-# C:\Users\Daniel Celis Garza\.julia\dev\DDD\test\ioTest.jl

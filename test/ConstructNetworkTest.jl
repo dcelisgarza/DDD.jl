@@ -127,7 +127,7 @@ end
         network.segIdx[idx, :],
     )
 
-    idx = rand(1:10,5)
+    idx = rand(1:10, 5)
     @test network[idx] == (
         network.links[idx, :],
         network.slipPlane[idx, :],
@@ -251,6 +251,8 @@ end
     @test eachindex(loop[1]) == 1
     @test nodeType(3) < 4.3
     @test nodeType(4) > 1.6
+    @test isless(nodeType(3), 4.3)
+    @test isless(1.6, nodeType(4))
     node = nodeType(2)
     @test_throws BoundsError node[3]
     @test node[1] == node

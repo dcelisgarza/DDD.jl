@@ -8,7 +8,7 @@ import Base: eachindex, push!, iterate, size, show
 include("./Misc/Misc.jl")
 # Miscelaneous.
 export makeTypeDict, compStruct, intAngle, extAngle, rot3D, makeInstanceDict
-export translateEnum, inclusiveComparison
+export translateEnum, inclusiveComparison, dimDot, dimNorm
 include("./Integration/CustomIntegration.jl")
 export IntegrationP, CustomTrapezoid
 include("./Material/MaterialBase.jl")

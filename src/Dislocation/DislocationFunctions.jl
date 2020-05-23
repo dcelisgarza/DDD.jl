@@ -328,7 +328,7 @@ end
     cSq = c * c
     omcSq = 1 - cSq
 
-    if omcSq > eps(Float32)
+    if omcSq > sqrt(eps(typeof(omcSq)))
 
         omcSqI = 1 / omcSq
 
@@ -625,9 +625,6 @@ end
 
     flip::Bool = false
 
-    # half of the cotangent of critical θ
-    hCotanθc = sqrt((1 - sqrt(eps(Float64)) * 1.01) / (sqrt(eps(Float64)) * 1.01)) / 2
-
     t2 = n22 - n21
     t2N = 1 / norm(t2)
     t2 = t2 * t2N
@@ -637,6 +634,10 @@ end
     t1 = t1 * t1N
 
     c = dot(t2, t1)
+
+    # half of the cotangent of critical θ
+    hCotanθc = sqrt((1 - sqrt(eps(typeof(c))) * 1.01) / (sqrt(eps(typeof(c))) * 1.01)) / 2
+
     # If c is negative we do a swap of n11 and n12 to keep notation consistent and avoid
     if c < 0
         flip = true
@@ -739,7 +740,7 @@ end
     magn21mSq = dot(n21m, n21m)
     magn22mSq = dot(n22m, n22m)
 
-    if magDiffSq > eps(Float32) * (magn21mSq + magn22mSq)
+    if magDiffSq > eps(sqrt(typeof(magDiffSq))) * (magn21mSq + magn22mSq)
         missing, missing, Fnode1Core, Fnode2Core =
             calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b2, n21, n21m, b1, n11, n12)
         Fnode1 = Fnode1 + Fnode1Core
@@ -845,7 +846,7 @@ end
     magn11mSq = dot(n11m, n11m)
     magn12mSq = dot(n12m, n12m)
 
-    if magDiffSq > eps(Float32) * (magn11mSq + magn12mSq)
+    if magDiffSq > eps(sqrt(typeof(magDiffSq))) * (magn11mSq + magn12mSq)
         missing, missing, Fnode3Core, Fnode4Core =
             calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n11m, b2, n21, n22)
         Fnode3 = Fnode3 + Fnode3Core

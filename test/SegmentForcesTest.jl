@@ -225,4 +225,16 @@ cd(@__DIR__)
     @test isapprox(remoteForcePar[1], f1)
     @test isapprox(remoteForcePar[2], f2)
 
+    selfForce = calcSelfForce(dlnParams, matParams, network)
+    remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
+    remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
+    sumForceSer = selfForce .+ remoteForceSer
+    sumForcePar = selfForce .+ remoteForcePar
+    totalForceSer = calcSegForce(dlnParams, matParams, network, parallel = false)
+    totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
+
+    @test isapprox(totalForceSer[1], sumForceSer[1])
+    @test isapprox(totalForcePar[1], sumForcePar[1])
+    @test isapprox(totalForceSer[1], totalForcePar[1])
+    @test isapprox(totalForceSer[2], totalForcePar[2])
 end
