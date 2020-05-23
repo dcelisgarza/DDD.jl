@@ -1,13 +1,13 @@
 isequal(x::Real, y::nodeType) = isequal(x, Int(y))
 isequal(x::nodeType, y::Real) = isequal(Int(x), y)
+==(x::nodeType, y::Real) = ==(Int(x), y)
+==(x::Real, y::nodeType) = ==(x, Int(y))
 isless(x::Real, y::nodeType) = isless(x, Int(y))
 isless(x::nodeType, y::Real) = isless(Int(x), y)
-==(x::nodeType, y::Real) = isequal(Int(x), y)
-==(x::Real, y::nodeType) = isequal(x, Int(y))
 convert(::Type{nodeType}, x::Real) = nodeType(Int(x))
 zero(::Type{nodeType}) = 0
 getindex(x::nodeType, i::Int) = i == 1 ? Int(x) : throw(BoundsError())
-iterate(x::nodeType, i = 1) = (length(x) < i ? nothing : (x[i], i + 1))
+iterate(x::nodeType, i=1) = (length(x) < i ? nothing : (x[i], i + 1))
 length(x::nodeType) = 1
 size(x::nodeType) = 1
 
@@ -40,7 +40,7 @@ end
 ) where {T}
     return bVec ./ norm(bVec)
 end
-length(::T) where {T <: AbstractDlnSeg} = 1
+length(::T) where {T<:AbstractDlnSeg} = 1
 
 # Dislocationloop.
 length(::DislocationLoop) = 1
@@ -86,12 +86,12 @@ function push!(network::DislocationNetwork, n::Int)
     network.nodeVel = [network.nodeVel; zeros(n, 3)]
     return network
 end
-function getindex(network::DislocationNetwork, i::Int...)
+function getindex(network::DislocationNetwork, i::Union{Int,AbstractVector{Int}})
     return network.links[i, :],
     network.slipPlane[i, :],
     network.bVec[i, :],
     network.coord[i, :],
-    network.label[i, :],
+    network.label[i],
     network.segForce[i, :],
     network.nodeVel[i, :],
     network.connectivity[i, :],

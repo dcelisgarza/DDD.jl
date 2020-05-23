@@ -6,27 +6,9 @@ Make a dictionary of enumerated variable instances. Helps in translating JSON fi
 """
 @inline function makeInstanceDict(valType::DataType)
     insts = instances(valType)
-    dict = Dict{String, valType}()
+    dict = Dict{String,valType}()
     @inbounds @simd for inst in insts
         push!(dict, string(inst) => inst)
-    end
-    return dict
-end
-
-"""
-```
-translateEnum(
-    valType::DataType,
-    dict::Dict{T1, T2},
-    key::T3,
-) where {T1, T2, T3}
-```
-Translates the string name of enumerated types to the actual Julia type.
-"""
-@inline function translateEnum(valType::DataType, dict::Dict{T1, T2}, key::T3) where {T1, T2, T3}
-    instanceDict = makeInstanceDict(valType)
-    @inbounds @simd for i in eachindex(dict[key])
-        dict[key][i] = instanceDict[dict[key][i]]
     end
     return dict
 end
@@ -67,7 +49,7 @@ Dict{String,Any} with 4 entries:
 """
 @inline function makeTypeDict(valType::DataType; cutoff = 1)
     primitive = subTypeTree(valType; cutoff = cutoff)
-    dict = Dict{String, Any}()
+    dict = Dict{String,Any}()
     @inbounds for (key, val) in primitive
         strSubType = string(key) * "()"
         push!(dict, strSubType => key())
@@ -103,6 +85,7 @@ false
     end
     return false
 end
+
 
 """
 ```
@@ -192,12 +175,7 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
  -0.9999999999999999
 ```
 """
-@inline function rot3D(
-    xyz::T1,
-    uvw::T1,
-    abc::T1,
-    θ::T2,
-) where {T1 <: AbstractVector{T} where {T}, T2}
+@inline function rot3D(xyz::T1, uvw::T1, abc::T1, θ::T2) where {T1<:AbstractVector{T} where {T},T2}
     isapprox(norm(uvw), 1) ? nothing : uvw ./= norm(uvw)
 
     cosθ = cos(θ)
@@ -205,25 +183,25 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
     sinθ = sin(θ)
     xyzDOTuvw = dot(xyz, uvw)
 
-    return [
+    return @SVector [
         (
             abc[1] * (uvw[2] * uvw[2] + uvw[3] * uvw[3]) -
             uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)
         ) * onemcosθ +
         xyz[1] * cosθ +
-        sinθ * (-abc[3] * uvw[2] + abc[2] * uvw[3] - uvw[3] * xyz[2] + uvw[2] * xyz[3])
+        sinθ * (-abc[3] * uvw[2] + abc[2] * uvw[3] - uvw[3] * xyz[2] + uvw[2] * xyz[3]),
         (
             abc[2] * (uvw[1] * uvw[1] + uvw[3] * uvw[3]) -
             uvw[2] * (abc[1] * uvw[1] + abc[3] * uvw[3] - xyzDOTuvw)
         ) * onemcosθ +
         xyz[2] * cosθ +
-        sinθ * (abc[3] * uvw[1] - abc[1] * uvw[3] + uvw[3] * xyz[1] - uvw[1] * xyz[3])
+        sinθ * (abc[3] * uvw[1] - abc[1] * uvw[3] + uvw[3] * xyz[1] - uvw[1] * xyz[3]),
         (
             abc[3] * (uvw[1] * uvw[1] + uvw[2] * uvw[2]) -
             uvw[3] * (abc[1] * uvw[1] + abc[2] * uvw[2] - xyzDOTuvw)
         ) * onemcosθ +
         xyz[3] * cosθ +
-        sinθ * (-abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] + uvw[1] * xyz[2])
+        sinθ * (-abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] + uvw[1] * xyz[2]),
     ]
 end
 
@@ -238,10 +216,10 @@ dimDot(
 Perform dot product along dimension `dim` of an array, returns a vector of dot products.
 """
 @inline function dimDot(
-    x::AbstractArray{T1, N},
-    y::AbstractArray{T2, N};
+    x::AbstractArray{T1,N},
+    y::AbstractArray{T2,N};
     dim::Int = 2,
-) where {T1, T2, N}
+) where {T1,T2,N}
     return sum(x .* y, dims = dim)
 end
 
@@ -251,6 +229,6 @@ dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
 ```
 Calculate norms along dimension `dim` of an array, returns a vector of norms.
 """
-@inline function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
+@inline function dimNorm(x::AbstractArray{T,N}; dim::Int = 2) where {T,N}
     return sqrt.(dimDot(x, x; dims = dim))
 end

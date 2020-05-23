@@ -7,7 +7,8 @@ import Base: eachindex, push!, iterate, size, show
 
 include("./Misc/Misc.jl")
 # Miscelaneous.
-export makeTypeDict, compStruct, intAngle, extAngle, rot3D
+export makeTypeDict, compStruct, intAngle, extAngle, rot3D, makeInstanceDict
+export translateEnum, inclusiveComparison
 include("./Integration/CustomIntegration.jl")
 export IntegrationP, CustomTrapezoid
 include("./Material/MaterialBase.jl")
@@ -19,6 +20,7 @@ export AbstractDistribution, Zeros, Rand, Randn, Regular, mobBCC
 # Dislocation types.
 export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
 export DislocationLoop, DislocationNetwork, DislocationNetwork!
+export getSegmentIdx!, makeConnect!
 # Dislocation functions.
 export checkNetwork, loopDistribution, calcSelfForce
 export calcSegSegForce, calcParSegSegForce, calcSegForce

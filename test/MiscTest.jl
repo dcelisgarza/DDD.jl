@@ -33,3 +33,17 @@ cd(@__DIR__)
     @test isapprox(p, [-21.1690, 31.0685, -30.6029]; atol = 1e-4)
     @test compStruct(1, 1.2) == false
 end
+
+@testset "Auxiliary" begin
+    dict = Dict("intFix" => nodeType(2),
+    "none" => nodeType(0),
+    "intMob" => nodeType(1),
+    "srfFix" => nodeType(4),
+    "ext" => nodeType(5),
+    "srfMob" => nodeType(3))
+
+    @test makeInstanceDict(nodeType) == dict
+    data = rand(5)
+    @test inclusiveComparison(data[rand(1:5)], data...)
+    @test !inclusiveComparison(data, data[rand(1:5)]*6)
+end

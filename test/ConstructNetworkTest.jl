@@ -51,11 +51,8 @@ end
     [bVec[i, :] = [i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
     [slipPlane[i, :] = -[i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
     lenLabel = length(label)
-    [label[i + 1] = mod(i, 6) for i = 0:(lenLabel - 1)]
-    [
-        coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel])
-        for i = 1:length(label)
-    ]
+    [label[i+1] = mod(i, 6) for i = 0:(lenLabel-1)]
+    [coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel]) for i = 1:length(label)]
     network = DislocationNetwork(
         links = links,
         slipPlane = slipPlane,
@@ -71,16 +68,15 @@ end
     @test isequal(network.label[1], 0)
     @test isequal(0, network.label[1])
     @test 0 == network.label[1]
+    @test network.label[1] == 0
     @test -2.0 < network.label[1]
     rnd = rand(-1:numNode)
     @test idxLabel(network, rnd) == findall(x -> x == rnd, label)
     @test coordLbl(network, rnd) == coord[findall(x -> x == rnd, label), :]
     @test idxCond(network, :label, inclusiveComparison, 0, 1) == [1; 2; 7; 8]
-    @test idxCond(network, :label, rnd; condition = <=) ==
-          findall(x -> x <= rnd, label)
+    @test idxCond(network, :label, rnd; condition = <=) == findall(x -> x <= rnd, label)
     rnd = rand(1:numSeg)
-    @test idxCond(network, :bVec, rnd; condition = cnd[1]) ==
-          findall(x -> cnd[1](x, rnd), bVec)
+    @test idxCond(network, :bVec, rnd; condition = cnd[1]) == findall(x -> cnd[1](x, rnd), bVec)
     @test dataCond(network, :slipPlane, rnd; condition = cnd[2]) ==
           slipPlane[findall(x -> cnd[2](x, rnd), slipPlane)]
     rnd = rand(-1:1)
@@ -101,6 +97,52 @@ end
     @test coordIdx(network, rnd) == coord[rnd, :]
     rnd = rand(1:numNode, numNode)
     @test coordIdx(network, rnd) == coord[rnd, :]
+
+    network = DislocationNetwork(
+        links = rand(1:10, 10, 2),
+        slipPlane = rand(10, 3),
+        bVec = rand(10, 3),
+        coord = rand(10, 3),
+        label = nodeType.(rand(0:5, 10)),
+        segForce = rand(10, 3),
+        nodeVel = rand(10, 3),
+        numNode = convert(Int, 10),
+        numSeg = convert(Int, 10),
+        maxConnect = convert(Int, 10),
+    )
+    getSegmentIdx!(network)
+    makeConnect!(network)
+
+    idx = rand(1:10)
+    @test network[idx] == (
+        network.links[idx, :],
+        network.slipPlane[idx, :],
+        network.bVec[idx, :],
+        network.coord[idx, :],
+        network.label[idx],
+        network.segForce[idx, :],
+        network.nodeVel[idx, :],
+        network.connectivity[idx, :],
+        network.linksConnect[idx, :],
+        network.segIdx[idx, :],
+    )
+
+    idx = rand(1:10,5)
+    @test network[idx] == (
+        network.links[idx, :],
+        network.slipPlane[idx, :],
+        network.bVec[idx, :],
+        network.coord[idx, :],
+        network.label[idx],
+        network.segForce[idx, :],
+        network.nodeVel[idx, :],
+        network.connectivity[idx, :],
+        network.linksConnect[idx, :],
+        network.segIdx[idx, :],
+    )
+
+
+
 end
 
 @testset "Loop generation" begin
@@ -117,23 +159,20 @@ end
     end
     # Check that the midpoint of the loops is at (0,0,0)
     for i in eachindex(loops)
-        @test mean(loops[i].coord) <
-              maximum(abs.(loops[i].coord)) * eps(Float64)
+        @test mean(loops[i].coord) < maximum(abs.(loops[i].coord)) * eps(Float64)
     end
     # Populate a dislocation network with the loops.
     # Test one branch of memory allocation.
     network = zero(DislocationNetwork)
     DislocationNetwork!(network, loops[1])
-    @test network.numNode ==
-          loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
+    @test network.numNode == loops[1].numSides * loops[1].nodeSide * loops[1].numLoops
     # Test other branch of memory allocation.
     network = zero(DislocationNetwork)
     DislocationNetwork!(network, loops)
     function sumNodes(loops)
         totalNodes = 0
         for i in eachindex(loops)
-            totalNodes +=
-                loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
+            totalNodes += loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
         end
         return totalNodes
     end
@@ -156,12 +195,11 @@ end
     @test network.label[1:nodeLoop] == loops[1].label
     # Check that the last loop was transfered correctly.
     nodeLoop = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
-    @test network.links[(1 + end - nodeLoop):end, :] ==
-          loops[end].links .+ (totalNodes - nodeLoop)
-    @test network.slipPlane[(1 + end - nodeLoop):end, :] == loops[end].slipPlane
-    @test network.bVec[(1 + end - nodeLoop):end, :] == loops[end].bVec
-    @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
-    @test network.label[(1 + end - nodeLoop):end] == loops[end].label
+    @test network.links[(1+end-nodeLoop):end, :] == loops[end].links .+ (totalNodes - nodeLoop)
+    @test network.slipPlane[(1+end-nodeLoop):end, :] == loops[end].slipPlane
+    @test network.bVec[(1+end-nodeLoop):end, :] == loops[end].bVec
+    @test network.coord[(1+end-nodeLoop):end, :] == loops[end].coord
+    @test network.label[(1+end-nodeLoop):end] == loops[end].label
     network2 = DislocationNetwork(
         links = zeros(Int, 1, 2),
         slipPlane = zeros(1, 3),
@@ -211,4 +249,13 @@ end
     @test loop[1] == loop
     @test_throws BoundsError loop[2]
     @test eachindex(loop[1]) == 1
+    @test nodeType(3) < 4.3
+    @test nodeType(4) > 1.6
+    node = nodeType(2)
+    @test_throws BoundsError node[3]
+    @test node[1] == node
+    for i in node
+        @test node == 2
+    end
+    @test size(node) == 1
 end

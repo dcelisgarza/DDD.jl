@@ -18,7 +18,8 @@ cd(@__DIR__)
     )
     network = DislocationNetwork(dislocationLoop)
     # Dump simulation.
-    paramDump = "../outputs/dump/sampleDump.JSON"
+    paramDump = "../outputs/simParams/sampleDump.JSON"
+    rm(paramDump, force = true)
     save(
         paramDump,
         dlnParams,
@@ -28,6 +29,7 @@ cd(@__DIR__)
         dislocationLoop,
     )
     networkDump = "../outputs/dln/sampleNetwork.JSON"
+    rm(networkDump, force = true)
     save(networkDump, network)
     # Reload simulation.
     simulation = load(paramDump)
@@ -48,4 +50,11 @@ cd(@__DIR__)
     @test compStruct(slipSystems, slipSystems2; verbose = true)
     @test compStruct(dislocationLoop, dislocationLoop2; verbose = true)
     @test compStruct(network, network2; verbose = true)
+
+    vars = (dlnParams, matParams, intParams, slipSystems, dislocationLoop, network)
+    @test hasmethod(show, Tuple{typeof(vars)})
+    @test hasmethod(show, Tuple{nodeType})
+    @test hasmethod(show, Tuple{AbstractVector{nodeType}})
+    rm(paramDump)
+    rm(networkDump)
 end
