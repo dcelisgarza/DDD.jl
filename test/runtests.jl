@@ -9,7 +9,7 @@ end
 @safetestset "Construct Dln" begin
     include("./ConstructNetworkTest.jl")
 end
-@safetestset "Segment Forces" begin
+@safetestset "Segment Force" begin
     include("./SegmentForcesTest.jl")
 end
 @safetestset "Topology" begin
