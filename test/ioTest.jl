@@ -19,7 +19,6 @@ cd(@__DIR__)
     network = DislocationNetwork(dislocationLoop)
     # Dump simulation.
     paramDump = "../outputs/simParams/sampleDump.JSON"
-    rm(paramDump, force = true)
     save(
         paramDump,
         dlnParams,
@@ -29,7 +28,6 @@ cd(@__DIR__)
         dislocationLoop,
     )
     networkDump = "../outputs/dln/sampleNetwork.JSON"
-    rm(networkDump, force = true)
     save(networkDump, network)
     # Reload simulation.
     simulation = load(paramDump)
@@ -58,3 +56,7 @@ cd(@__DIR__)
     rm(paramDump)
     rm(networkDump)
 end
+
+# C:\Users\Daniel Celis Garza\.julia\dev\DDD\outputs\simParams\sampleDump.JSON
+#
+# C:\Users\Daniel Celis Garza\.julia\dev\DDD\test\ioTest.jl
