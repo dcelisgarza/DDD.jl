@@ -103,7 +103,8 @@ julia> integrationP = IntegrationP(;
         )
 IntegrationP{Float64,CustomTrapezoid,Int64}(1000.0, 0.0, 1.0e10, CustomTrapezoid(), 1.0e-6, 1.0e-6, 0.0, 0)
 ```
-!!! Warning
+!!! warning "This will change"
+
     `IntegrationP` will undergo revisions. Probably be split into two, or perhaps eliminated completely in order to use/extend the state of the art `DifferentialEquations.jl` framework.
 
 Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `n × 3` matrices rather than vectors.
@@ -115,7 +116,8 @@ julia> slipSystems = SlipSystem(;
        )
 SlipSystem{BCC,Array{Float64,1}}(BCC(), [1.0, 1.0, 1.0], [1.0, -1.0, 0.0])
 ```
-!!! Warning
+!!! warning "This may change"
+
     This may change to perform validity checks regarding the relationship between burgers vector and slip plane.
 
 We also need dislocation sources. We make use of Julia's type system to create standard functions for loop generation. We provide a way of easily and quickly generating loops whose segments inhabit the same slip system. However, new `DislocationLoop()` methods can be made by subtyping `AbstractDlnStr`, and dispatching on the new type. One may of also course also use the default constructor and build the initial structures manually.
@@ -159,7 +161,7 @@ The dislocation loops will be centred about the origin, but the `range`, `buffer
 
 Note also the array of `nodeType`, this is an enumerated type which ensures node types are limited to only those supported by the model, lowers memory footprint and increases performance.
 
-We can then plot our loops to see our handy work. We use `plotlyjs()` because it provides a nice interactive experience, but of course, since this is Julia any plotting backend will work.
+We can then plot our loops to see our handy work. We use `plotlyjs()` because it provides a nice interactive experience, but of course, since this is Julia any plotting backend will work. Note that since they have the same slip system but one is a shear and the other a prismatic loop, they are orthogonal to each other.
 ```julia
 julia> using Plots
 julia> plotlyjs()
@@ -176,7 +178,7 @@ julia> plotNodes!(fig1, prisPentagon, m = 1, l = 3,
                   linecolor = :red, markercolor = :red, legend = false)
 julia> plot!(fig1, camera=(100,35))
 ```
-![loops]("./examples/network.png")
+![loops](/examples/loops.png)
 
 After generating our primitive loops, we can create a network using either a vector of dislocation loops or a single dislocation loop. The network may also be created manually, and new constructor methods may be defined for bespoke cases. For our purposes, we use the constructor that dispatches on `Union{DislocationLoop, AbstractVector{<:DislocationLoop}}`, meaning a single variable whose type is `DislocationLoop` or a vector of them. Here we use a vector with both our loop structures.
 
@@ -209,7 +211,7 @@ julia> fig2 = plotNodes(
         )
 julia> plot!(fig2, camera=(110,40))
 ```
-![loops]("./examples/network.png")
+![network](/examples/network.png)
 
 [^1]: Immutability is translated into code performance.
 
