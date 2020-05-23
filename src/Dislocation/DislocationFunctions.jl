@@ -126,7 +126,6 @@ end
 
 """
 !!! Note
-
     This function is based on the SegSegForces function by A. Arsenlis et al. It is optimised for speed and reusability. It has also been locally parallelised.
 ```
 ```
@@ -233,7 +232,7 @@ At a high level this works by creating a local coordinate frame using the line d
             b1 = @SVector [bVec[i, 1], bVec[i, 2], bVec[i, 3]]
             n11 = @SVector [node1[i, 1], node1[i, 2], node1[i, 3]]
             n12 = @SVector [node2[i, 1], node2[i, 2], node2[i, 3]]
-            @simd for j = (i+1):numSeg
+            for j = (i+1):numSeg
                 b2 = @SVector [bVec[j, 1], bVec[j, 2], bVec[j, 3]]
                 n21 = @SVector [node1[j, 1], node1[j, 2], node1[j, 3]]
                 n22 = @SVector [node2[j, 1], node2[j, 2], node2[j, 3]]
@@ -252,7 +251,6 @@ At a high level this works by creating a local coordinate frame using the line d
                     n21,
                     n22,
                 )
-
                 SegSegForce[i, :, 1] += Fnode1
                 SegSegForce[j, :, 1] += Fnode3
                 SegSegForce[i, :, 2] += Fnode2
@@ -329,6 +327,7 @@ end
     c = dot(t1, t2)
     cSq = c * c
     omcSq = 1 - cSq
+
     if omcSq > eps(Float32)
 
         omcSqI = 1 / omcSq
@@ -734,7 +733,6 @@ end
     Fint2 = y2 * integ[4] - integ[6]
     Fint3 = y2 * integ[7] - integ[9]
     Fint4 = y2 * integ[10] - integ[12]
-
     Fnode1 = (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t1N
 
     magDiffSq = dot(diff, diff)
@@ -819,7 +817,7 @@ end
     tmp = t2db2 * t2db1
     tmpVec1 = tmp * nd
     tmpVec2 = b1ct2dnd * b2ct2
-    V1 = μ4πν * (nddb2 * b1ct2ct2 + b1ct2db2 * ndct2 - tmpVec2) - μ4π * tmpVec2
+    V1 = μ4πν * (nddb2 * b1ct2ct2 + b1ct2db2 * ndct2 - tmpVec2) - μ4π * tmpVec1
 
     tmp = (μ4πν - μ4π) * t2db2
     V2 = tmp * b1ct2ct2
@@ -829,7 +827,7 @@ end
 
     tmp = μ8πaSq * t2db2
     tmp2 = μ4πν * b1ct2dnd * t2db2
-    V4 = -tmp * b1ct2ct2 - tmp2 * tmp2 * ndct2
+    V4 = -tmp * b1ct2ct2 - tmp2 * ndct2
 
     Fint1 = integ[2] - x1 * integ[1]
     Fint2 = integ[5] - x1 * integ[4]
@@ -906,9 +904,9 @@ end
 
 @inline function SegSegInteg(aSq::T, d::T, c::T, cSq::T, omcSq::T, omcSqI::T, x::T, y::T) where {T}
 
-    aSq_dSq = aSq + d^2 * omcSqI
-    xSq = y^2
-    ySq = x^2
+    aSq_dSq = aSq + d^2 * omcSq
+    xSq = x^2
+    ySq = y^2
     Ra = sqrt(aSq_dSq + xSq + ySq + 2 * x * y * c)
     RaInv = 1 / Ra
 
@@ -929,15 +927,15 @@ end
     yRaSq_R_t2_I = y * RaSq_R_t2_I
     ySqRaSq_R_t2_I = y * yRaSq_R_t2_I
 
-    den = 1 / sqrt(omcSqI * aSq_dSq)
+    den = 1 / sqrt(omcSq * aSq_dSq)
 
     integ1 = -2 * den * atan((1 + c) * (Ra + x + y) * den)
 
     c_1 = aSq_dSq * integ1
     c_5_6 = (c * Ra - c_1) * omcSqI
 
-    integ2 = (c * log_Ra_Rd_t1 - log_Ra_Rd_t2) * omcSqI
-    integ3 = (c * log_Ra_Rd_t2 - log_Ra_Rd_t1) * omcSqI
+    integ2 = (c * log_Ra_Rd_t2 - log_Ra_Rd_t1) * omcSqI
+    integ3 = (c * log_Ra_Rd_t1 - log_Ra_Rd_t2) * omcSqI
     integ4 = (c * c_1 - Ra) * omcSqI
     integ5 = ylog_Ra_Rd_t2 + c_5_6
     integ6 = xlog_Ra_Rd_t1 + c_5_6
@@ -947,9 +945,9 @@ end
     x_13_14 = x * c_15_18
     c_19 = c * yRaSq_R_t2_I - RaInv
     y_13_14 = y * c_19
-    c_16 = log_Ra_Rd_t1 - (x - c * y) * RaInv - cSq * ySqRaSq_R_t2_I
+    c_16 = log_Ra_Rd_t2 - (x - c * y) * RaInv - cSq * ySqRaSq_R_t2_I
     z_15_18 = y * c_16
-    c_17_19 = log_Ra_Rd_t2 - (y - c * x) * RaInv - cSq * xSqRaSq_R_t1_I
+    c_17_19 = log_Ra_Rd_t1 - (y - c * x) * RaInv - cSq * xSqRaSq_R_t1_I
 
     c15_18_19 = 2 * integ4
 

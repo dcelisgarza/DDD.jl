@@ -1,5 +1,5 @@
 using DDD
-using Test, Plots
+using Test
 cd(@__DIR__)
 
 @testset "Merge nodes" begin

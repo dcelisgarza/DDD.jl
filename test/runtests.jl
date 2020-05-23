@@ -3,11 +3,14 @@ using SafeTestsets
 @safetestset "Miscelaneous" begin
     include("./MiscTest.jl")
 end
-@safetestset "Generate dln" begin
-    include("./dlnNetworkTest.jl")
-end
 @safetestset "IO" begin
     include("./ioTest.jl")
+end
+@safetestset "Construct Dln" begin
+    include("./ConstructNetworkTest.jl")
+end
+@safetestset "Segment Forces" begin
+    include("./SegmentForcesTest.jl")
 end
 @safetestset "Topology" begin
     include("./TopologyTest.jl")

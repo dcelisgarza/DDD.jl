@@ -302,9 +302,12 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     end
 
     # If nodeKept has no connections remove it.
-    connectivity[nodeKept, 1] == 0 ? removeNode!(network, nodeKept) : nothing
+    if connectivity[nodeKept, 1] == 0
+        removeNode!(network, nodeKept)
+        nodeKept = 0
+    end
 
-    return network
+    return nodeKept
 end
 
 function splitNode end
@@ -323,15 +326,19 @@ function coarsenMesh(
     tiny = eps(Float64)
 
     label = network.label
-    idx = findall(x -> x == 1, label)
     links = network.links
     connectivity = network.links
     linksConnect = network.linksConnect
     segForce = network.segForce
     nodeVel = network.nodeVel
 
-    for i in idx
-        connectivity[i, 1] != 2 ? continue : nothing
+    i = 1
+    while i <= network.numNode
+        # We only want to coarsen real internal nodes. Else we skip to the next node.
+        if !(connectivity[i, 1] == 2 && label[i] == 1)
+            i += 1
+            continue
+        end
         link1 = connectivity[i, 2]  # Node i in link 1
         link2 = connectivity[i, 4]  # Node i in link 2
 
@@ -344,8 +351,11 @@ function coarsenMesh(
         link1_nodeNotInLink = links[i, colNotInLink1] # Node i is connected to this node as part of link 1.
         link2_nodeNotInLink = links[i, colNotInLink2] # Node i is connected to this node as part of link 2.
 
-        # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source.
-        label[link1_nodeNotInLink] == 2 && label[link2_nodeNotInLink] == 2 ? continue : nothing
+        # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source, thus we skip to the next node.
+        if label[link1_nodeNotInLink] == 2 && label[link2_nodeNotInLink] == 2
+            i += 1
+            continue
+        end
 
         # Coordinate of node i
         iCoord = coord[i, :]
@@ -358,8 +368,11 @@ function coarsenMesh(
         r2 = norm(coordVec2)
         r3 = norm(coordVec3)
 
-        # If coarsening would result in a link whose length is bigger than the maximum we don't coarsen.
-        r3 >= maxSegLen ? continue : nothing
+        # If coarsening would result in a link whose length is bigger than the maximum allowed we skip ahead to the next node.
+        if r3 >= maxSegLen
+            i += 1
+            continue
+        end
 
         # Heron's formula for the area of a triangle when we know its sides.
         # Half the triangle's perimeter.
@@ -379,14 +392,39 @@ function coarsenMesh(
         dr0dt = (dr1dt + dr2dt + dr3dt) / 2
 
         # Rate of change of triangle area with respect to time.
-        dareaSqdt = dr0dt * (r0 - r1) * (r0 - r2) * (r0 - r3)
-        dareaSqdt += r0 * (dr0dt - dr1dt) * (r0 - r2) * (r0 - r3)
-        dareaSqdt += r0 * (r0 - r1) * (dr0dt - dr2dt) * (r0 - r3)
-        dareaSqdt += r0 * (r0 - r1) * (r0 - r2) * (dr0dt - dr3dt)
+        dAreaSqdt = dr0dt * (r0 - r1) * (r0 - r2) * (r0 - r3)
+        dAreaSqdt += r0 * (dr0dt - dr1dt) * (r0 - r2) * (r0 - r3)
+        dAreaSqdt += r0 * (r0 - r1) * (dr0dt - dr2dt) * (r0 - r3)
+        dAreaSqdt += r0 * (r0 - r1) * (r0 - r2) * (dr0dt - dr3dt)
 
-        # Coarsen if the area is less than the minimum allowed area and the area is shrinking. Or if the length of link 1 or link 2 less than the minimum area. Else do continue to the next iteration.
-        areaSq < minArea && dareaSqdt < 0 || r1 < minSegLen || r2 < minSegLen ? nothing : continue
+        # Coarsen if the area is less than the minimum allowed and shrinking. Or if the length of either of its links is less than the minimum allowed. Else continue to the next node.
+        if !(areaSq < minArea && dAreaSqdt < 0 || r1 < minSegLen || r2 < minSegLen)
+            i += 1
+            continue
+        end
 
+        # Merge node i into node link2_nodeNotInLink.
+        nodeMerged = mergeNode!(network, link2_nodeNotInLink, i)
+
+        # If link2_nodeNotInLink no longer exists there is nothing to calculate and we proceed to the next iteration.
+        nodeMerged == 0 ? continue : nothing
+
+        for j in 1:connectivity[nodeMerged, 1]
+            # Find the new link that has been created between nodeMerged and nodeNotMerged.
+            linkMerged = connectivity[nodeMerged, 2*j]
+            colLinkMerged = connectivity[nodeMerged, 2*j + 1]
+            colNotLinkMerged = 3 - colLinkMerged
+            nodeNotMerged = links[linkMerged, colNotLinkMerged]
+
+            if nodeNotMerged == i || nodeNotMerged == link1_nodeNotInLink
+                #remesh 67
+                getSegmentIdx!(network)
+                # Calculate segment force for segment linkMerged.
+                for k in 1:2
+                    # Calculate mobility for the two nodes involved in linkMerged.
+                end
+            end
+        end
         # remesh 60
     end
 

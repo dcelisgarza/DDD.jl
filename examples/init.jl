@@ -96,5 +96,5 @@ fig2 = plotNodes(
 )
 plot!(fig2, camera=(110,40))
 cd(@__DIR__)
-savefig(fig1, "loops.svg")
-savefig(fig2, "network.svg")
+savefig(fig1, "loops.png")
+savefig(fig2, "network.png")

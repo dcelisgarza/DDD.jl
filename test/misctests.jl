@@ -58,8 +58,7 @@ pentagon = DislocationLoop(
 )
 network = DislocationNetwork(pentagon; memBuffer = 1)
 # DislocationNetwork!(network, pentagon)
-network2 = deepcopy(network)
-network2.coord = [
+network.coord = [
     -38.9526 -15.6253 -70.0006
     -44.416 -7.63875 -72.5237
     -51.8751 -6.78528 -65.9181
@@ -71,46 +70,20 @@ network2.coord = [
     -33.0337 27.9679 96.1568
     -25.0472 22.5044 93.6336
 ];
+network2 = deepcopy(network)
 mergeNode!(network2, 1, 3)
 
-@time mergeNode!(network2, 1, 3)
+@time mergeNode!(network2, 1, 10)
 
 @allocated mergeNode!(network2, 1, 3)
 
 @allocated mergeNode!(network2, 1, 3)
 
 @allocated mergeNode!(network2, 1, 3)
-
-network2
-
-test1 = [1; 0; 0]
-test2 = [0; 1; 0]
-test3 = SVector(test1[:]-test2[:])
-using LinearAlgebra, StaticArrays
-function foo(a, b)
-    c = [b[2] * a[3] - b[3] * a[2], b[3] * a[1] - b[1] * a[3], b[1] * a[2] - b[2] * a[1]]
-    c
-end
-function foo2(a, b)
-    c = @SVector [a[2] * b[3] - a[3] * b[2], a[3] * b[1] - a[1] * b[3], a[1] * b[2] - a[2] * b[1]]
-    c
-end
-@allocated foo(test1, test2)
-@allocated foo2(test1, test2)
-c = foo2(test2, test1)
-d = cross(test2, test1)
-
-
-
-c == d
-
-cross(test1,c)
-svec = @SVector cross(test1, test2)
-svec[1] .= 1
 
 plotlyjs()
 fig = plotNodes(
-    network2,
+    network,
     m = 1,
     l = 3,
     linecolor = :red,
