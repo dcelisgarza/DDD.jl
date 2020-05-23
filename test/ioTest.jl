@@ -53,8 +53,8 @@ cd(@__DIR__)
     @test hasmethod(show, Tuple{typeof(vars)})
     @test hasmethod(show, Tuple{nodeType})
     @test hasmethod(show, Tuple{AbstractVector{nodeType}})
-    rm(paramDump)
-    rm(networkDump)
+    # rm(paramDump)
+    # rm(networkDump)
 end
 
 # C:\Users\Daniel Celis Garza\.julia\dev\DDD\outputs\simParams\sampleDump.JSON
