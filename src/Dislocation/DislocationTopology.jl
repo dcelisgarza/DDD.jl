@@ -1,8 +1,8 @@
 """
 ```
-removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = missing)
+removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = nothing)
 ```
-In-place remove `nodeGone`. If `nodeGone` is *not* the last node, this replaces the entries corresponding to `nodeGone` with `lastNode`. Else it simply zeros out the entries corresponding to `lastNode`. This also decreases `numNode` by one. If `lastNode` is missing, this function finds it.
+In-place remove `nodeGone`. If `nodeGone` is *not* the last node, this replaces the entries corresponding to `nodeGone` with `lastNode`. Else it simply zeros out the entries corresponding to `lastNode`. This also decreases `numNode` by one. If `lastNode` is nothing, this function finds it.
 
 Modifies
 ```
@@ -14,16 +14,14 @@ network.numNode
 network.connectivity
 ```
 """
-@inline function removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = missing)
+@inline function removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode::Int = nothing)
     links = network.links
     coord = network.coord
     label = network.label
     nodeVel = network.nodeVel
     connectivity = network.connectivity
 
-    if ismissing(lastNode)
-        lastNode = maximum((network.numNode, 1))
-    end
+    isnothing(lastNode) ? lastNode = maximum((network.numNode, 1)) : nothing
 
     # The if nodeGone is not the last node in the relevant arrays, replace it by lastNode.
     if nodeGone < lastNode
@@ -90,9 +88,9 @@ end
 
 """
 ```
-removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = missing)
+removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = nothing)
 ```
-In-place remove `linkGone` with the last valid link. If `linkGone` is *not* the last link, this replaces the entries corresponding to `linkGone` with `lastLink`. Else it simply zeros out the entries corresponding to `lastLink`. This also decreases `numSeg` by one. If `lastLink` is missing, this function finds it.
+In-place remove `linkGone` with the last valid link. If `linkGone` is *not* the last link, this replaces the entries corresponding to `linkGone` with `lastLink`. Else it simply zeros out the entries corresponding to `lastLink`. This also decreases `numSeg` by one. If `lastLink` is nothing, this function finds it.
 
 Modifies
 ```
@@ -108,7 +106,7 @@ network.connectivity
 network.linksConnect
 ```
 """
-function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = missing)
+function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = nothing)
     links = network.links
     slipPlane = network.slipPlane
     bVec = network.bVec
@@ -133,9 +131,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = miss
     # Remove link that no longer appears in connectivity and doesn't connect any nodes.
     @assert linksConnect[linkGone, :]' * linksConnect[linkGone, :] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
-    if ismissing(lastLink)
-        lastLink = maximum((network.numSeg, 1))
-    end
+    isnothing(lastLink) ? lastLink = maximum((network.numSeg, 1)) : nothing
 
     # If the linkGone is not the last link, replace it with lastLink.
     if linkGone < lastLink

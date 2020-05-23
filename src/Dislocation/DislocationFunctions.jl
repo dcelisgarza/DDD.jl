@@ -741,12 +741,12 @@ end
     magn22mSq = dot(n22m, n22m)
 
     if magDiffSq > sqrt(eps(typeof(magDiffSq))) * (magn21mSq + magn22mSq)
-        missing, missing, Fnode1Core, Fnode2Core =
+        nothing, nothing, Fnode1Core, Fnode2Core =
             calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b2, n21, n21m, b1, n11, n12)
         Fnode1 = Fnode1 + Fnode1Core
         Fnode2 = Fnode2 + Fnode2Core
 
-        missing, missing, Fnode1Core, Fnode2Core =
+        nothing, nothing, Fnode1Core, Fnode2Core =
             calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b2, n22m, n22, b1, n11, n12)
         Fnode1 = Fnode1 + Fnode1Core
         Fnode2 = Fnode2 + Fnode2Core
@@ -847,12 +847,12 @@ end
     magn12mSq = dot(n12m, n12m)
 
     if magDiffSq > sqrt(eps(typeof(magDiffSq))) * (magn11mSq + magn12mSq)
-        missing, missing, Fnode3Core, Fnode4Core =
+        nothing, nothing, Fnode3Core, Fnode4Core =
             calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n11m, b2, n21, n22)
         Fnode3 = Fnode3 + Fnode3Core
         Fnode4 = Fnode4 + Fnode4Core
 
-        missing, missing, Fnode3Core, Fnode4Core =
+        nothing, nothing, Fnode3Core, Fnode4Core =
             calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n12m, n12, b2, n21, n22)
         Fnode3 = Fnode3 + Fnode3Core
         Fnode4 = Fnode4 + Fnode4Core
