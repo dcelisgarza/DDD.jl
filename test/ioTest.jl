@@ -40,21 +40,4 @@ cd(@__DIR__)
     @test compStruct(slipSystems, slipSystems2; verbose = true)
     @test compStruct(dislocationLoop, dislocationLoop2; verbose = true)
     @test compStruct(network, network2; verbose = true)
-
-    vars = (dlnParams, matParams, intParams, slipSystems, dislocationLoop, network)
-    try
-        show.(vars)
-        @test true
-    catch err
-        @test false
-    end
-    try
-        show(nodeType(1))
-        @test true
-    catch err
-        @test false
-    end
-    @test hasmethod(show, Tuple{typeof(vars)})
-    @test hasmethod(show, Tuple{nodeType})
-    @test hasmethod(show, Tuple{AbstractVector{nodeType}})
 end

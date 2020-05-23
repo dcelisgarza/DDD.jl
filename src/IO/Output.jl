@@ -42,23 +42,3 @@ function save(filename::AbstractString, args...; mode::AbstractString = "w")
         JSON.print(io, args)
     end
 end
-
-const DDDTypes =
-    Union{MaterialP,IntegrationP,DislocationP,SlipSystem,DislocationLoop,DislocationNetwork,DislocationFEMCorrective}
-function show(var::DDDTypes)
-    type = typeof(var)
-    println(type)
-    for field in fieldnames(type)
-        val = getfield(var, field)
-        println("  $field :: $(typeof(val))")
-        print("  ")
-        show(val)
-        println("\n")
-    end
-end
-function show(var::nodeType)
-    show(Int(var))
-end
-function show(var::AbstractVector{nodeType})
-    show(Int.(var))
-end
