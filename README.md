@@ -48,7 +48,7 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 
 Before running a simulation we need to initialise the simulation. For this example, we will use the keyword initialisers because they automatically calculate derived quantities, perform input validations, provide default values, and are make for self-documenting code.
 
-Dislocations live in a material, as such we need a few constants that describe it. These are encapsulated in the immutable^[1] structure `MaterialP`. Note that we use unicode to denote variables as per convention written `\mu -> μ` and `\nu -> ν`. Here we create a basic material.
+Dislocations live in a material, as such we need a few constants that describe it. These are encapsulated in the immutable <sup>[1](#1)</sup> structure `MaterialP`. Note that we use unicode to denote variables as per convention written `\mu -> μ` and `\nu -> ν`. Here we create a basic material.
 ```julia
 julia> materialP = MaterialP(;
           μ = 1.0,                  # Shear modulus.
@@ -64,7 +64,7 @@ Note that a few extra constants have been automatically calculated by the constr
 julia> fieldnames(typeof(materialP))
 (:μ, :μMag, :ν, :E, :omνInv, :νomνInv, :μ4π, :μ8π, :μ4πν, :crystalStruct)
 ```
-Where `omνInv = 1/(1-ν)`, `νomνInv = v/(1-ν)`, `μ4π = μ / (4π)`, `μ8π = μ / (8π)`, `μ4πν = μ/[4π(1-ν)]`. These precomputed variables are used in various places and are there to avoid recalculating them later.
+Where `omνInv = 1/(1-ν)`, `νomνInv = v/(1-ν)`, `μ4π = μ/(4π)`, `μ8π = μ/(8π)`, `μ4πν = μ/[4π(1-ν)]`. These precomputed variables are used in various places and are there to avoid recalculating them later.
 
 Our dislocations also have certain constant characteristics that are encapsulated in their own immutable structure, `DislocationP`. These parameters are somewhat arbitrary as long as they approximately hold certain proportions.
 ```julia
@@ -103,9 +103,10 @@ julia> integrationP = IntegrationP(;
         )
 IntegrationP{Float64,CustomTrapezoid,Int64}(1000.0, 0.0, 1.0e10, CustomTrapezoid(), 1.0e-6, 1.0e-6, 0.0, 0)
 ```
-!!! warning "This will change"
 
-    `IntegrationP` will undergo revisions. Probably be split into two, or perhaps eliminated completely in order to use/extend the state of the art `DifferentialEquations.jl` framework.
+>[!WARNING]
+>
+>`IntegrationP` will undergo revisions. Probably be split into two, or perhaps eliminated completely in order to use/extend the state of the art `DifferentialEquations.jl` framework.
 
 Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `n × 3` matrices rather than vectors.
 ```julia
@@ -116,9 +117,9 @@ julia> slipSystems = SlipSystem(;
        )
 SlipSystem{BCC,Array{Float64,1}}(BCC(), [1.0, 1.0, 1.0], [1.0, -1.0, 0.0])
 ```
-!!! warning "This may change"
-
-    This may change to perform validity checks regarding the relationship between burgers vector and slip plane.
+>[!WARNING]
+>
+>This may change to perform validity checks regarding the relationship between burgers vector and slip plane.
 
 We also need dislocation sources. We make use of Julia's type system to create standard functions for loop generation. We provide a way of easily and quickly generating loops whose segments inhabit the same slip system. However, new `DislocationLoop()` methods can be made by subtyping `AbstractDlnStr`, and dispatching on the new type. One may of also course also use the default constructor and build the initial structures manually.
 
@@ -172,11 +173,10 @@ julia> fig1 = plotNodes(
           linecolor = :blue,
           markercolor = :blue,
           legend = false,
-          size = (750, 750),
         )
 julia> plotNodes!(fig1, prisPentagon, m = 1, l = 3,
                   linecolor = :red, markercolor = :red, legend = false)
-julia> plot!(fig1, camera=(100,35))
+julia> plot!(fig1, camera=(100,35), size=(400,400))
 ```
 ![loops](/examples/loops.png)
 
@@ -207,13 +207,12 @@ julia> fig2 = plotNodes(
           linecolor = :blue,
           markercolor = :blue,
           legend = false,
-          size = (750, 750),
         )
-julia> plot!(fig2, camera=(110,40))
+julia> plot!(fig2, camera=(110,40), size=(400,400))
 ```
 ![network](/examples/network.png)
 
-[^1]: Immutability is translated into code performance.
+<a name="1">1</a>: Immutability is translated into code performance.
 
 ## IO
 

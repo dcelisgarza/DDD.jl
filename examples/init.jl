@@ -80,10 +80,9 @@ fig1 = plotNodes(
     linecolor = :blue,
     markercolor = :blue,
     legend = false,
-    size = (750, 750),
 )
 plotNodes!(fig1, prisPentagon, m = 1, l = 3, linecolor = :red, markercolor = :red, legend = false)
-plot!(fig1, camera=(100,35))
+plot!(fig1, camera=(100,35), size=(400,400))
 
 fig2 = plotNodes(
     network,
@@ -92,9 +91,8 @@ fig2 = plotNodes(
     linecolor = :blue,
     markercolor = :blue,
     legend = false,
-    size = (750, 750),
 )
-plot!(fig2, camera=(110,40))
+plot!(fig2, camera=(110,40), size=(400,400))
 cd(@__DIR__)
 savefig(fig1, "loops.png")
 savefig(fig2, "network.png")
