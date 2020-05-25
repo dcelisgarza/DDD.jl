@@ -35,7 +35,8 @@ integrationP = IntegrationP(;
     step = 0,
 )
 # Define the slip system.
-slipSystem = SlipSystem(crystalStruct = BCC(), slipPlane = [1.0; 1.0; 1.0], bVec = [1.0; -1.0; 0.0])
+slipSystem =
+    SlipSystem(crystalStruct = BCC(), slipPlane = [1.0; 1.0; 1.0], bVec = [1.0; -1.0; 0.0])
 # dot(a,b) == a ⋅ b == a' * b == 0
 isapprox(slipSystem.slipPlane ⋅ slipSystem.bVec, 0) ==
 isapprox(dot(slipSystem.slipPlane, slipSystem.bVec), 0) ==
@@ -81,18 +82,20 @@ fig1 = plotNodes(
     markercolor = :blue,
     legend = false,
 )
-plotNodes!(fig1, prisPentagon, m = 1, l = 3, linecolor = :red, markercolor = :red, legend = false)
-plot!(fig1, camera=(100,35), size=(400,400))
-
-fig2 = plotNodes(
-    network,
+plotNodes!(
+    fig1,
+    prisPentagon,
     m = 1,
     l = 3,
-    linecolor = :blue,
-    markercolor = :blue,
+    linecolor = :red,
+    markercolor = :red,
     legend = false,
 )
-plot!(fig2, camera=(110,40), size=(400,400))
+plot!(fig1, camera = (100, 35), size = (400, 400))
+
+fig2 =
+    plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
+plot!(fig2, camera = (110, 40), size = (400, 400))
 cd(@__DIR__)
 savefig(fig1, "loops.png")
 savefig(fig2, "network.png")

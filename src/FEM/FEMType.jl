@@ -39,8 +39,8 @@ end
 Cuboid mesh structure.
 """
 struct RegularCuboidMesh{
-    T1 <: AbstractArray{T3, N} where {T3, N},
-    T2 <: AbstractArray{T4, N} where {T4, N},
+    T1<:AbstractArray{T3,N} where {T3,N},
+    T2<:AbstractArray{T4,N} where {T4,N},
 }
     label::T1
     sizeElem::T2

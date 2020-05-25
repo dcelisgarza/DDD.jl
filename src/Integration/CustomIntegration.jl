@@ -23,7 +23,7 @@ end
 ```
 This structure contains the integration parameters for the simulation.
 """
-mutable struct IntegrationP{T1, T2, T3}
+mutable struct IntegrationP{T1,T2,T3}
     dt::T1
     tmin::T1
     tmax::T1
@@ -33,8 +33,17 @@ mutable struct IntegrationP{T1, T2, T3}
     time::T1
     step::T3
 end
-function IntegrationP(; dt, tmin, tmax, method, abstol = 1e-6, reltol = 1e-6, time = 0.0, step = 0)
-    IntegrationP(dt, tmin, tmax, method, abstol, reltol, time, step)
+function IntegrationP(;
+    dt,
+    tmin,
+    tmax,
+    method,
+    abstol = 1e-6,
+    reltol = 1e-6,
+    time = 0.0,
+    step = 0,
+)
+    return IntegrationP(dt, tmin, tmax, method, abstol, reltol, time, step)
 end
 
 # function zero(::Type{IntegrationP})

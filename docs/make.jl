@@ -1,10 +1,25 @@
 using Documenter, DDD
 
-import DDD: AbstractMesh, RegularCuboidMesh, DislocationFEMCorrective, calcPKForce, makeInstanceDict, translateEnum, subTypeTree, inclusiveComparison, dimDot, dimNorm, AbstractCrystalStruct, MaterialP, AbstractIntegrator, IntegrationP, AbstractShapeFunction
+import DDD:
+    AbstractMesh,
+    RegularCuboidMesh,
+    DislocationFEMCorrective,
+    calcPKForce,
+    makeInstanceDict,
+    translateEnum,
+    subTypeTree,
+    inclusiveComparison,
+    dimDot,
+    dimNorm,
+    AbstractCrystalStruct,
+    MaterialP,
+    AbstractIntegrator,
+    IntegrationP,
+    AbstractShapeFunction
 makedocs(;
-    modules=[DDD],
-    format=Documenter.HTML(),
-    pages=[
+    modules = [DDD],
+    format = Documenter.HTML(),
+    pages = [
         "Home" => "index.md",
         "Theory" => "theory.md",
         "Types" => "types.md",
@@ -15,12 +30,10 @@ makedocs(;
         "Motivation" => "motivation.md",
         "Index" => "idx.md",
     ],
-    repo="https://github.com/dcelisgarza/DDD.jl/blob/{commit}{path}#L{line}",
-    sitename="DDD.jl",
-    authors="Daniel Celis Garza",
+    repo = "https://github.com/dcelisgarza/DDD.jl/blob/{commit}{path}#L{line}",
+    sitename = "DDD.jl",
+    authors = "Daniel Celis Garza",
     # assets=String[],
 )
 
-deploydocs(;
-    repo="github.com/dcelisgarza/DDD.jl.git",
-)
+deploydocs(; repo = "github.com/dcelisgarza/DDD.jl.git")

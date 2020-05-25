@@ -109,7 +109,17 @@ function SlipSystem(;
     slipPlane::T2,
     bVec::T2,
 ) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
-    SlipSystem(crystalStruct, slipPlane, bVec)
+
+    if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
+        if ndims(slipPlane) == 1
+            @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n = = $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
+        else
+            idx = findall(x -> !isapprox(x, 0), dimDot(slipPlane, bVec; dim = 2))
+            @assert isempty(idx) "SlipSystem: entries of the slip plane, n[$idx, :] = $(slipPlane[idx,:]), and Burgers vector, b[$idx, :] = $(bVec[idx,:]), are not orthogonal."
+        end
+    end
+
+    return SlipSystem(crystalStruct, slipPlane, bVec)
 end
 
 """
@@ -175,7 +185,7 @@ DislocationP(;
     climbDrag::T1,
     lineDrag::T1,
     mobility::T4,
-) where {T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
+) where {T1, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
 ```
 Keyword constructor for [`DislocationP`](@ref).
 """
@@ -196,13 +206,14 @@ function DislocationP(;
     climbDrag::T1,
     lineDrag::T1,
     mobility::T4,
-) where {T1 <: Float64, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
+) where {T1, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
 
-    coreRad == minSegLen == maxSegLen == 0 ? nothing : @assert coreRad < minSegLen < maxSegLen
+    coreRad == minSegLen == maxSegLen == 0 ? nothing :
+    @assert coreRad < minSegLen < maxSegLen
     minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
     coreRadSq = coreRad^2
 
-    DislocationP(
+    return DislocationP(
         coreRad,
         coreRadSq,
         coreRadMag,
@@ -281,7 +292,7 @@ DislocationLoop(;
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
     T5 <: AbstractVector{nodeType},
-    T6 <: Float64,
+    T6,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
 }
@@ -307,12 +318,12 @@ Generic keyword constructor for dislocation loop. Calls other constructors that 
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
     T5 <: AbstractVector{nodeType},
-    T6 <: Float64,
+    T6,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
 }
 
-    DislocationLoop(
+    return DislocationLoop(
         loopType;
         numSides = numSides,
         nodeSide = nodeSide,
@@ -347,7 +358,7 @@ end
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
     T5 <: AbstractVector{nodeType},
-    T6 <: Float64,
+    T6,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
 }
@@ -358,7 +369,7 @@ end
     slipPlane = zeros(0, 3)
     bVec = zeros(0, 3)
 
-    DislocationLoop(
+    return DislocationLoop(
         loopType,
         numSides,
         nodeSide,
@@ -394,7 +405,7 @@ end
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
     T5 <: AbstractVector{nodeType},
-    T6 <: Float64,
+    T6,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
 }
@@ -469,7 +480,7 @@ end
     end
     links[nodeTotal, :] = [nodeTotal; 1]
 
-    DislocationLoop(
+    return DislocationLoop(
         loopType,
         numSides,
         nodeSide,
@@ -580,7 +591,7 @@ Generic keyword constructor for [`DislocationNetwork`](@ref).
     @assert size(links, 1) == size(bVec, 1) == size(slipPlane, 1)
     @assert size(coord, 1) == size(label, 1)
 
-    DislocationNetwork(
+    return DislocationNetwork(
         links,
         slipPlane,
         bVec,
@@ -616,7 +627,11 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
     memBuffer::T2 = 10,
     checkConsistency::T3 = true,
     kw...,
-) where {T1 <: Union{DislocationLoop, AbstractVector{<:DislocationLoop}}, T2 <: Int, T3 <: Bool}
+) where {
+    T1 <: Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
+    T2 <: Int,
+    T3 <: Bool,
+}
 
     # Initialisation.
     nodeTotal::Int = 0
@@ -741,7 +756,7 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
     # If there's memory available.
     if available == nothing
         push!(network, nodeTotal)
-    # If there's no memory, calculate how much is neaded to add the extra data.
+        # If there's no memory, calculate how much is neaded to add the extra data.
     else
         check = length(network.label) - (available - 1) - nodeTotal
         check < 0 ? push!(network, -check) : nothing

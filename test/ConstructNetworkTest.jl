@@ -19,6 +19,20 @@ import DDD:
 cd(@__DIR__)
 
 @testset "Generate single segments" begin
+    testSlip = [-1.0, 0.0, 1.0]
+    testBVec = [1.0, 1.0, -1.0]
+    @test_throws AssertionError SlipSystem(;
+        crystalStruct = BCC(),
+        slipPlane = testSlip,
+        bVec = testBVec,
+    )
+    testSlip = [testSlip'; -1.0 0.0 1.0]
+    testBVec = [testBVec'; 1.0 1.0 1.0]
+    @test_throws AssertionError SlipSystem(;
+        crystalStruct = BCC(),
+        slipPlane = testSlip,
+        bVec = testBVec,
+    )
     fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem[1])
@@ -47,12 +61,15 @@ end
     coord = zeros(numNode, 3)
     label = zeros(nodeType, numNode)
     lenLinks = size(links, 1)
-    [links[i, :] = [i, i + lenLinks] for i = 1:lenLinks]
-    [bVec[i, :] = [i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
-    [slipPlane[i, :] = -[i, i + lenLinks, i + 2 * lenLinks] for i = 1:lenLinks]
+    [links[i, :] = [i, i + lenLinks] for i in 1:lenLinks]
+    [bVec[i, :] = [i, i + lenLinks, i + 2 * lenLinks] for i in 1:lenLinks]
+    [slipPlane[i, :] = -[i, i + lenLinks, i + 2 * lenLinks] for i in 1:lenLinks]
     lenLabel = length(label)
-    [label[i+1] = mod(i, 6) for i = 0:(lenLabel-1)]
-    [coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel]) for i = 1:length(label)]
+    [label[i + 1] = mod(i, 6) for i in 0:(lenLabel - 1)]
+    [
+        coord[i, :] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel])
+        for i in 1:length(label)
+    ]
     network = DislocationNetwork(
         links = links,
         slipPlane = slipPlane,
@@ -76,7 +93,8 @@ end
     @test idxCond(network, :label, inclusiveComparison, 0, 1) == [1; 2; 7; 8]
     @test idxCond(network, :label, rnd; condition = <=) == findall(x -> x <= rnd, label)
     rnd = rand(1:numSeg)
-    @test idxCond(network, :bVec, rnd; condition = cnd[1]) == findall(x -> cnd[1](x, rnd), bVec)
+    @test idxCond(network, :bVec, rnd; condition = cnd[1]) ==
+          findall(x -> cnd[1](x, rnd), bVec)
     @test dataCond(network, :slipPlane, rnd; condition = cnd[2]) ==
           slipPlane[findall(x -> cnd[2](x, rnd), slipPlane)]
     rnd = rand(-1:1)
@@ -141,8 +159,6 @@ end
         network.segIdx[idx, :],
     )
 
-
-
 end
 
 @testset "Loop generation" begin
@@ -195,11 +211,12 @@ end
     @test network.label[1:nodeLoop] == loops[1].label
     # Check that the last loop was transfered correctly.
     nodeLoop = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
-    @test network.links[(1+end-nodeLoop):end, :] == loops[end].links .+ (totalNodes - nodeLoop)
-    @test network.slipPlane[(1+end-nodeLoop):end, :] == loops[end].slipPlane
-    @test network.bVec[(1+end-nodeLoop):end, :] == loops[end].bVec
-    @test network.coord[(1+end-nodeLoop):end, :] == loops[end].coord
-    @test network.label[(1+end-nodeLoop):end] == loops[end].label
+    @test network.links[(1 + end - nodeLoop):end, :] ==
+          loops[end].links .+ (totalNodes - nodeLoop)
+    @test network.slipPlane[(1 + end - nodeLoop):end, :] == loops[end].slipPlane
+    @test network.bVec[(1 + end - nodeLoop):end, :] == loops[end].bVec
+    @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
+    @test network.label[(1 + end - nodeLoop):end] == loops[end].label
     network2 = DislocationNetwork(
         links = zeros(Int, 1, 2),
         slipPlane = zeros(1, 3),

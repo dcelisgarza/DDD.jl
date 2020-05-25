@@ -14,7 +14,7 @@ macro makeType(type::Any, supertype::Any)
     ex = quote
         struct $type <: $supertype end
     end
-    esc(ex)
+    return esc(ex)
 end
 """
 ```
@@ -24,7 +24,7 @@ Turn a string `s` into a variable whose name is the string `s` and value is `v`.
 """
 macro string_as_varname_macro(s::AbstractString, v::Any)
     s = Symbol(s)
-    esc(:($s = $v))
+    return esc(:($s = $v))
 end
 
 """
@@ -37,7 +37,11 @@ translateEnum(
 ```
 Translates the string name of enumerated types to the actual Julia type.
 """
-@inline function translateEnum(valType::DataType, dict::Dict{T1, T2}, key::T3) where {T1, T2, T3}
+@inline function translateEnum(
+    valType::DataType,
+    dict::Dict{T1,T2},
+    key::T3,
+) where {T1,T2,T3}
     instanceDict = makeInstanceDict(valType)
     @inbounds @simd for i in eachindex(dict[key])
         dict[key][i] = instanceDict[dict[key][i]]
@@ -55,7 +59,11 @@ translateEnum(
 ```
 Translates the string name of enumerated types to the actual Julia type.
 """
-@inline function translateEnum(valType::DataType, dict::Dict{T1, T2}, key::T3) where {T1, T2, T3}
+@inline function translateEnum(
+    valType::DataType,
+    dict::Dict{T1,T2},
+    key::T3,
+) where {T1,T2,T3}
     instanceDict = makeInstanceDict(valType)
     @inbounds @simd for i in eachindex(dict[key])
         dict[key][i] = instanceDict[dict[key][i]]

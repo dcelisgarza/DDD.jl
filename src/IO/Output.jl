@@ -17,10 +17,10 @@ JSON.lower(t::nodeType)
 ```
 Extensions to `JSON.lower` for custom types. Allows these variables to be serialised properly.
 """
-JSON.lower(
+function JSON.lower(
     t::T,
 ) where {
-    T <: Union{
+    T<:Union{
         AbstractCrystalStruct,
         AbstractMobility,
         AbstractIntegrator,
@@ -28,7 +28,9 @@ JSON.lower(
         AbstractDlnStr,
         AbstractDistribution,
     },
-} = string(t)
+}
+    return string(t)
+end
 JSON.lower(t::nodeType) = Int(t)
 
 """
@@ -38,7 +40,7 @@ save(filename::AbstractString, args...; mode::AbstractString = "w")
 Wrapper for `JSON.print` to a file, `args` are the variables or structures you want to save.
 """
 function save(filename::AbstractString, args...; mode::AbstractString = "w")
-    open(filename, mode) do io
-        JSON.print(io, args)
+    return open(filename, mode) do io
+        return JSON.print(io, args)
     end
 end

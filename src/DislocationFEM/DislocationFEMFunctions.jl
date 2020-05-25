@@ -53,7 +53,7 @@ Calculate the reaction from a dislocation.
 @inline function calc_σ_hat(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
-    x0::AbstractArray{T, N} where {T, N},
+    x0::AbstractArray{T,N} where {T,N},
 )
 
     # Unroll structure.
@@ -147,5 +147,5 @@ Calculate the reaction from a dislocation.
         U[idx - 0] = uHat[idx3 - 0]
     end
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
-    σ = C * B * U
+    return σ = C * B * U
 end

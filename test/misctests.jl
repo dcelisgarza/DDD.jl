@@ -6,7 +6,6 @@ using Revise, BenchmarkTools, Plots
 using DDD
 cd(@__DIR__)
 
-
 # using Makie
 # function plotNodesMakie(network::DislocationNetwork, args...; kw...)
 #     idx = findall(x -> x != 0, network.label)
@@ -91,13 +90,33 @@ fig = plotNodes(
     legend = false,
     size = (750, 750),
 )
-plotNodes!(fig, network2, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
+plotNodes!(
+    fig,
+    network2,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+)
 
+plotNodes!(
+    fig,
+    network1,
+    m = 1,
+    l = 3,
+    linecolor = :red,
+    markercolor = :red,
+    legend = false,
+)
 
-plotNodes!(fig, network1, m = 1, l = 3, linecolor = :red, markercolor = :red, legend = false)
-
-scene1 =
-    plotNodesMakie(network, linewidth = 2, markersize = 0.5, strokecolor = :black, color = :black)
+scene1 = plotNodesMakie(
+    network,
+    linewidth = 2,
+    markersize = 0.5,
+    strokecolor = :black,
+    color = :black,
+)
 
 self = calcSelfForce(dlnParams, matParams, network)
 @allocated calcSelfForce(dlnParams, matParams, network)
@@ -124,14 +143,11 @@ isapprox.(tser, tpar)
 isapprox.(tser .- ser, self)
 isapprox.(tpar .- ser, self)
 
-
 @btime calcSelfForce(dlnParams, matParams, network)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegForce(dlnParams, matParams, network; parallel = false)
 
-
-
-remo.-tot
+remo .- tot
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
 par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
@@ -139,7 +155,6 @@ ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
 maximum.(par .- ser)
 minimum.(par .- ser)
-
 
 idx = network.segIdx
 coord = network.coord
@@ -151,7 +166,6 @@ node2 = coord[idx[:, 3], :]
 @btime mean((node1, node2))
 @btime 0.5 * (node1 + node2)
 
-
 test = [1 1 1; 2 2 2; 3 3 3]
 test2 = [1; 2; 3]
 test[1, :]
@@ -159,7 +173,6 @@ test * test2
 
 test .* test2
 cross(vec(sum(test .* test2, dims = 1)), test2)
-
 
 a = tot[1][:, :]
 b = tot[2][:, :]
@@ -192,7 +205,6 @@ b2 = (bVec[2, 1], bVec[2, 2], bVec[2, 3])
 n21 = (node1[2, 1], node1[2, 2], node1[2, 3])
 n22 = (node2[2, 1], node2[2, 2], node2[2, 3])
 
-
 Fnode1, Fnode2, Fnode3, Fnode4 =
     calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
 
@@ -203,7 +215,6 @@ n12 = (1.0, 0.0, 0.0)
 b2 = (bVec[2, 1], bVec[2, 2], bVec[2, 3])
 n21 = (0.0, 1.00000001, 0.000000001)
 n22 = (2.0, 1.0, 0.0)
-
 
 Fnode1, Fnode2, Fnode3, Fnode4 =
     calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)

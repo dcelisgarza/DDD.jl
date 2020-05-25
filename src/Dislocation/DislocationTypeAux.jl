@@ -8,8 +8,9 @@ Returns `n` points according to the concrete subtype of [`AbstractDistribution`]
 loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(n, 3)
 loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(n, 3)
 loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(n, 3)
-loopDistribution(dist::Regular, n::Int, args...; kw...) =
-    error("loopDistribution: regular distribution yet not implemented")
+function loopDistribution(dist::Regular, n::Int, args...; kw...)
+    return error("loopDistribution: regular distribution yet not implemented")
+end
 
 """
 ```
@@ -27,7 +28,7 @@ Calculate the spatial limits a dislocation will occupy. This and [`loopDistribut
     segLen::T2,
     range::T1,
     buffer::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
+) where {T1<:AbstractArray{T,N} where {T,N},T2}
 
     @inbounds for i in 1:size(lims, 2)
         for j in 1:size(lims, 1)
@@ -51,7 +52,7 @@ Translate dislocation node coordinates `coord` inside the spatial bounds of `lim
     coord::T1,
     lims::T1,
     disp::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
+) where {T1<:AbstractArray{T,N} where {T,N},T2<:AbstractVector{T} where {T}}
     @inbounds for i in 1:size(coord, 2)
         @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
@@ -73,7 +74,7 @@ Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the 
 @inline function makeConnect(
     links::T1,
     maxConnect::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
+) where {T1<:AbstractArray{T,N} where {T,N},T2<:Int}
 
     # Indices of defined links.
     idx = findall(x -> x != 0, links[:, 1])
@@ -152,7 +153,7 @@ getSegmentIdx(
 @inline function getSegmentIdx(
     links::T1,
     label::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
+) where {T1<:AbstractArray{T,N} where {T,N},T2<:AbstractVector{nodeType}}
 
     segIdx = zeros(Int, size(links, 1), 3)  # Indexing matrix.
     idx = findall(x -> x != 0, label)       # Find all defined nodes.
@@ -232,7 +233,8 @@ Checks the validity of the dislocation network. It ensures the following conditi
 
         # Check for zero Burgers vectors.
         norm(bVec[i, :]) < eps(eltype(bVec)) ? error("Burgers vector must be non-zero.
-                                       norm(bVec) = $(norm(bVec[i,:]))") : nothing
+                                       norm(bVec) = $(norm(bVec[i,:]))") :
+        nothing
 
         # Trailing columns must be zero.
         sum(connectivity[i, (2 * (col + 1)):end]) != 0 ?

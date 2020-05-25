@@ -20,28 +20,6 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 - Performant.
 - Easily parallelisable.
 
-## Current TODO:
-- [ ] Custom 3-vec type, place x,y,z coordinates in contiguous memory instead of columns, ie [x1 y1 z1; x2 y2 z2] -> [x1;y1;z1;x2;y2;z2], have to define custom array type, `getindex(arr, (a,b)) = arr[3*(a-1)+b]`, out of bounds and all the rest. Watch [this](https://www.youtube.com/watch?v=jS9eouMJf_Y).
-- [x] Generate docs
-  - [x] Documented Misc
-  - [ ] Upload docs
-- [ ] Optimise
-- [ ] Specialised integrator
-  - [ ] Perhaps later make use of [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for their stepping and event handling routines.
-- [ ] Calculate segment-segment interactions.
-- [ ] Mobility laws
-  - [ ] BCC
-  - [ ] FCC
-- [ ] Topology operations
-  - [ ] Split
-  - [ ] Merge
-- [ ] Couple to FEM, perhaps use a package from [JuliaFEM](http://www.juliafem.org/).
-  - [ ] Boundary conditions
-    - [ ] Neuman
-    - [ ] Dirichlet
-  - [ ] Displacements
-  - [ ] Tractions
-
 # Example
 
 ## Initialisation
@@ -246,3 +224,53 @@ For the sake of open, reproducible and portable science it is recommended users 
 1. Use `DelimitedFiles`.
 1. Use binary streams.
 1. Create your own format and IO stream.
+
+TO BE WRITTEN: USE IO TO INITIALISE SIMULATION
+
+TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
+
+# TODO
+
+## Working Objectives
+- [x] IO
+  - [x] Input validation
+    - [ ] Sensible input generators
+- [ ] Topology functions
+  - [ ] Remeshing
+    - [ ] Refine mesh
+      - [x] Merge nodes
+        - [ ] Test all edge cases
+    - [ ] Coarsen mesh
+      - [ ] Split nodes
+    - [ ] Surface remeshing
+    - [ ] Virtual node remeshing
+- [x] Self-segment force
+- [x] Seg-seg force
+  - [ ] Test tiny segment edge case
+  - [ ] Distributed and gpu parallelisation
+- [ ] PK force
+  - [x] Implementation
+  - [ ] Tests
+- [ ] Post processing
+  - [x] Plot nodes
+  - [ ] Plot recipe
+  - [ ] Statistical analysis
+- [ ] Mobility function
+  - [ ] BCC
+  - [ ] FCC
+- [ ] Integration
+  - [ ] Refactor integrator structures
+  - [ ] Look into using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for structure and perhaps use/extension of methods
+  - [ ] Make integrator
+- [ ] Couple to FEM, perhaps use a package from [JuliaFEM](http://www.juliafem.org/).
+  - [ ] Mesh and FE matrices generation
+  - [ ] Boundary conditions
+    - [ ] Neuman
+    - [ ] Dirichlet
+  - [ ] Displacements
+    - [ ] Parallelisation
+  - [ ] Tractions
+    - [ ] Parallelisation
+
+### Tentative Objectives
+- [ ] Custom 3-vec type, place x,y,z coordinates in contiguous memory instead of columns, ie [x1 y1 z1; x2 y2 z2] -> [x1;y1;z1;x2;y2;z2], have to define custom array type, `getindex(arr, (a,b)) = arr[3*(a-1)+b]`, out of bounds and all the rest. Watch [this](https://www.youtube.com/watch?v=jS9eouMJf_Y).

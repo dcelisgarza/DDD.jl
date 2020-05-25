@@ -14,16 +14,14 @@ cd(@__DIR__)
     dictDislocationLoop = load(fileDislocationLoop)
     loops = zeros(DislocationLoop, length(dictDislocationLoop))
     for i in eachindex(loops)
-        loops[i] =
-            loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+        loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
     end
     network = DislocationNetwork(loops)
 
     function sumNodes(loops)
         totalNodes = 0
         for i in eachindex(loops)
-            totalNodes +=
-                loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
+            totalNodes += loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
         end
         return totalNodes
     end
@@ -38,18 +36,16 @@ cd(@__DIR__)
 
     function plotLoops(fig, loops)
         totalNodes = 0
-        for i in eachindex(loops)
+        return for i in eachindex(loops)
             plotNodes!(fig, loops[i], m = 1, l = 3, legend = false)
-            totalNodes +=
-                loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
+            totalNodes += loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
             @test fig.n == totalNodes
         end
     end
     function plotLoops(loops)
-        for i in eachindex(loops)
+        return for i in eachindex(loops)
             fig = plotNodes(loops[i], m = 1, l = 3, legend = false)
-            @test fig.n ==
-                  loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
+            @test fig.n == loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
         end
     end
     fig = plot()

@@ -86,7 +86,6 @@ false
     return false
 end
 
-
 """
 ```
 compStruct(arg1, arg2; verbose::Bool = false)
@@ -175,7 +174,12 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
  -0.9999999999999999
 ```
 """
-@inline function rot3D(xyz::T1, uvw::T1, abc::T1, θ::T2) where {T1<:AbstractVector{T} where {T},T2}
+@inline function rot3D(
+    xyz::T1,
+    uvw::T1,
+    abc::T1,
+    θ::T2,
+) where {T1<:AbstractVector{T} where {T},T2}
     isapprox(norm(uvw), 1) ? nothing : uvw ./= norm(uvw)
 
     cosθ = cos(θ)

@@ -23,7 +23,7 @@ struct MaterialP{T1, T2}
 end
 ```
 """
-struct MaterialP{T1, T2}
+struct MaterialP{T1,T2}
     μ::T1
     μMag::T1
     ν::T1
@@ -41,7 +41,7 @@ end
     μ4π = μ / (4π)
     μ8π = μ4π / 2
     μ4πν = μ4π * omνInv
-    MaterialP(μ, μMag, ν, E, omνInv, νomνInv, μ4π, μ8π, μ4πν, crystalStruct)
+    return MaterialP(μ, μMag, ν, E, omνInv, νomνInv, μ4π, μ8π, μ4πν, crystalStruct)
 end
 
 # function zero(::Type{MaterialP})

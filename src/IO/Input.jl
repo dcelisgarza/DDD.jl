@@ -18,7 +18,7 @@ function loadDislocationLoop(
 ```
 Loads initial dislocation structure out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationLoop`](@ref).
 """
-function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::SlipSystem)
+function loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSystem)
 
     dlnTypes = makeTypeDict(AbstractDlnStr)
     distributions = makeTypeDict(AbstractDistribution)
@@ -55,7 +55,7 @@ loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialP`](@ref).
 """
-function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
+function loadMaterialP(dict::Dict{T1,T2}) where {T1,T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
@@ -76,7 +76,7 @@ loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationP`](@ref).
 """
-function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationP(dict::Dict{T1,T2}) where {T1,T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
@@ -100,7 +100,7 @@ loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads slip systems out of a dictionary loaded from a JSON file. Returns a variable of type [`SlipSystem`](@ref).
 """
-function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
+function loadSlipSystem(dict::Dict{T1,T2}) where {T1,T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
@@ -122,7 +122,7 @@ loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationP`](@ref).
 """
-function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
+function loadDislocationP(dict::Dict{T1,T2}) where {T1,T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
