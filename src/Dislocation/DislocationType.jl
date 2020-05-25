@@ -414,8 +414,8 @@ end
     numSegLen = length(segLen) # Number of segment lengths.
 
     # Validate input.
-    @assert length(label) == nodeTotal "makeLoop: All $nodeTotal nodes must be labelled. There are only $(length(label)) labels currently defined."
-    @assert numSegLen == nodeTotal "makeLoop: All $nodeTotal segments must have their lengths defined. There are only $numSegLen lengths currently defined."
+    @assert length(label) == nodeTotal "DislocationLoop: All $nodeTotal nodes must be labelled. There are $(length(label)) labels currently defined."
+    @assert numSegLen == nodeTotal "DislocationLoop: All $nodeTotal segments must have their lengths defined. There are $numSegLen lengths currently defined."
 
     # Normalise vectors.
     _slipPlane = _slipPlane ./ norm(_slipPlane)
@@ -431,7 +431,7 @@ end
         rotAxis = _bVec
         # Catch all.
     else
-        @warn "makeLoop: rotation axis for $(typeof(loopType)) not defined, defaulting to prismatic loop."
+        @warn "DislocationLoop: rotation axis for $(typeof(loopType)) not defined, defaulting to prismatic loop."
         rotAxis = _bVec
     end
 

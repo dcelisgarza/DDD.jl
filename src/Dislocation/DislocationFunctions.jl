@@ -98,7 +98,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-        
+
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -315,7 +315,7 @@ end
     b2::T2,
     n21::T2,
     n22::T2,
-) where {T1,T2<:AbstractVector{T} where {T}}
+) where {T1, T2 <: AbstractVector{T} where {T}}
 
     t2 = n22 - n21
     t2N = 1 / norm(t2)
@@ -325,7 +325,7 @@ end
     t1N = 1 / norm(t1)
     t1 = t1 * t1N
 
-    c = dot(t1, t2)
+    c = t1 ⋅ t2
     cSq = c * c
     omcSq = 1 - cSq
 
@@ -334,37 +334,22 @@ end
         omcSqI = 1 / omcSq
 
         # Single cross products.
-        t2ct1 = @SVector [
-            t2[2] * t1[3] - t2[3] * t1[2],
-            t2[3] * t1[1] - t2[1] * t1[3],
-            t2[1] * t1[2] - t2[2] * t1[1],
-        ]
-
+        t2ct1 = t2 × t1
         t1ct2 = -t2ct1
-
-        b2ct2 = @SVector [
-            b2[2] * t2[3] - b2[3] * t2[2],
-            b2[3] * t2[1] - b2[1] * t2[3],
-            b2[1] * t2[2] - b2[2] * t2[1],
-        ]
-
-        b1ct1 = @SVector [
-            b1[2] * t1[3] - b1[3] * t1[2],
-            b1[3] * t1[1] - b1[1] * t1[3],
-            b1[1] * t1[2] - b1[2] * t1[1],
-        ]
+        b2ct2 = b2 × t2
+        b1ct1 = b1 × t1
 
         # Dot products.
-        t2db2 = dot(t2, b2)
-        t2db1 = dot(t2, b1)
-        t1db2 = dot(t1, b2)
-        t1db1 = dot(t1, b1)
+        t2db2 = t2 ⋅ b2
+        t2db1 = t2 ⋅ b1
+        t1db2 = t1 ⋅ b2
+        t1db1 = t1 ⋅ b1
 
         # Cross dot products.
-        t2ct1db2 = dot(t2ct1, b2)
-        t1ct2db1 = dot(t1ct2, b1)
-        b1ct1db2 = dot(b1ct1, b2)
-        b2ct2db1 = dot(b2ct2, b1)
+        t2ct1db2 = t2ct1 ⋅ b2
+        t1ct2db1 = t1ct2 ⋅ b1
+        b1ct1db2 = b1ct1 ⋅ b2
+        b2ct2db1 = b2ct2 ⋅ b1
 
         # Double cross products.
         t2ct1ct2 = t1 - c * t2
@@ -382,7 +367,7 @@ end
         # Integration limits for local coordinates.
         R1 = n21 - n11
         R2 = n22 - n12
-        d = dot(R2, t2ct1) * omcSqI
+        d = (R2 ⋅ t2ct1) * omcSqI
 
         μ4πd = μ4π * d
         μ8πd = μ8π * d
@@ -392,10 +377,10 @@ end
         μ4πνaSqd = μ4πνaSq * d
         μ8πaSqd = μ8πaSq * d
 
-        lim11 = dot(R1, t1)
-        lim12 = dot(R1, t2)
-        lim21 = dot(R2, t1)
-        lim22 = dot(R2, t2)
+        lim11 = R1 ⋅ t1
+        lim12 = R1 ⋅ t2
+        lim21 = R2 ⋅ t1
+        lim22 = R2 ⋅ t2
 
         x1 = (lim12 - c * lim11) * omcSqI
         x2 = (lim22 - c * lim21) * omcSqI
@@ -634,7 +619,7 @@ end
     b2::T2,
     n21::T2,
     n22::T2,
-) where {T1,T2<:AbstractVector{T} where {T}}
+) where {T1, T2 <: AbstractVector{T} where {T}}
 
     flip::Bool = false
 
@@ -646,7 +631,7 @@ end
     t1N = 1 / norm(t1)
     t1 = t1 * t1N
 
-    c = dot(t2, t1)
+    c = t2 ⋅ t1
 
     # half of the cotangent of critical θ
     hCotanθc = sqrt((1 - sqrt(eps(typeof(c))) * 1.01) / (sqrt(eps(typeof(c))) * 1.01)) / 2
@@ -660,7 +645,7 @@ end
     end
 
     # Vector projection and rejection.
-    tmp = dot(n22 - n21, t1)
+    tmp = (n22 - n21) ⋅ t1
     n22m = n21 + tmp * t1
     diff = n22 - n22m
     magDiff = norm(diff)
@@ -672,45 +657,31 @@ end
 
     # Dot products.
     R = n21m - n11
-    Rdt1 = dot(R, t1)
+    Rdt1 = R ⋅ t1
 
     nd = R - Rdt1 * t1
-    ndb1 = dot(nd, b1)
-    dSq = dot(nd, nd)
+    ndb1 = nd ⋅ b1
+    dSq = nd ⋅ nd
     aSq_dSq = aSq + dSq
     aSq_dSqI = 1 / aSq_dSq
 
-    x1 = dot(n21m, t1)
-    x2 = dot(n22m, t1)
-    y1 = -dot(n11, t1)
-    y2 = -dot(n12, t1)
+    x1 = n21m ⋅ t1
+    x2 = n22m ⋅ t1
+    y1 = -n11 ⋅ t1
+    y2 = -n12 ⋅ t1
 
-    t1db2 = dot(t1, b2)
-    t1db1 = dot(t1, b1)
-    nddb1 = dot(nd, b1)
+    t1db2 = t1 ⋅ b2
+    t1db1 = t1 ⋅ b1
+    nddb1 = nd ⋅ b1
 
     # Cross products.
-    b2ct1 = @SVector [
-        b2[2] * t1[3] - b2[3] * t1[2],
-        b2[3] * t1[1] - b2[1] * t1[3],
-        b2[1] * t1[2] - b2[2] * t1[1],
-    ]
-
-    b1ct1 = @SVector [
-        b1[2] * t1[3] - b1[3] * t1[2],
-        b1[3] * t1[1] - b1[1] * t1[3],
-        b1[1] * t1[2] - b1[2] * t1[1],
-    ]
-
-    ndct1 = @SVector [
-        nd[2] * t1[3] - nd[3] * t1[2],
-        nd[3] * t1[1] - nd[1] * t1[3],
-        nd[1] * t1[2] - nd[2] * t1[1],
-    ]
+    b2ct1 = b2 × t1
+    b1ct1 = b1 × t1
+    ndct1 = nd × t1
 
     # Cross dot products
-    b2ct1db1 = dot(b2ct1, b1)
-    b2ct1dnd = dot(b2ct1, nd)
+    b2ct1db1 = b2ct1 ⋅ b1
+    b2ct1dnd = b2ct1 ⋅ nd
 
     # Double cross products
     b2ct1ct1 = t1db2 * t1 - b2
@@ -749,9 +720,9 @@ end
     Fint4 = y2 * integ[10] - integ[12]
     Fnode1 = (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t1N
 
-    magDiffSq = dot(diff, diff)
-    magn21mSq = dot(n21m, n21m)
-    magn22mSq = dot(n22m, n22m)
+    magDiffSq = diff ⋅ diff
+    magn21mSq = n21m ⋅ n21m
+    magn22mSq = n22m ⋅ n22m
 
     if magDiffSq > sqrt(eps(typeof(magDiffSq))) * (magn21mSq + magn22mSq)
         nothing, nothing, Fnode1Core, Fnode2Core = calcSegSegForce(
@@ -791,7 +762,7 @@ end
 
     # Segment 2
     # Scalar projection of seg1 (n12-n11) onto t2, not normalised because we need the length.
-    tmp = dot(n12 .- n11, t2)
+    tmp = (n12 - n11) ⋅ t2
     # Vector projection of seg 1 to seg 2.
     n12m = n11 + tmp * t2
     # Vector rejection and its magnitude.
@@ -805,44 +776,30 @@ end
 
     # Dot products.
     R = n21 - n11m
-    Rdt2 = dot(R, t2)
+    Rdt2 = R ⋅ t2
 
     nd = R - Rdt2 * t2
-    dSq = dot(nd, nd)
+    dSq = nd ⋅ nd
     aSq_dSq = aSq + dSq
     aSq_dSqI = 1 / aSq_dSq
 
-    x1 = dot(n21, t2)
-    x2 = dot(n22, t2)
-    y1 = -dot(n11m, t2)
-    y2 = -dot(n12m, t2)
+    x1 = n21 ⋅ t2
+    x2 = n22 ⋅ t2
+    y1 = -n11m ⋅ t2
+    y2 = -n12m ⋅ t2
 
-    t2db2 = dot(t2, b2)
-    t2db1 = dot(t2, b1)
-    nddb2 = dot(nd, b2)
+    t2db2 = t2 ⋅ b2
+    t2db1 = t2 ⋅ b1
+    nddb2 = nd ⋅ b2
 
     # Cross products.
-    b2ct2 = @SVector [
-        b2[2] * t2[3] - b2[3] * t2[2],
-        b2[3] * t2[1] - b2[1] * t2[3],
-        b2[1] * t2[2] - b2[2] * t2[1],
-    ]
-
-    b1ct2 = @SVector [
-        b1[2] * t2[3] - b1[3] * t2[2],
-        b1[3] * t2[1] - b1[1] * t2[3],
-        b1[1] * t2[2] - b1[2] * t2[1],
-    ]
-
-    ndct2 = @SVector [
-        nd[2] * t2[3] - nd[3] * t2[2],
-        nd[3] * t2[1] - nd[1] * t2[3],
-        nd[1] * t2[2] - nd[2] * t2[1],
-    ]
+    b2ct2 = b2 × t2
+    b1ct2 = b1 × t2
+    ndct2 = nd × t2
 
     # Cross dot producs.
-    b1ct2db2 = dot(b1ct2, b2)
-    b1ct2dnd = dot(b1ct2, nd)
+    b1ct2db2 = b1ct2 ⋅ b2
+    b1ct2dnd = b1ct2 ⋅ nd
 
     # Double cross products.
     b1ct2ct2 = t2db1 * t2 - b1
@@ -880,8 +837,8 @@ end
     Fnode3 = (V1 * Fint1 + V2 * Fint2 + V3 * Fint3 + V4 * Fint4) * t2N
 
     magDiffSq = magDiff^2
-    magn11mSq = dot(n11m, n11m)
-    magn12mSq = dot(n12m, n12m)
+    magn11mSq = n11m ⋅ n11m
+    magn12mSq = n12m ⋅ n12m
 
     if magDiffSq > sqrt(eps(typeof(magDiffSq))) * (magn11mSq + magn12mSq)
         nothing, nothing, Fnode3Core, Fnode4Core = calcSegSegForce(
@@ -927,7 +884,12 @@ end
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-@inline function ParSegSegInteg(aSq_dSq::T1, aSq_dSqI::T1, x::T1, y::T1) where {T1<:Float64}
+@inline function ParSegSegInteg(
+    aSq_dSq::T1,
+    aSq_dSqI::T1,
+    x::T1,
+    y::T1,
+) where {T1}
 
     xpy = x + y
     xmy = x - y

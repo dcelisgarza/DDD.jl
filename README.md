@@ -235,8 +235,11 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
 - [x] IO
   - [x] Input validation
     - [ ] Sensible input generators
+  - [ ] Performance
+    - [ ] Compression
+    - [ ] Asyncronicity
 - [ ] Topology functions
-  - [ ] Remeshing
+  - [ ] Internal Remeshing
     - [ ] Refine mesh
       - [x] Merge nodes
         - [ ] Test all edge cases
@@ -253,6 +256,7 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
   - [ ] Tests
 - [ ] Post processing
   - [x] Plot nodes
+    - [ ] Asyncronicity
   - [ ] Plot recipe
   - [ ] Statistical analysis
 - [ ] Mobility function
