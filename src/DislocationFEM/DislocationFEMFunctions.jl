@@ -30,9 +30,9 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
 
     # Loop over segments.
     @inbounds @simd for i in 1:numSeg
-        x0 = midNode[i, :]
-        b = bVec[i, :]
-        t = tVec[i, :]
+        x0 = @SVector [midNode[i, 1], midNode[i, 2], midNode[i, 3]]
+        b = @SVector [bVec[i, 1], bVec[i, 2], bVec[i, 3]]
+        t = @SVector [tVec[i, 1], tVec[i, 2], tVec[i, 3]]
         σ_hat = calc_σ_hat(mesh, dlnFEM, x0)
         PKForce[i, :] = (σ_hat * b) × t
     end
@@ -53,7 +53,7 @@ Calculate the reaction from a dislocation.
 @inline function calc_σ_hat(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
-    x0::AbstractArray{T,N} where {T,N},
+    x0::AbstractArray{T, N} where {T, N},
 )
 
     # Unroll structure.

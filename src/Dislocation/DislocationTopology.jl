@@ -280,9 +280,9 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             b = @SVector [bVec[link1, 1], bVec[link1, 2], bVec[link1, 3]]
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
-            if dot(n1, n1) > eps(eltype(n1)) # non-screw
+            if n1 ⋅ n1 > eps(eltype(n1)) # non-screw
                 slipPlane[link1, :] = n1 / norm(n1)
-            elseif dot(n2, n2) > eps(eltype(n2)) # screw
+            elseif n2 ⋅ n2 > eps(eltype(n2)) # screw
                 slipPlane[link1, :] = n2 / norm(n2)
             end
 
