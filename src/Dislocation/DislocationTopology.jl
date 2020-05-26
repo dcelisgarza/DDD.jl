@@ -265,6 +265,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             colNotLink1 + colNotLink2 == 3 ? bVec[link1, :] -= bVec[link2, :] :
             bVec[link1, :] += bVec[link2, :]
 
+            # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
             # Fix slip plane.
             # Line direction and velocity of the resultant dislocation.
             t = @SVector [
@@ -463,27 +464,43 @@ end
 ## Addition
 function splitNode!(
     network::DislocationNetwork,
-    node::Int,
+    splitNode::Int,
     splitConnect::Int,
     midCoord::AbstractArray{T, N},
     midVel::AbstractArray{T, N},
 ) where {T, N}
 
     # Remove connection from node in preparation of adding the new node.
-    removeConnection!(network, node, splitConnect)
+    removeConnection!(network, splitNode, splitConnect)
 
-    # New node.
-    newNode = network.numNode + 1
+    # New node created at the very end.
+    network.numNode += 1
+    newNode = network.numNode
+
     # Allocate memory.
     if numNode > length(network.label)
         # A good heuristic for memory allocation is to allocate an extra N log₂(N) entries.
         numNewEntries = Int(round(newNode * log2(newNode)))
-        push!(network, numNewEntries)
-        push!(network.connectivity, zeros(numNewEntries, size(network.connectivity)))
-        push!(network.linksConnect, zeros(numNewEntries, size(network.linksConnect)))
+        push!(
+            network.coord,
+            zeros(eltype(network.coord), numNewEntries, ndims(network.coord)),
+        )
+        push!(
+            network.label,
+            zeros(eltype(network.label), numNewEntries, ndims(network.label)),
+        )
+        push!(
+            network.nodeVel,
+            zeros(eltype(network.nodeVel), numNewEntries, ndims(network.nodeVel)),
+        )
+        push!(
+            network.connectivity,
+            zeros(eltype(network.connectivity), numNewEntries, ndims(network.connectivity)),
+        )
     end
 
     links = network.links
+    bVec = network.bVec
     network.coord[newNode, :] = midCoord
     network.label[newNode] = nodeType(1)
     network.nodeVel[newNode, :] = midVel
@@ -495,13 +512,94 @@ function splitNode!(
     # This only does the first connection. The rest are made after in case they are needed.
     connectivity[newNode, 1] = 1
     connectivity[newNode, 2:3] =
-        connectivity[node, (2 * splitConnect):(2 * splitConnect + 1)]
+        connectivity[splitNode, (2 * splitConnect):(2 * splitConnect + 1)]
     link = connectivity[newNode, 2]
     colLink = connectivity[newNode, 3]
     links[link, colLink] = newNode
     linksConnect[link, colLink] = 1
 
-    # Check if we need a new link between newNode and node for Burgers vector conservation.
+    # Check if we need a new link between newNode and splitNode for Burgers vector conservation.
+    b = @SVector [bVec[link, 1], bVec[link, 2], bVec[link, 3]]
+    # If burgers vector is conserved return.
+    b ⋅ b == 0 && return network
+
+    # New link created at the end.
+    network.numSeg += 1
+    newSeg = network.numSeg
+
+    # Allocate memory.
+    if newSeg > size(network.links, 1)
+        # A good heuristic for memory allocation is to allocate an extra N log₂(N) entries.
+        numNewEntries = Int(round(newSeg * log2(newSeg)))
+        push!(
+            network.links,
+            zeros(eltype(network.links), numNewEntries, ndims(network.links)),
+        )
+        push!(
+            network.slipPlane,
+            zeros(eltype(network.slipPlane), numNewEntries, ndims(network.slipPlane)),
+        )
+        push!(network.bVec, zeros(eltype(network.bVec), numNewEntries, ndims(network.bVec)))
+        push!(
+            network.segForce,
+            zeros(eltype(network.segForce), numNewEntries, ndims(network.segForce)),
+        )
+        push!(
+            network.linksConnect,
+            zeros(eltype(network.linksConnect), numNewEntries, ndims(network.linksConnect)),
+        )
+    end
+
+    bVec = network.bVec
+    links = network.links
+    slipPlane = network.slipPlane
+
+    # Add new link to network.
+    bVec[numSeg, :] = b
+    links[numSeg, colLink] = nodeSplit  # First node in the link is the node that was split.
+    colOppLink = 3 - colLink            # Other column in links.
+    links[numSeg, colOppLink] = newNode # Second node of the link is the new node.
+
+    # Update connectivity of nodeSplit.
+    newConnect1 = connectivity[nodeSplit, 1] + 1
+    connectivity[nodeSplit, 1] = newConnect1
+    connectivity[nodeSplit, (2 * newConnect1):(2 * newConnect1 + 1)] = [numSeg, colLink]
+
+    # Update connectivity of newNode.
+    newConnect2 = connectivity[newNode, 1] + 1
+    connectivity[newNode, 1] = newConnect2
+    connectivity[newNode, (2 * newConnect2):(2 * newConnect2 + 1)] = [numSeg, colOppLink]
+
+    # Update linksConnect.
+    linksConnect[numSeg, colLink] = newConnect1
+    linksConnect[numSeg, colOppLink] = newConnect2
+
+    # Fix slip plane.
+    # Line direction and velocity of the resultant dislocation.
+    coord = network.coord
+    nodeVel = network.nodeVel
+
+    # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
+    t = @SVector [
+        coord[nodeSplit, 1] - coord[newNode, 1],
+        coord[nodeSplit, 2] - coord[newNode, 2],
+        coord[nodeSplit, 3] - coord[newNode, 3],
+    ]
+
+    v = @SVector [
+        nodeVel[nodeSplit, 1] + nodeVel[newNode, 1],
+        nodeVel[nodeSplit, 2] + nodeVel[newNode, 2],
+        nodeVel[nodeSplit, 3] + nodeVel[newNode, 3],
+    ]
+
+    # Potential new slip plane.
+    n1 = t × b  # For non-screw segments.
+    n2 = t × v  # For screw segments.
+    if n1 ⋅ n1 > eps(eltype(n1)) # non-screw
+        slipPlane[numSeg, :] = n1 / norm(n1)
+    elseif n2 ⋅ n2 > eps(eltype(n2)) # screw
+        slipPlane[numSeg, :] = n2 / norm(n2)
+    end
 
     return network
 end
