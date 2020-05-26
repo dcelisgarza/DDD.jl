@@ -20,7 +20,7 @@ Extensions to `JSON.lower` for custom types. Allows these variables to be serial
 function JSON.lower(
     t::T,
 ) where {
-    T<:Union{
+    T <: Union{
         AbstractCrystalStruct,
         AbstractMobility,
         AbstractIntegrator,

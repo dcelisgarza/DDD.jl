@@ -884,12 +884,7 @@ end
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-@inline function ParSegSegInteg(
-    aSq_dSq::T1,
-    aSq_dSqI::T1,
-    x::T1,
-    y::T1,
-) where {T1}
+@inline function ParSegSegInteg(aSq_dSq::T1, aSq_dSqI::T1, x::T1, y::T1) where {T1}
 
     xpy = x + y
     xmy = x - y

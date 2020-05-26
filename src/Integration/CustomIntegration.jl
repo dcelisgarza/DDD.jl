@@ -23,7 +23,7 @@ end
 ```
 This structure contains the integration parameters for the simulation.
 """
-mutable struct IntegrationP{T1,T2,T3}
+mutable struct IntegrationP{T1, T2, T3}
     dt::T1
     tmin::T1
     tmax::T1

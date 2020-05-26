@@ -6,7 +6,7 @@ Make a dictionary of enumerated variable instances. Helps in translating JSON fi
 """
 @inline function makeInstanceDict(valType::DataType)
     insts = instances(valType)
-    dict = Dict{String,valType}()
+    dict = Dict{String, valType}()
     @inbounds @simd for inst in insts
         push!(dict, string(inst) => inst)
     end
@@ -49,7 +49,7 @@ Dict{String,Any} with 4 entries:
 """
 @inline function makeTypeDict(valType::DataType; cutoff = 1)
     primitive = subTypeTree(valType; cutoff = cutoff)
-    dict = Dict{String,Any}()
+    dict = Dict{String, Any}()
     @inbounds for (key, val) in primitive
         strSubType = string(key) * "()"
         push!(dict, strSubType => key())
@@ -179,7 +179,7 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
     uvw::T1,
     abc::T1,
     θ::T2,
-) where {T1<:AbstractVector{T} where {T},T2}
+) where {T1 <: AbstractVector{T} where {T}, T2}
     isapprox(norm(uvw), 1) ? nothing : uvw ./= norm(uvw)
 
     cosθ = cos(θ)
@@ -220,10 +220,10 @@ dimDot(
 Perform dot product along dimension `dim` of an array, returns a vector of dot products.
 """
 @inline function dimDot(
-    x::AbstractArray{T1,N},
-    y::AbstractArray{T2,N};
+    x::AbstractArray{T1, N},
+    y::AbstractArray{T2, N};
     dim::Int = 2,
-) where {T1,T2,N}
+) where {T1, T2, N}
     return vec(sum(x .* y, dims = dim))
 end
 
@@ -233,6 +233,6 @@ dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
 ```
 Calculate norms along dimension `dim` of an array, returns a vector of norms.
 """
-@inline function dimNorm(x::AbstractArray{T,N}; dim::Int = 2) where {T,N}
+@inline function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
     return vec(sqrt.(dimDot(x, x; dim = dim)))
 end

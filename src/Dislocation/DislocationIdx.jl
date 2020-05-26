@@ -28,7 +28,7 @@ provided.
 """
 @inline function coordIdx(
     network::DislocationNetwork,
-    index::Union{Int,AbstractArray{<:Int,N}},
+    index::Union{Int, AbstractArray{<:Int, N}},
 ) where {N}
     return network.coord[index, :]
 end
@@ -67,10 +67,10 @@ Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxCo
     return findall(x -> condition(x, args...), getproperty(network, fieldname))
 end
 @inline function idxCond(
-    data::Union{AbstractArray{<:Real,N1},AbstractArray{<:nodeType,N2}},
+    data::Union{AbstractArray{<:Real, N1}, AbstractArray{<:nodeType, N2}},
     val::Real;
     condition::Function = ==,
-) where {N1,N2}
+) where {N1, N2}
     return findall(x -> condition(x, val), data)
 end
 @inline function idxCond(

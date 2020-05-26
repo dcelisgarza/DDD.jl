@@ -321,7 +321,7 @@ end
 
 function splitNode end
 
-function coarsenMesh(
+function coarsenNetwork!(
     dlnParams::DislocationP,
     matParams::MaterialP,
     network::DislocationNetwork,
@@ -329,20 +329,19 @@ function coarsenMesh(
     # dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
 )
-    minArea = dlnParams.minArea^2
+    minAreaSq = dlnParams.minArea^2
     minSegLen = dlnParams.minSegLen
     maxSegLen = dlnParams.maxSegLen
-    tiny = eps(Float64)
 
     label = network.label
     links = network.links
-    connectivity = network.links
+    connectivity = network.connectivity
     linksConnect = network.linksConnect
     segForce = network.segForce
     nodeVel = network.nodeVel
 
     i = 1
-    return while i <= network.numNode
+    while i <= network.numNode
         # We only want to coarsen real internal nodes. Else we skip to the next node.
         if !(connectivity[i, 1] == 2 && label[i] == 1)
             i += 1
@@ -357,8 +356,8 @@ function coarsenMesh(
         colNotInLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
         colNotInLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
 
-        link1_nodeNotInLink = links[i, colNotInLink1] # Node i is connected to this node as part of link 1.
-        link2_nodeNotInLink = links[i, colNotInLink2] # Node i is connected to this node as part of link 2.
+        link1_nodeNotInLink = links[link1, colNotInLink1] # Node i is connected to this node as part of link 1.
+        link2_nodeNotInLink = links[link2, colNotInLink2] # Node i is connected to this node as part of link 2.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source, thus we skip to the next node.
         if label[link1_nodeNotInLink] == 2 && label[link2_nodeNotInLink] == 2
@@ -367,10 +366,20 @@ function coarsenMesh(
         end
 
         # Coordinate of node i
-        iCoord = coord[i, :]
+        iCoord = @SVector [coord[i, 1], coord[i, 2], coord[i, 3]]
         # Create a triangle formed by the three nodes involved in coarsening.
-        coordVec1 = coord[link1_nodeNotInLink, :] - iCoord # Vector between node 1 and the node it's connected to via link 1.
-        coordVec2 = coord[link2_nodeNotInLink, :] - iCoord # Vector between node 1 and the node it's connected to via link 2.
+        coordVec1 =
+            SVector(
+                coord[link1_nodeNotInLink, 1],
+                coord[link1_nodeNotInLink, 2],
+                coord[link1_nodeNotInLink, 3],
+            ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
+        coordVec2 =
+            SVector(
+                coord[link2_nodeNotInLink, 1],
+                coord[link2_nodeNotInLink, 2],
+                coord[link2_nodeNotInLink, 3],
+            ) - iCoord # Vector between node 1 and the node it's connected to via link 2.
         coordVec3 = vec2 - vec1 # Vector between both nodes connected to iCoord.
         # Lengths of the triangle sides.
         r1 = norm(coordVec1)
@@ -383,21 +392,31 @@ function coarsenMesh(
             continue
         end
 
-        # Heron's formula for the area of a triangle when we know its sides.
         # Half the triangle's perimeter.
         r0 = (r1 + r2 + r3) / 2
+        # Heron's formula for the area of a triangle when we know its sides.
         areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
         # Node i velocities.
-        iVel = nodeVel[i, :]
-        velVec1 = nodeVel[link1_nodeNotInLink, :] - iVel
-        velVec2 = nodeVel[link2_nodeNotInLink, :] - iVel
+        iVel = @SVector [nodeVel[i, 1], nodeVel[i, 2], nodeVel[i, 3]]
+        velVec1 =
+            SVector(
+                nodeVel[link1_nodeNotInLink, 1],
+                nodeVel[link1_nodeNotInLink, 2],
+                nodeVel[link1_nodeNotInLink, 3],
+            ) - iVel
+        velVec2 =
+            SVector(
+                nodeVel[link2_nodeNotInLink, 1],
+                nodeVel[link2_nodeNotInLink, 2],
+                nodeVel[link2_nodeNotInLink, 3],
+            ) - iVel
         velVec3 = velVec2 - velVec1
 
-        # Rate of change of side length with respect to time. We add eps(Float64) to avoid division by zero.
-        dr1dt = dot(coordVec1, velVec1) / (r1 + tiny)
-        dr2dt = dot(coordVec2, velVec2) / (r2 + tiny)
-        dr3dt = dot(coordVec3, velVec3) / (r3 + tiny)
+        # Rate of change of side length with respect to time. We add eps(typeof(r)) to avoid division by zero.
+        dr1dt = coordVec1 ⋅ velVec1 / (r1 + eps(typeof(r1)))
+        dr2dt = coordVec2 ⋅ velVec2 / (r2 + eps(typeof(r2)))
+        dr3dt = coordVec3 ⋅ velVec3 / (r3 + eps(typeof(r3)))
         dr0dt = (dr1dt + dr2dt + dr3dt) / 2
 
         # Rate of change of triangle area with respect to time.
@@ -407,7 +426,7 @@ function coarsenMesh(
         dAreaSqdt += r0 * (r0 - r1) * (r0 - r2) * (dr0dt - dr3dt)
 
         # Coarsen if the area is less than the minimum allowed and shrinking. Or if the length of either of its links is less than the minimum allowed. Else continue to the next node.
-        if !(areaSq < minArea && dAreaSqdt < 0 || r1 < minSegLen || r2 < minSegLen)
+        if !(areaSq < minAreaSq && dAreaSqdt < 0 || r1 < minSegLen || r2 < minSegLen)
             i += 1
             continue
         end
@@ -430,25 +449,96 @@ function coarsenMesh(
                 getSegmentIdx!(network)
                 # Calculate segment force for segment linkMerged.
                 for k in 1:2
-                    # Calculate mobility for the two nodes involved in linkMerged.
+                    # Calculate new velocity for the two nodes involved in linkMerged.
                 end
             end
         end
-        # remesh 60
     end
-
+    return network
 end
 
-#=
-function refineMesh(
+function refineNetwork!(
     dlnParams::DislocationP,
     matParams::MaterialP,
     network::DislocationNetwork,
-    mesh::RegularCuboidMesh,
-    dlnFEM::DislocationFEMCorrective;
+    # mesh::RegularCuboidMesh,
+    # dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
 )
 
+    maxAreaSq = dlnParams.maxArea^2
+    maxSegLen = dlnParams.maxSegLen
+    twoMinSegLen = 2 * dlnParams.minSegLen
+
+    label = network.label
+    links = network.links
+    connectivity = network.connectivity
+    linksConnect = network.linksConnect
+    segForce = network.segForce
+    nodeVel = network.nodeVel
+    numNode = network.numNode
+
+    for i in 1:numNode
+        if connectivity[i, 1] == 2 && label[i] == 1
+            link1 = connectivity[i, 2]  # First connection.
+            link2 = connectivity[i, 4]  # Second connection.
+            colLink1 = connectivity[i, 3]   # Column where node i is in links of the first connection.
+            colLink2 = connectivity[i, 5]   # Column where node i is in links of the second connection.
+            colNotInLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
+            colNotInLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
+            link1_nodeNotInLink = links[link1, colNotInLink1] # Node i is connected to this node as part of link 1.
+            link2_nodeNotInLink = links[link1, colNotInLink2] # Node i is connected to this node as part of link 2.
+
+            # Create triangle formed by the node and its two links.
+            iCoord = @SVector [coord[i, 1], coord[i, 2], coord[i, 3]]
+            # Side 1
+            coordVec1 =
+                SVector(
+                    coord[link1_nodeNotInLink, 1],
+                    coord[link1_nodeNotInLink, 2],
+                    coord[link1_nodeNotInLink, 3],
+                ) - iCoord
+            # Side 2
+            coordVec2 =
+                SVector(
+                    coord[link2_nodeNotInLink, 1],
+                    coord[link2_nodeNotInLink, 2],
+                    coord[link2_nodeNotInLink, 3],
+                ) - iCoord
+            # Side 3 (close the triangle)
+            coordVec3 = coordVec2 - coordVec1
+            # Side lengths.
+            r1 = norm(coordVec1)
+            r2 = norm(coordVec2)
+            r3 = norm(coordVec3)
+
+            # Half the triangle's perimeter.
+            r0 = (r1 + r2 + r3) / 2
+            # Heron's formula for the area of a triangle when we know its sides.
+            areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
+
+            # Check if we have to split the first link.
+            if (
+                areaSq > maxAreaSq && r1 >= twoMinSegLen && link1_nodeNotInLink <= numNode
+            ) || r1 > maxSegLen
+                # remesh 143, make into function.
+            end
+
+            # Check if we have to split the second link.
+            if (
+                areaSq > maxAreaSq && r2 >= twoMinSegLen && link2_nodeNotInLink <= numNode
+            ) || r2 > maxSegLen
+                # remesh 121, make into function
+            end
+
+        elseif connectivity[i, 1] > 2 && label[i] == 1
+            # remesh 163
+        end
+    end
+
+    return network
+end
+#=
 end
 
 function remeshNetwork(

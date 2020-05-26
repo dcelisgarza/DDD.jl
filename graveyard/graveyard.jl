@@ -39,9 +39,9 @@ Translates the string name of enumerated types to the actual Julia type.
 """
 @inline function translateEnum(
     valType::DataType,
-    dict::Dict{T1,T2},
+    dict::Dict{T1, T2},
     key::T3,
-) where {T1,T2,T3}
+) where {T1, T2, T3}
     instanceDict = makeInstanceDict(valType)
     @inbounds @simd for i in eachindex(dict[key])
         dict[key][i] = instanceDict[dict[key][i]]
@@ -61,9 +61,9 @@ Translates the string name of enumerated types to the actual Julia type.
 """
 @inline function translateEnum(
     valType::DataType,
-    dict::Dict{T1,T2},
+    dict::Dict{T1, T2},
     key::T3,
-) where {T1,T2,T3}
+) where {T1, T2, T3}
     instanceDict = makeInstanceDict(valType)
     @inbounds @simd for i in eachindex(dict[key])
         dict[key][i] = instanceDict[dict[key][i]]

@@ -40,7 +40,7 @@ end
 ) where {T}
     return bVec ./ norm(bVec)
 end
-Base.length(::T) where {T<:AbstractDlnSeg} = 1
+Base.length(::T) where {T <: AbstractDlnSeg} = 1
 
 # Dislocationloop.
 Base.length(::DislocationLoop) = 1
@@ -88,7 +88,7 @@ function Base.push!(network::DislocationNetwork, n::Int)
     network.nodeVel = [network.nodeVel; zeros(n, 3)]
     return network
 end
-function Base.getindex(network::DislocationNetwork, i::Union{Int,AbstractVector{Int}})
+function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector{Int}})
     return network.links[i, :],
     network.slipPlane[i, :],
     network.bVec[i, :],

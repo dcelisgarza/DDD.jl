@@ -115,7 +115,7 @@ julia> prisPentagon = DislocationLoop(
           label = nodeType[1; 2; 1; 2; 1],    # Node labels, has to be equal to the number of nodes.
           buffer = 0.0,   # Buffer to increase the dislocation spread.
           range = Float64[-100 -100 -100;   # Distribution range
-                           100  100  100],   # [xmin, ymin, zmin; xmax, ymax, zmax].
+                           100  100  100],  # [xmin, ymin, zmin; xmax, ymax, zmax].
           dist = Rand(),  # Loop distribution.
       )
 DislocationLoop{loopPrism,Int64,Array{Float64,1},Int64,Array{Int64,2},Array{Float64,2},Array{nodeType,1},Float64,Rand}(loopPrism(), 5, 1, 20, [10.0, 10.0, 10.0, 10.0, 10.0], 1, [1 2; 2 3; … ; 4 5; 5 1], [0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258; … ; 0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258], [0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0; … ; 0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0], [-1.932030909139515 -1.932030909139515 -8.055755266097462; 4.820453044614565 4.820453044614565 -5.087941102678986; … ; -1.785143053581134 -1.785143053581134 8.123251093712414; -6.014513813778146 -6.014513813778146 0.10921054317980072], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob], 0.0, [-100.0 -100.0 -100.0; 100.0 100.0 100.0], Rand())
@@ -195,9 +195,15 @@ julia> plot!(fig2, camera=(110,40), size=(400,400))
 
 ## IO
 
-The package provides a way to load and save its parameters using `JSON` files. While this is *not* the most performant format for IO, it is a popular and portable, web-friendly file format that is very human readable (and therefore easy to manually create).
+The package provides a way to load and save its parameters using `JSON` files. While this is *not* the most performant format for IO, it is a popular and portable, web-friendly file format that is very human readable (and therefore easy to manually create). It also produces smaller file sizes both compressed and uncompressed. Which is why it is so popular for online data sharing.
 
-This is a sample `JSON` file for a loop type. They can be compactified by editors to decrease storage space by removing unnecessary line breaks and spaces. Here we show a somewhat longified view which is very human readable and fairly easy to create manually.
+`JSON` files are representations of dictionaries with `(key, value)` pairs, which are analogous to the `(key, value)` pair of structures. This makes it so any changes to any structure will automatically be taken care of by the `JSON` library. Arrays are recursively linearised into vectors of vectors using the calling language's preferred storage order. This means arrays preserve their shape and dimensionality regardless of whether the inputting or outputting language stores arrays in column- or row-major order.
+
+They also have the added advantage of being designed for sending over the web, so they have small compressed and uncompressed file sizes, smaller than `BSON`, `HDF5` and its variants such as `MAT` and `JLD2` formats. They also aren't plagued by the portability issues these other formats have, as well as being generally easier to read, create and work with, while being within a factor of ≈3 of the aforementioned filetypes. They do however, allocate more memory than the others while being created, but the end result is half the size or less of these other file formats.
+
+### Sample JSON File
+
+This is a sample `JSON` file for a dislocation loop. They can be compactified by editors to decrease storage space by removing unnecessary line breaks and spaces. Here we show a somewhat longified view which is very human readable and trivially easy to create manually. Note that arrays are recursively linearised as vectors of vectors, where the linearisation follows the calling language's memory order. This means arrays will keep their shape and dimensionality regardless of the language that opens the JSON file.
 ```JSON
 [
   {
@@ -214,19 +220,90 @@ This is a sample `JSON` file for a loop type. They can be compactified by editor
   }
 ]
 ```
-`JSON` files are representations of dictionaries with `(key, value)` pairs, which are analogous to the `(key, value)` pair of structures. This makes it so any changes to any structure will automatically be taken care of by the `JSON` library, even preserving array shapes regardless of whether they are column- or row-major. It also guarantees portability between ecosystems since they can easily be loaded into dictionaries.
+This file describes an array, denoted by the `[]` at the top and bottom of the file, of a structure denoted by the `{}` on the second and penultimate lines. We could remove the `[]` but having all files be represent arrays (even if they are of length 1) simplifies users' and developers' lives by letting the same IO functions work for every case.
 
-They also have the added advantage of being designed for sending over the web, so they have good compression ratios and enable open science by not requiring specialised IO to view.
+The keys are on the left side of the colon and the values on the right. This would get loaded to a dictionary with the same `(key, value)` pair shown here. Since the keys are the structure's field names and the values their value, everything can be easily matched to the constructor function.
 
-For the sake of open, reproducible and portable science it is recommended users make use of `JSON` or a standard delimited file format for their IO. If IO is a performance bottleneck these are some incremental steps one should take to improve it before creating a custom IO format.
+Also, with since `JSON` files represent dictionaries, users can add irrelevant data to the file either as extra entries to the top level array, or into the structure definition without breaking their ability to use the file.
+
+### Initialisation, Data Dump, and Reloading
+
+One can load all their parameters at once like so.
+```julia
+fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
+fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
+fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
+fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
+fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
+    fileDislocationP,
+    fileMaterialP,
+    fileIntegrationP,
+    fileSlipSystem,
+    fileDislocationLoop,
+)
+```
+which not only loads the data but returns the aforementioned structures. If there is a single file holding all the parameters, then all the filenames would be the same, but nothing else would change as the file would be loaded into a large dictionary and only the relevant `(key, value)` pairs are used in each case.
+
+Users may also load individual structures as follows.
+```julia
+dictDislocationP = load(fileDislocationP)
+dislocationP = loadDislocationP(dictDislocationP[1])
+
+dictMaterialP = load(fileMaterialP)
+materialP = loadMaterialP(dictMaterialP[1])
+
+dictIntegrationP = load(fileIntegrationP)
+integrationP = loadIntegrationP(dictIntegrationP[1])
+
+dictSlipSystem = load(fileSlipSystem)
+slipSystems = loadSlipSystem(dictSlipSystem[1])
+
+# There can be multiple dislocation types per simulation.
+dictDislocationLoop = load(fileDislocationLoop)
+dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
+for i in eachindex(dislocationLoop)
+    dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+end
+```
+The reason why all the dictionary arguments of the `load<struct_name>` all have an index is that the files specify an array, as that keeps all files consistent with each other, particularly when saving more than one variable or constant in a single file. Individually loading files like this is useful when recovering previous save states where the data was dumped into a single file, as shown here.
+```julia
+# Dump simulation parameters into a single file. Creates an array where each entry is one of the structs.
+paramDump = "../outputs/simParams/sampleDump.JSON"
+save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
+
+# Dump network data into a separate file.
+networkDump = "../outputs/dln/sampleNetwork.JSON"
+save(networkDump, network)
+
+# Reload parameters.
+simulation = load(paramDump)
+dlnParams2 = loadDislocationP(simulation[1])
+matParams2 = loadMaterialP(simulation[2])
+intParams2 = loadIntegrationP(simulation[3])
+slipSystems2 = loadSlipSystem(simulation[4])
+dislocationLoop2 = zeros(DislocationLoop, length(simulation[5]))
+for i in eachindex(dislocationLoop2)
+    dislocationLoop2[i] = loadDislocationLoop(simulation[5][i], slipSystems2)
+end
+
+# Reload network.
+network2 = loadNetwork(networkDump)
+```
+The reason why `loadNetwork()` is different from the others is that the other values are constants, so for record keeping they would only need to be saved once per simulation. The network might have to be saved at multiple times so it gets a simpler function that calls `load()` internally.
+
+### Against the Unbridled Pursuit of Performance
+
+For the sake of open, reproducible and portable science it is recommended users utilise `JSON` or a standard delimited file format for their IO. If IO is a performance bottleneck these are some incremental steps one should take to improve it before creating a custom IO format. Beware that your mileage may vary when using other IO formats, some may not be fully mature yet others may be abandoned in favour of better implementations.
+
 1. Use buffered IO.
 1. Use Julia's in-built task and asyncronous functionality via `tasks` and `async` for either multiple IO streams or an asyncronous IO process while the other threads/cores carry on with the simulation.
-1. Use `BSON`, `JSON`'s binary counterpart, though this may break compatibility with other systems, particularly those with different word size and architecture.
+1. Use [`BSON`](https://github.com/JuliaIO/BSON.jl), `JSON`'s binary counterpart, though this may break compatibility with other systems, particularly those with different word size and architecture. Furthermore, the binary nature of `BSON` may be used to inject code into a programme so should only be used for self-generated files.
+1. Use [`JLD2`](https://github.com/JuliaIO/JLD2.jl). Though the package currently says it has remained largely untested in the wild.
 1. Use `DelimitedFiles`.
 1. Use binary streams.
+1. Use [`Parquet`](https://github.com/JuliaIO/Parquet.jl)
 1. Create your own format and IO stream.
-
-TO BE WRITTEN: USE IO TO INITIALISE SIMULATION
 
 TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
 
@@ -278,4 +355,6 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
     - [ ] Parallelisation
 
 ### Tentative Objectives
+
 - [ ] Custom 3-vec type, place x,y,z coordinates in contiguous memory instead of columns, ie [x1 y1 z1; x2 y2 z2] -> [x1;y1;z1;x2;y2;z2], have to define custom array type, `getindex(arr, (a,b)) = arr[3*(a-1)+b]`, out of bounds and all the rest. Watch [this](https://www.youtube.com/watch?v=jS9eouMJf_Y).
+- [ ] Keep an eye on [JuliaIO](https://github.com/JuliaIO), [JuliaFEM](https://github.com/JuliaFEM/), [SciML](https://github.com/sciml) because their methods might be useful.

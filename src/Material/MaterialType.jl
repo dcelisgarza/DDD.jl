@@ -23,7 +23,7 @@ struct MaterialP{T1, T2}
 end
 ```
 """
-struct MaterialP{T1,T2}
+struct MaterialP{T1, T2}
     μ::T1
     μMag::T1
     ν::T1
