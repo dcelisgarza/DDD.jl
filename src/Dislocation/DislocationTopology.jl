@@ -353,14 +353,14 @@ function coarsenNetwork!(
         colInLink1 = connectivity[i, 3] # Column of node i in link 1
         colInLink2 = connectivity[i, 5] # Column of node i in link 2
 
-        colNotInLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
-        colNotInLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
+        oppColLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
+        oppColLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
 
-        link1_nodeNotInLink = links[link1, colNotInLink1] # Node i is connected to this node as part of link 1.
-        link2_nodeNotInLink = links[link2, colNotInLink2] # Node i is connected to this node as part of link 2.
+        link1_nodeOppI = links[link1, oppColLink1] # Node i is connected to this node as part of link 1.
+        link2_nodeOppI = links[link2, oppColLink2] # Node i is connected to this node as part of link 2.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source, thus we skip to the next node.
-        if label[link1_nodeNotInLink] == 2 && label[link2_nodeNotInLink] == 2
+        if label[link1_nodeOppI] == 2 && label[link2_nodeOppI] == 2
             i += 1
             continue
         end
@@ -370,15 +370,15 @@ function coarsenNetwork!(
         # Create a triangle formed by the three nodes involved in coarsening.
         coordVec1 =
             SVector(
-                coord[link1_nodeNotInLink, 1],
-                coord[link1_nodeNotInLink, 2],
-                coord[link1_nodeNotInLink, 3],
+                coord[link1_nodeOppI, 1],
+                coord[link1_nodeOppI, 2],
+                coord[link1_nodeOppI, 3],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
         coordVec2 =
             SVector(
-                coord[link2_nodeNotInLink, 1],
-                coord[link2_nodeNotInLink, 2],
-                coord[link2_nodeNotInLink, 3],
+                coord[link2_nodeOppI, 1],
+                coord[link2_nodeOppI, 2],
+                coord[link2_nodeOppI, 3],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 2.
         coordVec3 = vec2 - vec1 # Vector between both nodes connected to iCoord.
         # Lengths of the triangle sides.
@@ -401,15 +401,15 @@ function coarsenNetwork!(
         iVel = @SVector [nodeVel[i, 1], nodeVel[i, 2], nodeVel[i, 3]]
         velVec1 =
             SVector(
-                nodeVel[link1_nodeNotInLink, 1],
-                nodeVel[link1_nodeNotInLink, 2],
-                nodeVel[link1_nodeNotInLink, 3],
+                nodeVel[link1_nodeOppI, 1],
+                nodeVel[link1_nodeOppI, 2],
+                nodeVel[link1_nodeOppI, 3],
             ) - iVel
         velVec2 =
             SVector(
-                nodeVel[link2_nodeNotInLink, 1],
-                nodeVel[link2_nodeNotInLink, 2],
-                nodeVel[link2_nodeNotInLink, 3],
+                nodeVel[link2_nodeOppI, 1],
+                nodeVel[link2_nodeOppI, 2],
+                nodeVel[link2_nodeOppI, 3],
             ) - iVel
         velVec3 = velVec2 - velVec1
 
@@ -431,10 +431,10 @@ function coarsenNetwork!(
             continue
         end
 
-        # Merge node i into node link2_nodeNotInLink.
-        nodeMerged = mergeNode!(network, link2_nodeNotInLink, i)
+        # Merge node i into node link2_nodeOppI.
+        nodeMerged = mergeNode!(network, link2_nodeOppI, i)
 
-        # If link2_nodeNotInLink no longer exists there is nothing to calculate and we proceed to the next iteration.
+        # If link2_nodeOppI no longer exists there is nothing to calculate and we proceed to the next iteration.
         nodeMerged == 0 ? continue : nothing
 
         for j in 1:connectivity[nodeMerged, 1]
@@ -444,7 +444,7 @@ function coarsenNetwork!(
             colNotLinkMerged = 3 - colLinkMerged
             nodeNotMerged = links[linkMerged, colNotLinkMerged]
 
-            if nodeNotMerged == i || nodeNotMerged == link1_nodeNotInLink
+            if nodeNotMerged == i || nodeNotMerged == link1_nodeOppI
                 #remesh 67
                 getSegmentIdx!(network)
                 # Calculate segment force for segment linkMerged.
@@ -484,26 +484,26 @@ function refineNetwork!(
             link2 = connectivity[i, 4]  # Second connection.
             colLink1 = connectivity[i, 3]   # Column where node i is in links of the first connection.
             colLink2 = connectivity[i, 5]   # Column where node i is in links of the second connection.
-            colNotInLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
-            colNotInLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
-            link1_nodeNotInLink = links[link1, colNotInLink1] # Node i is connected to this node as part of link 1.
-            link2_nodeNotInLink = links[link1, colNotInLink2] # Node i is connected to this node as part of link 2.
+            oppColLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
+            oppColLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
+            link1_nodeOppI = links[link1, oppColLink1] # Node i is connected to this node as part of link 1.
+            link2_nodeOppI = links[link1, oppColLink2] # Node i is connected to this node as part of link 2.
 
             # Create triangle formed by the node and its two links.
             iCoord = @SVector [coord[i, 1], coord[i, 2], coord[i, 3]]
             # Side 1
             coordVec1 =
                 SVector(
-                    coord[link1_nodeNotInLink, 1],
-                    coord[link1_nodeNotInLink, 2],
-                    coord[link1_nodeNotInLink, 3],
+                    coord[link1_nodeOppI, 1],
+                    coord[link1_nodeOppI, 2],
+                    coord[link1_nodeOppI, 3],
                 ) - iCoord
             # Side 2
             coordVec2 =
                 SVector(
-                    coord[link2_nodeNotInLink, 1],
-                    coord[link2_nodeNotInLink, 2],
-                    coord[link2_nodeNotInLink, 3],
+                    coord[link2_nodeOppI, 1],
+                    coord[link2_nodeOppI, 2],
+                    coord[link2_nodeOppI, 3],
                 ) - iCoord
             # Side 3 (close the triangle)
             coordVec3 = coordVec2 - coordVec1
@@ -518,17 +518,81 @@ function refineNetwork!(
             areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
             # Check if we have to split the first link.
-            if (
-                areaSq > maxAreaSq && r1 >= twoMinSegLen && link1_nodeNotInLink <= numNode
-            ) || r1 > maxSegLen
-                # remesh 143, make into function.
+            if (areaSq > maxAreaSq && r1 >= twoMinSegLen && link1_nodeOppI <= numNode) ||
+               r1 > maxSegLen
+                midCoord =
+                    (
+                        SVector(coord[i, 1], coord[i, 2], coord[i, 3]) + SVector(
+                            coord[link1_nodeOppI, 1],
+                            coord[link1_nodeOppI, 2],
+                            coord[link1_nodeOppI, 3],
+                        )
+                    ) / 2
+
+                midVel =
+                    (
+                        SVector(nodeVel[i, 1], nodeVel[i, 2], nodeVel[i, 3]) + SVector(
+                            nodeVel[link1_nodeOppI, 1],
+                            nodeVel[link1_nodeOppI, 2],
+                            nodeVel[link1_nodeOppI, 3],
+                        )
+                    ) / 2
+
+                splitNode!(network, i, 1, midCoord, midVel)
+
+                newNode = network.numNode
+                newLink = network.numSeg
+
+                slipPlane[link1, :] == slipPlane[link2, :] ?
+                slipPlane[newlink, :] = slipPlane[link1, :] : nothing
+
+                for j in 1:connectivity[newNode, 1]
+                    link = connectivity[newNode, 2 * j]
+                    colLink = connectivity[newNode, 2 * j + 1]
+                    oppColLink = 3 - colLink
+                    oldNode = links[link, oppColLink]
+                    # remesh 154
+                end
+                # remesh 159
             end
 
             # Check if we have to split the second link.
-            if (
-                areaSq > maxAreaSq && r2 >= twoMinSegLen && link2_nodeNotInLink <= numNode
-            ) || r2 > maxSegLen
-                # remesh 121, make into function
+            if (areaSq > maxAreaSq && r2 >= twoMinSegLen && link2_nodeOppI <= numNode) ||
+               r2 > maxSegLen
+               midCoord =
+                   (
+                       SVector(coord[i, 1], coord[i, 2], coord[i, 3]) + SVector(
+                           coord[link2_nodeOppI, 1],
+                           coord[link2_nodeOppI, 2],
+                           coord[link2_nodeOppI, 3],
+                       )
+                   ) / 2
+
+               midVel =
+                   (
+                       SVector(nodeVel[i, 1], nodeVel[i, 2], nodeVel[i, 3]) + SVector(
+                           nodeVel[link2_nodeOppI, 1],
+                           nodeVel[link2_nodeOppI, 2],
+                           nodeVel[link2_nodeOppI, 3],
+                       )
+                   ) / 2
+
+               splitNode!(network, i, 2, midCoord, midVel)
+
+               newNode = network.numNode
+               newLink = network.numSeg
+
+               slipPlane[link2, :] == slipPlane[link1, :] ?
+               slipPlane[newlink, :] = slipPlane[link2, :] : nothing
+
+               for j in 1:connectivity[newNode, 1]
+                   link = connectivity[newNode, 2 * j]
+                   colLink = connectivity[newNode, 2 * j + 1]
+                   oppColLink = 3 - colLink
+                   oldNode = links[link, oppColLink]
+                   # remesh 133
+               end
+               # remesh 139
             end
 
         elseif connectivity[i, 1] > 2 && label[i] == 1
