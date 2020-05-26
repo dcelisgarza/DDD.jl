@@ -1,3 +1,6 @@
+## Topology functions
+
+## Deletion
 """
 ```
 removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = nothing)
@@ -457,6 +460,52 @@ function coarsenNetwork!(
     return network
 end
 
+## Addition
+function splitNode!(
+    network::DislocationNetwork,
+    node::Int,
+    splitConnect::Int,
+    midCoord::AbstractArray{T, N},
+    midVel::AbstractArray{T, N},
+) where {T, N}
+
+    # Remove connection from node in preparation of adding the new node.
+    removeConnection!(network, node, splitConnect)
+
+    # New node.
+    newNode = network.numNode + 1
+    # Allocate memory.
+    if numNode > length(network.label)
+        # A good heuristic for memory allocation is to allocate an extra N log₂(N) entries.
+        numNewEntries = Int(round(newNode * log2(newNode)))
+        push!(network, numNewEntries)
+        push!(network.connectivity, zeros(numNewEntries, size(network.connectivity)))
+        push!(network.linksConnect, zeros(numNewEntries, size(network.linksConnect)))
+    end
+
+    links = network.links
+    network.coord[newNode, :] = midCoord
+    network.label[newNode] = nodeType(1)
+    network.nodeVel[newNode, :] = midVel
+
+    connectivity = network.connectivity
+    linksConnect = network.linksConnect
+
+    # Create connectivity for the new node and update links and linksConnect.
+    # This only does the first connection. The rest are made after in case they are needed.
+    connectivity[newNode, 1] = 1
+    connectivity[newNode, 2:3] =
+        connectivity[node, (2 * splitConnect):(2 * splitConnect + 1)]
+    link = connectivity[newNode, 2]
+    colLink = connectivity[newNode, 3]
+    links[link, colLink] = newNode
+    linksConnect[link, colLink] = 1
+
+    # Check if we need a new link between newNode and node for Burgers vector conservation.
+
+    return network
+end
+
 function refineNetwork!(
     dlnParams::DislocationP,
     matParams::MaterialP,
@@ -559,40 +608,40 @@ function refineNetwork!(
             # Check if we have to split the second link.
             if (areaSq > maxAreaSq && r2 >= twoMinSegLen && link2_nodeOppI <= numNode) ||
                r2 > maxSegLen
-               midCoord =
-                   (
-                       SVector(coord[i, 1], coord[i, 2], coord[i, 3]) + SVector(
-                           coord[link2_nodeOppI, 1],
-                           coord[link2_nodeOppI, 2],
-                           coord[link2_nodeOppI, 3],
-                       )
-                   ) / 2
+                midCoord =
+                    (
+                        SVector(coord[i, 1], coord[i, 2], coord[i, 3]) + SVector(
+                            coord[link2_nodeOppI, 1],
+                            coord[link2_nodeOppI, 2],
+                            coord[link2_nodeOppI, 3],
+                        )
+                    ) / 2
 
-               midVel =
-                   (
-                       SVector(nodeVel[i, 1], nodeVel[i, 2], nodeVel[i, 3]) + SVector(
-                           nodeVel[link2_nodeOppI, 1],
-                           nodeVel[link2_nodeOppI, 2],
-                           nodeVel[link2_nodeOppI, 3],
-                       )
-                   ) / 2
+                midVel =
+                    (
+                        SVector(nodeVel[i, 1], nodeVel[i, 2], nodeVel[i, 3]) + SVector(
+                            nodeVel[link2_nodeOppI, 1],
+                            nodeVel[link2_nodeOppI, 2],
+                            nodeVel[link2_nodeOppI, 3],
+                        )
+                    ) / 2
 
-               splitNode!(network, i, 2, midCoord, midVel)
+                splitNode!(network, i, 2, midCoord, midVel)
 
-               newNode = network.numNode
-               newLink = network.numSeg
+                newNode = network.numNode
+                newLink = network.numSeg
 
-               slipPlane[link2, :] == slipPlane[link1, :] ?
-               slipPlane[newlink, :] = slipPlane[link2, :] : nothing
+                slipPlane[link2, :] == slipPlane[link1, :] ?
+                slipPlane[newlink, :] = slipPlane[link2, :] : nothing
 
-               for j in 1:connectivity[newNode, 1]
-                   link = connectivity[newNode, 2 * j]
-                   colLink = connectivity[newNode, 2 * j + 1]
-                   oppColLink = 3 - colLink
-                   oldNode = links[link, oppColLink]
-                   # remesh 133
-               end
-               # remesh 139
+                for j in 1:connectivity[newNode, 1]
+                    link = connectivity[newNode, 2 * j]
+                    colLink = connectivity[newNode, 2 * j + 1]
+                    oppColLink = 3 - colLink
+                    oldNode = links[link, oppColLink]
+                    # remesh 133
+                end
+                # remesh 139
             end
 
         elseif connectivity[i, 1] > 2 && label[i] == 1
