@@ -22,7 +22,7 @@ export getSegmentIdx!, makeConnect!
 export checkNetwork, loopDistribution, calcSelfForce
 export calcSegSegForce, calcParSegSegForce, calcSegForce
 # Topology
-export removeNode!, mergeNode!
+export removeNode!, mergeNode!, splitNode!
 include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")
