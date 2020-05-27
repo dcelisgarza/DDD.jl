@@ -158,7 +158,6 @@ At a high level this works by creating a local coordinate frame using the line d
 
     # Constants.
     μ = matParams.μ
-    ν = matParams.ν
     μ4π = matParams.μ4π
     μ8π = matParams.μ8π
     μ4πν = matParams.μ4πν
@@ -370,7 +369,6 @@ end
         d = (R2 ⋅ t2ct1) * omcSqI
 
         μ4πd = μ4π * d
-        μ8πd = μ8π * d
         μ4πνd = μ4πν * d
         μ4πνdSq = μ4πνd * d
         μ4πνdCu = μ4πνdSq * d

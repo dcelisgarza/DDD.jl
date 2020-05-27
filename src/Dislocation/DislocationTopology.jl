@@ -193,7 +193,6 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     bVec = network.bVec
     coord = network.coord
     label = network.label
-    segForce = network.segForce
     nodeVel = network.nodeVel
     connectivity = network.connectivity
     linksConnect = network.linksConnect
