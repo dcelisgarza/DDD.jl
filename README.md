@@ -318,11 +318,11 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
     - [ ] Asyncronicity
 - [ ] Topology functions
   - [ ] Internal Remeshing
-    - [ ] Refine mesh
+    - [ ] Coarsen mesh
       - [x] Merge nodes
         - [ ] Test all edge cases
-    - [ ] Coarsen mesh
-      - [ ] Split nodes
+    - [ ] Refine mesh
+      - [x] Split nodes
     - [ ] Surface remeshing
     - [ ] Virtual node remeshing
 - [x] Self-segment force

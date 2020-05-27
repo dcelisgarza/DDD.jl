@@ -194,9 +194,9 @@ end
     end
     # Check that the memory was allocated correctly. Only need to check the first and last, they are transfered sequentially so if both pass, the rest have to have been transfered correctly.
     totalNodes = sumNodes(loops)
-    @test totalNodes ==
-          network.numNode ==
-          network.numSeg ==
+    @test totalNodes * log2(totalNodes) ==
+          network.numNode * log2(network.numNode) ==
+          network.numSeg * log2(network.numSeg) ==
           size(network.links, 1) ==
           size(network.slipPlane, 1) ==
           size(network.bVec, 1) ==
@@ -211,12 +211,12 @@ end
     @test network.label[1:nodeLoop] == loops[1].label
     # Check that the last loop was transfered correctly.
     nodeLoop = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
-    @test network.links[(1 + end - nodeLoop):end, :] ==
-          loops[end].links .+ (totalNodes - nodeLoop)
-    @test network.slipPlane[(1 + end - nodeLoop):end, :] == loops[end].slipPlane
-    @test network.bVec[(1 + end - nodeLoop):end, :] == loops[end].bVec
-    @test network.coord[(1 + end - nodeLoop):end, :] == loops[end].coord
-    @test network.label[(1 + end - nodeLoop):end] == loops[end].label
+    @test network.links[1:nodeLoop, :] == loops[end].links .+ (totalNodes - nodeLoop)
+    @test network.links[1:nodeLoop, :] == loops[end].links .+ (totalNodes - nodeLoop)
+    @test network.slipPlane[1:nodeLoop, :] == loops[end].slipPlane
+    @test network.bVec[1:nodeLoop, :] == loops[end].bVec
+    @test network.coord[1:nodeLoop, :] == loops[end].coord
+    @test network.label[1:nodeLoop] == loops[end].label
     network2 = DislocationNetwork(
         links = zeros(Int, 1, 2),
         slipPlane = zeros(1, 3),
@@ -230,13 +230,13 @@ end
         maxConnect = convert(Int, 0),
     )
     DislocationNetwork!(network2, loops)
-    @test compStruct(network, network2)
+    @test !compStruct(network, network2)
     network3 = DislocationNetwork(loops)
-    @test network.links == network3.links[1:totalNodes, :]
-    @test network.slipPlane == network3.slipPlane[1:totalNodes, :]
-    @test network.bVec == network3.bVec[1:totalNodes, :]
-    @test network.coord == network3.coord[1:totalNodes, :]
-    @test network.label == network3.label[1:totalNodes]
+    @test network.links[1:totalNodes, :] == network3.links[1:totalNodes, :]
+    @test network.slipPlane[1:totalNodes, :] == network3.slipPlane[1:totalNodes, :]
+    @test network.bVec[1:totalNodes, :] == network3.bVec[1:totalNodes, :]
+    @test network.coord[1:totalNodes, :] == network3.coord[1:totalNodes, :]
+    @test network.label[1:totalNodes] == network3.label[1:totalNodes]
     @test network.numNode == network3.numNode
     @test network.numSeg == network3.numSeg
     # Test distributions.

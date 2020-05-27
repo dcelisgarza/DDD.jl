@@ -624,7 +624,7 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
     sources::T1,
     maxConnect::T2 = 4,
     args...;
-    memBuffer::T2 = 10,
+    memBuffer = nothing,
     checkConsistency::T3 = true,
     kw...,
 ) where {
@@ -641,7 +641,7 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
     # Memory buffer.
-    nodeBuffer::Int = nodeTotal * memBuffer
+    isnothing(memBuffer) ? nodeBuffer = Int(nodeTotal*round(log2(nodeTotal))) : nodeBuffer = nodeTotal * Int(memBuffer)
 
     # Allocate memory.
     links = zeros(Int, nodeBuffer, 2)
@@ -752,14 +752,11 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
     end
 
     # Allocate memory.
-    available = findfirst(x -> x == 0, network.label)
-    # If there's memory available.
-    if available == nothing
-        push!(network, nodeTotal)
-        # If there's no memory, calculate how much is neaded to add the extra data.
-    else
-        check = length(network.label) - (available - 1) - nodeTotal
-        check < 0 ? push!(network, -check) : nothing
+    lenLabel = length(network.label)
+    diff = lenLabel - nodeTotal
+    if nodeTotal > diff
+        newEntries = Int(nodeTotal * round(log2(nodeTotal)))
+        push!(network, newEntries)
     end
 
     initIdx::Int = 1
