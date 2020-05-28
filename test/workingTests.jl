@@ -218,3 +218,18 @@ n22 = (2.0, 1.0, 0.0)
 
 Fnode1, Fnode2, Fnode3, Fnode4 =
     calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
+
+
+x = rand(3, 10000000)
+xt = copy(transpose(x))
+y = transpose(rand(3, 10000000))
+yt = copy(transpose(y))
+function foo(x)
+    for i in 1:size(x, 1)
+        (x[i, :] .* i .- i).^i
+    end
+end
+@time foo(x)
+@time foo(xt)
+@time foo(y)
+@time foo(yt)
