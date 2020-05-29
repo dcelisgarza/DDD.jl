@@ -1,5 +1,6 @@
 using SafeTestsets
 
+timeStart = time_ns()
 @safetestset "Miscelaneous" begin
     include("./MiscTest.jl")
 end
@@ -21,6 +22,6 @@ end
 @safetestset "Post-process" begin
     include("./PlotTest.jl")
 end
-# @safetestset "Performant code" begin
-#     include("performantCodeTest.jl")
-# end
+
+timeEnd = time_ns()
+println("\nTesting Time (ns): ", timeEnd - timeStart)
