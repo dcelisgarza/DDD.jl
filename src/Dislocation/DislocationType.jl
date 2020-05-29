@@ -752,9 +752,8 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
     end
 
     # Allocate memory.
-    lenLabel = length(network.label)
-    diff = lenLabel - nodeTotal
-    if nodeTotal > diff
+    available = length(findall(x -> x == 0, network.label))
+    if nodeTotal > available
         newEntries = Int(nodeTotal * round(log2(nodeTotal)))
         push!(network, newEntries)
     end

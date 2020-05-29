@@ -57,8 +57,8 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     coord = network.coord
     numSeg = network.numSeg
     # Un normalised segment vectors.
-    bVec = network.bVec[idx[:, 1], :]
-    tVec = coord[idx[:, 3], :] - coord[idx[:, 2], :]
+    bVec = network.bVec[idx[1:numSeg, 1], :]
+    tVec = coord[idx[1:numSeg, 3], :] - coord[idx[1:numSeg, 2], :]
 
     # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
     L = zeros(numSeg)
@@ -169,9 +169,9 @@ At a high level this works by creating a local coordinate frame using the line d
     numSeg = network.numSeg
     idx = network.segIdx
     coord = network.coord
-    bVec = network.bVec[idx[:, 1], :]
-    node1 = coord[idx[:, 2], :]
-    node2 = coord[idx[:, 3], :]
+    bVec = network.bVec[idx[1:numSeg, 1], :]
+    node1 = coord[idx[1:numSeg, 2], :]
+    node2 = coord[idx[1:numSeg, 3], :]
     SegSegForce = zeros(numSeg, 3, 2)
 
     if parallel

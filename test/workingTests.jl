@@ -38,8 +38,9 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileSlipSystem,
     fileDislocationLoop,
 )
-
-network = DislocationNetwork(dislocationLoop; memBuffer = 10)
+dislocationLoop
+network = DislocationNetwork(dislocationLoop, memBuffer = 1)
+DislocationNetwork!(network, dislocationLoop)
 
 pentagon = DislocationLoop(
     loopPrism();
@@ -80,6 +81,7 @@ mergeNode!(network2, 1, 3)
 
 @allocated mergeNode!(network2, 1, 3)
 
+using Plots
 plotlyjs()
 fig = plotNodes(
     network,
@@ -117,16 +119,16 @@ scene1 = plotNodesMakie(
     strokecolor = :black,
     color = :black,
 )
-
+using BenchmarkTools
 self = calcSelfForce(dlnParams, matParams, network)
 @allocated calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
 
-par = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
-ser = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = true)
 
@@ -220,9 +222,9 @@ Fnode1, Fnode2, Fnode3, Fnode4 =
     calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
 
 
-x = rand(3, 10000000)
+x = rand(10000000, 3)'
 xt = copy(transpose(x))
-y = transpose(rand(3, 10000000))
+y = transpose(rand(10000000, 3))
 yt = copy(transpose(y))
 function foo(x)
     for i in 1:size(x, 1)
