@@ -114,7 +114,7 @@ function SlipSystem(;
         if ndims(slipPlane) == 1
             @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n = = $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
         else
-            idx = findall(x -> !isapprox(x, 0), dimDot(slipPlane, bVec; dim = 2))
+            idx = findall(x -> !isapprox(x, 0), dimDot(slipPlane, bVec; dim = 1))
             @assert isempty(idx) "SlipSystem: entries of the slip plane, n[$idx, :] = $(slipPlane[idx,:]), and Burgers vector, b[$idx, :] = $(bVec[idx,:]), are not orthogonal."
         end
     end
@@ -589,7 +589,7 @@ Generic keyword constructor for [`DislocationNetwork`](@ref).
     @assert size(links, 1) == 2
     @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) == 3
     @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2)
-    @assert size(coord, 2) == size(label, 2)
+    @assert size(coord, 2) == length(label)
 
     return DislocationNetwork(
         links,

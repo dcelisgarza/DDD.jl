@@ -18,12 +18,19 @@ function calcSegForce(
     # dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
 )
+    numSeg = network.numSeg
 
     # pkForce = pkForce(mesh, dlnFEM, network)
     selfForce = calcSelfForce(dlnParams, matParams, network)
-    segSegForce = calcSegSegForce(dlnParams, matParams, network; parallel = parallel)
+    segForce = calcSegSegForce(dlnParams, matParams, network; parallel = parallel)
 
-    segForce = selfForce .+ segSegForce
+    @inbounds for i in 1:numSeg
+        @simd for j in 1:2
+            segForce[:,j,i] = selfForce[j][:, i] + segForce[:, j, i]
+        end
+    end
+
+    # (selfForce[1] .+ segSegForce[:, 1, :], selfForce[2] .+ segSegForce[:, 2, :])
 
     return segForce
 end
@@ -57,15 +64,15 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     coord = network.coord
     numSeg = network.numSeg
     # Un normalised segment vectors.
-    bVec = network.bVec[idx[1:numSeg, 1], :]
-    tVec = coord[idx[1:numSeg, 3], :] - coord[idx[1:numSeg, 2], :]
+    bVec = network.bVec[:, idx[1, 1:numSeg]]
+    tVec = coord[:, idx[3, 1:numSeg]] - coord[:, idx[2, 1:numSeg]]
 
     # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
     L = zeros(numSeg)
     Linv = zeros(numSeg)
     La = zeros(numSeg)
     bScrew = zeros(numSeg)
-    bEdgeVec = zeros(numSeg, 3)
+    bEdgeVec = zeros(3, numSeg)
     bEdgeSq = zeros(numSeg)
     LaMa = zeros(numSeg)
     tor = zeros(numSeg)
@@ -75,24 +82,24 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
 
     @fastmath @inbounds @simd for i in 1:numSeg
         # Finding the norm of each line vector.
-        tVecSq = tVec[i, 1]^2 + tVec[i, 2]^2 + tVec[i, 3]^2
+        tVecSq = tVec[1, i]^2 + tVec[2, i]^2 + tVec[3, i]^2
         L[i] = sqrt(tVecSq)
         Linv[i] = inv(L[i])
         # Finding the non-singular norm.
         La[i] = sqrt(tVecSq + aSq)
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-        tVec[i, 1] *= Linv[i]
-        tVec[i, 2] *= Linv[i]
-        tVec[i, 3] *= Linv[i]
+        tVec[1, i] *= Linv[i]
+        tVec[2, i] *= Linv[i]
+        tVec[3, i] *= Linv[i]
         # Screw component, scalar projection of bVec onto t.
         bScrew[i] =
-            bVec[i, 1] * tVec[i, 1] + bVec[i, 2] * tVec[i, 2] + bVec[i, 3] * tVec[i, 3]
+            bVec[1, i] * tVec[1, i] + bVec[2, i] * tVec[2, i] + bVec[3, i] * tVec[3, i]
         # Edge component, vector rejection of bVec onto t.
-        bEdgeVec[i, 1] = bVec[i, 1] - bScrew[i] * tVec[i, 1]
-        bEdgeVec[i, 2] = bVec[i, 2] - bScrew[i] * tVec[i, 2]
-        bEdgeVec[i, 3] = bVec[i, 3] - bScrew[i] * tVec[i, 3]
+        bEdgeVec[1, i] = bVec[1, i] - bScrew[i] * tVec[1, i]
+        bEdgeVec[2, i] = bVec[2, i] - bScrew[i] * tVec[2, i]
+        bEdgeVec[3, i] = bVec[3, i] - bScrew[i] * tVec[3, i]
         # Finding the norm squared of each edge component.
-        bEdgeSq[i] = sqrt(bEdgeVec[i, 1]^2 + bEdgeVec[i, 2]^2 + bEdgeVec[i, 3]^2)
+        bEdgeSq[i] = sqrt(bEdgeVec[1, i]^2 + bEdgeVec[2, i]^2 + bEdgeVec[3, i]^2)
         #=
         A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
         553?595: gives this expression in appendix A p590
@@ -119,7 +126,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         lonCore[i] = (bScrew[i]^2 + bEdgeSq[i] * omNuInv) * E
     end
     # Force on node 2 = -Force on node 1. This is faster as a fused operation than in the loop. The final assignment uses no memory, julia black magic.
-    f2 = @. torTot * bEdgeVec - lonCore * tVec
+    f2 = @. torTot' * bEdgeVec - lonCore' * tVec
     f1 = -f2
 
     return f1, f2
@@ -169,23 +176,23 @@ At a high level this works by creating a local coordinate frame using the line d
     numSeg = network.numSeg
     idx = network.segIdx
     coord = network.coord
-    bVec = network.bVec[idx[1:numSeg, 1], :]
-    node1 = coord[idx[1:numSeg, 2], :]
-    node2 = coord[idx[1:numSeg, 3], :]
-    SegSegForce = zeros(numSeg, 3, 2)
+    bVec = network.bVec[:, idx[1, 1:numSeg]]
+    node1 = coord[:, idx[2, 1:numSeg]]
+    node2 = coord[:, idx[3, 1:numSeg]]
+    SegSegForce = zeros(3, 2, numSeg)
 
     if parallel
         # Threadid parallelisation + parallelised reduction.
-        TSegSegForce = zeros(Threads.nthreads(), numSeg, 3, 2)
+        TSegSegForce = zeros(Threads.nthreads(), 3, 2, numSeg)
         @fastmath @inbounds @sync for i in 1:numSeg
             Threads.@spawn begin
-                b1 = @SVector [bVec[i, 1], bVec[i, 2], bVec[i, 3]]
-                n11 = @SVector [node1[i, 1], node1[i, 2], node1[i, 3]]
-                n12 = @SVector [node2[i, 1], node2[i, 2], node2[i, 3]]
+                b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
+                n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
+                n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
                 @simd for j in (i + 1):numSeg
-                    b2 = @SVector [bVec[j, 1], bVec[j, 2], bVec[j, 3]]
-                    n21 = @SVector [node1[j, 1], node1[j, 2], node1[j, 3]]
-                    n22 = @SVector [node2[j, 1], node2[j, 2], node2[j, 3]]
+                    b2 = @SVector [bVec[1, j], bVec[2, j], bVec[3, j]]
+                    n21 = @SVector [node1[1, j], node1[2, j], node1[3, j]]
+                    n22 = @SVector [node2[1, j], node2[2, j], node2[3, j]]
 
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
@@ -202,25 +209,25 @@ At a high level this works by creating a local coordinate frame using the line d
                         n22,
                     )
 
-                    TSegSegForce[Threads.threadid(), i, :, 1] += Fnode1
-                    TSegSegForce[Threads.threadid(), j, :, 1] += Fnode3
-                    TSegSegForce[Threads.threadid(), i, :, 2] += Fnode2
-                    TSegSegForce[Threads.threadid(), j, :, 2] += Fnode4
+                    TSegSegForce[Threads.threadid(), :, 1, i] += Fnode1
+                    TSegSegForce[Threads.threadid(), :, 1, j] += Fnode3
+                    TSegSegForce[Threads.threadid(), :, 2, i] += Fnode2
+                    TSegSegForce[Threads.threadid(), :, 2, j] += Fnode4
                 end
             end
         end
 
         nthreads = Threads.nthreads()
         TSegSegForce2 = [Threads.Atomic{Float64}(0.0) for i in 1:(numSeg * 3 * 2)]
-        TSegSegForce2 = reshape(TSegSegForce2, numSeg, 3, 2)
+        TSegSegForce2 = reshape(TSegSegForce2, 3, 2, numSeg)
         @fastmath @inbounds @sync for tid in 1:nthreads
             Threads.@spawn begin
                 start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                 stop = (tid * numSeg) ÷ nthreads
                 domain = start:stop
                 Threads.atomic_add!.(
-                    TSegSegForce2[start:stop, :, :],
-                    sum(TSegSegForce[:, start:stop, :, :], dims = 1)[1, :, :, :],
+                    TSegSegForce2[:, :, start:stop],
+                    sum(TSegSegForce[:, :, :, start:stop], dims = 1)[1, :, :, :],
                 )
             end
         end
@@ -229,13 +236,13 @@ At a high level this works by creating a local coordinate frame using the line d
     else
         # Serial execution.
         @fastmath @inbounds for i in 1:numSeg
-            b1 = @SVector [bVec[i, 1], bVec[i, 2], bVec[i, 3]]
-            n11 = @SVector [node1[i, 1], node1[i, 2], node1[i, 3]]
-            n12 = @SVector [node2[i, 1], node2[i, 2], node2[i, 3]]
+            b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
+            n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
+            n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
             for j in (i + 1):numSeg
-                b2 = @SVector [bVec[j, 1], bVec[j, 2], bVec[j, 3]]
-                n21 = @SVector [node1[j, 1], node1[j, 2], node1[j, 3]]
-                n22 = @SVector [node2[j, 1], node2[j, 2], node2[j, 3]]
+                b2 = @SVector [bVec[1, j], bVec[2, j], bVec[3, j]]
+                n21 = @SVector [node1[1, j], node1[2, j], node1[3, j]]
+                n22 = @SVector [node2[1, j], node2[2, j], node2[3, j]]
 
                 Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                     aSq,
@@ -251,10 +258,10 @@ At a high level this works by creating a local coordinate frame using the line d
                     n21,
                     n22,
                 )
-                SegSegForce[i, :, 1] += Fnode1
-                SegSegForce[j, :, 1] += Fnode3
-                SegSegForce[i, :, 2] += Fnode2
-                SegSegForce[j, :, 2] += Fnode4
+                SegSegForce[:, 1, i] += Fnode1
+                SegSegForce[:, 1, j] += Fnode3
+                SegSegForce[:, 2, i] += Fnode2
+                SegSegForce[:, 2, j] += Fnode4
             end
         end
     end
@@ -268,13 +275,13 @@ At a high level this works by creating a local coordinate frame using the line d
     #     stop = (tid * numSeg) ÷ nthreads
     #     domain = start:stop
     #     for i = start:stop
-    #         b1 = (bVec[i, 1], bVec[i, 2], bVec[i, 3])
-    #         n11 = (node1[i, 1], node1[i, 2], node1[i, 3])
-    #         n12 = (node2[i, 1], node2[i, 2], node2[i, 3])
+    #         b1 = (bVec[1, i], bVec[2, i], bVec[3, i])
+    #         n11 = (node1[1, i], node1[2, i], node1[3, i])
+    #         n12 = (node2[1, i], node2[2, i], node2[3, i])
     #         for j = (i + 1):numSeg
-    #             b2 = (bVec[j, 1], bVec[j, 2], bVec[j, 3])
-    #             n21 = (node1[j, 1], node1[j, 2], node1[j, 3])
-    #             n22 = (node2[j, 1], node2[j, 2], node2[j, 3])
+    #             b2 = (bVec[1 ,j], bVec[2 ,j], bVec[3 ,j])
+    #             n21 = (node1[1 ,j], node1[2 ,j], node1[3 ,j])
+    #             n22 = (node2[1 ,j], node2[2 ,j], node2[3 ,j])
     #
     #             Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
     #                 aSq,
@@ -299,7 +306,7 @@ At a high level this works by creating a local coordinate frame using the line d
     # end
     # SegSegForce = getproperty.(TSegSegForce, :value)
 
-    return SegSegForce[:, :, 1], SegSegForce[:, :, 2]
+    return SegSegForce
 end
 @inline function calcSegSegForce(
     aSq::T1,

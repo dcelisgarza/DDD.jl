@@ -27,8 +27,8 @@ function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::Slip
     bVec = slipSystem.bVec
 
     range = zeros(3, 2)
-    for i in 1:3
-        range[i, :] = convert.(Int, dict["range"][i])
+    for i in 1:2
+        range[:, i] = convert.(Int, dict["range"][i])
     end
 
     dislocationLoop = DislocationLoop(;
@@ -38,8 +38,8 @@ function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::Slip
         numLoops = convert(Int, dict["numLoops"]),
         segLen = convert.(Float64, dict["segLen"]),
         slipSystem = convert.(Int, dict["slipSystem"]),
-        _slipPlane = convert.(Float64, slipPlane[dict["slipSystem"], 1:3]),
-        _bVec = convert.(Float64, bVec[dict["slipSystem"], 1:3]),
+        _slipPlane = convert.(Float64, slipPlane[:, dict["slipSystem"]]),
+        _bVec = convert.(Float64, bVec[:, dict["slipSystem"]]),
         label = nodeType.(dict["label"]),
         buffer = convert(Float64, dict["buffer"]),
         range = range,
@@ -104,13 +104,19 @@ function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
+    lenSlipSys = length(dict["slipPlane"])
+    slipPlane = zeros(3, lenSlipSys)
+    bVec = zeros(3, lenSlipSys)
+
+    for i in 1:lenSlipSys
+        slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
+        bVec[:, i] = convert.(Float64, dict["bVec"][i])
+    end
+
     slipSystem = SlipSystem(;
         crystalStruct = crystalStruct[dict["crystalStruct"]],
-        slipPlane = convert.(
-            Float64,
-            [dict["slipPlane"][1] dict["slipPlane"][2] dict["slipPlane"][3]],
-        ),
-        bVec = convert.(Float64, [dict["bVec"][1] dict["bVec"][2] dict["bVec"][3]]),
+        slipPlane = slipPlane,
+        bVec = bVec,
     )
 
     return slipSystem
@@ -198,34 +204,35 @@ Loads a dislocation network from a JSON file. Returns a [`DislocationNetwork`](@
 function loadNetwork(fileDislocationNetwork::AbstractString)
     dict = load(fileDislocationNetwork)[1]
 
-    lenLinks = length(dict["links"][1])
-    lenCoord = length(dict["coord"][1])
+    lenLinks = length(dict["links"])
+    lenCoord = length(dict["coord"])
     maxConnect = convert.(Int, dict["maxConnect"])
-    links = zeros(Int, lenLinks, 2)
-    slipPlane = zeros(lenLinks, 3)
-    bVec = zeros(lenLinks, 3)
-    coord = zeros(lenCoord, 3)
-    connectivity = zeros(Int, lenLinks, 2 * maxConnect + 1)
-    linksConnect = zeros(Int, lenLinks, 2)
-    segIdx = zeros(Int, lenLinks, 3)
-    segForce = zeros(lenLinks, 3)
-    nodeVel = zeros(lenLinks, 3)
+    links = zeros(Int, 2, lenLinks)
+    slipPlane = zeros(3, lenLinks)
+    bVec = zeros(3, lenLinks)
+    coord = zeros(3, lenCoord)
+    connectivity = zeros(Int, 2 * maxConnect + 1, lenLinks)
+    linksConnect = zeros(Int, 2, lenLinks)
+    segIdx = zeros(Int, 3, lenLinks)
+    segForce = zeros(3, lenLinks)
+    nodeVel = zeros(3, lenLinks)
 
-    for i in 1:2
+    for i in 1:lenLinks
         links[:, i] = convert.(Int, dict["links"][i])
         linksConnect[:, i] = convert.(Int, dict["linksConnect"][i])
     end
 
-    @inbounds @simd for i in 1:3
+    @inbounds @simd for i in 1:lenCoord
         slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
         bVec[:, i] = convert.(Float64, dict["bVec"][i])
+        # println(i)
         coord[:, i] = convert.(Float64, dict["coord"][i])
         segIdx[:, i] = convert.(Int, dict["segIdx"][i])
         segForce[:, i] = convert.(Float64, dict["segForce"][i])
         nodeVel[:, i] = convert.(Float64, dict["nodeVel"][i])
     end
 
-    @inbounds @simd for i in 1:9
+    @inbounds @simd for i in 1:lenCoord
         connectivity[:, i] = convert.(Int, dict["connectivity"][i])
     end
 

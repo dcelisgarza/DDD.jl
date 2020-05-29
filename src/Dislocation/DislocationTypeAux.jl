@@ -31,7 +31,7 @@ Calculate the spatial limits a dislocation will occupy. This and [`loopDistribut
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
 
     @inbounds for i in 1:size(lims, 2)
-        for j in 1:size(lims, 1)
+        @simd for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
         end
     end
@@ -53,8 +53,8 @@ Translate dislocation node coordinates `coord` inside the spatial bounds of `lim
     lims::T1,
     disp::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
-    @inbounds for i in 1:size(coord, 1)
-        @simd for j in 1:size(coord, 2)
+    @inbounds for i in 1:size(coord, 2)
+        @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
     end

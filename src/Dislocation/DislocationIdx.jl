@@ -16,7 +16,7 @@ coordLbl(network::DislocationNetwork, label::Int)
 Get coordinates for the nodes with a given label (node type).
 """
 @inline function coordLbl(network::DislocationNetwork, label::Int)
-    return network.coord[idxLabel(network, label), :]
+    return network.coord[:, idxLabel(network, label)]
 end
 """
 ```
@@ -30,7 +30,7 @@ provided.
     network::DislocationNetwork,
     index::Union{Int, AbstractArray{<:Int, N}},
 ) where {N}
-    return network.coord[index, :]
+    return network.coord[:, index]
 end
 """
 Related functions: [`dataCond`](@ref)
@@ -88,7 +88,7 @@ end
     val::Real;
     condition::Function = ==,
 )
-    return findall(x -> condition(x, val), getproperty(network, fieldname)[:, idxComp])
+    return findall(x -> condition(x, val), getproperty(network, fieldname)[idxComp, :])
 end
 """
 Related functions: `idxCond`
@@ -131,8 +131,8 @@ end
     condition::Function = ==,
 )
     data = getproperty(network, dataField)
-    idx = idxCond(data[:, idxComp], val; condition = condition)
-    return data[idx, :]
+    idx = idxCond(data[idxComp, :], val; condition = condition)
+    return data[:, idx]
 end
 @inline function dataCond(
     network::DislocationNetwork,
@@ -143,12 +143,12 @@ end
 )
     data = getproperty(network, dataField)
     cond = getproperty(network, condField)
-    @assert size(data, 1) == size(cond, 1) "Number of rows of both fields must be equal."
+    @assert size(data, 2) == size(cond, 1) || size(data, 1) == size(cond, 2) || size(data) == size(cond) "Number of rows of both fields must be equal."
     idx = idxCond(cond, val; condition = condition)
     return if ndims(cond) > 1
         return data[idx]
     else
-        return data[idx, :]
+        return data[:, idx]
     end
 end
 @inline function dataCond(
@@ -162,6 +162,6 @@ end
     data = getproperty(network, dataField)
     cond = getproperty(network, condField)
     @assert size(data, 1) == size(cond, 1) "Number of rows of both fields must be equal."
-    idx = idxCond(cond[:, idxComp], val; condition = condition)
-    return data[idx, :]
+    idx = idxCond(cond[idxComp, :], val; condition = condition)
+    return data[:, idx]
 end

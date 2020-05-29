@@ -23,15 +23,15 @@ cd(@__DIR__)
         numLoops = 2,
         segLen = 10 * ones(5),
         slipSystem = 4,
-        _slipPlane = slipSystems.slipPlane[4, :],
-        _bVec = slipSystems.bVec[4, :],
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
         label = nodeType[1; 2; 1; 2; 1],
         buffer = 0.0,
-        range = Float64[-100 -100 -100; 100 100 100],
+        range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
     network = DislocationNetwork(pentagon; memBuffer = 1)
-    network.coord[6:end, :] .+= [10 10 10]
+    network.coord[:, 6:end] .+= [10; 10; 10]
     for i in eachindex(network.segForce)
         network.segForce[i] = i
     end
@@ -65,8 +65,8 @@ cd(@__DIR__)
         -0.758809517064033 1.109241905058071 0.350432387994039
         0.567011514533144 0.567011514533144 1.134023029066286
     ]
-    @test isapprox(selfForce[1], f1)
-    @test isapprox(selfForce[2], f2)
+    @test isapprox(selfForce[1], f1')
+    @test isapprox(selfForce[2], f2')
 
     pentagon = DislocationLoop(
         loopPrism();
@@ -75,11 +75,11 @@ cd(@__DIR__)
         numLoops = 2,
         segLen = 10 * ones(5),
         slipSystem = 4,
-        _slipPlane = slipSystems.slipPlane[4, :],
-        _bVec = slipSystems.bVec[4, :],
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
         label = nodeType[1; 2; 1; 2; 1],
         buffer = 0.0,
-        range = Float64[-100 -100 -100; 100 100 100],
+        range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
     network = DislocationNetwork(pentagon, memBuffer = 1)
@@ -109,10 +109,10 @@ cd(@__DIR__)
         -0.001179598001408 -0.000330019407456 -0.001509617408864
         -0.001374647041126 0.001374647041126 0.000000000000000
     ]
-    @test isapprox(remoteForceSer[1], f1)
-    @test isapprox(remoteForceSer[2], f2)
-    @test isapprox(remoteForcePar[1], f1)
-    @test isapprox(remoteForcePar[2], f2)
+    @test isapprox(remoteForceSer[:, 1, :], f1')
+    @test isapprox(remoteForceSer[:, 2, :], f2')
+    @test isapprox(remoteForcePar[:, 1, :], f1')
+    @test isapprox(remoteForcePar[:, 2, :], f2')
 
     pentagon = DislocationLoop(
         loopPrism();
@@ -121,15 +121,15 @@ cd(@__DIR__)
         numLoops = 2,
         segLen = 10 * ones(5),
         slipSystem = 4,
-        _slipPlane = slipSystems.slipPlane[4, :],
-        _bVec = slipSystems.bVec[4, :],
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
         label = nodeType[1; 2; 1; 2; 1],
         buffer = 0.0,
-        range = Float64[-100 -100 -100; 100 100 100],
+        range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
     network = DislocationNetwork(pentagon, memBuffer = 1)
-    network.coord[6:end, :] .+= [20 20 20]
+    network.coord[:, 6:end] .+= [20; 20; 20]
     remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
     remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
     f1 = [
@@ -156,10 +156,10 @@ cd(@__DIR__)
         -0.000839481257576 -0.000217825304625 -0.001128278735983
         -0.001093373550372 0.001103824816939 -0.000005225633284
     ]
-    @test isapprox(remoteForceSer[1], f1)
-    @test isapprox(remoteForceSer[2], f2)
-    @test isapprox(remoteForcePar[1], f1)
-    @test isapprox(remoteForcePar[2], f2)
+    @test isapprox(remoteForceSer[:, 1, :], f1')
+    @test isapprox(remoteForceSer[:, 2, :], f2')
+    @test isapprox(remoteForcePar[:, 1, :], f1')
+    @test isapprox(remoteForcePar[:, 2, :], f2')
 
     hexagonPris = DislocationLoop(
         loopPrism();
@@ -168,11 +168,11 @@ cd(@__DIR__)
         numLoops = 1,
         segLen = 10 * ones(6),
         slipSystem = 1,
-        _slipPlane = slipSystems.slipPlane[1, :],
-        _bVec = slipSystems.bVec[1, :],
+        _slipPlane = slipSystems.slipPlane[:, 1],
+        _bVec = slipSystems.bVec[:, 1],
         label = nodeType[1; 2; 1; 2; 1; 2],
         buffer = 0.0,
-        range = Float64[-100 -100 -100; 100 100 100],
+        range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
     hexagonShear = DislocationLoop(
@@ -182,16 +182,17 @@ cd(@__DIR__)
         numLoops = 1,
         segLen = 10 * ones(6),
         slipSystem = 1,
-        _slipPlane = slipSystems.slipPlane[1, :],
-        _bVec = slipSystems.bVec[1, :],
+        _slipPlane = slipSystems.slipPlane[:, 1],
+        _bVec = slipSystems.bVec[:, 1],
         label = nodeType[1; 2; 1; 2; 1; 2],
         buffer = 0.0,
-        range = Float64[-100 -100 -100; 100 100 100],
+        range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
     network = DislocationNetwork([hexagonPris, hexagonShear], memBuffer = 1)
     remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
     remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
+
     f1 = [
         0.000148330200377 0.000867173203941 -0.001163833604695
         -0.001162438253910 0.000146934849592 -0.000868568554726
@@ -220,21 +221,23 @@ cd(@__DIR__)
         0.000843647543328 0.000196923065666 0.000210680448988
         0.001337886532722 0.000747434694618 -0.000295225919052
     ]
-    @test isapprox(remoteForceSer[1], f1)
-    @test isapprox(remoteForceSer[2], f2)
-    @test isapprox(remoteForcePar[1], f1)
-    @test isapprox(remoteForcePar[2], f2)
+    @test isapprox(remoteForceSer[:, 1, :], f1')
+    @test isapprox(remoteForceSer[:, 2, :], f2')
+    @test isapprox(remoteForcePar[:, 1, :], f1')
+    @test isapprox(remoteForcePar[:, 2, :], f2')
 
     selfForce = calcSelfForce(dlnParams, matParams, network)
     remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
     remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
-    sumForceSer = selfForce .+ remoteForceSer
-    sumForcePar = selfForce .+ remoteForcePar
+    sumForceSer =
+        (selfForce[1] .+ remoteForceSer[:, 1, :], selfForce[2] .+ remoteForceSer[:, 2, :])
+    sumForcePar =
+        (selfForce[1] .+ remoteForcePar[:, 1, :], selfForce[2] .+ remoteForcePar[:, 2, :])
     totalForceSer = calcSegForce(dlnParams, matParams, network, parallel = false)
     totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
 
-    @test isapprox(totalForceSer[1], sumForceSer[1])
-    @test isapprox(totalForcePar[1], sumForcePar[1])
-    @test isapprox(totalForceSer[1], totalForcePar[1])
-    @test isapprox(totalForceSer[2], totalForcePar[2])
+    @test isapprox(totalForceSer[:, 1, :], sumForceSer[1])
+    @test isapprox(totalForcePar[:, 2, :], sumForcePar[2])
+    @test isapprox(totalForceSer[:, 1, :], totalForcePar[:, 1, :])
+    @test isapprox(totalForceSer[:, 2, :], totalForcePar[:, 2, :])
 end
