@@ -26,9 +26,9 @@ function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::Slip
     slipPlane = slipSystem.slipPlane
     bVec = slipSystem.bVec
 
-    range = zeros(2, 3)
+    range = zeros(3, 2)
     for i in 1:3
-        range[:, i] = convert.(Int, dict["range"][i])
+        range[i, :] = convert.(Int, dict["range"][i])
     end
 
     dislocationLoop = DislocationLoop(;

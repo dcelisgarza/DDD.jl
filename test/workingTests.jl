@@ -38,7 +38,7 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileSlipSystem,
     fileDislocationLoop,
 )
-dislocationLoop
+dislocationLoop[1]
 network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 DislocationNetwork!(network, dislocationLoop)
 
@@ -53,9 +53,12 @@ pentagon = DislocationLoop(
     _bVec = slipSystems.bVec[4, :],
     label = nodeType[1; 2; 1; 2; 1],
     buffer = 0.0,
-    range = Float64[-100 -100 -100; 100 100 100],
+    range = Float64[-100 100; -100 100; -100 100],
     dist = Rand(),
 )
+
+using LinearAlgebra
+mean(pentagon.coord, dims=2)
 network = DislocationNetwork(pentagon; memBuffer = 1)
 # DislocationNetwork!(network, pentagon)
 network.coord = [

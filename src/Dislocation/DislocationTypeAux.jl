@@ -5,9 +5,9 @@ loopDistribution(dist<:AbstractDistribution, n::Int, args...; kw...)
 ```
 Returns `n` points according to the concrete subtype of [`AbstractDistribution`](@ref) given. Overload this function with new concrete subtypes and custom distributions. This and [`limits!`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
 """
-loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(n, 3)
-loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(n, 3)
-loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(n, 3)
+loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(3, n)
+loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(3, n)
+loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(3, n)
 function loopDistribution(dist::Regular, n::Int, args...; kw...)
     return error("loopDistribution: regular distribution yet not implemented")
 end
@@ -53,9 +53,9 @@ Translate dislocation node coordinates `coord` inside the spatial bounds of `lim
     lims::T1,
     disp::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
-    @inbounds for i in 1:size(coord, 2)
-        @simd for j in 1:size(coord, 1)
-            coord[j, i] += lims[1, i] + (lims[2, i] - lims[1, i]) * disp[i]
+    @inbounds for i in 1:size(coord, 1)
+        @simd for j in 1:size(coord, 2)
+            coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
     end
     return coord
@@ -77,32 +77,32 @@ Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the 
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
 
     # Indices of defined links.
-    idx = findall(x -> x != 0, links[:, 1])
-    lenLinks = size(links, 1)
-    connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
-    linksConnect = zeros(Int, lenLinks, 2)
+    idx = findall(x -> x != 0, links[1, :])
+    lenLinks = size(links, 2)
+    connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
+    linksConnect = zeros(Int, 2, lenLinks)
 
     # Loop through indices.
     @inbounds @simd for i in idx
         # Node 1, it is the row of the coord matrix.
-        n1 = links[i, 1]
-        n2 = links[i, 2]
+        n1 = links[1, i]
+        n2 = links[2, i]
 
         # Num of other nodes node n1 is connected to.
-        connectivity[n1, 1] += 1
-        connectivity[n2, 1] += 1
+        connectivity[1, n1] += 1
+        connectivity[1, n2] += 1
 
         # Next column for n1 in connectivity.
-        tmp1 = 2 * connectivity[n1, 1]
-        tmp2 = 2 * connectivity[n2, 1]
+        tmp1 = 2 * connectivity[1, n1]
+        tmp2 = 2 * connectivity[1, n2]
 
         # i = linkID. 1, 2 are the first and second nodes in link with linkID
-        connectivity[n1, tmp1:(tmp1 + 1)] = [i, 1]
-        connectivity[n2, tmp2:(tmp2 + 1)] = [i, 2]
+        connectivity[tmp1:(tmp1 + 1), n1] = [i, 1]
+        connectivity[tmp2:(tmp2 + 1), n2] = [i, 2]
 
         # Connectivity of the nodes in link i.
-        linksConnect[i, 1] = connectivity[n1, 1]
-        linksConnect[i, 2] = connectivity[n2, 1]
+        linksConnect[1, i] = connectivity[1, n1]
+        linksConnect[2, i] = connectivity[1, n2]
     end
 
     return connectivity, linksConnect
@@ -119,21 +119,21 @@ In-place version of [`makeConnect`](@ref).
     links = network.links
     maxConnect = network.maxConnect
 
-    idx = findall(x -> x != 0, links[:, 1])
-    lenLinks = size(links, 1)
-    connectivity = zeros(Int, lenLinks, 1 + 2 * maxConnect)
-    linksConnect = zeros(Int, lenLinks, 2)
+    idx = findall(x -> x != 0, links[1,:])
+    lenLinks = size(links, 2)
+    connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
+    linksConnect = zeros(Int, 2, lenLinks)
     @inbounds @simd for i in idx
-        n1 = links[i, 1]
-        n2 = links[i, 2]
-        connectivity[n1, 1] += 1
-        connectivity[n2, 1] += 1
-        tmp1 = 2 * connectivity[n1, 1]
-        tmp2 = 2 * connectivity[n2, 1]
-        connectivity[n1, tmp1:(tmp1 + 1)] = [i, 1]
-        connectivity[n2, tmp2:(tmp2 + 1)] = [i, 2]
-        linksConnect[i, 1] = connectivity[n1, 1]
-        linksConnect[i, 2] = connectivity[n2, 1]
+        n1 = links[1, i]
+        n2 = links[2, i]
+        connectivity[1, n1] += 1
+        connectivity[1, n2] += 1
+        tmp1 = 2 * connectivity[1, n1]
+        tmp2 = 2 * connectivity[1, n2]
+        connectivity[tmp1:(tmp1 + 1), n1] = [i, 1]
+        connectivity[tmp2:(tmp2 + 1), n2] = [i, 2]
+        linksConnect[1, i] = connectivity[1, n1]
+        linksConnect[2, i] = connectivity[1, n2]
     end
 
     network.connectivity = connectivity
@@ -155,20 +155,20 @@ getSegmentIdx(
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
 
-    segIdx = zeros(Int, size(links, 1), 3)  # Indexing matrix.
+    segIdx = zeros(Int, 3, size(links, 2))  # Indexing matrix.
     idx = findall(x -> x != 0, label)       # Find all defined nodes.
     numSeg::Int = 0 # Number of segments.
 
     # Loop through indices.
     for i in idx
         # Nodes.
-        n1 = links[i, 1]
-        n2 = links[i, 2]
+        n1 = links[1, i]
+        n2 = links[2, i]
         # Skip external nodes.
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1 # Increment index.
         # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
-        segIdx[numSeg, :] = [i, n1, n2]
+        segIdx[:, numSeg] = [i, n1, n2]
     end
 
     return numSeg, segIdx
@@ -182,15 +182,15 @@ getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
 
-    segIdx = zeros(Int, size(links, 1), 3)
+    segIdx = zeros(Int, 3, size(links, 2))
     idx = findall(x -> x != 0, label)
     numSeg::Int = 0
     for i in idx
-        n1 = links[i, 1]
-        n2 = links[i, 2]
+        n1 = links[1, i]
+        n2 = links[2, i]
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1
-        segIdx[numSeg, :] = [i, n1, n2]
+        segIdx[:, numSeg] = [i, n1, n2]
     end
 
     network.numSeg = numSeg
@@ -222,22 +222,22 @@ Checks the validity of the dislocation network. It ensures the following conditi
     linksConnect = network.linksConnect
 
     # Connectivity and links must be the same length.
-    maximum(connectivity) == length(links[idx, 1]) ? nothing :
+    maximum(connectivity) == length(links[1, idx]) ? nothing :
     error("Non-empty entries of connectivity should be the same as the non-empty entries of links.")
 
     bVec = network.bVec
     bSum = zeros(3)
     @inbounds for i in idx
         iLinkBuffer = zeros(Int, 0)
-        col = connectivity[i, 1]
+        col = connectivity[1, i]
 
         # Check for zero Burgers vectors.
-        norm(bVec[i, :]) < eps(eltype(bVec)) ? error("Burgers vector must be non-zero.
+        norm(bVec[:, i]) < eps(eltype(bVec)) ? error("Burgers vector must be non-zero.
                                        norm(bVec) = $(norm(bVec[i,:]))") :
         nothing
 
         # Trailing columns must be zero.
-        sum(connectivity[i, (2 * (col + 1)):end]) != 0 ?
+        sum(connectivity[(2 * (col + 1)):end, i]) != 0 ?
         error("Trailing columns of connectivity must be zero.
         connectivity[$(i), $(2*(col + 1)):end] = $(connectivity[i, (2 * (col + 1)):end]))") :
         nothing
@@ -249,26 +249,26 @@ Checks the validity of the dislocation network. It ensures the following conditi
         for j in 1:col
             j2 = 2 * j
 
-            iLink = connectivity[i, j2]     # Link ID.
-            pLink = connectivity[i, j2 + 1] # Link position in links.
-            bSum += (3 - 2 * pLink) .* bVec[iLink, :] # Running total of burgers vectors.
+            iLink = connectivity[j2, i]     # Link ID.
+            pLink = connectivity[j2 + 1, i] # Link position in links.
+            bSum += (3 - 2 * pLink) .* bVec[:, iLink] # Running total of burgers vectors.
 
-            neighbours[j] = links[iLink, 3 - connectivity[i, 2 * j + 1]] # Find neighbouring nodes.
+            neighbours[j] = links[iLink, 3 - connectivity[2 * j + 1, i]] # Find neighbouring nodes.
             push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
 
             # Check that node does not appear twice in connectivity.
             for k in (j + 1):col
-                connectivity[i, j2] == connectivity[i, 2 * k] ?
+                connectivity[j2, i] == connectivity[2 * k, i] ?
                 error("Node $(i) cannot appear twice in connectivity, $(connectivity[i, j2])") :
                 nothing
             end
 
             # Check links and connectivity are consistent.
-            testNode = links[connectivity[i, j2], connectivity[i, j2 + 1]]
+            testNode = links[connectivity[j2 + 1, i], connectivity[j2, i]]
             testNode != i ?
             error("Connectivity and links are not consistent.
-connectivity[$(i), :] = $(connectivity[i,:])
-links[$(connectivity[i, j2]), :] = [$(links[connectivity[i, j2],1]), $(links[connectivity[i, j2],2])]") :
+connectivity[:, $(i)] = $(connectivity[:, i])
+links[:, $(connectivity[j2, i])] = [$(links[1, connectivity[j2, i]]), $(links[2, connectivity[j2, i]])]") :
             nothing
         end
 
@@ -287,14 +287,14 @@ neighbours = $(neighbours)") :
 
         # Check connectivity and linksConnect are consistent.
         check = [
-            connectivity[links[i, 1], 2 * linksConnect[i, 1]]
-            connectivity[links[i, 2], 2 * linksConnect[i, 2]]
+            connectivity[2 * linksConnect[1, i], links[1, i]]
+            connectivity[2 * linksConnect[2, i], links[2, i]]
         ]
         i != check[1] | i != check[2] ? error("Inconsistent link.
-        links[$(i), :] = $(links[i,:])
-        linksConnect[$(i),:] = $(linksConnect[i,:])
-        connectivity[$(links[i,1]), :] = $(connectivity[links[i,1], :])
-        connectivity[$(links[i,2]), :] = $(connectivity[links[i,2], :])") : nothing
+        links[:, $(i)] = $(links[:, i])
+        linksConnect[:, $(i)] = $(linksConnect[:, i])
+        connectivity[:, $(links[1, i])] = $(connectivity[:, links[1, i]])
+        connectivity[:, $(links[2, i])] = $(connectivity[:, links[2, i]])") : nothing
     end
 
     return true

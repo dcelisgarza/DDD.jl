@@ -54,11 +54,11 @@ function Base.zero(::Type{DislocationLoop})
         numLoops = convert(Int, 0),
         segLen = convert(Float64, 0),
         slipSystem = convert(Int, 0),
-        _slipPlane = zeros(0, 3),
-        _bVec = zeros(0, 3),
+        _slipPlane = zeros(3, 0),
+        _bVec = zeros(3, 0),
         label = zeros(nodeType, 0),
         buffer = convert(Float64, 0),
-        range = zeros(0, 3),
+        range = zeros(3, 0),
         dist = Zeros(),
     )
 end
@@ -67,36 +67,36 @@ end
 function Base.zero(::Type{DislocationNetwork})
     return DislocationNetwork(
         links = zeros(Int, 0, 2),
-        slipPlane = zeros(0, 3),
-        bVec = zeros(0, 3),
-        coord = zeros(0, 3),
+        slipPlane = zeros(3, 0),
+        bVec = zeros(3, 0),
+        coord = zeros(3, 0),
         label = zeros(nodeType, 0),
-        segForce = zeros(0, 3),
-        nodeVel = zeros(0, 3),
+        segForce = zeros(3, 0),
+        nodeVel = zeros(3, 0),
         numNode = convert(Int, 0),
         numSeg = convert(Int, 0),
         maxConnect = convert(Int, 0),
     )
 end
 function Base.push!(network::DislocationNetwork, n::Int)
-    network.links = [network.links; zeros(Int, n, 2)]
-    network.slipPlane = [network.slipPlane; zeros(n, 3)]
-    network.bVec = [network.bVec; zeros(n, 3)]
-    network.coord = [network.coord; zeros(n, 3)]
+    network.links = hcat(network.links, zeros(Int, 2, n))
+    network.slipPlane = hcat(network.slipPlane, zeros(3, n))
+    network.bVec = hcat(network.bVec, zeros(3, n))
+    network.coord = hcat(network.coord, zeros(3, n))
     network.label = [network.label; zeros(nodeType, n)]
-    network.segForce = [network.segForce; zeros(n, 3)]
-    network.nodeVel = [network.nodeVel; zeros(n, 3)]
+    network.segForce = hcat(network.segForce, zeros(3, n))
+    network.nodeVel = hcat(network.nodeVel, zeros(3, n))
     return network
 end
 function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector{Int}})
-    return network.links[i, :],
-    network.slipPlane[i, :],
-    network.bVec[i, :],
-    network.coord[i, :],
+    return network.links[:, i],
+    network.slipPlane[:, i],
+    network.bVec[:, i],
+    network.coord[:, i],
     network.label[i],
-    network.segForce[i, :],
-    network.nodeVel[i, :],
-    network.connectivity[i, :],
-    network.linksConnect[i, :],
-    network.segIdx[i, :]
+    network.segForce[:, i],
+    network.nodeVel[:, i],
+    network.connectivity[:, i],
+    network.linksConnect[:, i],
+    network.segIdx[:, i]
 end
