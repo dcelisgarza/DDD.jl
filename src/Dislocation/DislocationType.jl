@@ -641,7 +641,8 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
     # Memory buffer.
-    isnothing(memBuffer) ? nodeBuffer = Int(nodeTotal*round(log2(nodeTotal))) : nodeBuffer = nodeTotal * Int(memBuffer)
+    isnothing(memBuffer) ? nodeBuffer = Int(round(nodeTotal * log2(nodeTotal))) :
+    nodeBuffer = nodeTotal * Int(memBuffer)
 
     # Allocate memory.
     links = zeros(Int, 2, nodeBuffer)
@@ -754,7 +755,7 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
     # Allocate memory.
     available = length(findall(x -> x == 0, network.label))
     if nodeTotal > available
-        newEntries = Int(nodeTotal * round(log2(nodeTotal)))
+        newEntries = Int(round(nodeTotal * log2(nodeTotal)))
         push!(network, newEntries)
     end
 
