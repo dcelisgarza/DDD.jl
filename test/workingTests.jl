@@ -49,8 +49,8 @@ pentagon = DislocationLoop(
     numLoops = 2,
     segLen = 10 * ones(5),
     slipSystem = 4,
-    _slipPlane = slipSystems.slipPlane[4, :],
-    _bVec = slipSystems.bVec[4, :],
+    _slipPlane = slipSystems.slipPlane[:, 4],
+    _bVec = slipSystems.bVec[:, 4],
     label = nodeType[1; 2; 1; 2; 1],
     buffer = 0.0,
     range = Float64[-100 100; -100 100; -100 100],
@@ -124,12 +124,29 @@ scene1 = plotNodesMakie(
 )
 using BenchmarkTools
 self = calcSelfForce(dlnParams, matParams, network)
+selfIdx = calcSelfForce(dlnParams, matParams, network, [1,3,5])
+self[1][:, idx] == selfIdx[1]
+self[2][:, idx] == selfIdx[2]
+
 @allocated calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
 
 ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+
+idx = rand(1:network.numNode, 3)
+serIdx = calcSegSegForce(dlnParams, matParams, network, idx; parallel = false)
+ser[:, 1, idx]
+serIdx[:, 1, :]
+
+== serIdx[:, 1, :]
+@test ser[2][:, idx] == serIdx[2]
+
+idx = rand(1:network.numNode)
+serIdx = calcSegSegForce(dlnParams, matParams, network, idx; parallel = false)
+@test ser[1][:, idx] == serIdx[1]
+@test ser[2][:, idx] == serIdx[2]
 
 par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = true)

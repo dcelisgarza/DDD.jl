@@ -68,6 +68,17 @@ cd(@__DIR__)
     @test isapprox(selfForce[1], f1')
     @test isapprox(selfForce[2], f2')
 
+
+    idx = rand(1:network.numNode, 3)
+    selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
+    @test self[1][:, idx] == selfIdx[1]
+    @test self[2][:, idx] == selfIdx[2]
+
+    idx = rand(1:network.numNode)
+    selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
+    @test self[1][:, idx] == selfIdx[1]
+    @test self[2][:, idx] == selfIdx[2]
+
     pentagon = DislocationLoop(
         loopPrism();
         numSides = 5,
