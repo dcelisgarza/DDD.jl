@@ -250,10 +250,11 @@ Checks the validity of the dislocation network. It ensures the following conditi
             j2 = 2 * j
 
             iLink = connectivity[i, j2]     # Link ID.
-            pLink = connectivity[i, j2 + 1] # Link position in links.
-            bSum += (3 - 2 * pLink) .* bVec[iLink, :] # Running total of burgers vectors.
+            colLink = connectivity[i, j2 + 1] # Link position in links.
+            colOppLink = 3 - connectivity[i, 2 * j + 1]
+            bSum += (3 - 2 * colLink) * bVec[iLink, :] # Running total of burgers vectors.
 
-            neighbours[j] = links[iLink, 3 - connectivity[i, 2 * j + 1]] # Find neighbouring nodes.
+            neighbours[j] = links[iLink, colOppLink] # Find neighbouring nodes.
             push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
 
             # Check that node does not appear twice in connectivity.
