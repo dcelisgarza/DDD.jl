@@ -1,4 +1,3 @@
-using Revise
 using DDD
 using Test, Statistics
 cd(@__DIR__)
