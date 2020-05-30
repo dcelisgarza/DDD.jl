@@ -32,23 +32,23 @@ network.connectivity
 
     # The if nodeGone is not the last node in the relevant arrays, replace it by lastNode.
     if nodeGone < lastNode
-        coord[nodeGone, :] .= coord[lastNode, :]
+        coord[:, nodeGone] .= coord[:, lastNode]
         label[nodeGone] = label[lastNode]
-        nodeVel[nodeGone, :] .= nodeVel[lastNode, :]
-        connectivity[nodeGone, :] .= connectivity[lastNode, :]
+        nodeVel[:, nodeGone] .= nodeVel[:, lastNode]
+        connectivity[:, nodeGone] .= connectivity[:, lastNode]
         # Change the link
-        @simd for j in 1:connectivity[nodeGone, 1]
+        @simd for j in 1:connectivity[1, nodeGone]
             idx = 2 * j
-            links[connectivity[nodeGone, idx], connectivity[nodeGone, idx + 1]] = nodeGone
+            links[connectivity[idx + 1, nodeGone], connectivity[idx, nodeGone]] = nodeGone
         end
     end
 
     # Remove the last node from the arrays since nodeGone was either replaced by lastNode above, or already was the last node. Reduce the number of nodes by one.
-    coord[lastNode, :] .= 0
+    coord[:, lastNode] .= 0
     label[lastNode] = 0
-    nodeVel[lastNode, :] .= 0
+    nodeVel[:, lastNode] .= 0
     network.numNode -= 1
-    connectivity[lastNode, :] .= 0
+    connectivity[:, lastNode] .= 0
 
     return network
 end
@@ -75,26 +75,26 @@ network.linksConnect
 
     # Remove entry from linksConnect.
     idx = 2 * connectGone
-    link1 = connectivity[nodeKept, idx]
+    link1 = connectivity[idx, nodeKept]
     @assert link1 != 0 "removeConnection!: connection $connectGone for node $nodeKept does not exist."
-    link2 = connectivity[nodeKept, idx + 1]
-    linksConnect[link1, link2] = 0
+    link2 = connectivity[idx + 1, nodeKept]
+    linksConnect[link2, link1] = 0
 
     # The last connection to be added to nodeKept is equal to the connectivity of the nodeKept.
-    lastConnect = connectivity[nodeKept, 1]
+    lastConnect = connectivity[1, nodeKept]
     lst = 2 * lastConnect
 
     # If the connectGone is not the last connection that was made, replace it by the last connection.
     if connectGone < lastConnect
-        connectivity[nodeKept, idx:(idx + 1)] = connectivity[nodeKept, lst:(lst + 1)]
-        linksConnect[connectivity[nodeKept, idx], connectivity[nodeKept, idx + 1]] =
+        connectivity[idx:(idx + 1), nodeKept] = connectivity[lst:(lst + 1), nodeKept]
+        linksConnect[connectivity[idx + 1, nodeKept], connectivity[idx, nodeKept]] =
             connectGone
     end
 
     # Change connectivity to reflect that nodeKept has one less connection.
     # Remove the last connection since lastConnect was either replaced by connectGone above, or already was the last connection.
-    connectivity[nodeKept, 1] -= 1
-    connectivity[nodeKept, lst:(lst + 1)] .= 0
+    connectivity[1, nodeKept] -= 1
+    connectivity[lst:(lst + 1), nodeKept] .= 0
 
     return network
 end
@@ -130,44 +130,44 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = noth
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
-    @assert linkGone <= size(links, 1) "removeLink!: link $linkGone not found."
+    @assert linkGone <= size(links, 2) "removeLink!: link $linkGone not found."
 
     # Delete linkGone from connectivity for both nodes in the link.
-    node1 = links[linkGone, 1]
-    connectGone1 = linksConnect[linkGone, 1]
+    node1 = links[1, linkGone]
+    connectGone1 = linksConnect[1, linkGone]
     removeConnection!(network, node1, connectGone1)
 
-    node2 = links[linkGone, 2]
-    connectGone2 = linksConnect[linkGone, 2]
+    node2 = links[2, linkGone]
+    connectGone2 = linksConnect[2, linkGone]
     removeConnection!(network, node2, connectGone2)
 
     # Remove link that no longer appears in connectivity and doesn't connect any nodes.
-    @assert linksConnect[linkGone, :]' * linksConnect[linkGone, :] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
+    @assert linksConnect[:, linkGone]' * linksConnect[:, linkGone] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     isnothing(lastLink) ? lastLink = maximum((network.numSeg, 1)) : nothing
 
     # If the linkGone is not the last link, replace it with lastLink.
     if linkGone < lastLink
-        links[linkGone, :] = links[lastLink, :]
-        slipPlane[linkGone, :] = slipPlane[lastLink, :]
-        bVec[linkGone, :] = bVec[lastLink, :]
-        segForce[linkGone, :] = segForce[lastLink, :]
-        linksConnect[linkGone, :] = linksConnect[lastLink, :]
-        node1 = links[linkGone, 1]
-        node2 = links[linkGone, 2]
-        connect1 = 2 * linksConnect[linkGone, 1]
-        connect2 = 2 * linksConnect[linkGone, 2]
-        connectivity[node1, connect1] = linkGone
-        connectivity[node2, connect2] = linkGone
+        links[:, linkGone] = links[:, lastLink]
+        slipPlane[:, linkGone] = slipPlane[:, lastLink]
+        bVec[:, linkGone] = bVec[:, lastLink]
+        segForce[:, linkGone] = segForce[:, lastLink]
+        linksConnect[:, linkGone] = linksConnect[:, lastLink]
+        node1 = links[1, linkGone]
+        node2 = links[2, linkGone]
+        connect1 = 2 * linksConnect[1, linkGone]
+        connect2 = 2 * linksConnect[2, linkGone]
+        connectivity[connect1, node1] = linkGone
+        connectivity[connect2, node2] = linkGone
     end
 
     # Remove the last link from the arrays since linkGone was either replaced by lastLink above, or already was the last link.
-    links[lastLink, :] .= 0
-    slipPlane[lastLink, :] .= 0
-    bVec[lastLink, :] .= 0
-    segForce[lastLink, :] .= 0
+    links[:, lastLink] .= 0
+    slipPlane[:, lastLink] .= 0
+    bVec[:, lastLink] .= 0
+    segForce[:, lastLink] .= 0
     network.numSeg -= 1
-    linksConnect[lastLink, :] .= 0
+    linksConnect[:, lastLink] .= 0
 
     return network
 end
@@ -197,28 +197,28 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
-    nodeKeptConnect = connectivity[nodeKept, 1]
-    nodeGoneConnect = connectivity[nodeGone, 1]
+    nodeKeptConnect = connectivity[1, nodeKept]
+    nodeGoneConnect = connectivity[1, nodeGone]
     totalConnect = nodeKeptConnect + nodeGoneConnect
 
     # Pass connections from nodeGone to nodeKept.
     if size(connectivity, 2) < 2 * totalConnect + 1
-        network.connectivity = hcat(
+        network.connectivity = vcat(
             network.connectivity,
-            zeros(Int, length(label), 2 * totalConnect + 1 - size(network.connectivity, 2)),
+            zeros(Int, 2 * totalConnect + 1 - size(network.connectivity, 1), length(label)),
         )
         connectivity = network.connectivity
     end
-    connectivity[nodeKept, (2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1)] =
-        connectivity[nodeGone, 2:(2 * nodeGoneConnect + 1)]
-    connectivity[nodeKept, 1] = totalConnect
+    connectivity[(2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1), nodeKept] =
+        connectivity[2:(2 * nodeGoneConnect + 1), nodeGone]
+    connectivity[1, nodeKept] = totalConnect
 
     # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.
     @inbounds @simd for i in 1:nodeGoneConnect
-        link = connectivity[nodeGone, 2 * i]      # Link id for nodeGone
-        colLink = connectivity[nodeGone, 2 * i + 1] # Position of links where link appears.
-        links[link, colLink] = nodeKept         # Replace nodeGone with nodeKept.
-        linksConnect[link, colLink] = nodeKeptConnect + i # Increase connectivity of nodeKept.
+        link = connectivity[2 * i, nodeGone]      # Link id for nodeGone
+        colLink = connectivity[2 * i + 1, nodeGone] # Position of links where link appears.
+        links[colLink, link] = nodeKept         # Replace nodeGone with nodeKept.
+        linksConnect[colLink, link] = nodeKeptConnect + i # Increase connectivity of nodeKept.
     end
 
     # Remove node from network and update index of nodeKept in case it changed.
@@ -229,11 +229,11 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     # Warning: connectivity can be updated by removeLink!().
     # Delete self links of nodeKept.
     i = 1
-    @inbounds while i < connectivity[nodeKept, 1]
-        link = connectivity[nodeKept, 2 * i]      # Link id for nodeKept
-        colLink = connectivity[nodeKept, 2 * i + 1] # Position of links where link appears.
+    @inbounds while i < connectivity[1, nodeKept]
+        link = connectivity[2 * i, nodeKept]      # Link id for nodeKept
+        colLink = connectivity[2 * i + 1, nodeKept] # Position of links where link appears.
         colNotLink = 3 - colLink # The column of the other node in the position of link in links.
-        nodeNotLink = links[link, colNotLink]   # Other node in the link.
+        nodeNotLink = links[colNotLink, link]   # Other node in the link.
         # If nodeKept and nodeNotLink are the same, this is a self-link, therefore delete. Else increase counter.
         nodeKept == nodeNotLink ? removeLink!(network, link) : i += 1
     end
@@ -241,18 +241,18 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     # Warning: connectivity can be updated in the while loop.
     # Delete duplicate links.
     i = 1
-    @inbounds while i < connectivity[nodeKept, 1]
-        link1 = connectivity[nodeKept, 2 * i]         # Link id for nodeKept
-        colLink1 = connectivity[nodeKept, 2 * i + 1]    # Position of links where link appears.
+    @inbounds while i < connectivity[1, nodeKept]
+        link1 = connectivity[2 * i, nodeKept]         # Link id for nodeKept
+        colLink1 = connectivity[2 * i + 1, nodeKept]    # Position of links where link appears.
         colNotLink1 = 3 - colLink1 # The column of the other node in the position of link in links.
-        nodeNotLink1 = links[link1, colNotLink1]    # Other node in the link.
+        nodeNotLink1 = links[colNotLink1, link1]    # Other node in the link.
         # Same but for the next link.
         j = i + 1
-        while j <= connectivity[nodeKept, 1]
-            link2 = connectivity[nodeKept, 2 * j]
-            colLink2 = connectivity[nodeKept, 2 * j + 1]
+        while j <= connectivity[1, nodeKept]
+            link2 = connectivity[2 * j, nodeKept]
+            colLink2 = connectivity[2 * j + 1, nodeKept]
             colNotLink2 = 3 - colLink2
-            nodeNotLink2 = links[link2, colNotLink2]
+            nodeNotLink2 = links[colNotLink2, link2]
 
             # Continue to next iteration if no duplicate links are found.
             if nodeNotLink1 != nodeNotLink2
@@ -262,32 +262,32 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
 
             # Fix Burgers vector.
             # If the nodes are on different ends of a link, conservation of Burgers vector in a loop requires we subtract contributions from the two links involved. Else we add them.
-            colNotLink1 + colNotLink2 == 3 ? bVec[link1, :] -= bVec[link2, :] :
-            bVec[link1, :] += bVec[link2, :]
+            colNotLink1 + colNotLink2 == 3 ? bVec[:, link1] -= bVec[:, link2] :
+            bVec[:, link1] += bVec[:, link2]
 
             # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
             # Fix slip plane.
             # Line direction and velocity of the resultant dislocation.
             t = @SVector [
-                coord[nodeKept, 1] - coord[nodeNotLink1, 1],
-                coord[nodeKept, 2] - coord[nodeNotLink1, 2],
-                coord[nodeKept, 3] - coord[nodeNotLink1, 3],
+                coord[1, nodeKept] - coord[1, nodeNotLink1],
+                coord[2, nodeKept] - coord[2, nodeNotLink1],
+                coord[3, nodeKept] - coord[3, nodeNotLink1],
             ]
 
             v = @SVector [
-                nodeVel[nodeKept, 1] + nodeVel[nodeNotLink1, 1],
-                nodeVel[nodeKept, 2] + nodeVel[nodeNotLink1, 2],
-                nodeVel[nodeKept, 3] + nodeVel[nodeNotLink1, 3],
+                nodeVel[1, nodeKept] + nodeVel[1, nodeNotLink1],
+                nodeVel[2, nodeKept] + nodeVel[2, nodeNotLink1],
+                nodeVel[3, nodeKept] + nodeVel[3, nodeNotLink1],
             ]
 
             # Burgers vector and potential new slip plane.
-            b = @SVector [bVec[link1, 1], bVec[link1, 2], bVec[link1, 3]]
+            b = @SVector [bVec[1, link1], bVec[2, link1], bVec[3, link1]]
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
             if n1 ⋅ n1 > eps(eltype(n1)) # non-screw
-                slipPlane[link1, :] = n1 / norm(n1)
+                slipPlane[:, link1] = n1 / norm(n1)
             elseif n2 ⋅ n2 > eps(eltype(n2)) # screw
-                slipPlane[link1, :] = n2 / norm(n2)
+                slipPlane[:, link1] = n2 / norm(n2)
             end
 
             # Remove link2 from network and update the index of link1 in case it changed.
@@ -296,11 +296,11 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             link1 == lastLink ? link1 = link2 : nothing
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
-            b = @SVector [bVec[link1, 1], bVec[link1, 2], bVec[link1, 3]]
+            b = @SVector [bVec[1, link1], bVec[2, link1], bVec[3, link1]]
             if isapprox(dot(b, b), 0)
                 removeLink!(network, link1)
                 # If the node that was connected to nodeKept has no connections, remove it from the network and update the index of nodeKept in case it changed.
-                if connectivity[nodeNotLink1, 1] == 0
+                if connectivity[1, nodeNotLink1] == 0
                     lastNode = maximum((network.numNode, 1))
                     removeNode!(network, nodeNotLink1, lastNode)
                     nodeKept == lastNode ? nodeKept = nodeNotLink1 : nothing
@@ -315,7 +315,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     end
 
     # If nodeKept has no connections remove it.
-    if connectivity[nodeKept, 1] == 0
+    if connectivity[1, nodeKept] == 0
         removeNode!(network, nodeKept)
         nodeKept = 0
     end
@@ -347,21 +347,21 @@ function coarsenNetwork!(
     i = 1
     while i <= network.numNode
         # We only want to coarsen real internal nodes. Else we skip to the next node.
-        if !(connectivity[i, 1] == 2 && label[i] == 1)
+        if !(connectivity[1, i] == 2 && label[i] == 1)
             i += 1
             continue
         end
-        link1 = connectivity[i, 2]  # Node i in link 1
-        link2 = connectivity[i, 4]  # Node i in link 2
+        link1 = connectivity[2, i]  # Node i in link 1
+        link2 = connectivity[4, i]  # Node i in link 2
 
-        colInLink1 = connectivity[i, 3] # Column of node i in link 1
-        colInLink2 = connectivity[i, 5] # Column of node i in link 2
+        colInLink1 = connectivity[3, i] # Column of node i in link 1
+        colInLink2 = connectivity[5, i] # Column of node i in link 2
 
         oppColLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
         oppColLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
 
-        link1_nodeOppI = links[link1, oppColLink1] # Node i is connected to this node as part of link 1.
-        link2_nodeOppI = links[link2, oppColLink2] # Node i is connected to this node as part of link 2.
+        link1_nodeOppI = links[oppColLink1, link1] # Node i is connected to this node as part of link 1.
+        link2_nodeOppI = links[oppColLink2, link2] # Node i is connected to this node as part of link 2.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source, thus we skip to the next node.
         if label[link1_nodeOppI] == 2 && label[link2_nodeOppI] == 2
@@ -370,19 +370,19 @@ function coarsenNetwork!(
         end
 
         # Coordinate of node i
-        iCoord = @SVector [coord[i, 1], coord[i, 2], coord[i, 3]]
+        iCoord = @SVector [coord[1, i], coord[2, i], coord[3, i]]
         # Create a triangle formed by the three nodes involved in coarsening.
         coordVec1 =
             SVector(
-                coord[link1_nodeOppI, 1],
-                coord[link1_nodeOppI, 2],
-                coord[link1_nodeOppI, 3],
+                coord[1, link1_nodeOppI],
+                coord[2, link1_nodeOppI],
+                coord[3, link1_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
         coordVec2 =
             SVector(
-                coord[link2_nodeOppI, 1],
-                coord[link2_nodeOppI, 2],
-                coord[link2_nodeOppI, 3],
+                coord[1, link2_nodeOppI],
+                coord[2, link2_nodeOppI],
+                coord[3, link2_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 2.
         coordVec3 = vec2 - vec1 # Vector between both nodes connected to iCoord.
         # Lengths of the triangle sides.
@@ -402,18 +402,18 @@ function coarsenNetwork!(
         areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
         # Node i velocities.
-        iVel = @SVector [nodeVel[i, 1], nodeVel[i, 2], nodeVel[i, 3]]
+        iVel = @SVector [nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]]
         velVec1 =
             SVector(
-                nodeVel[link1_nodeOppI, 1],
-                nodeVel[link1_nodeOppI, 2],
-                nodeVel[link1_nodeOppI, 3],
+                nodeVel[1, link1_nodeOppI],
+                nodeVel[2, link1_nodeOppI],
+                nodeVel[3, link1_nodeOppI],
             ) - iVel
         velVec2 =
             SVector(
-                nodeVel[link2_nodeOppI, 1],
-                nodeVel[link2_nodeOppI, 2],
-                nodeVel[link2_nodeOppI, 3],
+                nodeVel[1, link2_nodeOppI],
+                nodeVel[2, link2_nodeOppI],
+                nodeVel[3, link2_nodeOppI],
             ) - iVel
         velVec3 = velVec2 - velVec1
 
@@ -441,12 +441,12 @@ function coarsenNetwork!(
         # If link2_nodeOppI no longer exists there is nothing to calculate and we proceed to the next iteration.
         nodeMerged == 0 ? continue : nothing
 
-        for j in 1:connectivity[nodeMerged, 1]
+        for j in 1:connectivity[1, nodeMerged]
             # Find the new link that has been created between nodeMerged and nodeNotMerged.
-            linkMerged = connectivity[nodeMerged, 2 * j]
-            colLinkMerged = connectivity[nodeMerged, 2 * j + 1]
+            linkMerged = connectivity[2 * j, nodeMerged]
+            colLinkMerged = connectivity[2 * j + 1, nodeMerged]
             colNotLinkMerged = 3 - colLinkMerged
-            nodeNotMerged = links[linkMerged, colNotLinkMerged]
+            nodeNotMerged = links[colNotLinkMerged, linkMerged]
 
             if nodeNotMerged == i || nodeNotMerged == link1_nodeOppI
                 #remesh 67
