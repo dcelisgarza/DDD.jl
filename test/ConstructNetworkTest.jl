@@ -76,7 +76,7 @@ end
         bVec = bVec,
         coord = coord,
         label = label,
-        segForce = zeros(size(coord)),
+        segForce = zeros(3, 2, numSeg),
         nodeVel = zeros(size(coord)),
         numNode = convert(Int, numNode),
         numSeg = convert(Int, numSeg),
@@ -123,7 +123,7 @@ end
         bVec = rand(3, 10),
         coord = rand(3, 10),
         label = nodeType.(rand(0:5, 10)),
-        segForce = rand(3, 10),
+        segForce = rand(3, 2, 10),
         nodeVel = rand(3, 10),
         numNode = convert(Int, 10),
         numSeg = convert(Int, 10),
@@ -139,11 +139,11 @@ end
         network.bVec[:, idx],
         network.coord[:, idx],
         network.label[idx],
-        network.segForce[:, idx],
         network.nodeVel[:, idx],
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
         network.segIdx[idx, :],
+        network.segForce[:, :, idx],
     )
 
     idx = rand(1:10, 5)
@@ -153,11 +153,11 @@ end
         network.bVec[:, idx],
         network.coord[:, idx],
         network.label[idx],
-        network.segForce[:, idx],
         network.nodeVel[:, idx],
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
         network.segIdx[idx, :],
+        network.segForce[:, :, idx],
     )
 end
 
@@ -223,7 +223,7 @@ end
         bVec = zeros(3, 1),
         coord = zeros(3, 1),
         label = zeros(nodeType, 1),
-        segForce = zeros(3, 1),
+        segForce = zeros(3, 2, 1),
         nodeVel = zeros(3, 1),
         numNode = convert(Int, 0),
         numSeg = convert(Int, 0),

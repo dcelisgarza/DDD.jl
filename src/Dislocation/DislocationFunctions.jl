@@ -10,7 +10,7 @@ calcSegForce(
 )
 ```
 """
-function calcSegForce(
+@inline function calcSegForce(
     dlnParams::DislocationP,
     matParams::MaterialP,
     network::DislocationNetwork,
@@ -63,19 +63,21 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     coord = network.coord
     segIdx = network.segIdx
 
-    # Un normalised segment vectors.
+    # Indices for self force.
     if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
         numSeg = network.numSeg
         idxBvec = @view segIdx[1:numSeg, 1]
         idxNode1 = @view segIdx[1:numSeg, 2]
         idxNode2 = @view segIdx[1:numSeg, 3]
     else
+        # Else, calculate forces only on idx.
         numSeg = length(idx)
         idxBvec = @view segIdx[idx, 1]
         idxNode1 = @view segIdx[idx, 2]
         idxNode2 = @view segIdx[idx, 3]
     end
-
+    # Un normalised segment vectors. Use views for speed.
     bVec = @view bVec[:, idxBvec]
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
@@ -117,7 +119,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-        
+
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -189,7 +191,7 @@ At a high level this works by creating a local coordinate frame using the line d
     coord = network.coord
     segIdx = network.segIdx
 
-    # Un normalised segment vectors.
+    # Un normalised segment vectors. Views for speed.
     numSeg = network.numSeg
     idxBvec = @view segIdx[1:numSeg, 1]
     idxNode1 = @view segIdx[1:numSeg, 2]

@@ -151,7 +151,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = noth
         links[:, linkGone] = links[:, lastLink]
         slipPlane[:, linkGone] = slipPlane[:, lastLink]
         bVec[:, linkGone] = bVec[:, lastLink]
-        segForce[:, linkGone] = segForce[:, lastLink]
+        segForce[:, :, linkGone] = segForce[:, :, lastLink]
         linksConnect[:, linkGone] = linksConnect[:, lastLink]
         node1 = links[1, linkGone]
         node2 = links[2, linkGone]
@@ -165,7 +165,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = noth
     links[:, lastLink] .= 0
     slipPlane[:, lastLink] .= 0
     bVec[:, lastLink] .= 0
-    segForce[:, lastLink] .= 0
+    segForce[:, :, lastLink] .= 0
     network.numSeg -= 1
     linksConnect[:, lastLink] .= 0
 
@@ -452,6 +452,7 @@ function coarsenNetwork!(
                 #remesh 67
                 getSegmentIdx!(network)
                 # Calculate segment force for segment linkMerged.
+                segForceTMP = calcSegForce(dlnParams, matParams, network, linkMerged)
                 for k in 1:2
                     # Calculate new velocity for the two nodes involved in linkMerged.
                 end
@@ -545,10 +546,6 @@ function splitNode!(
             network.bVec,
             zeros(eltype(network.bVec), size(network.bVec, 1), numNewEntries),
         )
-        network.segForce = hcat(
-            network.segForce,
-            zeros(eltype(network.segForce), size(network.segForce, 1), numNewEntries),
-        )
         network.linksConnect = hcat(
             network.linksConnect,
             zeros(
@@ -556,6 +553,11 @@ function splitNode!(
                 size(network.linksConnect, 1),
                 numNewEntries,
             ),
+        )
+        network.segForce = cat(
+            network.segForce,
+            zeros(eltype(network.segForce), size(network.segForce, 1), 2, numNewEntries),
+            dims = 3,
         )
     end
 

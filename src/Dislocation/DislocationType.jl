@@ -523,13 +523,12 @@ DislocationNetwork{
 ```
 Dislocation Network structure. See [`DislocationLoop`](@ref), [`makeNetwork`](@ref) and [`makeNetwork!`](@ref) for further details.
 """
-mutable struct DislocationNetwork{T1, T2, T3, T4, T5}
+mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     links::T1
     slipPlane::T2
     bVec::T2
     coord::T2
     label::T3
-    segForce::T2
     nodeVel::T2
     numNode::T4
     numSeg::T4
@@ -537,6 +536,7 @@ mutable struct DislocationNetwork{T1, T2, T3, T4, T5}
     connectivity::T5
     linksConnect::T5
     segIdx::T5
+    segForce::T6
 end
 """
 ```
@@ -570,25 +570,26 @@ Generic keyword constructor for [`DislocationNetwork`](@ref).
     bVec::T2,
     coord::T2,
     label::T3,
-    segForce::T2,
     nodeVel::T2,
     numNode::T4 = 0,
     numSeg::T4 = 0,
     maxConnect::T4 = 0,
     connectivity::T5 = zeros(Int, 0, 0),
-    linksConnect::T5 = zeros(Int, 0, 0),
-    segIdx::T5 = zeros(Int, 0, 0),
+    linksConnect::T5 = zeros(Int, 2, 0),
+    segIdx::T5 = zeros(Int, 2, 3),
+    segForce::T6 = zeros(3, 2, 0),
 ) where {
     T1 <: AbstractArray{T, N} where {T, N},
     T2 <: AbstractArray{T, N} where {T, N},
     T3 <: AbstractVector{nodeType},
     T4 <: Int,
     T5 <: AbstractArray{Int, N} where {N},
+    T6 <: AbstractArray{T, N} where {T, N},
 }
 
-    @assert size(links, 1) == 2
-    @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) == 3
-    @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2)
+    @assert size(links, 1) == size(segForce, 2) == 2
+    @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
+    @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
     @assert size(coord, 2) == length(label)
 
     return DislocationNetwork(
@@ -597,7 +598,6 @@ Generic keyword constructor for [`DislocationNetwork`](@ref).
         bVec,
         coord,
         label,
-        segForce,
         nodeVel,
         numNode,
         numSeg,
@@ -605,6 +605,7 @@ Generic keyword constructor for [`DislocationNetwork`](@ref).
         connectivity,
         linksConnect,
         segIdx,
+        segForce,
     )
 end
 """
@@ -650,10 +651,10 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
     bVec = zeros(3, nodeBuffer)
     coord = zeros(3, nodeBuffer)
     label = zeros(nodeType, nodeBuffer)
-    segForce = zeros(Float64, 3, nodeBuffer)
     nodeVel = zeros(Float64, 3, nodeBuffer)
     numNode = nodeTotal
     numSeg = nodeTotal
+    segForce = zeros(Float64, 3, 2, nodeBuffer)
 
     nodeTotal = 0
     @inbounds for i in eachindex(sources)
@@ -698,7 +699,6 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
         bVec,
         coord,
         label,
-        segForce,
         nodeVel,
         numNode,
         numSeg,
@@ -706,6 +706,7 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
         connectivity,
         linksConnect,
         segIdx,
+        segForce,
     )
 
     # Check that the network is generated properly.

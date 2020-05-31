@@ -32,11 +32,13 @@ cd(@__DIR__)
     )
     network = DislocationNetwork(pentagon; memBuffer = 1)
     network.coord[:, 6:end] .+= [10; 10; 10]
+    factor = rand()
 
     for j in 1:size(network.segForce, 1)
-        for i in 1:size(network.segForce, 2)
-            network.segForce[j, i] = i + (j - 1) * size(network.segForce, 2)
-            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 2)
+        for i in 1:size(network.segForce, 3)
+            network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
+            network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
+            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
         end
     end
 
@@ -162,7 +164,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 9
     @test networkTest.numSeg == 9
@@ -287,7 +290,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 8
     @test networkTest.numSeg == 8
@@ -411,7 +415,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 8
     @test networkTest.numSeg == 8
@@ -535,7 +540,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 8
     @test networkTest.numSeg == 8
@@ -659,7 +665,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 9
     @test networkTest.numSeg == 10
@@ -783,7 +790,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 9
     @test networkTest.numSeg == 10
@@ -908,7 +916,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 7
     @test networkTest.numSeg == 8
@@ -1034,7 +1043,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 5
     @test networkTest.numSeg == 6
@@ -1161,7 +1171,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.bVec, bVec')
     @test isapprox(networkTest.coord, coord')
     @test isapprox(Int.(networkTest.label), label)
-    @test isapprox(networkTest.segForce, segForce')
+    @test isapprox(networkTest.segForce[:, 1, :], segForce')
+    @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
     @test networkTest.numNode == 4
     @test networkTest.numSeg == 4
@@ -1199,10 +1210,12 @@ end
     )
     network = DislocationNetwork(pentagon; memBuffer = 1)
     network.coord[:, 6:end] .+= [10; 10; 10]
+    factor = rand()
     for j in 1:size(network.segForce, 1)
-        for i in 1:size(network.segForce, 2)
-            network.segForce[j, i] = i + (j - 1) * size(network.segForce, 2)
-            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 2)
+        for i in 1:size(network.segForce, 3)
+            network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
+            network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
+            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
         end
     end
 
@@ -1338,7 +1351,7 @@ end
           size(networkTest.bVec, 2) ==
           length(networkTest.label) ==
           size(networkTest.coord, 2) ==
-          size(networkTest.segForce, 2) ==
+          size(networkTest.segForce, 3) ==
           size(networkTest.nodeVel, 2) ==
           size(networkTest.connectivity, 2) ==
           size(networkTest.linksConnect, 2) ==
@@ -1478,7 +1491,7 @@ end
           size(networkTest.bVec, 2) ==
           length(networkTest.label) ==
           size(networkTest.coord, 2) ==
-          size(networkTest.segForce, 2) ==
+          size(networkTest.segForce, 3) ==
           size(networkTest.nodeVel, 2) ==
           size(networkTest.connectivity, 2) ==
           size(networkTest.linksConnect, 2) ==

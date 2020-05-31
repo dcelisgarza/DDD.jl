@@ -71,11 +71,12 @@ function Base.zero(::Type{DislocationNetwork})
         bVec = zeros(3, 0),
         coord = zeros(3, 0),
         label = zeros(nodeType, 0),
-        segForce = zeros(3, 0),
         nodeVel = zeros(3, 0),
         numNode = convert(Int, 0),
         numSeg = convert(Int, 0),
         maxConnect = convert(Int, 0),
+        segForce = zeros(3, 2, 0),
+        linksConnect = zeros(Int, 2, 0)
     )
 end
 function Base.push!(network::DislocationNetwork, n::Int)
@@ -83,9 +84,14 @@ function Base.push!(network::DislocationNetwork, n::Int)
     network.slipPlane = hcat(network.slipPlane, zeros(3, n))
     network.bVec = hcat(network.bVec, zeros(3, n))
     network.coord = hcat(network.coord, zeros(3, n))
-    network.label = [network.label; zeros(nodeType, n)]
-    network.segForce = hcat(network.segForce, zeros(3, n))
+    network.label = vcat(network.label, zeros(nodeType, n))
     network.nodeVel = hcat(network.nodeVel, zeros(3, n))
+    network.connectivity =
+        hcat(network.connectivity, zeros(size(network.connectivity, 1), n))
+    network.linksConnect =
+        hcat(network.linksConnect, zeros(2, n))
+    network.segIdx = vcat(network.segIdx, zeros(n, 3))
+    network.segForce = cat(network.segForce, zeros(3, 2, n), dims = 3)
     return network
 end
 function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector{Int}})
@@ -94,9 +100,9 @@ function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector
     network.bVec[:, i],
     network.coord[:, i],
     network.label[i],
-    network.segForce[:, i],
     network.nodeVel[:, i],
     network.connectivity[:, i],
     network.linksConnect[:, i],
-    network.segIdx[i, :]
+    network.segIdx[i, :],
+    network.segForce[:, :, i]
 end
