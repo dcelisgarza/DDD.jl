@@ -248,7 +248,6 @@ Checks the validity of the dislocation network. It ensures the following conditi
         neighbours = -ones(Int, col)
         for j in 1:col
             j2 = 2 * j
-
             iLink = connectivity[j2, i]     # Link ID.
             colLink = connectivity[j2 + 1, i] # Link position in links.
             colOppLink = 3 - connectivity[2 * j + 1, i] # Opposite column in links
