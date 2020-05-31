@@ -58,7 +58,7 @@ pentagon = DislocationLoop(
 )
 
 using LinearAlgebra
-mean(pentagon.coord, dims=2)
+mean(pentagon.coord, dims = 2)
 network = DislocationNetwork(pentagon; memBuffer = 1)
 # DislocationNetwork!(network, pentagon)
 network.coord = [
@@ -126,36 +126,31 @@ using BenchmarkTools
 self = calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
 
-idx = [1,3,5]
+idx = [2, 5, 7]
 selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
-self[1][:, idx] == selfIdx[1]
+isapprox(self[1][:, idx], selfIdx[1])
+
 self[2][:, idx] == selfIdx[2]
+@btime calcSelfForce(dlnParams, matParams, network, idx)
 
 @allocated calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
 
 ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
-@allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
-
+@allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
 ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
-
-
-
-
-
 ser[:, 2, idx]
 serIdx[:, 2, :]
 
-
-
 @test ser[2][:, idx] == serIdx[2]
 
-idx = rand(1:network.numNode)
+idx = rand(1:(network.numNode))
 serIdx = calcSegSegForce(dlnParams, matParams, network, idx; parallel = false)
+@btime calcSegSegForce(dlnParams, matParams, network, idx; parallel = false)
 @test ser[1][:, idx] == serIdx[1]
 @test ser[2][:, idx] == serIdx[2]
 
@@ -252,14 +247,13 @@ n22 = (2.0, 1.0, 0.0)
 Fnode1, Fnode2, Fnode3, Fnode4 =
     calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
 
-
 x = rand(10000000, 3)'
 xt = copy(transpose(x))
 y = transpose(rand(10000000, 3))
 yt = copy(transpose(y))
 function foo(x)
     for i in 1:size(x, 1)
-        (x[i, :] .* i .- i).^i
+        (x[i, :] .* i .- i) .^ i
     end
 end
 @time foo(x)

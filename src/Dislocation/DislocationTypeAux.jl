@@ -119,7 +119,7 @@ In-place version of [`makeConnect`](@ref).
     links = network.links
     maxConnect = network.maxConnect
 
-    idx = findall(x -> x != 0, links[1,:])
+    idx = findall(x -> x != 0, links[1, :])
     lenLinks = size(links, 2)
     connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)

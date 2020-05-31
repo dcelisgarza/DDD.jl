@@ -66,13 +66,18 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     # Un normalised segment vectors.
     if isnothing(idx)
         numSeg = network.numSeg
-        bVec = @view bVec[:, segIdx[1:numSeg, 1]]
-        tVec = coord[:, segIdx[1:numSeg, 3]] - coord[:, segIdx[1:numSeg, 2]]
+        idxBvec = @view segIdx[1:numSeg, 1]
+        idxNode1 = @view segIdx[1:numSeg, 2]
+        idxNode2 = @view segIdx[1:numSeg, 3]
     else
         numSeg = length(idx)
-        bVec = bVec[:, segIdx[idx, 1]]
-        tVec = coord[:, segIdx[idx, 3]] - coord[:, segIdx[idx, 2]]
+        idxBvec = @view segIdx[idx, 1]
+        idxNode1 = @view segIdx[idx, 2]
+        idxNode2 = @view segIdx[idx, 3]
     end
+
+    bVec = @view bVec[:, idxBvec]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
     # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
     L = zeros(numSeg)
@@ -112,7 +117,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-
+        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -186,9 +191,12 @@ At a high level this works by creating a local coordinate frame using the line d
 
     # Un normalised segment vectors.
     numSeg = network.numSeg
-    bVec = @view bVec[:, segIdx[1:numSeg, 1]]
-    node1 = @view coord[:, segIdx[1:numSeg, 2]]
-    node2 = @view coord[:, segIdx[1:numSeg, 3]]
+    idxBvec = @view segIdx[1:numSeg, 1]
+    idxNode1 = @view segIdx[1:numSeg, 2]
+    idxNode2 = @view segIdx[1:numSeg, 3]
+    bVec = @view bVec[:, idxBvec]
+    node1 = @view coord[:, idxNode1]
+    node2 = @view coord[:, idxNode2]
 
     # Calculate segseg forces on every segment.
     if isnothing(idx)

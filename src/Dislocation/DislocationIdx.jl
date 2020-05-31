@@ -143,7 +143,9 @@ end
 )
     data = getproperty(network, dataField)
     cond = getproperty(network, condField)
-    @assert size(data, 2) == size(cond, 1) || size(data, 1) == size(cond, 2) || size(data) == size(cond) "Number of rows of both fields must be equal."
+    @assert size(data, 2) == size(cond, 1) ||
+            size(data, 1) == size(cond, 2) ||
+            size(data) == size(cond) "Number of rows of both fields must be equal."
     idx = idxCond(cond, val; condition = condition)
     return if ndims(cond) > 1
         return data[idx]
