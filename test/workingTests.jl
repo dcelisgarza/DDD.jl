@@ -38,7 +38,7 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileSlipSystem,
     fileDislocationLoop,
 )
-dislocationLoop
+dislocationLoop[1]
 network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 DislocationNetwork!(network, dislocationLoop)
 
@@ -49,13 +49,16 @@ pentagon = DislocationLoop(
     numLoops = 2,
     segLen = 10 * ones(5),
     slipSystem = 4,
-    _slipPlane = slipSystems.slipPlane[4, :],
-    _bVec = slipSystems.bVec[4, :],
+    _slipPlane = slipSystems.slipPlane[:, 4],
+    _bVec = slipSystems.bVec[:, 4],
     label = nodeType[1; 2; 1; 2; 1],
     buffer = 0.0,
-    range = Float64[-100 -100 -100; 100 100 100],
+    range = Float64[-100 100; -100 100; -100 100],
     dist = Rand(),
 )
+
+using LinearAlgebra
+mean(pentagon.coord, dims=2)
 network = DislocationNetwork(pentagon; memBuffer = 1)
 # DislocationNetwork!(network, pentagon)
 network.coord = [
@@ -121,12 +124,40 @@ scene1 = plotNodesMakie(
 )
 using BenchmarkTools
 self = calcSelfForce(dlnParams, matParams, network)
+@btime calcSelfForce(dlnParams, matParams, network)
+
+idx = [1,3,5]
+selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
+self[1][:, idx] == selfIdx[1]
+self[2][:, idx] == selfIdx[2]
+
 @allocated calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
 
 ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+
+
+ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+
+
+
+
+
+
+ser[:, 2, idx]
+serIdx[:, 2, :]
+
+
+
+@test ser[2][:, idx] == serIdx[2]
+
+idx = rand(1:network.numNode)
+serIdx = calcSegSegForce(dlnParams, matParams, network, idx; parallel = false)
+@test ser[1][:, idx] == serIdx[1]
+@test ser[2][:, idx] == serIdx[2]
 
 par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = true)

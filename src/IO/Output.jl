@@ -40,7 +40,8 @@ save(filename::AbstractString, args...; mode::AbstractString = "w")
 Wrapper for `JSON.print` to a file, `args` are the variables or structures you want to save.
 """
 function save(filename::AbstractString, args...; mode::AbstractString = "w")
-    return open(filename, mode) do io
-        return JSON.print(io, args)
+    open(filename, mode) do io
+        JSON.print(io, args)
     end
+    return nothing
 end

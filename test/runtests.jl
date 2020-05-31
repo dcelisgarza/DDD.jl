@@ -22,6 +22,5 @@ end
 @safetestset "Post-process" begin
     include("./PlotTest.jl")
 end
-
 timeEnd = time_ns()
 println("\nTesting Time (ns): ", timeEnd - timeStart)

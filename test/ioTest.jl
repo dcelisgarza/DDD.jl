@@ -16,7 +16,8 @@ cd(@__DIR__)
         fileSlipSystem,
         fileDislocationLoop,
     )
-    network = DislocationNetwork(dislocationLoop)
+    slipSystems
+    network = DislocationNetwork(dislocationLoop, memBuffer = 1)
     # Dump simulation.
     paramDump = "../outputs/simParams/sampleDump.JSON"
     save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
