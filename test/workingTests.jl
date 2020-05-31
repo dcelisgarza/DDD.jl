@@ -124,6 +124,7 @@ scene1 = plotNodesMakie(
 )
 using BenchmarkTools
 self = calcSelfForce(dlnParams, matParams, network)
+@btime calcSelfForce(dlnParams, matParams, network)
 selfIdx = calcSelfForce(dlnParams, matParams, network, [1,3,5])
 self[1][:, idx] == selfIdx[1]
 self[2][:, idx] == selfIdx[2]
@@ -135,12 +136,20 @@ ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @allocated calcSegSegForce(dlnParams, matParams, network; parallel = false)
 @btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
 
-idx = rand(1:network.numNode, 3)
-serIdx = calcSegSegForce(dlnParams, matParams, network, idx; parallel = false)
-ser[:, 1, idx]
-serIdx[:, 1, :]
 
-== serIdx[:, 1, :]
+ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+@btime calcSegSegForce(dlnParams, matParams, network; parallel = false)
+
+
+
+
+
+
+ser[:, 2, idx]
+serIdx[:, 2, :]
+
+
+
 @test ser[2][:, idx] == serIdx[2]
 
 idx = rand(1:network.numNode)

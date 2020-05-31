@@ -69,15 +69,15 @@ cd(@__DIR__)
     @test isapprox(selfForce[2], f2')
 
 
-    idx = rand(1:network.numNode, 3)
+    idx = rand(1:network.numNode, Int(network.numNode/2))
     selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
-    @test self[1][:, idx] == selfIdx[1]
-    @test self[2][:, idx] == selfIdx[2]
+    @test isapprox(selfForce[1][:, idx], selfIdx[1])
+    @test isapprox(selfForce[2][:, idx], selfIdx[2])
 
     idx = rand(1:network.numNode)
     selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
-    @test self[1][:, idx] == selfIdx[1]
-    @test self[2][:, idx] == selfIdx[2]
+    @test isapprox(selfForce[1][:, idx], selfIdx[1])
+    @test isapprox(selfForce[2][:, idx], selfIdx[2])
 
     pentagon = DislocationLoop(
         loopPrism();
@@ -172,6 +172,16 @@ cd(@__DIR__)
     @test isapprox(remoteForcePar[:, 1, :], f1')
     @test isapprox(remoteForcePar[:, 2, :], f2')
 
+    idx = rand(1:network.numSeg, Int(network.numSeg/2))
+    serIdx = calcSegSegForce(dlnParams, matParams, network, idx)
+    @test isapprox(remoteForceSer[:, :, idx], serIdx)
+    @test isapprox(remoteForcePar[:, :, idx], serIdx)
+
+    idx = rand(1:network.numSeg)
+    serIdx = calcSegSegForce(dlnParams, matParams, network, idx)
+    @test isapprox(remoteForceSer[:, :, idx], serIdx)
+    @test isapprox(remoteForcePar[:, :, idx], serIdx)
+
     hexagonPris = DislocationLoop(
         loopPrism();
         numSides = 6,
@@ -251,4 +261,19 @@ cd(@__DIR__)
     @test isapprox(totalForcePar[:, 2, :], sumForcePar[2])
     @test isapprox(totalForceSer[:, 1, :], totalForcePar[:, 1, :])
     @test isapprox(totalForceSer[:, 2, :], totalForcePar[:, 2, :])
+
+
+    idx = rand(1:network.numSeg, Int(network.numSeg/2))
+    totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
+    totalForceSer = calcSegForce(dlnParams, matParams, network, parallel = false)
+    totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
+    @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
+    @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
+
+    idx = rand(1:network.numSeg)
+    totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
+    totalForceSer = calcSegForce(dlnParams, matParams, network, parallel = false)
+    totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
+    @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
+    @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 end

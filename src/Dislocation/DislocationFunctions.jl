@@ -19,7 +19,7 @@ function calcSegForce(
     # dlnFEM::DislocationFEMCorrective;
     parallel::Bool = true,
 )
-    numSeg = network.numSeg
+    isnothing(idx) ? numSeg = network.numSeg : numSeg = length(idx)
 
     # pkForce = pkForce(mesh, dlnFEM, network)
     selfForce = calcSelfForce(dlnParams, matParams, network, idx)
@@ -66,7 +66,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     # Un normalised segment vectors.
     if isnothing(idx)
         numSeg = network.numSeg
-        bVec = bVec[:, segIdx[1, 1:numSeg]]
+        bVec = @view bVec[:, segIdx[1, 1:numSeg]]
         tVec = coord[:, segIdx[3, 1:numSeg]] - coord[:, segIdx[2, 1:numSeg]]
     else
         numSeg = length(idx)
@@ -186,9 +186,9 @@ At a high level this works by creating a local coordinate frame using the line d
 
     # Un normalised segment vectors.
     numSeg = network.numSeg
-    bVec = bVec[:, segIdx[1, 1:numSeg]]
-    node1 = coord[:, segIdx[2, 1:numSeg]]
-    node2 = coord[:, segIdx[3, 1:numSeg]]
+    bVec = @view bVec[:, segIdx[1, 1:numSeg]]
+    node1 = @view coord[:, segIdx[2, 1:numSeg]]
+    node2 = @view coord[:, segIdx[3, 1:numSeg]]
 
     # Calculate segseg forces on every segment.
     if isnothing(idx)
@@ -251,7 +251,7 @@ At a high level this works by creating a local coordinate frame using the line d
                 b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
                 n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
                 n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
-                for j in (i + 1):numSeg
+                @simd for j in (i + 1):numSeg
                     b2 = @SVector [bVec[1, j], bVec[2, j], bVec[3, j]]
                     n21 = @SVector [node1[1, j], node1[2, j], node1[3, j]]
                     n22 = @SVector [node2[1, j], node2[2, j], node2[3, j]]
@@ -278,20 +278,19 @@ At a high level this works by creating a local coordinate frame using the line d
             end
         end
     else # Calculate segseg forces only on segments provided
-        SegSegForce = zeros(3, 2, length(idx))
-        @fastmath for i in 1:numSeg
+        lenIdx = length(idx)
+        SegSegForce = zeros(3, 2, lenIdx)
+        @fastmath @inbounds for (idx1, i) in enumerate(idx)
             b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
             n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
             n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
-            idx1 = 0
-            for j in idx
+            for j in 1:numSeg
                 i == j ? continue : nothing
-                idx1 += 1
                 b2 = @SVector [bVec[1, j], bVec[2, j], bVec[3, j]]
                 n21 = @SVector [node1[1, j], node1[2, j], node1[3, j]]
                 n22 = @SVector [node2[1, j], node2[2, j], node2[3, j]]
 
-                missing, missing, Fnode3, Fnode4 = calcSegSegForce(
+                Fnode1, Fnode2, missing, missing = calcSegSegForce(
                     aSq,
                     μ4π,
                     μ8π,
@@ -305,8 +304,9 @@ At a high level this works by creating a local coordinate frame using the line d
                     n21,
                     n22,
                 )
-                SegSegForce[:, 1, idx1] += Fnode3
-                SegSegForce[:, 2, idx1] += Fnode4
+
+                SegSegForce[:, 1, idx1] += Fnode1
+                SegSegForce[:, 2, idx1] += Fnode2
             end
         end
     end
