@@ -66,12 +66,12 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     # Un normalised segment vectors.
     if isnothing(idx)
         numSeg = network.numSeg
-        bVec = @view bVec[:, segIdx[1, 1:numSeg]]
-        tVec = coord[:, segIdx[3, 1:numSeg]] - coord[:, segIdx[2, 1:numSeg]]
+        bVec = @view bVec[:, segIdx[1:numSeg, 1]]
+        tVec = coord[:, segIdx[1:numSeg, 3]] - coord[:, segIdx[1:numSeg, 2]]
     else
         numSeg = length(idx)
-        bVec = bVec[:, segIdx[1, idx]]
-        tVec = coord[:, segIdx[3, idx]] - coord[:, segIdx[2, idx]]
+        bVec = bVec[:, segIdx[idx, 1]]
+        tVec = coord[:, segIdx[idx, 3]] - coord[:, segIdx[idx, 2]]
     end
 
     # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
@@ -186,9 +186,9 @@ At a high level this works by creating a local coordinate frame using the line d
 
     # Un normalised segment vectors.
     numSeg = network.numSeg
-    bVec = @view bVec[:, segIdx[1, 1:numSeg]]
-    node1 = @view coord[:, segIdx[2, 1:numSeg]]
-    node2 = @view coord[:, segIdx[3, 1:numSeg]]
+    bVec = @view bVec[:, segIdx[1:numSeg, 1]]
+    node1 = @view coord[:, segIdx[1:numSeg, 2]]
+    node2 = @view coord[:, segIdx[1:numSeg, 3]]
 
     # Calculate segseg forces on every segment.
     if isnothing(idx)

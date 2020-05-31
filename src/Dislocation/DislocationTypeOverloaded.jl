@@ -98,5 +98,5 @@ function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector
     network.nodeVel[:, i],
     network.connectivity[:, i],
     network.linksConnect[:, i],
-    network.segIdx[:, i]
+    network.segIdx[i, :]
 end

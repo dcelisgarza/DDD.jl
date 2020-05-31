@@ -143,7 +143,7 @@ end
         network.nodeVel[:, idx],
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
-        network.segIdx[:, idx],
+        network.segIdx[idx, :],
     )
 
     idx = rand(1:10, 5)
@@ -157,7 +157,7 @@ end
         network.nodeVel[:, idx],
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
-        network.segIdx[:, idx],
+        network.segIdx[idx, :],
     )
 end
 

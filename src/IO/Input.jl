@@ -213,7 +213,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     coord = zeros(3, lenCoord)
     connectivity = zeros(Int, 2 * maxConnect + 1, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
-    segIdx = zeros(Int, 3, lenLinks)
+    segIdx = zeros(Int, lenLinks, 3)
     segForce = zeros(3, lenLinks)
     nodeVel = zeros(3, lenLinks)
 
@@ -225,15 +225,14 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     @inbounds @simd for i in 1:lenCoord
         slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
         bVec[:, i] = convert.(Float64, dict["bVec"][i])
-        # println(i)
         coord[:, i] = convert.(Float64, dict["coord"][i])
-        segIdx[:, i] = convert.(Int, dict["segIdx"][i])
         segForce[:, i] = convert.(Float64, dict["segForce"][i])
         nodeVel[:, i] = convert.(Float64, dict["nodeVel"][i])
+        connectivity[:, i] = convert.(Int, dict["connectivity"][i])
     end
 
-    @inbounds @simd for i in 1:lenCoord
-        connectivity[:, i] = convert.(Int, dict["connectivity"][i])
+    @inbounds @simd for i in 1:3
+        segIdx[:, i] = convert.(Int, dict["segIdx"][i])
     end
 
     dislocationNetwork = DislocationNetwork(;

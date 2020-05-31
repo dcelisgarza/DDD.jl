@@ -155,7 +155,7 @@ getSegmentIdx(
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
 
-    segIdx = zeros(Int, 3, size(links, 2))  # Indexing matrix.
+    segIdx = zeros(Int, size(links, 2), 3)  # Indexing matrix.
     idx = findall(x -> x != 0, label)       # Find all defined nodes.
     numSeg::Int = 0 # Number of segments.
 
@@ -168,7 +168,7 @@ getSegmentIdx(
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1 # Increment index.
         # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
-        segIdx[:, numSeg] = [i, n1, n2]
+        segIdx[numSeg, :] = [i, n1, n2]
     end
 
     return numSeg, segIdx
@@ -182,7 +182,7 @@ getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
 
-    segIdx = zeros(Int, 3, size(links, 2))
+    segIdx = zeros(Int, size(links, 2), 3)
     idx = findall(x -> x != 0, label)
     numSeg::Int = 0
     for i in idx
@@ -190,7 +190,7 @@ getSegmentIdx!(network::DislocationNetwork)
         n2 = links[2, i]
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1
-        segIdx[:, numSeg] = [i, n1, n2]
+        segIdx[numSeg, :] = [i, n1, n2]
     end
 
     network.numSeg = numSeg

@@ -125,7 +125,9 @@ scene1 = plotNodesMakie(
 using BenchmarkTools
 self = calcSelfForce(dlnParams, matParams, network)
 @btime calcSelfForce(dlnParams, matParams, network)
-selfIdx = calcSelfForce(dlnParams, matParams, network, [1,3,5])
+
+idx = [1,3,5]
+selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
 self[1][:, idx] == selfIdx[1]
 self[2][:, idx] == selfIdx[2]
 
