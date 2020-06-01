@@ -110,15 +110,18 @@ julia> prisPentagon = DislocationLoop(
           numLoops = 20,  # Number of loops of this type to generate when making a network.
           segLen = 10 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
           slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-          _slipPlane = slipSystem.slipPlane,  # Slip plane of the segments.
-          _bVec = slipSystem.bVec,            # Burgers vector of the segments.
+          _slipPlane = slipSystems.slipPlane,  # Slip plane of the segments.
+          _bVec = slipSystems.bVec,            # Burgers vector of the segments.
           label = nodeType[1; 2; 1; 2; 1],    # Node labels, has to be equal to the number of nodes.
           buffer = 0.0,   # Buffer to increase the dislocation spread.
-          range = Float64[-100 -100 -100;   # Distribution range
-                           100  100  100],  # [xmin, ymin, zmin; xmax, ymax, zmax].
+          range = Float64[          # Distribution range
+                        -100 100; # xmin, xmax          
+                        -100 100; # ymin, ymax
+                        -100 100  # zmin, zmax
+                      ],
           dist = Rand(),  # Loop distribution.
       )
-DislocationLoop{loopPrism,Int64,Array{Float64,1},Int64,Array{Int64,2},Array{Float64,2},Array{nodeType,1},Float64,Rand}(loopPrism(), 5, 1, 20, [10.0, 10.0, 10.0, 10.0, 10.0], 1, [1 2; 2 3; … ; 4 5; 5 1], [0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258; … ; 0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258], [0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0; … ; 0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0], [-1.932030909139515 -1.932030909139515 -8.055755266097462; 4.820453044614565 4.820453044614565 -5.087941102678986; … ; -1.785143053581134 -1.785143053581134 8.123251093712414; -6.014513813778146 -6.014513813778146 0.10921054317980072], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob], 0.0, [-100.0 -100.0 -100.0; 100.0 100.0 100.0], Rand())
+DislocationLoop{loopPrism,Int64,Array{Float64,1},Int64,Array{Int64,2},Array{Float64,2},Array{nodeType,1},Float64,Rand}(loopPrism(), 5, 1, 20, [10.0, 10.0, 10.0, 10.0, 10.0], 1, [1 2 … 4 5; 2 3 … 5 1], [0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; -0.7071067811865475 -0.7071067811865475 … -0.7071067811865475 -0.7071067811865475; 0.0 0.0 … 0.0 0.0], [-1.932030909139515 4.820453044614565 … -1.785143053581134 -6.014513813778146; -1.932030909139515 4.820453044614565 … -1.785143053581134 -6.014513813778146; -8.055755266097462 -5.087941102678986 … 8.123251093712414 0.10921054317980072], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob], 0.0, [-100.0 100.0; -100.0 100.0; -100.0 100.0], Rand())
 
 julia> shearHexagon = DislocationLoop(
           loopShear();    # Shear loop
@@ -127,15 +130,19 @@ julia> shearHexagon = DislocationLoop(
           numLoops = 20,
           segLen = 10 * ones(3 * 6) / 3,  # The hexagon's side length is 10, each segment is 10/3.
           slipSystem = 1,
-          _slipPlane = slipSystem.slipPlane,
-          _bVec = slipSystem.bVec,
+          _slipPlane = slipSystems.slipPlane,
+          _bVec = slipSystems.bVec,
           label = nodeType[1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2],
           buffer = 0.0,
-          range = Float64[-100 -100 -100;
-                           100  100  100],
+          range = Float64[
+                        -100 100;
+                        -100 100;
+                        -100 100
+                      ],
           dist = Rand(),
       )
-DislocationLoop{loopShear,Int64,Array{Float64,1},Int64,Array{Int64,2},Array{Float64,2},Array{nodeType,1},Float64,Rand}(loopShear(), 6, 3, 20, [3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335], 1, [1 2; 2 3; … ; 17 18; 18 1], [0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258; … ; 0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258], [0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0; … ; 0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0], [5.4433105395181745 -6.804138174397717 1.3608276348795434; 6.804138174397718 -5.443310539518174 -1.3608276348795434; … ; 1.360827634879545 -6.804138174397715 5.443310539518167; 4.082482904638632 -8.164965809277255 4.0824829046386215], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix], 0.0, [-100.0 -100.0 -100.0; 100.0 100.0 100.0], Rand())
+DislocationLoop{loopShear,Int64,Array{Float64,1},Int64,Array{Int64,2},Array{Float64,2},Array{nodeType,1},Float64,Rand}(loopShear(), 6, 3, 20, [3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335], 1, [1 2 … 17 18; 2 3 … 18 1], [0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; -0.7071067811865475 -0.7071067811865475 … -0.7071067811865475 -0.7071067811865475; 0.0 0.0 … 0.0 0.0], [5.443310539518175 6.8041381743977185 … 1.3608276348795458 4.082482904638633; -6.804138174397717 -5.443310539518174 … -6.804138174397715 -8.164965809277255; 1.3608276348795436 -1.3608276348795432
+… 5.443310539518167 4.082482904638622], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix], 0.0, [-100.0 100.0; -100.0 100.0; -100.0 100.0], Rand())
 ```
 The dislocation loops will be centred about the origin, but the `range`, `buffer` and `dist` parameters will distribute the dislocations about the simulation domain once the dislocation network is generated. The type of `dist` must be a concrete subtype of `AbstractDistribution` and `loopDistribution()` method should dispatch on this concrete subtype. If a non-suported distribution is required, you only need to create a concrete subtype of `AbstractDistribution` and a new method of `loopDistribution()` to dispatch on the new type. This is all the reworking needed, since multiple dispatch will take care of any new distributions when generating the dislocation network.
 
@@ -167,17 +174,24 @@ julia> network = DislocationNetwork(
           [shearHexagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
           memBuffer = 1 # Buffer for memory allocation.
        )
-DislocationNetwork{Array{Int64,2},Array{Float64,2},Array{nodeType,1},Int64,Array{Int64,2}}([1 2; 2 3; … ; 459 460; 460 456], [0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258; … ; 0.5773502691896258 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 0.5773502691896258], [0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0; … ; 0.7071067811865475 -0.7071067811865475 0.0; 0.7071067811865475 -0.7071067811865475 0.0], [41.91082711407302 54.62017549955427 30.676858569059906; 43.27165474895257 55.98100313443381 27.955203299300816; … ; -28.839667409599297 -72.8714555754737 -31.14471190957846; -33.06903816979631 -77.10082633567072 -39.158752460111074], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix  …  DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob], [0.0 0.0 0.0; 0.0 0.0 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0], [0.0 0.0 0.0; 0.0 0.0 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0], 460, 460, 4, [2 1 … 0 0; 2 1 … 0 0; … ; 2 458 … 0 0; 2 459 … 0 0], [1 1; 2 1; … ; 2 1; 2 2], [1 1 2; 2 2 3; … ; 459 459 460; 460 460 456])
+ DislocationNetwork{Array{Int64,2},Array{Float64,2},Array{nodeType,1},Int64,Array{Int64,2},Array{Float64,3}}([1 2 … 459 460; 2 3 … 460 456], [0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; -0.7071067811865475 -0.7071067811865475 … -0.7071067811865475 -0.7071067811865475; 0.0 0.0 … 0.0 0.0], [46.39761283211718 47.75844046699673 … -57.496002894414175 -61.72537365461118; -49.937613036904054 -48.57678540202451 … -59.28380906452193 -63.51317982471895; 41.67317243370178 38.9515171639427 … -2.1285556467706765 -10.14259619730329], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix  …  DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob], [0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0], 460, 460, 4, [2 2 … 2 2; 1 1 … 458 459; … ; 0 0 … 0 0; 0 0 … 0 0], [1 2 … 2 2; 1 1 … 1 2], [1 1 2; 2 2 3; … ; 459 459 460; 460 460 456],
+ [0.0 0.0; 0.0 0.0; 0.0 0.0]
+ [0.0 0.0; 0.0 0.0; 0.0 0.0]
+ [0.0 0.0; 0.0 0.0; 0.0 0.0]
+ ...
+ [0.0 0.0; 0.0 0.0; 0.0 0.0]
+ [0.0 0.0; 0.0 0.0; 0.0 0.0]
+ [0.0 0.0; 0.0 0.0; 0.0 0.0])
 ```
 This method automatically takes the previously defined loops and scatters them according to the parameters provided in the `DislocationLoop` structure. Furthermore, the `memBuffer` defaults to 10. The number of entries allocated for the matrices is the total number of nodes in the network times `memBuffer`. Here we allocate enough memory for all the nodes but no more. Since julia is dynamic we can allocate memory when needed. However for performance reasons it is advisable to minimise memory management as much as possible.
 
 This function will also automatically calculate other quantities to keep track of the network's links, nodes and segments.
 ```julia
 julia> fieldnames(typeof(network))
-(:links, :slipPlane, :bVec, :coord, :label, :segForce, :nodeVel, :numNode, :numSeg, :maxConnect, :connectivity, :linksConnect, :segIdx)
+(:links, :slipPlane, :bVec, :coord, :label, :nodeVel, :numNode, :numSeg, :maxConnect, :connectivity, :linksConnect, :segIdx, :segForce)
 ```
 
-We can view our network with special plotting functions, here we use `plotlyjs()` because it provides a nice interactive viewing environment.
+We can also view our network with `plotNodes`.
 ```julia
 julia> fig2 = plotNodes(
           network,
@@ -215,7 +229,7 @@ This is a sample `JSON` file for a dislocation loop. They can be compactified by
     "slipSystem": 1,
     "label": [2, 1, 2, 1, 2, 1, 2, 1],
     "buffer": 0,
-    "range": [[0, 0], [0, 0], [0, 0]],
+    "range": [[0, 0, 0], [0, 0, 0]],
     "dist": "DDD.Zeros()"
   }
 ]

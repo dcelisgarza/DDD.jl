@@ -678,6 +678,7 @@ function refineNetwork!(
             areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
             # Check if we have to split the first link.
+            # Split node the area is greater than the maximum area and if by splitting we would not create two segments smaller than the minimum allowed and if the node is in the simulation. Or if r1 is longer than the maximum length allowed.
             if (areaSq > maxAreaSq && r1 >= twoMinSegLen && link1_nodeOppI <= numNode) ||
                r1 > maxSegLen
                 midCoord =
@@ -717,6 +718,7 @@ function refineNetwork!(
             end
 
             # Check if we have to split the second link.
+            # Split node the area is greater than the maximum area and if by splitting we would not create two segments smaller than the minimum allowed and if the node is in the simulation. Or if r2 is longer than the maximum length allowed.
             if (areaSq > maxAreaSq && r2 >= twoMinSegLen && link2_nodeOppI <= numNode) ||
                r2 > maxSegLen
                 midCoord =
