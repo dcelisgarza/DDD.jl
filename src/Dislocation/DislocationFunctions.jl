@@ -33,6 +33,22 @@ calcSegForce(
 
     return segForce
 end
+@inline function calcSegForce!(
+    dlnParams::DislocationP,
+    matParams::MaterialP,
+    network::DislocationNetwork,
+    idx = nothing;
+    # mesh::RegularCuboidMesh,
+    # dlnFEM::DislocationFEMCorrective;
+    parallel::Bool = true,
+)
+
+    # pkForce!(mesh, dlnFEM, network)
+    calcSelfForce!(dlnParams, matParams, network, idx)
+    calcSegSegForce!(dlnParams, matParams, network, idx; parallel = parallel)
+
+    return network
+end
 
 """
 ```
@@ -67,16 +83,15 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
         numSeg = network.numSeg
-        idxBvec = @view segIdx[1:numSeg, 1]
-        idxNode1 = @view segIdx[1:numSeg, 2]
-        idxNode2 = @view segIdx[1:numSeg, 3]
+        idx = 1:numSeg
     else
         # Else, calculate forces only on idx.
         numSeg = length(idx)
-        idxBvec = @view segIdx[idx, 1]
-        idxNode1 = @view segIdx[idx, 2]
-        idxNode2 = @view segIdx[idx, 3]
     end
+
+    idxBvec = @view segIdx[idx, 1]
+    idxNode1 = @view segIdx[idx, 2]
+    idxNode2 = @view segIdx[idx, 3]
     # Un normalised segment vectors. Use views for speed.
     bVec = @view bVec[:, idxBvec]
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
@@ -94,7 +109,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     torTot = zeros(numSeg)
     lonCore = zeros(numSeg)
 
-    @fastmath @inbounds @simd for i in 1:numSeg
+    @fastmath @simd for i in eachindex(idx)
         # Finding the norm of each line vector.
         tVecSq = tVec[1, i]^2 + tVec[2, i]^2 + tVec[3, i]^2
         L[i] = sqrt(tVecSq)
@@ -144,6 +159,112 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     f1 = -f2
 
     return f1, f2
+end
+@inline function calcSelfForce!(
+    dlnParams::DislocationP,
+    matParams::MaterialP,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+
+    μ = matParams.μ
+    ν = matParams.ν
+    E = matParams.E
+    omNuInv = matParams.omνInv
+    nuOmNuInv = matParams.νomνInv
+    μ4π = matParams.μ4π
+    a = dlnParams.coreRad
+    aSq = dlnParams.coreRadSq
+    bVec = network.bVec
+    coord = network.coord
+    segIdx = network.segIdx
+    segForce = network.segForce
+
+    # Indices for self force.
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg
+        idx = 1:numSeg
+    else
+        # Else, calculate forces only on idx.
+        numSeg = length(idx)
+    end
+
+    # Un normalised segment vectors. Use views for speed.
+    idxBvec = @view segIdx[idx, 1]
+    idxNode1 = @view segIdx[idx, 2]
+    idxNode2 = @view segIdx[idx, 3]
+    bVec = @view bVec[:, idxBvec]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+
+    # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
+    L = zeros(numSeg)
+    Linv = zeros(numSeg)
+    La = zeros(numSeg)
+    bScrew = zeros(numSeg)
+    bEdgeVec = zeros(3, numSeg)
+    bEdgeSq = zeros(numSeg)
+    LaMa = zeros(numSeg)
+    tor = zeros(numSeg)
+    torCore = zeros(numSeg)
+    torTot = zeros(numSeg)
+    lonCore = zeros(numSeg)
+
+    @fastmath @inbounds @simd for i in eachindex(idx)
+        # Finding the norm of each line vector.
+        tVecSq = tVec[1, i]^2 + tVec[2, i]^2 + tVec[3, i]^2
+        L[i] = sqrt(tVecSq)
+        Linv[i] = inv(L[i])
+        # Finding the non-singular norm.
+        La[i] = sqrt(tVecSq + aSq)
+        # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
+        tVec[1, i] *= Linv[i]
+        tVec[2, i] *= Linv[i]
+        tVec[3, i] *= Linv[i]
+        # Screw component, scalar projection of bVec onto t.
+        bScrew[i] =
+            bVec[1, i] * tVec[1, i] + bVec[2, i] * tVec[2, i] + bVec[3, i] * tVec[3, i]
+        # Edge component, vector rejection of bVec onto t.
+        bEdgeVec[1, i] = bVec[1, i] - bScrew[i] * tVec[1, i]
+        bEdgeVec[2, i] = bVec[2, i] - bScrew[i] * tVec[2, i]
+        bEdgeVec[3, i] = bVec[3, i] - bScrew[i] * tVec[3, i]
+        # Finding the norm squared of each edge component.
+        bEdgeSq[i] = sqrt(bEdgeVec[1, i]^2 + bEdgeVec[2, i]^2 + bEdgeVec[3, i]^2)
+        #=
+        A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
+        553?595: gives this expression in appendix A p590
+        f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
+        (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
+
+        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
+        = tVec * bScrew - bVec
+        = - bEdgeVec
+        =#
+        # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
+        LaMa[i] = La[i] - a
+        # Torsional component of core self interaction.
+        tor[i] =
+            μ4π *
+            bScrew[i] *
+            (
+                nuOmNuInv * (log((La[i] + L[i]) / a) - 2 * LaMa[i] * Linv[i]) -
+                LaMa[i]^2 / (2 * La[i] * L[i])
+            )
+        torCore[i] = 2 * E * nuOmNuInv * bScrew[i]
+        torTot[i] = tor[i] + torCore[i]
+        # Longitudinal component of core self interaction.
+        lonCore[i] = (bScrew[i]^2 + bEdgeSq[i] * omNuInv) * E
+
+        segForce[1, 1, idx[i]] += -(torTot[i] * bEdgeVec[1, i] - lonCore[i] * tVec[1, i])
+        segForce[2, 1, idx[i]] += -(torTot[i] * bEdgeVec[2, i] - lonCore[i] * tVec[2, i])
+        segForce[3, 1, idx[i]] += -(torTot[i] * bEdgeVec[3, i] - lonCore[i] * tVec[3, i])
+
+        segForce[1, 2, idx[i]] += -segForce[1, 1, idx[i]]
+        segForce[2, 2, idx[i]] += -segForce[2, 1, idx[i]]
+        segForce[3, 2, idx[i]] += -segForce[3, 1, idx[i]]
+    end
+
+    return network
 end
 
 """
@@ -202,7 +323,7 @@ At a high level this works by creating a local coordinate frame using the line d
 
     # Calculate segseg forces on every segment.
     if isnothing(idx)
-        SegSegForce = zeros(3, 2, numSeg)
+        segSegForce = zeros(3, 2, numSeg)
         if parallel
             # Threadid parallelisation + parallelised reduction.
             TSegSegForce = zeros(Threads.nthreads(), 3, 2, numSeg)
@@ -231,10 +352,21 @@ At a high level this works by creating a local coordinate frame using the line d
                             n22,
                         )
 
-                        TSegSegForce[Threads.threadid(), :, 1, i] += Fnode1
-                        TSegSegForce[Threads.threadid(), :, 1, j] += Fnode3
-                        TSegSegForce[Threads.threadid(), :, 2, i] += Fnode2
-                        TSegSegForce[Threads.threadid(), :, 2, j] += Fnode4
+                        TSegSegForce[Threads.threadid(), 1, 1, i] += Fnode1[1]
+                        TSegSegForce[Threads.threadid(), 2, 1, i] += Fnode1[2]
+                        TSegSegForce[Threads.threadid(), 3, 1, i] += Fnode1[3]
+
+                        TSegSegForce[Threads.threadid(), 1, 1, j] += Fnode3[1]
+                        TSegSegForce[Threads.threadid(), 2, 1, j] += Fnode3[2]
+                        TSegSegForce[Threads.threadid(), 3, 1, j] += Fnode3[3]
+
+                        TSegSegForce[Threads.threadid(), 1, 2, i] += Fnode2[1]
+                        TSegSegForce[Threads.threadid(), 2, 2, i] += Fnode2[2]
+                        TSegSegForce[Threads.threadid(), 3, 2, i] += Fnode2[3]
+
+                        TSegSegForce[Threads.threadid(), 1, 2, j] += Fnode4[1]
+                        TSegSegForce[Threads.threadid(), 2, 2, j] += Fnode4[2]
+                        TSegSegForce[Threads.threadid(), 3, 2, j] += Fnode4[3]
                     end
                 end
             end
@@ -254,7 +386,228 @@ At a high level this works by creating a local coordinate frame using the line d
                 end
             end
             # This allows type inference and reduces memory allocation.
-            SegSegForce .= getproperty.(TSegSegForce2, :value)
+            segSegForce .= getproperty.(TSegSegForce2, :value)
+        elseif parallel == false
+            # Serial execution.
+            @fastmath @inbounds for i in 1:numSeg
+                b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
+                n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
+                n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
+                @simd for j in (i + 1):numSeg
+                    b2 = @SVector [bVec[1, j], bVec[2, j], bVec[3, j]]
+                    n21 = @SVector [node1[1, j], node1[2, j], node1[3, j]]
+                    n22 = @SVector [node2[1, j], node2[2, j], node2[3, j]]
+
+                    Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+                        aSq,
+                        μ4π,
+                        μ8π,
+                        μ8πaSq,
+                        μ4πν,
+                        μ4πνaSq,
+                        b1,
+                        n11,
+                        n12,
+                        b2,
+                        n21,
+                        n22,
+                    )
+                    segSegForce[1, 1, i] += Fnode1[1]
+                    segSegForce[2, 1, i] += Fnode1[2]
+                    segSegForce[3, 1, i] += Fnode1[3]
+
+                    segSegForce[1, 1, j] += Fnode3[1]
+                    segSegForce[2, 1, j] += Fnode3[2]
+                    segSegForce[3, 1, j] += Fnode3[3]
+
+                    segSegForce[1, 2, i] += Fnode2[1]
+                    segSegForce[2, 2, i] += Fnode2[2]
+                    segSegForce[3, 2, i] += Fnode2[3]
+
+                    segSegForce[1, 2, j] += Fnode4[1]
+                    segSegForce[2, 2, j] += Fnode4[2]
+                    segSegForce[3, 2, j] += Fnode4[3]
+                end
+            end
+        end
+    else # Calculate segseg forces only on segments provided
+        lenIdx = length(idx)
+        segSegForce = zeros(3, 2, lenIdx)
+        @fastmath @inbounds for (k, i) in enumerate(idx)
+            b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
+            n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
+            n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
+            for j in 1:numSeg
+                i == j ? continue : nothing
+                b2 = @SVector [bVec[1, j], bVec[2, j], bVec[3, j]]
+                n21 = @SVector [node1[1, j], node1[2, j], node1[3, j]]
+                n22 = @SVector [node2[1, j], node2[2, j], node2[3, j]]
+
+                Fnode1, Fnode2, missing, missing = calcSegSegForce(
+                    aSq,
+                    μ4π,
+                    μ8π,
+                    μ8πaSq,
+                    μ4πν,
+                    μ4πνaSq,
+                    b1,
+                    n11,
+                    n12,
+                    b2,
+                    n21,
+                    n22,
+                )
+
+                segSegForce[1, 1, k] += Fnode1[1]
+                segSegForce[2, 1, k] += Fnode1[2]
+                segSegForce[3, 1, k] += Fnode1[3]
+
+                segSegForce[1, 2, k] += Fnode2[1]
+                segSegForce[2, 2, k] += Fnode2[2]
+                segSegForce[3, 2, k] += Fnode2[3]
+            end
+        end
+    end
+#=
+    ## Atomic add parallelisation, slow as heck on a single processor.
+    TSegSegForce = [Threads.Atomic{Float64}(0.0) for i = 1:(numSeg * 3 * 2)]
+    TSegSegForce = reshape(TSegSegForce, numSeg, 3, 2)
+    nthreads = Base.Threads.nthreads()
+    @fastmath @inbounds Threads.@threads for tid = 1:nthreads
+        start = 1 + ((tid - 1) * numSeg) ÷ nthreads
+        stop = (tid * numSeg) ÷ nthreads
+        domain = start:stop
+        for i = start:stop
+            b1 = (bVec[1, i], bVec[2, i], bVec[3, i])
+            n11 = (node1[1, i], node1[2, i], node1[3, i])
+            n12 = (node2[1, i], node2[2, i], node2[3, i])
+            for j = (i + 1):numSeg
+                b2 = (bVec[1 ,j], bVec[2 ,j], bVec[3 ,j])
+                n21 = (node1[1 ,j], node1[2 ,j], node1[3 ,j])
+                n22 = (node2[1 ,j], node2[2 ,j], node2[3 ,j])
+
+                Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+                    aSq,
+                    μ4π,
+                    μ8π,
+                    μ8πaSq,
+                    μ4πν,
+                    μ4πνaSq,
+                    b1,
+                    n11,
+                    n12,
+                    b2,
+                    n21,
+                    n22,
+                )
+                Threads.atomic_add!.(TSegSegForce[i, :, 1], Fnode1)
+                Threads.atomic_add!.(TSegSegForce[j, :, 1], Fnode3)
+                Threads.atomic_add!.(TSegSegForce[i, :, 2], Fnode2)
+                Threads.atomic_add!.(TSegSegForce[j, :, 2], Fnode4)
+            end
+        end
+    end
+    segSegForce = getproperty.(TSegSegForce, :value)
+=#
+    return segSegForce
+end
+
+@inline function calcSegSegForce!(
+    dlnParams::DislocationP,
+    matParams::MaterialP,
+    network::DislocationNetwork,
+    idx = nothing;
+    parallel::Bool = true,
+)
+
+    # Constants.
+    μ = matParams.μ
+    μ4π = matParams.μ4π
+    μ8π = matParams.μ8π
+    μ4πν = matParams.μ4πν
+    aSq = dlnParams.coreRadSq
+    μ8πaSq = aSq * μ8π
+    μ4πνaSq = aSq * μ4πν
+
+    bVec = network.bVec
+    coord = network.coord
+    segIdx = network.segIdx
+
+    # Un normalised segment vectors. Views for speed.
+    numSeg = network.numSeg
+    idxBvec = @view segIdx[1:numSeg, 1]
+    idxNode1 = @view segIdx[1:numSeg, 2]
+    idxNode2 = @view segIdx[1:numSeg, 3]
+    bVec = @view bVec[:, idxBvec]
+    node1 = @view coord[:, idxNode1]
+    node2 = @view coord[:, idxNode2]
+    segForce = network.segForce
+
+    # Calculate segseg forces on every segment.
+    if isnothing(idx)
+        if parallel
+            # Threadid parallelisation + parallelised reduction.
+            TSegSegForce = zeros(Threads.nthreads(), 3, 2, numSeg)
+            @fastmath @inbounds @sync for i in 1:numSeg
+                Threads.@spawn begin
+                    b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
+                    n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
+                    n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
+                    @simd for j in (i + 1):numSeg
+                        b2 = @SVector [bVec[1, j], bVec[2, j], bVec[3, j]]
+                        n21 = @SVector [node1[1, j], node1[2, j], node1[3, j]]
+                        n22 = @SVector [node2[1, j], node2[2, j], node2[3, j]]
+
+                        Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
+                            aSq,
+                            μ4π,
+                            μ8π,
+                            μ8πaSq,
+                            μ4πν,
+                            μ4πνaSq,
+                            b1,
+                            n11,
+                            n12,
+                            b2,
+                            n21,
+                            n22,
+                        )
+
+                        TSegSegForce[Threads.threadid(), 1, 1, i] += Fnode1[1]
+                        TSegSegForce[Threads.threadid(), 2, 1, i] += Fnode1[2]
+                        TSegSegForce[Threads.threadid(), 3, 1, i] += Fnode1[3]
+
+                        TSegSegForce[Threads.threadid(), 1, 1, j] += Fnode3[1]
+                        TSegSegForce[Threads.threadid(), 2, 1, j] += Fnode3[2]
+                        TSegSegForce[Threads.threadid(), 3, 1, j] += Fnode3[3]
+
+                        TSegSegForce[Threads.threadid(), 1, 2, i] += Fnode2[1]
+                        TSegSegForce[Threads.threadid(), 2, 2, i] += Fnode2[2]
+                        TSegSegForce[Threads.threadid(), 3, 2, i] += Fnode2[3]
+
+                        TSegSegForce[Threads.threadid(), 1, 2, j] += Fnode4[1]
+                        TSegSegForce[Threads.threadid(), 2, 2, j] += Fnode4[2]
+                        TSegSegForce[Threads.threadid(), 3, 2, j] += Fnode4[3]
+                    end
+                end
+            end
+
+            nthreads = Threads.nthreads()
+            TSegSegForce2 = [Threads.Atomic{Float64}(0.0) for i in 1:(numSeg * 3 * 2)]
+            TSegSegForce2 = reshape(TSegSegForce2, 3, 2, numSeg)
+            @fastmath @inbounds @sync for tid in 1:nthreads
+                Threads.@spawn begin
+                    start = 1 + ((tid - 1) * numSeg) ÷ nthreads
+                    stop = (tid * numSeg) ÷ nthreads
+                    domain = start:stop
+                    Threads.atomic_add!.(
+                        TSegSegForce2[:, :, start:stop],
+                        sum(TSegSegForce[:, :, :, start:stop], dims = 1)[1, :, :, :],
+                    )
+                end
+            end
+            # This allows type inference and reduces memory allocation.
+            segForce[:,:,1:numSeg] += getproperty.(TSegSegForce2, :value)
         else
             # Serial execution.
             @fastmath @inbounds for i in 1:numSeg
@@ -280,17 +633,26 @@ At a high level this works by creating a local coordinate frame using the line d
                         n21,
                         n22,
                     )
-                    SegSegForce[:, 1, i] += Fnode1
-                    SegSegForce[:, 1, j] += Fnode3
-                    SegSegForce[:, 2, i] += Fnode2
-                    SegSegForce[:, 2, j] += Fnode4
+                    segForce[1, 1, i] += Fnode1[1]
+                    segForce[2, 1, i] += Fnode1[2]
+                    segForce[3, 1, i] += Fnode1[3]
+
+                    segForce[1, 1, j] += Fnode3[1]
+                    segForce[2, 1, j] += Fnode3[2]
+                    segForce[3, 1, j] += Fnode3[3]
+
+                    segForce[1, 2, i] += Fnode2[1]
+                    segForce[2, 2, i] += Fnode2[2]
+                    segForce[3, 2, i] += Fnode2[3]
+
+                    segForce[1, 2, j] += Fnode4[1]
+                    segForce[2, 2, j] += Fnode4[2]
+                    segForce[3, 2, j] += Fnode4[3]
                 end
             end
         end
     else # Calculate segseg forces only on segments provided
-        lenIdx = length(idx)
-        SegSegForce = zeros(3, 2, lenIdx)
-        @fastmath @inbounds for (idx1, i) in enumerate(idx)
+        @fastmath @inbounds for i in idx
             b1 = @SVector [bVec[1, i], bVec[2, i], bVec[3, i]]
             n11 = @SVector [node1[1, i], node1[2, i], node1[3, i]]
             n12 = @SVector [node2[1, i], node2[2, i], node2[3, i]]
@@ -315,53 +677,17 @@ At a high level this works by creating a local coordinate frame using the line d
                     n22,
                 )
 
-                SegSegForce[:, 1, idx1] += Fnode1
-                SegSegForce[:, 2, idx1] += Fnode2
+                segForce[1, 1, i] += Fnode1[1]
+                segForce[2, 1, i] += Fnode1[2]
+                segForce[3, 1, i] += Fnode1[3]
+
+                segForce[1, 2, i] += Fnode2[1]
+                segForce[2, 2, i] += Fnode2[2]
+                segForce[3, 2, i] += Fnode2[3]
             end
         end
     end
-
-    ### Atomic add parallelisation, slow as heck on a single processor.
-    # TSegSegForce = [Threads.Atomic{Float64}(0.0) for i = 1:(numSeg * 3 * 2)]
-    # TSegSegForce = reshape(TSegSegForce, numSeg, 3, 2)
-    # nthreads = Base.Threads.nthreads()
-    # @fastmath @inbounds Threads.@threads for tid = 1:nthreads
-    #     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
-    #     stop = (tid * numSeg) ÷ nthreads
-    #     domain = start:stop
-    #     for i = start:stop
-    #         b1 = (bVec[1, i], bVec[2, i], bVec[3, i])
-    #         n11 = (node1[1, i], node1[2, i], node1[3, i])
-    #         n12 = (node2[1, i], node2[2, i], node2[3, i])
-    #         for j = (i + 1):numSeg
-    #             b2 = (bVec[1 ,j], bVec[2 ,j], bVec[3 ,j])
-    #             n21 = (node1[1 ,j], node1[2 ,j], node1[3 ,j])
-    #             n22 = (node2[1 ,j], node2[2 ,j], node2[3 ,j])
-    #
-    #             Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
-    #                 aSq,
-    #                 μ4π,
-    #                 μ8π,
-    #                 μ8πaSq,
-    #                 μ4πν,
-    #                 μ4πνaSq,
-    #                 b1,
-    #                 n11,
-    #                 n12,
-    #                 b2,
-    #                 n21,
-    #                 n22,
-    #             )
-    #             Threads.atomic_add!.(TSegSegForce[i, :, 1], Fnode1)
-    #             Threads.atomic_add!.(TSegSegForce[j, :, 1], Fnode3)
-    #             Threads.atomic_add!.(TSegSegForce[i, :, 2], Fnode2)
-    #             Threads.atomic_add!.(TSegSegForce[j, :, 2], Fnode4)
-    #         end
-    #     end
-    # end
-    # SegSegForce = getproperty.(TSegSegForce, :value)
-
-    return SegSegForce
+    return network
 end
 @inline function calcSegSegForce(
     aSq::T1,

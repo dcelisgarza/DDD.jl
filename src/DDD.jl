@@ -19,8 +19,8 @@ export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
 export DislocationLoop, DislocationNetwork, DislocationNetwork!
 export getSegmentIdx!, makeConnect!
 # Dislocation functions.
-export checkNetwork, loopDistribution, calcSelfForce
-export calcSegSegForce, calcParSegSegForce, calcSegForce
+export checkNetwork, loopDistribution, calcSelfForce, calcSelfForce!
+export calcSegSegForce, calcSegSegForce!, calcParSegSegForce, calcSegForce, calcSegForce!
 # Topology
 export removeNode!, mergeNode!, splitNode!
 include("./FEM/FEMBase.jl")

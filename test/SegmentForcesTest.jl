@@ -274,4 +274,51 @@ cd(@__DIR__)
     totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
+
+    # In-place functions.
+    numSeg = network.numSeg
+    idx = rand(1:numSeg)
+    self = calcSelfForce(dlnParams, matParams, network)
+    selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
+    @test isapprox(self[1][:, idx], selfIdx[1])
+    @test isapprox(self[2][:, idx], selfIdx[2])
+    network.segForce .= 0
+    calcSelfForce!(dlnParams, matParams, network)
+    @test isapprox(self[1], network.segForce[:, 1, 1:numSeg])
+    isapprox(self[2], network.segForce[:, 2, 1:numSeg])
+    network.segForce .= 0
+    calcSelfForce!(dlnParams, matParams, network, idx)
+    @test isapprox(self[1][:, idx], network.segForce[:, 1, idx])
+    @test isapprox(self[2][:, idx], network.segForce[:, 2, idx])
+
+    ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+    network.segForce .= 0
+    calcSegSegForce!(dlnParams, matParams, network; parallel = false)
+    @test isapprox(network.segForce[:, :, 1:numSeg], ser)
+    network.segForce .= 0
+    calcSegSegForce!(dlnParams, matParams, network, idx; parallel = false)
+    @test isapprox(network.segForce[:, :, idx], ser[:, :, idx])
+
+    par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+    network.segForce .= 0
+    calcSegSegForce!(dlnParams, matParams, network; parallel = true)
+    @test isapprox(network.segForce[:, :, 1:numSeg], par)
+    network.segForce .= 0
+    calcSegSegForce!(dlnParams, matParams, network, idx; parallel = true)
+    @test isapprox(network.segForce[:, :, idx], par[:, :, idx])
+    @test isapprox(par, ser)
+
+    tot = calcSegForce(dlnParams, matParams, network)
+    @test isapprox(tot[:, 1, :], self[1] + ser[:, 1, :])
+    @test isapprox(tot[:, 2, :], self[2] + ser[:, 2, :])
+    network.segForce .= 0
+    calcSegForce!(dlnParams, matParams, network)
+    @test isapprox(tot, network.segForce[:, :, 1:numSeg])
+
+    tot = calcSegForce(dlnParams, matParams, network, idx)
+    @test isapprox(tot[:, 1, :], self[1][:, idx] + ser[:, 1, idx])
+    @test isapprox(tot[:, 2, :], self[2][:, idx] + ser[:, 2, idx])
+    network.segForce .= 0
+    calcSegForce!(dlnParams, matParams, network, idx)
+    @test isapprox(tot, network.segForce[:, :, idx])
 end

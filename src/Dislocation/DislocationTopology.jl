@@ -592,7 +592,7 @@ function splitNode!(
     coord = network.coord
     nodeVel = network.nodeVel
 
-    # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
+    # WARNING This calculation's dodgy. Try using the cross product of the adjacent segments.
     t = @SVector [
         coord[1, splitNode] - coord[1, newNode],
         coord[2, splitNode] - coord[2, newNode],
