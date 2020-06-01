@@ -96,7 +96,6 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     bVec = @view bVec[:, idxBvec]
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
-    # We don't use fused-vectorised operations or dot products because the explicit loop is already 3x faster at 100 dislocations, scales much better in memory and compute time, and can be parallelised more easily. Though the parallelisation overhead isn't worth it unless you are running monstruous simulations.
     selfForceNode2 = zeros(3, numSeg)
 
     @fastmath @simd for i in eachindex(idx)

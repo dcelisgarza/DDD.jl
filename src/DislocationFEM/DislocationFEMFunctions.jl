@@ -26,15 +26,18 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
     node2 = coord[idx[:, 3], :]
     tVec = node2 - node1            # Line vector.
     midNode = 0.5 * (node1 + node2) # Midpoint of segment.
-    PKForce = zeros(numSeg, 3)      # Vector of PK force.
+    PKForce = zeros(3, numSeg)      # Vector of PK force.
 
     # Loop over segments.
     @inbounds @simd for i in 1:numSeg
-        x0 = @SVector [midNode[i, 1], midNode[i, 2], midNode[i, 3]]
-        b = @SVector [bVec[i, 1], bVec[i, 2], bVec[i, 3]]
-        t = @SVector [tVec[i, 1], tVec[i, 2], tVec[i, 3]]
+        x0 = SVector{3, Float64}(midNode[i, 1], midNode[i, 2], midNode[i, 3])
+        b = SVector{3, Float64}(bVec[i, 1], bVec[i, 2], bVec[i, 3])
+        t = SVector{3, Float64}(tVec[i, 1], tVec[i, 2], tVec[i, 3])
         σ_hat = calc_σ_hat(mesh, dlnFEM, x0)
-        PKForce[i, :] = (σ_hat * b) × t
+        pkforce = (σ_hat * b) × t
+        PKForce[1, i] = pkforce[1]
+        PKForce[2, i] = pkforce[2]
+        PKForce[3, i] = pkforce[3]
     end
 
     return PKForce

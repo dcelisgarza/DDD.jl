@@ -79,7 +79,7 @@ shearHexagon = DislocationLoop(
     ],
     dist = Rand(),
 )
-network = DislocationNetwork([shearHexagon, prisPentagon]; memBuffer = 1)
+network = DislocationNetwork([shearHexagon, prisPentagon], memBuffer = 1)
 
 network.links = copy([
     1 2
@@ -3820,7 +3820,10 @@ function timeSplit(network, node, connection, meanCoord, meanVel)
     splitNode!(network, 173, 1, meanCoord, meanVel)
 end
 copyTime = 15.701e-6
-timeMerge(network)
+network2 = deepcopy(network)
+timeMerge(network2)
+meanCoord = vec(mean(network.coord, dims=2))
+meanVel = vec(mean(network.nodeVel, dims=2))
 network2 = deepcopy(network)
 timeSplit(network2, 173, 1, meanCoord, meanVel)
 
@@ -3838,7 +3841,7 @@ timeRem!(dislocationP, materialP, network, 127)
 selfOutComp = 7.440175390630199e-05 / 21.504e-6
 selfInComp = 7.440175390630199e-05 / 18.432e-6
 
-@time timeRem(dislocationP, materialP, network, parallel = false)
+@btime timeRem(dislocationP, materialP, network, parallel = false)
 @btime timeRem!(dislocationP, materialP, network, parallel = false)
 remOutComp = 0.081659618478275 / 77.892e-3
 remInComp = 0.081659618478275 / 77.837e-3
@@ -3859,6 +3862,8 @@ meanVel = vec(mean(network2.nodeVel, dims=2))
 @btime splitNode!(network2, 173, 1, meanCoord, meanVel)
 splitComp = 4.463750247893207e-05/416.804e-9
 
+timeMerge(network)
+@btime deepcopy(network)
 @btime timeMerge(network)
 mergeComp = 5.452575341614758e-05/(17.066e-6-copyTime)
 

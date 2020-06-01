@@ -202,7 +202,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     totalConnect = nodeKeptConnect + nodeGoneConnect
 
     # Pass connections from nodeGone to nodeKept.
-    if size(connectivity, 2) < 2 * totalConnect + 1
+    if size(connectivity, 1) < 2 * totalConnect + 1
         network.connectivity = vcat(
             network.connectivity,
             zeros(Int, 2 * totalConnect + 1 - size(network.connectivity, 1), length(label)),
@@ -268,20 +268,20 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
             # Fix slip plane.
             # Line direction and velocity of the resultant dislocation.
-            t = @SVector [
+            t = SVector{3, Float64}(
                 coord[1, nodeKept] - coord[1, nodeNotLink1],
                 coord[2, nodeKept] - coord[2, nodeNotLink1],
                 coord[3, nodeKept] - coord[3, nodeNotLink1],
-            ]
+            )
 
-            v = @SVector [
+            v = SVector{3, Float64}(
                 nodeVel[1, nodeKept] + nodeVel[1, nodeNotLink1],
                 nodeVel[2, nodeKept] + nodeVel[2, nodeNotLink1],
                 nodeVel[3, nodeKept] + nodeVel[3, nodeNotLink1],
-            ]
+            )
 
             # Burgers vector and potential new slip plane.
-            b = @SVector [bVec[1, link1], bVec[2, link1], bVec[3, link1]]
+            b = SVector{3, Float64}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
             if n1 ⋅ n1 > eps(eltype(n1)) # non-screw
@@ -296,7 +296,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             link1 == lastLink ? link1 = link2 : nothing
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
-            b = @SVector [bVec[1, link1], bVec[2, link1], bVec[3, link1]]
+            b = SVector{3, Float64}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             if isapprox(dot(b, b), 0)
                 removeLink!(network, link1)
                 # If the node that was connected to nodeKept has no connections, remove it from the network and update the index of nodeKept in case it changed.
@@ -370,7 +370,7 @@ function coarsenNetwork!(
         end
 
         # Coordinate of node i
-        iCoord = @SVector [coord[1, i], coord[2, i], coord[3, i]]
+        iCoord = SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i])
         # Create a triangle formed by the three nodes involved in coarsening.
         coordVec1 =
             SVector(
@@ -402,7 +402,7 @@ function coarsenNetwork!(
         areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
         # Node i velocities.
-        iVel = @SVector [nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]]
+        iVel = SVector{3, Float64}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
         velVec1 =
             SVector(
                 nodeVel[1, link1_nodeOppI],
@@ -522,7 +522,7 @@ function splitNode!(
     linksConnect[colLink, link] = 1
 
     # Check if we need a new link between newNode and splitNode for Burgers vector conservation.
-    b = @SVector [bVec[1, link], bVec[2, link], bVec[3, link]]
+    b = SVector{3, Float64}(bVec[1, link], bVec[2, link], bVec[3, link])
     # If burgers vector is conserved return.
     b ⋅ b == 0 && return network
 
@@ -593,17 +593,17 @@ function splitNode!(
     nodeVel = network.nodeVel
 
     # WARNING This calculation's dodgy. Try using the cross product of the adjacent segments.
-    t = @SVector [
+    t = SVector{3, Float64}(
         coord[1, splitNode] - coord[1, newNode],
         coord[2, splitNode] - coord[2, newNode],
         coord[3, splitNode] - coord[3, newNode],
-    ]
+    )
 
-    v = @SVector [
+    v = SVector{3, Float64}(
         nodeVel[1, splitNode] + nodeVel[1, newNode],
         nodeVel[2, splitNode] + nodeVel[2, newNode],
         nodeVel[3, splitNode] + nodeVel[3, newNode],
-    ]
+    )
 
     # Potential new slip plane.
     n1 = t × b  # For non-screw segments.
@@ -650,7 +650,7 @@ function refineNetwork!(
             link2_nodeOppI = links[oppColLink2, link1] # Node i is connected to this node as part of link 2.
 
             # Create triangle formed by the node and its two links.
-            iCoord = @SVector [coord[1, i], coord[2, i], coord[3, i]]
+            iCoord = SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i])
             # Side 1
             coordVec1 =
                 SVector(
