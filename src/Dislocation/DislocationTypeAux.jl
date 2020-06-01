@@ -76,14 +76,23 @@ Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the 
     maxConnect::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
 
-    # Indices of defined links.
-    idx = findall(x -> x != 0, links[1, :])
     lenLinks = size(links, 2)
+
+    # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
+    idx = findfirst(x -> x == 0, links[1, :])
+    if isnothing(idx)
+        idx = lenLinks
+    elseif idx == 1
+        idx = 1
+    else
+        idx -= 1
+    end
+
     connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
 
     # Loop through indices.
-    @inbounds @simd for i in idx
+    for i in 1:idx
         # Node 1, it is the row of the coord matrix.
         n1 = links[1, i]
         n2 = links[2, i]
@@ -115,15 +124,20 @@ In-place version of [`makeConnect`](@ref).
 """
 @inline function makeConnect!(network::DislocationNetwork)
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
-
     links = network.links
     maxConnect = network.maxConnect
-
-    idx = findall(x -> x != 0, links[1, :])
     lenLinks = size(links, 2)
+    idx = findfirst(x -> x == 0, links[1, :])
+    if isnothing(idx)
+        idx = lenLinks
+    elseif idx == 1
+        idx = 1
+    else
+        idx -= 1
+    end
     connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
-    @inbounds @simd for i in idx
+    @inbounds @simd for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
         connectivity[1, n1] += 1
@@ -135,10 +149,8 @@ In-place version of [`makeConnect`](@ref).
         linksConnect[1, i] = connectivity[1, n1]
         linksConnect[2, i] = connectivity[1, n2]
     end
-
     network.connectivity = connectivity
     network.linksConnect = linksConnect
-
     return network
 end
 
@@ -155,12 +167,23 @@ getSegmentIdx(
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
 
-    segIdx = zeros(Int, size(links, 2), 3)  # Indexing matrix.
-    idx = findall(x -> x != 0, label)       # Find all defined nodes.
+    lenLinks = size(links, 2)
+    segIdx = zeros(Int, lenLinks, 3)  # Indexing matrix.
+
+    # Find all defined nodes.
+    idx = findfirst(x -> x == 0, links[1, :])
+    if isnothing(idx)
+        idx = lenLinks
+    elseif idx == 1
+        idx = 1
+    else
+        idx -= 1
+    end
+
     numSeg::Int = 0 # Number of segments.
 
     # Loop through indices.
-    for i in idx
+    for i in 1:idx
         # Nodes.
         n1 = links[1, i]
         n2 = links[2, i]
@@ -181,21 +204,26 @@ getSegmentIdx!(network::DislocationNetwork)
 @inline function getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
-
-    segIdx = zeros(Int, size(links, 2), 3)
-    idx = findall(x -> x != 0, label)
+    lenLinks = size(links, 2)
+    segIdx = zeros(Int, lenLinks, 3)
+    idx = findfirst(x -> x == 0, links[1, :])
+    if isnothing(idx)
+        idx = lenLinks
+    elseif idx == 1
+        idx = 1
+    else
+        idx -= 1
+    end
     numSeg::Int = 0
-    for i in idx
+    for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1
         segIdx[numSeg, :] = [i, n1, n2]
     end
-
     network.numSeg = numSeg
     network.segIdx = segIdx
-
     return network
 end
 
@@ -215,19 +243,28 @@ Checks the validity of the dislocation network. It ensures the following conditi
 
 """
 @inline function checkNetwork(network::DislocationNetwork)
-    label = network.label
-    idx = findall(x -> x != 0, label)
+
     links = network.links
+    label = network.label
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
-    # Connectivity and links must be the same length.
-    maximum(connectivity) == length(links[1, idx]) ? nothing :
+    idx = findfirst(x -> x == 0, links[1, :])
+    if isnothing(idx)
+        idx = size(links, 2)
+    elseif idx == 1
+        idx = 1
+    else
+        idx -= 1
+    end
+
+    # Max value of connectivity should be the last link.
+    maximum(connectivity) == idx ? nothing :
     error("Non-empty entries of connectivity should be the same as the non-empty entries of links.")
 
     bVec = network.bVec
     bSum = zeros(3)
-    @inbounds for i in idx
+    @inbounds for i in 1:idx
         iLinkBuffer = zeros(Int, 0)
         col = connectivity[1, i]
 
