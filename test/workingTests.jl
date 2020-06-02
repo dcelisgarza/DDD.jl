@@ -131,18 +131,17 @@ isapprox(self[1][:, idx], selfIdx[1])
 isapprox(self[2][:, idx], selfIdx[2])
 network.segForce .= 0
 calcSelfForce!(dlnParams, matParams, network)
-isapprox(self[1], network.segForce[:, 1, 1:network.numSeg])
-isapprox(self[2], network.segForce[:, 2, 1:network.numSeg])
+isapprox(self[1], network.segForce[:, 1, 1:(network.numSeg)])
+isapprox(self[2], network.segForce[:, 2, 1:(network.numSeg)])
 network.segForce .= 0
 calcSelfForce!(dlnParams, matParams, network, idx)
 isapprox(self[1][:, idx], network.segForce[:, 1, idx])
 isapprox(self[2][:, idx], network.segForce[:, 2, idx])
 
-
 ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
 network.segForce .= 0
 calcSegSegForce!(dlnParams, matParams, network; parallel = false)
-isapprox(network.segForce[:,:,1:network.numSeg], ser)
+isapprox(network.segForce[:, :, 1:(network.numSeg)], ser)
 network.segForce .= 0
 calcSegSegForce!(dlnParams, matParams, network, idx; parallel = false)
 isapprox(network.segForce[:, :, idx], ser[:, :, idx])
@@ -150,30 +149,28 @@ isapprox(network.segForce[:, :, idx], ser[:, :, idx])
 par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
 network.segForce .= 0
 calcSegSegForce!(dlnParams, matParams, network; parallel = true)
-isapprox(network.segForce[:,:,1:network.numSeg], par)
+isapprox(network.segForce[:, :, 1:(network.numSeg)], par)
 network.segForce .= 0
 calcSegSegForce!(dlnParams, matParams, network, idx; parallel = true)
-isapprox(network.segForce[:,:, idx], par[:,:,idx])
+isapprox(network.segForce[:, :, idx], par[:, :, idx])
 isapprox(par, ser)
 
 tot = calcSegForce(dlnParams, matParams, network)
-isapprox(tot[:,1,:], self[1]+ser[:,1,:])
-isapprox(tot[:,2,:], self[2]+ser[:,2,:])
+isapprox(tot[:, 1, :], self[1] + ser[:, 1, :])
+isapprox(tot[:, 2, :], self[2] + ser[:, 2, :])
 network.segForce .= 0
 calcSegForce!(dlnParams, matParams, network)
-isapprox(tot,network.segForce[:,:,1:network.numSeg])
-
+isapprox(tot, network.segForce[:, :, 1:(network.numSeg)])
 
 tot = calcSegForce(dlnParams, matParams, network, idx)
-self[1][:,idx]
-ser[:,1,idx]
-tot[:,1,:]
-isapprox(tot[:,1,:], self[1][:,idx]+ser[:,1,idx])
-isapprox(tot[:,2,:], self[2][:,idx]+ser[:,2,idx])
+self[1][:, idx]
+ser[:, 1, idx]
+tot[:, 1, :]
+isapprox(tot[:, 1, :], self[1][:, idx] + ser[:, 1, idx])
+isapprox(tot[:, 2, :], self[2][:, idx] + ser[:, 2, idx])
 network.segForce .= 0
 calcSegForce!(dlnParams, matParams, network, idx)
-isapprox(tot,network.segForce[:,:,idx])
-
+isapprox(tot, network.segForce[:, :, idx])
 
 function selfIn(dlnParams, matParams, network, idx = nothing)
     network.segForce .= 0
@@ -182,13 +179,13 @@ end
 function selfOut(dlnParams, matParams, network, idx = nothing)
     network.segForce .= 0
     if idx == nothing
-        range = 1:network.numSeg
+        range = 1:(network.numSeg)
     else
         range = idx
     end
     f1, f2 = calcSelfForce(dlnParams, matParams, network, idx)
-    network.segForce[:,1,range] += f1
-    network.segForce[:,2,range] += f2
+    network.segForce[:, 1, range] += f1
+    network.segForce[:, 2, range] += f2
 end
 function remIn(dlnParams, matParams, network, idx = nothing; parallel = false)
     network.segForce .= 0
@@ -197,11 +194,12 @@ end
 function remOut(dlnParams, matParams, network, idx = nothing; parallel = false)
     network.segForce .= 0
     if idx == nothing
-        range = 1:network.numSeg
+        range = 1:(network.numSeg)
     else
         range = idx
     end
-    network.segForce[:,:,range] += calcSegSegForce(dlnParams, matParams, network, idx; parallel = parallel)
+    network.segForce[:, :, range] +=
+        calcSegSegForce(dlnParams, matParams, network, idx; parallel = parallel)
     # calcSegSegForce(dlnParams, matParams, network, idx, parallel = parallel)
 end
 function totIn(dlnParams, matParams, network, idx = nothing; parallel = false)
@@ -211,13 +209,13 @@ end
 function totOut(dlnParams, matParams, network, idx = nothing; parallel = false)
     network.segForce .= 0
     if idx == nothing
-        range = 1:network.numSeg
+        range = 1:(network.numSeg)
     else
         range = idx
     end
-    network.segForce[:,:,range] += calcSegForce(dlnParams, matParams, network, idx; parallel = parallel)
+    network.segForce[:, :, range] +=
+        calcSegForce(dlnParams, matParams, network, idx; parallel = parallel)
 end
-
 
 selfOut(dlnParams, matParams, network)
 @btime selfIn(dlnParams, matParams, network)
@@ -235,7 +233,6 @@ selfOut(dlnParams, matParams, network)
 
 totIn(dlnParams, matParams, network)
 totOut(dlnParams, matParams, network)
-
 
 isapprox(self[1][:, idx], selfIdx[1])
 

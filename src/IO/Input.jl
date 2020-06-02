@@ -231,7 +231,6 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         connectivity[:, i] = dict["connectivity"][i]
     end
 
-
     @inbounds @simd for i in 1:3
         segIdx[:, i] = dict["segIdx"][i]
     end

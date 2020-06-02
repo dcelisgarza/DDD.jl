@@ -119,7 +119,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-
+        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -200,7 +200,7 @@ end
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-
+        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -448,7 +448,7 @@ At a high level this works by creating a local coordinate frame using the line d
                     b2 = (bVec[1 ,j], bVec[2 ,j], bVec[3 ,j])
                     n21 = (node1[1 ,j], node1[2 ,j], node1[3 ,j])
                     n22 = (node2[1 ,j], node2[2 ,j], node2[3 ,j])
-
+    
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
                         μ4π,

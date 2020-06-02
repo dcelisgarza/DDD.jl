@@ -76,7 +76,7 @@ function Base.zero(::Type{DislocationNetwork})
         numSeg = convert(Int, 0),
         maxConnect = convert(Int, 0),
         segForce = zeros(3, 2, 0),
-        linksConnect = zeros(Int, 2, 0)
+        linksConnect = zeros(Int, 2, 0),
     )
 end
 function Base.push!(network::DislocationNetwork, n::Int)
@@ -88,8 +88,7 @@ function Base.push!(network::DislocationNetwork, n::Int)
     network.nodeVel = hcat(network.nodeVel, zeros(3, n))
     network.connectivity =
         hcat(network.connectivity, zeros(size(network.connectivity, 1), n))
-    network.linksConnect =
-        hcat(network.linksConnect, zeros(2, n))
+    network.linksConnect = hcat(network.linksConnect, zeros(2, n))
     network.segIdx = vcat(network.segIdx, zeros(n, 3))
     network.segForce = cat(network.segForce, zeros(3, 2, n), dims = 3)
     return network
