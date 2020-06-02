@@ -236,3 +236,5 @@ Calculate norms along dimension `dim` of an array, returns a vector of norms.
 @inline function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
     return vec(sqrt.(dimDot(x, x; dim = dim)))
 end
+
+⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1, T2} = x * y'

@@ -452,7 +452,7 @@ function coarsenNetwork!(
                 #remesh 67
                 getSegmentIdx!(network)
                 # Calculate segment force for segment linkMerged.
-                segForceTMP = calcSegForce(dlnParams, matParams, network, linkMerged)
+                calcSegForce!(dlnParams, matParams, network, linkMerged)
                 for k in 1:2
                     # Calculate new velocity for the two nodes involved in linkMerged.
                 end
