@@ -1,4 +1,4 @@
-function dlnMobility!(
+function dlnMobility(
     mobility::mobBCC,
     dlnParams::DislocationP,
     network::DislocationNetwork,
@@ -138,9 +138,15 @@ function dlnMobility!(
         # ξ v = f
         try
             iNodeVel = totalDrag \ iNodeForce
-        catch e
-            totalDrag += I3 * maximum(abs.(totalDrag)) * sqrt(eps(Float64)) * 10
-            iNodeVel = totalDrag \ iNodeForce
+        catch SingularSystem
+            while true
+                try
+                    totalDrag += I3 * maximum(abs.(totalDrag)) * sqrt(eps(Float64))
+                    iNodeVel = totalDrag \ iNodeForce
+                    break
+                catch SingularSystem
+                end
+            end
         end
 
         nodeForce[1, i] = iNodeForce[1]
@@ -150,4 +156,6 @@ function dlnMobility!(
         nodeVel[2, i] = iNodeVel[2]
         nodeVel[3, i] = iNodeVel[3]
     end
+
+    return nodeForce, nodeVel
 end

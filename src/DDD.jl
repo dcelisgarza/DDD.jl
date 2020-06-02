@@ -5,7 +5,7 @@ using LinearAlgebra, Plots, Statistics, InteractiveUtils, JSON, StaticArrays
 include("./Misc/Misc.jl")
 # Miscelaneous.
 export makeTypeDict, compStruct, intAngle, extAngle, rot3D, makeInstanceDict
-export translateEnum, inclusiveComparison, dimDot, dimNorm
+export translateEnum, inclusiveComparison, dimDot, dimNorm, ⊗
 include("./Integration/CustomIntegration.jl")
 export IntegrationP, CustomTrapezoid
 include("./Material/MaterialBase.jl")
@@ -21,6 +21,7 @@ export getSegmentIdx!, makeConnect!
 # Dislocation functions.
 export checkNetwork, loopDistribution, calcSelfForce, calcSelfForce!
 export calcSegSegForce, calcSegSegForce!, calcParSegSegForce, calcSegForce, calcSegForce!
+export dlnMobility
 # Topology
 export removeNode!, mergeNode!, splitNode!
 include("./FEM/FEMBase.jl")
