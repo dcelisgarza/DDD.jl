@@ -55,8 +55,8 @@ shearHexagon = DislocationLoop(
 )
 network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
 calcSegForce!(dlnParams, matParams, network)
-
-@btime dlnMobility(mobBCC(), dlnParams, network, 0)
+using BenchmarkTools
+@btime dlnMobility(mobBCC(), dlnParams, matParams, network)
 pMobOut = 5.841123409344815e-04/2.503e-6
 
 

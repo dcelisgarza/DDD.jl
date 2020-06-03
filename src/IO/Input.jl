@@ -65,6 +65,7 @@ function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
         ν = convert(Float64, dict["ν"]),
         E = convert(Float64, dict["E"]),
         crystalStruct = crystalStruct[dict["crystalStruct"]],
+        σPN = convert(Float64, dict["σPN"]),
     )
 
     return materialP

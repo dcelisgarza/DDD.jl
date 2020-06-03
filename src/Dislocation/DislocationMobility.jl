@@ -1,12 +1,14 @@
-function dlnMobility(
+@inline function dlnMobility(
     mobility::mobBCC,
     dlnParams::DislocationP,
+    matParams::MaterialP,
     network::DislocationNetwork,
-    σ_PN, # Peierls-Nabarro stress for the bcc material.
     nodeIdx = nothing,
     conList = nothing,
 )
-
+    # Peierls-Nabarro stress for the bcc material.
+    σPN = matParams.σPN
+    # Drag coefficients.
     edgeDrag = dlnParams.edgeDrag
     screwDrag = dlnParams.screwDrag
     climbDrag = dlnParams.climbDrag
@@ -73,7 +75,7 @@ function dlnMobility(
                 segForce[3, colLink, link],
             )
             # If the sress is lower than the Peierls-Nabarro stress, the node behaves as if the force acting on it is zero.
-            norm(iNodeConForce) * tN < σ_PN ? iNodeConForce = SVector{3, Float64}(0, 0, 0) :
+            norm(iNodeConForce) * tN < σPN ? iNodeConForce = SVector{3, Float64}(0, 0, 0) :
             nothing
             # Add force from this connection to the total force on the node.
             iNodeForce += iNodeConForce
@@ -140,9 +142,10 @@ function dlnMobility(
         try
             iNodeVel = totalDrag \ iNodeForce
         catch SingularSystem
+            origTotalDrag = totalDrag
             while true
                 try
-                    totalDrag += I3 * maximum(abs.(totalDrag)) * sqrt(eps(Float64))
+                    totalDrag += I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(Float64))
                     iNodeVel = totalDrag \ iNodeForce
                     break
                 catch SingularSystem

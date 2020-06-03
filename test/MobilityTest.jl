@@ -48,7 +48,7 @@ cd(@__DIR__)
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
     calcSegForce!(dlnParams, matParams, network)
 
-    force, vel = dlnMobility(mobBCC(), dlnParams, network, 0)
+    force, vel = dlnMobility(mobBCC(), dlnParams, matParams, network)
     testVel = [
         -0.036175006034684 -0.036175006034656 0.088938030619749
         0.060538472465831 0.060538472465831 0.121076825150312
