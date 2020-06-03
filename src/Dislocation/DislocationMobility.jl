@@ -25,7 +25,7 @@ function dlnMobility(
         connectivity = network.connectivity
         nodeRange = 1:numNode
         conList = zeros(Int, maxConnect + 1, numNode)
-        @inbounds for i in nodeRange
+        @inbounds @simd for i in nodeRange
             numConnect = connectivity[1, i]
             conList[1, i] = numConnect
             conList[2:(numConnect + 1), i] = 1:numConnect
@@ -40,7 +40,7 @@ function dlnMobility(
     nodeVel = zeros(3, numNode)
 
     # Loop through nodes.
-    for (i, node1) in enumerate(nodeRange)
+    @fastmath @inbounds for (i, node1) in enumerate(nodeRange)
         totalDrag = SMatrix{3, 3, Float64}(0, 0, 0, 0, 0, 0, 0, 0, 0)
         iNodeForce = SVector{3, Float64}(0, 0, 0)
         iNodeVel = SVector{3, Float64}(0, 0, 0)
@@ -150,12 +150,8 @@ function dlnMobility(
             end
         end
 
-        nodeForce[1, i] = iNodeForce[1]
-        nodeForce[2, i] = iNodeForce[2]
-        nodeForce[3, i] = iNodeForce[3]
-        nodeVel[1, i] = iNodeVel[1]
-        nodeVel[2, i] = iNodeVel[2]
-        nodeVel[3, i] = iNodeVel[3]
+        nodeForce[:, i] = iNodeForce
+        nodeVel[:, i] = iNodeVel
     end
 
     return nodeForce, nodeVel

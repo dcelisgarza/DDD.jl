@@ -24,6 +24,41 @@ DislocationNetwork!(network, dislocationLoop)
 
 
 ## Benchmarking
+prismPentagon = DislocationLoop(
+    loopPrism();
+    numSides = 5,
+    nodeSide = 1,
+    numLoops = 1,
+    segLen = 10 * ones(5),
+    slipSystem = 4,
+    _slipPlane = slipSystems.slipPlane[:, 4],
+    _bVec = slipSystems.bVec[:, 4],
+    label = nodeType[1; 2; 1; 2; 1],
+    buffer = 0.0,
+    range = Float64[-100 100; -100 100; -100 100],
+    dist = Zeros(),
+)
+
+shearHexagon = DislocationLoop(
+    loopShear();
+    numSides = 6,
+    nodeSide = 1,
+    numLoops = 1,
+    segLen = 10 * ones(6),
+    slipSystem = 4,
+    _slipPlane = slipSystems.slipPlane[:, 4],
+    _bVec = slipSystems.bVec[:, 4],
+    label = nodeType[1; 2; 1; 2; 1; 1],
+    buffer = 0.0,
+    range = Float64[-100 100; -100 100; -100 100],
+    dist = Zeros(),
+)
+network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
+calcSegForce!(dlnParams, matParams, network)
+
+@btime dlnMobility(mobBCC(), dlnParams, network, 0)
+pMobOut = 5.841123409344815e-04/2.503e-6
+
 
 function timeSelf(dlnParams, matParams, network, idx = nothing)
     calcSelfForce(dlnParams, matParams, network, idx)
