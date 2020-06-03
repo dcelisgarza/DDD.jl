@@ -437,6 +437,7 @@ function coarsenNetwork!(
 
         # Merge node i into node link2_nodeOppI.
         nodeMerged = mergeNode!(network, link2_nodeOppI, i)
+        getSegmentIdx!(network)
 
         # If link2_nodeOppI no longer exists there is nothing to calculate and we proceed to the next iteration.
         nodeMerged == 0 ? continue : nothing
@@ -449,13 +450,12 @@ function coarsenNetwork!(
             nodeNotMerged = links[colNotLinkMerged, linkMerged]
 
             if nodeNotMerged == i || nodeNotMerged == link1_nodeOppI
-                #remesh 67
-                getSegmentIdx!(network)
                 # Calculate segment force for segment linkMerged.
                 calcSegForce!(dlnParams, matParams, network, linkMerged)
-                for k in 1:2
-                    # Calculate new velocity for the two nodes involved in linkMerged.
-                end
+                # Calculate node velocity.
+                nodes = links(:, linkMerged)
+                missing, nodeVel[:, nodes] =
+                    dlnMobility(dlnParams, matParams, network, nodes)
             end
         end
     end
@@ -700,6 +700,7 @@ function refineNetwork!(
                     ) / 2
 
                 splitNode!(network, i, 1, midCoord, midVel)
+                getSegmentIdx!(network)
 
                 newNode = network.numNode
                 newLink = network.numSeg
@@ -712,9 +713,15 @@ function refineNetwork!(
                     colLink = connectivity[2 * j + 1, newNode]
                     oppColLink = 3 - colLink
                     oldNode = links[oppColLink, link]
-                    # remesh 154
+                    # Calculate segment force for segment link.
+                    calcSegForce!(dlnParams, matParams, network, link)
+                    # Calculate old node velocity.
+                    missing, nodeVel[:, oldNode] =
+                        dlnMobility(dlnParams, matParams, network, oldNode)
                 end
-                # remesh 159
+                # Calculate new node velocity.
+                missing, nodeVel[:, oldNode] =
+                    dlnMobility(dlnParams, matParams, network, oldNode)
             end
 
             # Check if we have to split the second link.
@@ -740,6 +747,7 @@ function refineNetwork!(
                     ) / 2
 
                 splitNode!(network, i, 2, midCoord, midVel)
+                getSegmentIdx!(network)
 
                 newNode = network.numNode
                 newLink = network.numSeg
@@ -752,9 +760,15 @@ function refineNetwork!(
                     colLink = connectivity[2 * j + 1, newNode]
                     oppColLink = 3 - colLink
                     oldNode = links[oppColLink, link]
-                    # remesh 133
+                    # Calculate segment force for segment link.
+                    calcSegForce!(dlnParams, matParams, network, link)
+                    # Calculate old node velocity.
+                    missing, nodeVel[:, oldNode] =
+                        dlnMobility(dlnParams, matParams, network, oldNode)
                 end
-                # remesh 139
+                # Calculate new node velocity.
+                missing, nodeVel[:, oldNode] =
+                    dlnMobility(dlnParams, matParams, network, oldNode)
             end
 
         elseif connectivity[1, i] > 2 && label[i] == 1

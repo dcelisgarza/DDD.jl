@@ -1,4 +1,12 @@
 @inline function dlnMobility(
+    dlnParams::DislocationP,
+    matParams::MaterialP,
+    network::DislocationNetwork,
+    nodeIdx = nothing,
+)
+    return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, nodeIdx)
+end
+@inline function dlnMobility(
     mobility::mobBCC,
     dlnParams::DislocationP,
     matParams::MaterialP,
@@ -125,7 +133,10 @@
             # ξ += ||b|| * ||t||/2 *
             #      ((screw_ξ_glide - ξ_screw) * q ⊗ q + (screw_ξ_climb - ξ_screw))
             totalDrag +=
-                nBnT_2 * ((ScrewGlideDrag - screwDrag) * q ⊗ q + (ScrewClimbDrag - screwDrag) * p ⊗ p)
+                nBnT_2 * (
+                    (ScrewGlideDrag - screwDrag) * q ⊗ q +
+                    (ScrewClimbDrag - screwDrag) * p ⊗ p
+                )
 
         end
         # Solve for velocity.
