@@ -30,17 +30,18 @@ Dislocations live in a material, as such we need a few constants that describe i
 ```julia
 julia> materialP = MaterialP(;
           μ = 1.0,                  # Shear modulus.
-          μMag = 145e3,             # Shear modulus magnitude, MPa.
+          μMag = 145e3,             # Shear modulus magnitude.
           ν = 0.28,                 # Poisson ratio.
           E = 1.0,                  # Young's modulus, MPa.
-          crystalStruct = BCC()     # Crystal structure.
+          crystalStruct = BCC(),    # Crystal structure.
+          σPN = 0.0                 # Peierls-Nabarro stress for the material.
         )
-MaterialP{Float64,BCC}(1.0, 145000.0, 0.28, 1.0, 1.3888888888888888, 0.3888888888888889, 0.07957747154594767, 0.039788735772973836, 0.11052426603603843, BCC())
+MaterialP{Float64,BCC}(1.0, 145000.0, 0.28, 1.0, 1.3888888888888888, 0.3888888888888889, 0.07957747154594767, 0.039788735772973836, 0.11052426603603843, BCC(), 0.0)
 ```
 Note that a few extra constants have been automatically calculated by the constructor. We find what these correspond to using the `fieldnames()` on the type of `materialP`, which is `MaterialP`.
 ```julia
 julia> fieldnames(typeof(materialP))
-(:μ, :μMag, :ν, :E, :omνInv, :νomνInv, :μ4π, :μ8π, :μ4πν, :crystalStruct)
+(:μ, :μMag, :ν, :E, :σPN, :omνInv, :νomνInv, :μ4π, :μ8π, :μ4πν, :crystalStruct)
 ```
 Where `omνInv = 1/(1-ν)`, `νomνInv = v/(1-ν)`, `μ4π = μ/(4π)`, `μ8π = μ/(8π)`, `μ4πν = μ/[4π(1-ν)]`. These precomputed variables are used in various places and are there to avoid recalculating them later.
 

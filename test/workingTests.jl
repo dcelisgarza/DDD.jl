@@ -56,18 +56,17 @@ shearHexagon = DislocationLoop(
 network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
 calcSegForce!(dlnParams, matParams, network)
 
-dlnMobility(mobBCC(), dlnParams, matParams, network)
+dlnMobility(dlnParams, matParams, network)
 idx = rand(1:network.numNode)
-dlnMobility(mobBCC(), dlnParams, matParams, network, idx)
+dlnMobility(dlnParams, matParams, network, idx)
 
-
-@btime dlnMobility(mobBCC(), dlnParams, matParams, network)
+@btime dlnMobility(dlnParams, matParams, network)
 idx = rand(1:network.numNode)
-@btime dlnMobility(mobBCC(), dlnParams, matParams, network, idx)
+@btime dlnMobility(dlnParams, matParams, network, idx)
 idx = rand(1:network.numNode, 5)
-@btime dlnMobility(mobBCC(), dlnParams, matParams, network, idx)
+@btime dlnMobility(dlnParams, matParams, network, idx)
 
-pMobOut = 5.841123409344815e-04/2.275e-6
+pMobOut = 5.841123409344815e-04/2.2e-6
 
 
 function timeSelf(dlnParams, matParams, network, idx = nothing)
