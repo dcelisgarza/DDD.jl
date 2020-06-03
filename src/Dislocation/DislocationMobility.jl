@@ -4,7 +4,6 @@
     matParams::MaterialP,
     network::DislocationNetwork,
     nodeIdx = nothing,
-    conList = nothing,
 )
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -19,23 +18,16 @@
     coord = network.coord
     maxConnect = network.maxConnect
     segForce = network.segForce
+    connectivity = network.connectivity
     I3 = SMatrix{3, 3}(I)
 
     # Do it for all nodes if no list is provided.
     if isnothing(nodeIdx)
         numNode = network.numNode
-        connectivity = network.connectivity
         nodeRange = 1:numNode
-        conList = zeros(Int, maxConnect + 1, numNode)
-        @inbounds @simd for i in nodeRange
-            numConnect = connectivity[1, i]
-            conList[1, i] = numConnect
-            conList[2:(numConnect + 1), i] = 1:numConnect
-        end
     else
         numNode = length(nodeIdx)
         nodeRange = nodeIdx
-        @assert size(conList) == (maxConnect + 1, numNode)
     end
 
     nodeForce = zeros(3, numNode)
@@ -46,13 +38,12 @@
         totalDrag = SMatrix{3, 3, Float64}(0, 0, 0, 0, 0, 0, 0, 0, 0)
         iNodeForce = SVector{3, Float64}(0, 0, 0)
         iNodeVel = SVector{3, Float64}(0, 0, 0)
-        numConnect = conList[1, i] # Number of connections.
+        numConnect = connectivity[1, node1]
 
         # Loop through number of connections.
         for connect in 1:numConnect
-            nodeCon = conList[connect + 1, i]
-            link = connectivity[2 * nodeCon, node1]
-            colLink = connectivity[2 * nodeCon + 1, node1]
+            link = connectivity[2 * connect, node1]
+            colLink = connectivity[2 * connect + 1, node1]
             colOppLink = 3 - colLink
             node2 = links[colOppLink, link]
 

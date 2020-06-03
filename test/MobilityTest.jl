@@ -79,4 +79,14 @@ cd(@__DIR__)
 
     @test isapprox(vel', testVel, rtol = 1e-5)
     @test isapprox(force', testForce)
+
+    idx = rand(1:network.numNode)
+    forceIdx, velIdx = dlnMobility(mobBCC(), dlnParams, matParams, network, idx)
+    @test isapprox(force[:, idx], forceIdx)
+    @test isapprox(vel[:, idx], velIdx)
+
+    idx = rand(1:network.numNode, 5)
+    forceIdx, velIdx = dlnMobility(mobBCC(), dlnParams, matParams, network, idx)
+    @test isapprox(force[:, idx], forceIdx)
+    @test isapprox(vel[:, idx], velIdx)
 end
