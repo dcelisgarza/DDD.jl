@@ -48,7 +48,7 @@ cd(@__DIR__)
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
     calcSegForce!(dlnParams, matParams, network)
 
-    force, vel = dlnMobility(mobBCC(), dlnParams, matParams, network)
+    force, vel = dlnMobility(dlnParams, matParams, network)
     testVel = [
         -0.036175006034684 -0.036175006034656 0.088938030619749
         0.060538472465831 0.060538472465831 0.121076825150312
@@ -81,12 +81,12 @@ cd(@__DIR__)
     @test isapprox(force', testForce)
 
     idx = rand(1:network.numNode)
-    forceIdx, velIdx = dlnMobility(mobBCC(), dlnParams, matParams, network, idx)
+    forceIdx, velIdx = dlnMobility(dlnParams, matParams, network, idx)
     @test isapprox(force[:, idx], forceIdx)
     @test isapprox(vel[:, idx], velIdx)
 
     idx = rand(1:network.numNode, 5)
-    forceIdx, velIdx = dlnMobility(mobBCC(), dlnParams, matParams, network, idx)
+    forceIdx, velIdx = dlnMobility(dlnParams, matParams, network, idx)
     @test isapprox(force[:, idx], forceIdx)
     @test isapprox(vel[:, idx], velIdx)
 end
