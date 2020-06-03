@@ -13,36 +13,37 @@ function dlnMobility(
     lineDrag = dlnParams.lineDrag
 
     links = network.links
-    bVec = network.links
+    bVec = network.bVec
     coord = network.coord
     maxConnect = network.maxConnect
     segForce = network.segForce
-    I_st = SMatrix{3, 3}(I)
+    I3 = SMatrix{3, 3}(I)
 
     # Do it for all nodes if no list is provided.
     if isnothing(nodeIdx)
-        numNodes = network.numNodes
+        numNode = network.numNode
         connectivity = network.connectivity
-        nodeRange = 1:numNodes
-        conList = zeros(maxConnect + 1, numNodes)
-        @inbounds @simd for i in nodeRange
+        nodeRange = 1:numNode
+        conList = zeros(Int, maxConnect + 1, numNode)
+        @inbounds for i in nodeRange
             numConnect = connectivity[1, i]
             conList[1, i] = numConnect
             conList[2:(numConnect + 1), i] = 1:numConnect
         end
     else
-        numNodes = length(nodeIdx)
+        numNode = length(nodeIdx)
         nodeRange = nodeIdx
-        @assert size(conList) == (maxConnect + 1, numNodes)
+        @assert size(conList) == (maxConnect + 1, numNode)
     end
 
-    nodeForce = zeros(3, numNodes)
-    nodeVel = zeros(3, numNodes)
+    nodeForce = zeros(3, numNode)
+    nodeVel = zeros(3, numNode)
 
     # Loop through nodes.
     for (i, node1) in enumerate(nodeRange)
         totalDrag = SMatrix{3, 3, Float64}(0, 0, 0, 0, 0, 0, 0, 0, 0)
         iNodeForce = SVector{3, Float64}(0, 0, 0)
+        iNodeVel = SVector{3, Float64}(0, 0, 0)
         numConnect = conList[1, i] # Number of connections.
 
         # Loop through number of connections.
@@ -67,9 +68,9 @@ function dlnMobility(
 
             # Segment force relevant to node1.
             iNodeConForce = SVector{3, Float64}(
-                segForce[1, colOppLink, link],
-                segForce[2, colOppLink, link],
-                segForce[3, colOppLink, link],
+                segForce[1, colLink, link],
+                segForce[2, colLink, link],
+                segForce[3, colLink, link],
             )
             # If the sress is lower than the Peierls-Nabarro stress, the node behaves as if the force acting on it is zero.
             norm(iNodeConForce) * tN < σ_PN ? iNodeConForce = SVector{3, Float64}(0, 0, 0) :
@@ -86,9 +87,9 @@ function dlnMobility(
             bTypeArr1 = @. abs(1 - absB) < sqrt(eps(Float64))
             bTypeArr2 = @. abs(2 - absB) < sqrt(eps(Float64))
             bTypeArr3 = @. abs(3 - absB) < sqrt(eps(Float64))
-            bType1 = sum(flagArr1)
-            bType2 = sum(flagArr2)
-            bType3 = sum(flagArr3)
+            bType1 = sum(bTypeArr1)
+            bType2 = sum(bTypeArr2)
+            bType3 = sum(bTypeArr3)
             screw = 1 - nB < sqrt(eps(Float64))
             # Normalise Burgers vector.
             b /= nB
@@ -118,20 +119,20 @@ function dlnMobility(
             sinSqθ < eps(Float64) ? continue : nothing
 
             # P, Q vectors as new local axes.
-            p = b × t / tDb
+            p = b × t / sqrt(sinSqθ)
             q = p × t
 
             # Eqn (112) from Arsenlis et al 2007 MSMSE 15 553
             screwDragSq = screwDrag^2
             # screw_ξ_glide = 1/sqrt(sin^2(θ) / ξ_edge^2 + cos^2(θ) / ξ_screw^2)
-            glideDrag = 1 / sqrt(sinSqθ / edgeDrag^2 + cosSqθ / screwDragSq)
+            ScrewGlideDrag = 1 / sqrt(sinSqθ / edgeDrag^2 + cosSqθ / screwDragSq)
             # screw_ξ_climb = sqrt(sin^2(θ) * ξ_climb^2 + cos^2(θ) * ξ_screw^2)
-            climbDrag = sqrt(sinSqθ * climbDrag^2 + cosSqθ * screwDragSq)
+            ScrewClimbDrag = sqrt(sinSqθ * climbDrag^2 + cosSqθ * screwDragSq)
 
             # ξ += ||b|| * ||t||/2 *
             #      ((screw_ξ_glide - ξ_screw) * q ⊗ q + (screw_ξ_climb - ξ_screw))
             totalDrag +=
-                nBnT_2 * ((glideDrag - screwDrag) * q ⊗ q + (climbDrag - screwDrag) * p ⊗ p)
+                nBnT_2 * ((ScrewGlideDrag - screwDrag) * q ⊗ q + (ScrewClimbDrag - screwDrag) * p ⊗ p)
 
         end
         # Solve for velocity.

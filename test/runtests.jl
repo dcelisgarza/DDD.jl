@@ -16,6 +16,9 @@ end
 @safetestset "Topology" begin
     include("./TopologyTest.jl")
 end
+@safetestset "Mobility" begin
+    include("./MobilityTest.jl")
+end
 @safetestset "FEM" begin
     include("./FEMTest.jl")
 end
