@@ -1704,6 +1704,19 @@ end
 end
 
 @testset "Refine network" begin
+    fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
+    fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
+    fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
+    fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+    dlnParams, matParams, intParams, slipSystems, missing = loadParams(
+        fileDislocationP,
+        fileMaterialP,
+        fileIntegrationP,
+        fileSlipSystem,
+        fileDislocationLoop,
+    )
+
     prismPentagon = DislocationLoop(
         loopPrism();
         numSides = 5,

@@ -98,10 +98,40 @@ shearHexagon = DislocationLoop(
     dist = Zeros(),
 )
 network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
+network2 = deepcopy(network)
+refineNetwork!(dlnParams, matParams, network2)
+compStruct(network, network2)
+
+
+
+plotlyjs()
+fig1 = plotNodes(
+    network2,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+)
+
+
+
+
+mean(shearHexagon.coord)
+mean(network.coord)
+
+
 
 network2 = deepcopy(network)
 calcSegForce!(dlnParams, matParams, network2)
 coarsenNetwork!(dlnParams, matParams, network2)
+network2.segIdx
+
+network3.segIdx
+
+network2.segIdx - network3.segIdx
+
+network3 = deepcopy(network2)
 segForce1 = [
     -0.731165101601140 -0.729070538387561 -0.845685760271632
     -0.107679944143240 -0.108364876814072 1.137684251104435
@@ -245,7 +275,7 @@ label = [2
 
 network2.label == label
 isapprox(network2.slipPlane', slipPlane)
-network2
+getSegmentIdx!(network2)
 isapprox(network2.bVec', bVec)
 isapprox(network2.connectivity', connectivity)
 isapprox(network2.linksConnect', linksConnect)
