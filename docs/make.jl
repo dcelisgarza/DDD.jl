@@ -1,33 +1,19 @@
 using Documenter, DDD
 
-import DDD:
-    AbstractMesh,
-    RegularCuboidMesh,
-    DislocationFEMCorrective,
-    calcPKForce,
-    makeInstanceDict,
-    translateEnum,
-    subTypeTree,
-    inclusiveComparison,
-    dimDot,
-    dimNorm,
-    AbstractCrystalStruct,
-    MaterialP,
-    AbstractIntegrator,
-    IntegrationP,
-    AbstractShapeFunction
+import DDD: nodeType, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution
+import DDD: AbstractMobility, SlipSystem, DislocationP, loopDln
 makedocs(;
     modules = [DDD],
     format = Documenter.HTML(),
     pages = [
         "Home" => "index.md",
-        "Theory" => "theory.md",
-        "Types" => "types.md",
+        "Dislocations" => "Dislocations.md",
         "IO" => "io.md",
         "Post Processing" => "postProcessing.md",
         "Functions" => "functions.md",
         "Discrete Dislocation Dynamics" => "theory.md",
         "Motivation" => "motivation.md",
+        "Theory" => "theory.md",
         "Index" => "idx.md",
     ],
     repo = "https://github.com/dcelisgarza/DDD.jl/blob/{commit}{path}#L{line}",

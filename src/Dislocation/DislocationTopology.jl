@@ -323,8 +323,6 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     return nodeKept
 end
 
-function splitNode end
-
 function coarsenNetwork!(
     dlnParams::DislocationP,
     matParams::MaterialP,
@@ -506,7 +504,7 @@ function splitNode!(
     links = network.links
     bVec = network.bVec
     network.coord[:, newNode] = midCoord
-    network.label[newNode] = nodeType(1)
+    network.label[newNode] = 1
     network.nodeVel[:, newNode] = midVel
 
     connectivity = network.connectivity

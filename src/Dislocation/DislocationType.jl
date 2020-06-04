@@ -1,9 +1,8 @@
 ## Primitives
 """
-Dislocation nodes have labels that change how they are treated by the simulation. There are only certain types of nodes so these labels may only take on predefined values. Adding new nodes requires adding new entries to the enumerated type.
 ```
 @enum nodeType begin
-    none = 0  # Undefined node, value at initialisation.
+    none = 0    # Undefined node, value at initialisation.
     intMob = 1  # Internal mobile node.
     intFix = 2  # Internal fixed node.
     srfMob = 3  # Mobile surface node.
@@ -22,15 +21,15 @@ end
 end
 
 """
-There are different types of segments. Edge segments are orthogonal to the Burgers vector; screw segments are parallel to the Burgers vector; mixed segments are anything in between. Segment type can be easily inferred during runtime. These are mainly used for multiple dispatch purposes.
 ```
 abstract type AbstractDlnSeg end
-struct segNone <: AbstractDlnSeg end    # Undefined segment.
-struct segEdge <: AbstractDlnSeg end    # Edge segment.
-struct segEdgeN <: AbstractDlnSeg end   # Edge segment parallel to slip plane.
-struct segScrew <: AbstractDlnSeg end   # Screw segment.
-struct segMixed <: AbstractDlnSeg end   # Mixed segment.
+struct segNone <: AbstractDlnSeg end    # Undefined segment
+struct segEdge <: AbstractDlnSeg end    # Edge segment
+struct segEdgeN <: AbstractDlnSeg end   # Edge segment
+struct segScrew <: AbstractDlnSeg end   # Screw segment
+struct segMixed <: AbstractDlnSeg end   # Mixed segment
 ```
+where `segEdge` have ``(\\bm{b} \\perp \\bm{t}) \\perp \\bm{n}``, `segEdgeN` have ``(\\bm{b} \\perp \\bm{t}) \\parallel \\bm{n}``, `segScrew` have ``\\bm{b} \\parallel \\bm{t}``, `segMixed` have ``\\bm{b} \\not\\perp \\bm{t}~ \\&~ \\bm{b} \\not\\perp \\bm{n}`` and ``\\bm{b}`` is the Burgers vector and ``\\bm{n}`` the slip plane.
 """
 abstract type AbstractDlnSeg end
 struct segNone <: AbstractDlnSeg end
@@ -40,14 +39,13 @@ struct segScrew <: AbstractDlnSeg end
 struct segMixed <: AbstractDlnSeg end
 
 """
-Dislocation structures have different classifications. Prismatic loops are made up only of edge segments with the same slip system; shear loops are made up of a mixture of segment types with the same slip system; jogs and kinks are steps not contained in the slip plane.
 ```
 abstract type AbstractDlnStr end
-struct loopDln <: AbstractDlnStr end    # Unclassified loop.
-struct loopPrism <: AbstractDlnStr end  # Prismatic loop.
-struct loopShear <: AbstractDlnStr end  # Shear loop.
-struct loopJog <: AbstractDlnStr end    # Jog.
-struct loopKink <: AbstractDlnStr end   # Kink.
+struct loopDln <: AbstractDlnStr end    # Unclassified loop
+struct loopPrism <: AbstractDlnStr end  # Prismatic loop
+struct loopShear <: AbstractDlnStr end  # Shear loop
+struct loopJog <: AbstractDlnStr end    # Jog
+struct loopKink <: AbstractDlnStr end   # Kink
 ```
 """
 abstract type AbstractDlnStr end
@@ -77,9 +75,9 @@ struct Regular <: AbstractDistribution end
 """
 ```
 abstract type AbstractMobility end
-struct BCC <: AbstractMobility end
-struct FCC <: AbstractMobility end
-struct HCP <: AbstractMobility end
+struct mobBCC <: AbstractMobility end
+struct mobFCC <: AbstractMobility end
+struct mobHCP <: AbstractMobility end
 ```
 Mobility functions.
 """
@@ -91,20 +89,30 @@ struct mobHCP <: AbstractMobility end
 ## Structures
 """
 ```
-struct SlipSystem{T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
-    crystalStruct::T1
-    slipPlane::T2
-    bVec::T2
+struct SlipSystem{T1, T2}
+    crystalStruct::T1   # Crystal structure
+    slipPlane::T2       # Slip plane
+    bVec::T2            # Burgers vector
 end
 ```
-Slip systems.
+Structure to store slip systems.
 """
 struct SlipSystem{T1, T2}
     crystalStruct::T1
     slipPlane::T2
     bVec::T2
 end
-function SlipSystem(;
+"""
+```
+SlipSystem(;
+    crystalStruct::T1,
+    slipPlane::T2,
+    bVec::T2,
+) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
+```
+Keyword constructor for [`SlipSystem`](@ref). Throws error if ``\\bm{b} \\not\\perp \\bm{n}`` where ``\\bm{b}`` is the Burgers vector and ``\\bm{n}`` the slip plane.
+"""
+@inline function SlipSystem(;
     crystalStruct::T1,
     slipPlane::T2,
     bVec::T2,
@@ -112,7 +120,7 @@ function SlipSystem(;
 
     if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
         if ndims(slipPlane) == 1
-            @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n = = $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
+            @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n == $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
         else
             idx = findall(x -> !isapprox(x, 0), dimDot(slipPlane, bVec; dim = 1))
             @assert isempty(idx) "SlipSystem: entries of the slip plane, n[$idx, :] = $(slipPlane[idx,:]), and Burgers vector, b[$idx, :] = $(bVec[idx,:]), are not orthogonal."
@@ -124,28 +132,27 @@ end
 
 """
 ```
-DislocationP{T1, T2, T3, T4}
-    # Size.
-    coreRad::T1     # Core radius.
-    coreRadMag::T1  # Magnitude of core Radius.
-    # Connectivity.
-    minSegLen::T1       # Minimum line length.
-    maxSegLen::T1       # Maximum line length.
-    minArea::T1         # Minimum area for remeshing.
-    maxArea::T1         # Maximum area for remeshing.
-    maxConnect::T2      # Maximum number of connections to a node.
-    remesh::T3          # Flag for remeshing.
-    collision::T3       # Flag for collision handling.
-    separation::T3      # Flag for separation handling.
-    virtualRemesh::T3   # Flag for virtual remeshing.
-    # Mobility.
-    edgeDrag::T1    # Drag coefficient edge dislocation.
-    screwDrag::T1   # Drag coefficient screw dislocation.
-    climbDrag::T1   # Drag coefficient climb.
-    lineDrag::T1    # Drag coefficient line.
-    mobility::T4    # Mobility law.
+struct DislocationP{T1, T2, T3, T4}
+    coreRad::T1         # Core radius
+    coreRadSq::T1       # Square of core radius
+    coreRadMag::T1      # Magnitude of core radius
+    minSegLen::T1       # Minimum segment length
+    maxSegLen::T1       # Maximum segment length
+    minArea::T1         # Minimum area enclosed by 3 segments
+    maxArea::T1         # Maximum area enclosed by 3 segments
+    maxConnect::T2      # Maximum connectivity
+    remesh::T3          # Remesh flag
+    collision::T3       # Collision flag
+    separation::T3      # Separation flag
+    virtualRemesh::T3   # Virtual remeshing flag
+    edgeDrag::T1        # Drag coefficient edge dislocation
+    screwDrag::T1       # Drag coefficient screw dislocation
+    climbDrag::T1       # Drag coefficient climb direction
+    lineDrag::T1        # Drag coefficient line direction
+    mobility::T4        # Mobility law
+end
 ```
-Dislocation parameters structure. See [`AbstractMobility`](@ref) for more details.
+Structure to store dislocation parameters.
 """
 struct DislocationP{T1, T2, T3, T4}
     coreRad::T1
@@ -187,9 +194,9 @@ DislocationP(;
     mobility::T4,
 ) where {T1, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
 ```
-Keyword constructor for [`DislocationP`](@ref).
+Keyword constructor for [`DislocationP`](@ref). Validates values and calculates derived quantities.
 """
-function DislocationP(;
+@inline function DislocationP(;
     coreRad::T1,
     coreRadMag::T1,
     minSegLen::T1,
@@ -237,23 +244,23 @@ end
 """
 ```
 struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
-    loopType::T1    # Loop type.
-    numSides::T2    # Number of sides per loop.
-    nodeSide::T2    # Number of nodes per side.
-    numLoops::T2    # Number of loops to generate.
-    segLen::T3      # Segment lengths.
-    slipSystem::T4  # Slip system.
-    links::T5       # Links matrix.
-    slipPlane::T6   # Slip plane for each link.
-    bVec::T6        # Burgers vector for each link.
-    coord::T6       # Coordinates of each node.
-    label::T7       # Label of each node.
-    buffer::T8      # Mean distance buffer separating each loop centre.
-    range::T6       # Distribution range of generated loops.
-    dist::T9        # Distribution of genrated loops.
+    loopType::T1    # Loop type
+    numSides::T2    # Number of sides per loop
+    nodeSide::T2    # Number of nodes per side
+    numLoops::T2    # Number of loops to generate
+    segLen::T3      # Segment lengths
+    slipSystem::T4  # Slip system
+    links::T5       # Links matrix
+    slipPlane::T6   # Slip plane for each link
+    bVec::T6        # Burgers vector for each link
+    coord::T6       # Coordinates of each node
+    label::T7       # Label of each node
+    buffer::T8      # Mean distance buffer separating each loop centre
+    range::T6       # Distribution range of generated loops
+    dist::T9        # Distribution of generated loops
 end
 ```
-Dislocation loop structure.
+Structure to store dislocation loop.
 """
 struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     loopType::T1
@@ -297,7 +304,7 @@ DislocationLoop(;
     T8 <: AbstractDistribution,
 }
 ```
-Generic keyword constructor for dislocation loop. Calls other constructors that dispatch on `loopType`.
+Generic keyword constructor for [`DislocationLoop`](@ref). Calls other constructors that dispatch on [`loopType`](@ref).
 """
 @inline function DislocationLoop(;
     loopType::T1,
@@ -339,6 +346,34 @@ Generic keyword constructor for dislocation loop. Calls other constructors that 
     )
 
 end
+"""
+```
+DislocationLoop(
+    loopType::T1;
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
+) where {
+    T1 <: loopDln,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
+    T6,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: AbstractDistribution,
+}
+```
+Constructor for a "zero" [`DislocationLoop`](@ref).
+"""
 @inline function DislocationLoop(
     loopType::T1;
     numSides::T2,
@@ -386,6 +421,34 @@ end
         dist,
     )
 end
+"""
+```
+DislocationLoop(
+    loopType::T1;
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
+    T6,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: AbstractDistribution,
+}
+```
+Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined by the arguments.
+"""
 @inline function DislocationLoop(
     loopType::T1;
     numSides::T2,
@@ -443,7 +506,7 @@ end
     seg = zeros(3, numSegLen)
 
     # Create initial segments.
-    @inbounds for i in eachindex(segLen)
+    @inbounds @simd for i in eachindex(segLen)
         seg[:, i] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
 
@@ -500,28 +563,23 @@ end
 
 """
 ```
-DislocationNetwork{
-    T1 <: AbstractArray{<:Int, N} where {N},
-    T2 <: AbstractArray{<:Float64, N} where {N},
-    T3 <: Vector{nodeType},
-    T4 <: Int,
-    T5 <: Int,
-}
+mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     links::T1
     slipPlane::T2
     bVec::T2
     coord::T2
     label::T3
-    segForce::T2
     nodeVel::T2
-    numNode::T4 = 0     # Total number of nodes in network.
-    numSeg::T4 = 0      # Total number of segs in network.
-    maxConnect::T5 = 4  # Maximum connectivity of nodes.
-    connectivity::T1
-    linksConnect::T1
-    segIdx::T1          # segIdx[:,1] is the segment index. Used to find the bVec and slipPlane of a real segment. segIdx[:,2:3] are the indices of the nodes involved in a given link, used to find their coordinates.
+    numNode::T4         # Number of nodes in network
+    numSeg::T4          # Number of segments in network
+    maxConnect::T4      # Maximum connections per node
+    connectivity::T5    # Connectivity matrix
+    linksConnect::T5    # Links involved in connection
+    segIdx::T5          # Contains segment index and the nodes of the nodes in said link
+    segForce::T6        # Force on each node of each segment
+end
 ```
-Dislocation Network structure. See [`DislocationLoop`](@ref), [`makeNetwork`](@ref) and [`makeNetwork!`](@ref) for further details.
+Structure to store dislocation network.
 """
 mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     links::T1
@@ -546,23 +604,24 @@ DislocationNetwork(;
     bVec::T2,
     coord::T2,
     label::T3,
-    segForce::T2,
     nodeVel::T2,
     numNode::T4 = 0,
     numSeg::T4 = 0,
     maxConnect::T4 = 0,
     connectivity::T5 = zeros(Int, 0, 0),
-    linksConnect::T5 = zeros(Int, 0, 0),
-    segIdx::T5 = zeros(Int, 0, 0),
+    linksConnect::T5 = zeros(Int, 2, 0),
+    segIdx::T5 = zeros(Int, 2, 3),
+    segForce::T6 = zeros(3, 2, 0),
 ) where {
     T1 <: AbstractArray{T, N} where {T, N},
     T2 <: AbstractArray{T, N} where {T, N},
     T3 <: AbstractVector{nodeType},
     T4 <: Int,
     T5 <: AbstractArray{Int, N} where {N},
+    T6 <: AbstractArray{T, N} where {T, N},
 }
 ```
-Generic keyword constructor for [`DislocationNetwork`](@ref).
+Keyword constructor for [`DislocationNetwork`](@ref), performs validations but creates dislocation network as provided.
 """
 @inline function DislocationNetwork(;
     links::T1,
@@ -613,13 +672,23 @@ end
 DislocationNetwork(
     sources::T1,
     maxConnect::T2 = 4,
-    args...;
-    memBuffer::T2 = 10,
-    checkConsistency::T3 = true,
-    kw...,
-) where {T1 <: Union{DislocationLoop, AbstractVector{<:DislocationLoop}}, T2 <: Int, T3 <: Bool}
+    args...;                        # Optional arguments
+    memBuffer = nothing,            # Buffer for memory allocation
+    checkConsistency::T3 = true,    # Check consistency of generated network
+    kw...,                          # Other keyword arguments
+) where {
+    T1 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
+    T2 <: Int,
+    T3 <: Bool,
+}
 ```
-Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) for in-place version.
+Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislocation network from previously generated sources.
+
+## Argument Explanation
+
+- `args...` are optional arguments that will be passed on to the `loopDistribution` function which distributes the loops in `sources` according to the type of their `dist` variable.
+- `kw...` are optional keyword arguments that will also be passed to `loopDistribution`.
+- `memBuffer` is the numerical value for allocating memory in advance, the quantity ``\\textrm{memBuffer} \\times N`` where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data, if it is `nothing` then the number of entries is ``\\textrm{round}(N \\log_{2}(N))``.
 """
 @inline function DislocationNetwork(
     sources::T1,
@@ -629,7 +698,7 @@ Constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork!`](@ref) 
     checkConsistency::T3 = true,
     kw...,
 ) where {
-    T1 <: Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
+    T1 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
     T2 <: Int,
     T3 <: Bool,
 }
@@ -718,18 +787,20 @@ end
 """
 ```
 DislocationNetwork!(
-    network::DislocationNetwork,
-    sources::Union{
-        DislocationLoop,
-        AbstractVector{<:DislocationLoop}
-    },
-    maxConnect::Int = 4,
+    network::T1,
+    sources::T2,
+    maxConnect::T3 = 4,
     args...;
-    checkConsistency::Bool = false,
+    checkConsistency::T4 = true,
     kw...,
-)
+) where {
+    T1 <: DislocationNetwork,
+    T2 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
+    T3 <: Int,
+    T4 <: Bool,
+}
 ```
-In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`](@ref) for constructor.
+In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocation network from already generated sources. If the matrices already in `network` are not large enough to accommodate the additions from `sources`, it will automatically allocate ``\\textrm{round}(N \\log_{2}(N))`` new entries where `N` is the total number of nodes in `sources`.
 """
 @inline function DislocationNetwork!(
     network::T1,
@@ -740,7 +811,7 @@ In-place constructor for [`DislocationNetwork`](@ref), see [`DislocationNetwork`
     kw...,
 ) where {
     T1 <: DislocationNetwork,
-    T2 <: Union{DislocationLoop, AbstractVector{<:DislocationLoop}},
+    T2 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
     T3 <: Int,
     T4 <: Bool,
 }

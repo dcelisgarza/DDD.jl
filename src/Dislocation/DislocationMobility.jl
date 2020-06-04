@@ -2,16 +2,16 @@
     dlnParams::DislocationP,
     matParams::MaterialP,
     network::DislocationNetwork,
-    nodeIdx = nothing,
+    idx = nothing,
 )
-    return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, nodeIdx)
+    return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
 @inline function dlnMobility(
     mobility::mobBCC,
     dlnParams::DislocationP,
     matParams::MaterialP,
     network::DislocationNetwork,
-    nodeIdx = nothing,
+    idx = nothing,
 )
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -30,19 +30,18 @@ end
     I3 = SMatrix{3, 3}(I)
 
     # Do it for all nodes if no list is provided.
-    if isnothing(nodeIdx)
+    if isnothing(idx)
         numNode = network.numNode
-        nodeRange = 1:numNode
+        idx = 1:numNode
     else
-        numNode = length(nodeIdx)
-        nodeRange = nodeIdx
+        numNode = length(idx)
     end
 
     nodeForce = zeros(3, numNode)
     nodeVel = zeros(3, numNode)
 
     # Loop through nodes.
-    @fastmath @inbounds for (i, node1) in enumerate(nodeRange)
+    @fastmath @inbounds for (i, node1) in enumerate(idx)
         totalDrag = SMatrix{3, 3, Float64}(0, 0, 0, 0, 0, 0, 0, 0, 0)
         iNodeForce = SVector{3, Float64}(0, 0, 0)
         iNodeVel = SVector{3, Float64}(0, 0, 0)

@@ -21,8 +21,6 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
 network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 DislocationNetwork!(network, dislocationLoop)
 
-
-
 ## Benchmarking
 prismPentagon = DislocationLoop(
     loopPrism();
