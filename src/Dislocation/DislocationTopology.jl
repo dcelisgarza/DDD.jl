@@ -331,7 +331,7 @@ function coarsenNetwork!(
     # dlnFEM::DislocationFEMCorrective;
     parallel::Bool = false,
 )
-    minAreaSq = dlnParams.minArea^2
+    minAreaSq = dlnParams.minAreaSq
     minSegLen = dlnParams.minSegLen
     maxSegLen = dlnParams.maxSegLen
 
@@ -625,17 +625,18 @@ function refineNetwork!(
     parallel::Bool = false,
 )
 
-    maxAreaSq = dlnParams.maxArea^2
+    maxAreaSq = dlnParams.maxAreaSq
     maxSegLen = dlnParams.maxSegLen
-    twoMinSegLen = 2 * dlnParams.minSegLen
+    twoMinSegLen = dlnParams.twoMinSegLen
 
-    label = network.label
     links = network.links
+    coord = network.coord
+    label = network.label
+    numNode = network.numNode
+    nodeVel = network.nodeVel
     connectivity = network.connectivity
     linksConnect = network.linksConnect
     segForce = network.segForce
-    nodeVel = network.nodeVel
-    numNode = network.numNode
 
     for i in 1:numNode
         if connectivity[1, i] == 2 && label[i] == 1
@@ -643,10 +644,10 @@ function refineNetwork!(
             link2 = connectivity[4, i]  # Second connection.
             colLink1 = connectivity[3, i]   # Column where node i is in links of the first connection.
             colLink2 = connectivity[5, i]   # Column where node i is in links of the second connection.
-            oppColLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
-            oppColLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
+            oppColLink1 = 3 - colLink1 # Node i is connected via link 1 to the node that is in this column in links.
+            oppColLink2 = 3 - colLink2 # Node i is connected via link 2 to the node that is in this column in links.
             link1_nodeOppI = links[oppColLink1, link1] # Node i is connected to this node as part of link 1.
-            link2_nodeOppI = links[oppColLink2, link1] # Node i is connected to this node as part of link 2.
+            link2_nodeOppI = links[oppColLink2, link2] # Node i is connected to this node as part of link 2.
 
             # Create triangle formed by the node and its two links.
             iCoord = SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i])

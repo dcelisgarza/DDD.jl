@@ -17,13 +17,13 @@ export AbstractDistribution, Zeros, Rand, Randn, Regular, mobBCC
 # Dislocation types.
 export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
 export DislocationLoop, DislocationNetwork, DislocationNetwork!
-export getSegmentIdx!, makeConnect!
+export getSegmentIdx!, getSegmentIdx, makeConnect!
 # Dislocation functions.
 export checkNetwork, loopDistribution, calcSelfForce, calcSelfForce!
 export calcSegSegForce, calcSegSegForce!, calcParSegSegForce, calcSegForce, calcSegForce!
 export dlnMobility
 # Topology
-export removeNode!, mergeNode!, splitNode!, coarsenNetwork!
+export removeNode!, mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
 include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")

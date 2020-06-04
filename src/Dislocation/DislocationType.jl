@@ -138,8 +138,11 @@ struct DislocationP{T1, T2, T3, T4}
     coreRadMag::T1      # Magnitude of core radius
     minSegLen::T1       # Minimum segment length
     maxSegLen::T1       # Maximum segment length
+    twoMinSegLen::T1    # Twice minimum segment length
     minArea::T1         # Minimum area enclosed by 3 segments
     maxArea::T1         # Maximum area enclosed by 3 segments
+    minAreaSq::T1       # Squared min area
+    maxAreaSq::T1       # Squared max area
     maxConnect::T2      # Maximum connectivity
     remesh::T3          # Remesh flag
     collision::T3       # Collision flag
@@ -160,8 +163,11 @@ struct DislocationP{T1, T2, T3, T4}
     coreRadMag::T1
     minSegLen::T1
     maxSegLen::T1
+    twoMinSegLen::T1
     minArea::T1
     maxArea::T1
+    minAreaSq::T1
+    maxAreaSq::T1
     maxConnect::T2
     remesh::T3
     collision::T3
@@ -226,8 +232,11 @@ Keyword constructor for [`DislocationP`](@ref). Validates values and calculates 
         coreRadMag,
         minSegLen,
         maxSegLen,
+        minSegLen*2,
         minArea,
         maxArea,
+        minArea^2,
+        maxArea^2,
         maxConnect,
         remesh,
         collision,

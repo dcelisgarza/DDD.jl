@@ -1702,3 +1702,39 @@ end
     @test isapprox(network2.connectivity', connectivity)
     @test isapprox(network2.linksConnect', linksConnect)
 end
+
+@testset "Refine network" begin
+    prismPentagon = DislocationLoop(
+        loopPrism();
+        numSides = 5,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = 10 * ones(5),
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 2; 1; 2; 1],
+        buffer = 0.0,
+        range = Float64[-100 100; -100 100; -100 100],
+        dist = Zeros(),
+    )
+
+    shearHexagon = DislocationLoop(
+        loopShear();
+        numSides = 6,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = 10 * ones(6),
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 2; 1; 2; 1; 1],
+        buffer = 0.0,
+        range = Float64[-100 100; -100 100; -100 100],
+        dist = Zeros(),
+    )
+    network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
+    network2 = deepcopy(network)
+    refineNetwork!(dlnParams, matParams, network2)
+    @test compStruct(network, network2)
+end
