@@ -46,8 +46,18 @@ end
     idx = nothing;
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-    parallel::Bool = true,
+    parallel::Bool = false,
 )
+
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg
+        range = 1:numSeg
+    else
+        # Else, calculate forces only on idx.
+        range = idx
+    end
+    network.segForce[:,:,range] .= 0
 
     # pkForce!(mesh, dlnFEM, network)
     calcSelfForce!(dlnParams, matParams, network, idx)

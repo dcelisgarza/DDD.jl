@@ -329,7 +329,7 @@ function coarsenNetwork!(
     network::DislocationNetwork,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-    parallel::Bool = true,
+    parallel::Bool = false,
 )
     minAreaSq = dlnParams.minArea^2
     minSegLen = dlnParams.minSegLen
@@ -337,10 +337,11 @@ function coarsenNetwork!(
 
     label = network.label
     links = network.links
+    coord = network.coord
+    nodeVel = network.nodeVel
     connectivity = network.connectivity
     linksConnect = network.linksConnect
     segForce = network.segForce
-    nodeVel = network.nodeVel
 
     i = 1
     while i <= network.numNode
@@ -382,7 +383,7 @@ function coarsenNetwork!(
                 coord[2, link2_nodeOppI],
                 coord[3, link2_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 2.
-        coordVec3 = vec2 - vec1 # Vector between both nodes connected to iCoord.
+        coordVec3 = coordVec2 - coordVec1 # Vector between both nodes connected to iCoord.
         # Lengths of the triangle sides.
         r1 = norm(coordVec1)
         r2 = norm(coordVec2)
@@ -451,7 +452,7 @@ function coarsenNetwork!(
                 # Calculate segment force for segment linkMerged.
                 calcSegForce!(dlnParams, matParams, network, linkMerged)
                 # Calculate node velocity.
-                nodes = links(:, linkMerged)
+                nodes = links[:, linkMerged]
                 missing, nodeVel[:, nodes] =
                     dlnMobility(dlnParams, matParams, network, nodes)
             end
@@ -621,7 +622,7 @@ function refineNetwork!(
     network::DislocationNetwork,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-    parallel::Bool = true,
+    parallel::Bool = false,
 )
 
     maxAreaSq = dlnParams.maxArea^2

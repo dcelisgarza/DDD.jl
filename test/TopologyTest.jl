@@ -1508,3 +1508,197 @@ end
     @test networkTest.linksConnect[:, 1:12] == linksConnect'
     @test_throws AssertionError splitNode!(networkTest, 8, 3, midCoord, midVel)
 end
+
+@testset "Coarsen network" begin
+    fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
+    fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
+    fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
+    fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
+        fileDislocationP,
+        fileMaterialP,
+        fileIntegrationP,
+        fileSlipSystem,
+        fileDislocationLoop,
+    )
+
+    prismPentagon = DislocationLoop(
+        loopPrism();
+        numSides = 5,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = 10 * ones(5),
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 2; 1; 2; 1],
+        buffer = 0.0,
+        range = Float64[-100 100; -100 100; -100 100],
+        dist = Zeros(),
+    )
+
+    shearHexagon = DislocationLoop(
+        loopShear();
+        numSides = 6,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = 10 * ones(6),
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 2; 1; 2; 1; 1],
+        buffer = 0.0,
+        range = Float64[-100 100; -100 100; -100 100],
+        dist = Zeros(),
+    )
+    network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
+
+    network2 = deepcopy(network)
+    calcSegForce!(dlnParams, matParams, network2)
+    coarsenNetwork!(dlnParams, matParams, network2)
+    links = [
+        6 2
+        2 3
+        3 4
+        4 6
+        5 1
+        1 7
+        7 8
+        8 5
+        0 0
+        0 0
+        0 0
+    ]
+    bVec = [
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0 0 0
+        0 0 0
+        0 0 0
+    ]
+    slipPlane = [
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        0 0 0
+        0 0 0
+        0 0 0
+    ]
+    coord =
+        1.0e+02 * [
+            -0.985559421232031 -0.948384617786012 -0.933944039018043
+            -1.040824829046386 -1.040824829046386 -1.081649658092773
+            -1.070412414523193 -1.070412414523193 -0.990824829046386
+            -1.029587585476807 -1.029587585476807 -0.909175170953614
+            -1.060150095500755 -0.939849904499245 -1.000000000000000
+            -0.929587585476807 -0.929587585476807 -1.009175170953614
+            -0.971749965049807 -1.069074863996580 -1.040824829046386
+            -1.051615382213988 -1.014440578767969 -1.066055960981957
+            0 0 0
+            0 0 0
+            0 0 0
+        ]
+    label = [
+        2
+        2
+        1
+        2
+        1
+        1
+        1
+        2
+        0
+        0
+        0
+    ]
+    nodeVel = [
+        -0.000006689570426 -0.000006689583194 0.000006689512325
+        0.094210513111597 0.094210513111611 0.225800116243039
+        0 0 0
+        0.082778555488260 0.082778555488232 -0.181030113207538
+        0 0 0
+        -0.197155144338323 -0.197155144338295 0.050824276836052
+        -0.000032128097977 -0.000032128031107 0.000032128094986
+        0 0 0
+        0 0 0
+        0 0 0
+        0 0 0
+    ]
+    segForce1 = [
+        -0.731165101601140 -0.729070538387561 -0.845685760271632
+        -0.107679944143240 -0.108364876814072 1.137684251104435
+        0.568002311233386 0.566611169671008 1.133727803147232
+        0.577108924635657 0.577103498327851 -0.577838384605370
+        1.036545887927879 -0.119085496493695 0.916735911922166
+        0.117275438015306 -1.035927969236551 -0.917667535670576
+        -1.109169644845321 0.759306566573759 -0.349584829798629
+        -0.117507614989553 1.035899543796946 0.917669635538588
+        0 0 0
+        0 0 0
+        0 0 0
+    ]
+    segForce2 = [
+        0.728639551563188 0.730718822192315 0.847032229650163
+        0.109020042708812 0.108325930005808 -1.137260380900199
+        -0.566020717832909 -0.567411859395269 -1.134318254985340
+        -0.577594899151688 -0.577589472843882 0.576866435573308
+        -1.035418014951076 0.117989143835423 -0.918151164384458
+        -0.119798333631734 1.036035282908816 0.917220387684654
+        1.109315417743939 -0.758311215081191 0.351278693716326
+        0.119568482835041 -1.036062901586534 -0.917218898263512
+        0 0 0
+        0 0 0
+        0 0 0
+    ]
+    connectivity = [
+        2 5 2 6 1 0 0 0 0
+        2 1 2 2 1 0 0 0 0
+        2 2 2 3 1 0 0 0 0
+        2 3 2 4 1 0 0 0 0
+        2 8 2 5 1 0 0 0 0
+        2 4 2 1 1 0 0 0 0
+        2 7 1 6 2 0 0 0 0
+        2 7 2 8 1 0 0 0 0
+        0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0
+    ]
+    linksConnect = [
+        2 1
+        2 1
+        2 1
+        2 1
+        2 1
+        2 2
+        1 1
+        2 1
+        0 0
+        0 0
+        0 0
+    ]
+
+    @test isapprox(network2.links', links)
+    @test isapprox(network2.slipPlane', slipPlane)
+    @test isapprox(network2.bVec', bVec)
+    @test isapprox(network2.coord', coord)
+    @test network2.label == label
+    @test isapprox(network2.nodeVel', nodeVel, rtol = 1e-6)
+    @test network2.numNode == 8
+    @test network2.numSeg == 8
+    @test isapprox(network2.segForce[:, 1, :]', segForce1)
+    @test isapprox(network2.segForce[:, 2, :]', segForce2)
+    @test isapprox(network2.connectivity', connectivity)
+    @test isapprox(network2.linksConnect', linksConnect)
+end
