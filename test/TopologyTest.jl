@@ -2228,7 +2228,7 @@ end
     @test isapprox(network.nodeVel[:, 1:11]', nodeVel[1:11, :], rtol = 1e-3)
     @test isapprox(network.nodeVel[:, 11:13]', nodeVel[11:13, :], rtol = 0.5)
     @test isapprox(network.nodeVel[:, 14:15]', nodeVel[14:15, :], rtol = 1)
-    @test isapprox(network.nodeVel[:, 16:numNode]', nodeVel[16:end, :], rtol = 1)
+    @test isapprox(network.nodeVel[:, 16:numNode]', nodeVel[16:end, :], atol = 1e-2)
     @test network.connectivity[:, 1:numNode]' == connectivity
     network.linksConnect[:, 1:numSeg]' == linksConnect
     @test isapprox(network.segForce[:, 1, 1:numSeg]', segForce1)
