@@ -234,7 +234,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
     linksConnect = network.linksConnect
 
     idx = findfirst(x -> x == 0, links[1, :])
-    isnothing(idx) ? idx = lenLinks : idx -= 1
+    isnothing(idx) ? idx = size(links, 2) : idx -= 1
 
     # Max value of connectivity should be the last link.
     maximum(connectivity) == idx ? nothing :

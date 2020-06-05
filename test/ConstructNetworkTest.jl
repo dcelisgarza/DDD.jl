@@ -263,7 +263,7 @@ end
         numSides = 4,
         nodeSide = 1,
         numLoops = 1,
-        segLen = ones(4),#,300; 700; 1100; 1500; 1900
+        segLen = ones(4),
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
