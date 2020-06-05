@@ -1,5 +1,7 @@
 # Dislocation Generation
 
+## Types, Structs and Constructors
+
 Dislocations are described, generated and validated by custom types, structures and functions. By subtyping the provided types with new concrete types, users can define functions which dispatch specifically on their new types while minimising the need for code rewrites, as multiple dispatch takes care of everything during JIT compilation. Structures have not had their default constructors overwritten, we provide custom constructors whose use is recommended instead.
 
 In discrete dislocation dynamics, dislocations are described by nodes connected by segments. The nodes are labelled according to their type, which is used by the software to decide how they are treated. However, labels are discrete variables, so they cannot take on any value. Additionally, accidentally using non-existent node types may produce silent and difficult to track errors. It is also impractical to validate node types at runtime. We solve these issues by defining a custom enumerated type, which not only limits possible values but informs users and developers of what the values represent.
@@ -149,6 +151,10 @@ DislocationLoop(
     T8 <: AbstractDistribution,
 }
 ```
+The `dist` parameter refers to a concrete subtype of [`AbstractDistribution`](@ref). When defining a new distribution it is important to define a new version of the [`loopDistribution`](@ref) function.
+```@docs
+loopDistribution
+```
 
 The dislocation loops contain all the data relevant to a single loop. This data is then used to populate a dislocation network, which is a mutable structure because it evolves over time.
 ```@docs
@@ -209,4 +215,47 @@ DislocationNetwork!(
     T3 <: Int,
     T4 <: Bool,
 }
+```
+
+Dislocation network constructors use a few internal functions to distribute loops about the domain as well as create auxiliary matrices and verify the integrity of the generated network. As previously mentioned, [`loopDistribution`](@ref) is used to generate points from a particular distribution. These points must be scaled and adjusted by limits generated the `limits` function.
+```@docs
+limits!(
+    lims::T1,
+    segLen::T2,
+    range::T1,
+    buffer::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
+```
+The limits, together with the aforementioned distributions are used to translate coordinates with the `translatePoints` function.
+```@docs
+translatePoints(
+    coord::T1,
+    lims::T1,
+    disp::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
+```
+
+In order to traverse the network, it is useful to define a few auxiliary matrices containing relational information about nodes and links. These are created by the `makeConnect` functions.
+```@docs
+makeConnect(
+    links::T1,
+    maxConnect::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
+
+makeConnect!(network::DislocationNetwork)
+```
+
+It's also useful to define another matrix for indexing segments quickly, this matrix is defined by the `getSegmentIdx` functions.
+```@docs
+getSegmentIdx(
+    links::T1,
+    label::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
+
+getSegmentIdx!(network::DislocationNetwork)
+```
+
+The validity of the network can be checked by `checkNetwork`.
+```@docs
+checkNetwork(network::DislocationNetwork)
 ```

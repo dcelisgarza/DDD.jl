@@ -2,26 +2,30 @@
 """
 ```
 loopDistribution(dist<:AbstractDistribution, n::Int, args...; kw...)
+loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(3, n)
+loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(3, n)
+loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(3, n)
+loopDistribution(dist::Regular, n::Int, args...; kw...) = error("loopDistribution: regular distribution yet not implemented")
 ```
-Returns `n` points according to the concrete subtype of [`AbstractDistribution`](@ref) given. Overload this function with new concrete subtypes and custom distributions. This and [`limits!`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
+Returns a `3 × n` matrix whose points follow the distribution defined by the method dispatching on the concrete subtype of `dist`. When creating custom [`AbstractDistribution`](@ref) subtypes, a corresponding `loopDistribution` method must be created for the custom distribution to be used in the [`DislocationLoop`](@ref) constructors.
 """
 loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(3, n)
 loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(3, n)
 loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(3, n)
 function loopDistribution(dist::Regular, n::Int, args...; kw...)
-    return error("loopDistribution: regular distribution yet not implemented")
+    error("loopDistribution: regular distribution yet not implemented")
 end
 
 """
 ```
 limits!(
-    lims::AbstractArray{<:Float64, N1},
-    segLen::Float64,
-    range::AbstractArray{<:Float64, N2},
-    buffer::Float64,
-) where {N1, N2}
+    lims::T1,
+    segLen::T2,
+    range::T1,
+    buffer::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
 ```
-Calculate the spatial limits a dislocation will occupy. This and [`loopDistribution`](@ref) are used in [`translatePoints`](@ref) to distribute dislocations in the simulation domain.
+In-place addition of `buffer × segLen` to `range` in order to calculate the limits in which dislocations will exist.
 """
 @inline function limits!(
     lims::T1,
@@ -46,7 +50,7 @@ translatePoints(
     disp::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
 ```
-Translate dislocation node coordinates `coord` inside the spatial bounds of `lims` (calculated in [`limits!`](@ref)) according to the displacement `disp` (calculated in [`loopDistribution`](@ref)). Used to distribute sources inside a domain in [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
+Translates coordinates using the limits and displacements calculated by [`limits!`](@ref) and [`loopDistribution`](@ref).
 """
 @inline function translatePoints(
     coord::T1,
@@ -67,9 +71,11 @@ end
 makeConnect(
     links::T1,
     maxConnect::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractArray{T, N}}
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
 ```
-Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. It also contains the segments in which it's involved. `linksConnect` is the connectivity of each link. This is called from [`makeNetwork`](@ref) and [`makeNetwork!`](@ref).
+Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. Every `(2i, j)` entry contains a node connected to node `j`. Every `(2i+1, j)` coordinate contains whether that node is the first or second node in the link.
+
+The matrix `linksConnect` relates connections enabled by a link. Analogous to the connectivity of a link.
 """
 @inline function makeConnect(
     links::T1,
@@ -161,6 +167,7 @@ getSegmentIdx(
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
 ```
+Creates an indexing matrix for quick indexing of dislocation segments for quick access to slip planes, burgers vectors and line vectors. The return `3 × n` matrix is of the form `[i, node1, node2]`. Index `i` can be used to find the Burgers vector, slip plane and segment forces of a segment, eg `bVec[:, i]`. While `node1` and `node2` can be used to find the coordinate and velocity of the nodes, eg `t = coord[:, node2] - coord[:, node1]`.
 """
 @inline function getSegmentIdx(
     links::T1,
@@ -200,6 +207,7 @@ end
 ```
 getSegmentIdx!(network::DislocationNetwork)
 ```
+In-place version of [`getSegmentIdx`](@ref).
 """
 @inline function getSegmentIdx!(network::DislocationNetwork)
     links = network.links
