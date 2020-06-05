@@ -372,13 +372,13 @@ function coarsenNetwork!(
         iCoord = SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i])
         # Create a triangle formed by the three nodes involved in coarsening.
         coordVec1 =
-            SVector(
+            SVector{3, Float64}(
                 coord[1, link1_nodeOppI],
                 coord[2, link1_nodeOppI],
                 coord[3, link1_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
         coordVec2 =
-            SVector(
+            SVector{3, Float64}(
                 coord[1, link2_nodeOppI],
                 coord[2, link2_nodeOppI],
                 coord[3, link2_nodeOppI],
@@ -403,13 +403,13 @@ function coarsenNetwork!(
         # Node i velocities.
         iVel = SVector{3, Float64}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
         velVec1 =
-            SVector(
+            SVector{3, Float64}(
                 nodeVel[1, link1_nodeOppI],
                 nodeVel[2, link1_nodeOppI],
                 nodeVel[3, link1_nodeOppI],
             ) - iVel
         velVec2 =
-            SVector(
+            SVector{3, Float64}(
                 nodeVel[1, link2_nodeOppI],
                 nodeVel[2, link2_nodeOppI],
                 nodeVel[3, link2_nodeOppI],
@@ -654,14 +654,14 @@ function refineNetwork!(
             iCoord = SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i])
             # Side 1
             coordVec1 =
-                SVector(
+                SVector{3, Float64}(
                     coord[1, link1_nodeOppI],
                     coord[2, link1_nodeOppI],
                     coord[3, link1_nodeOppI],
                 ) - iCoord
             # Side 2
             coordVec2 =
-                SVector(
+                SVector{3, Float64}(
                     coord[1, link2_nodeOppI],
                     coord[2, link2_nodeOppI],
                     coord[3, link2_nodeOppI],
@@ -684,7 +684,8 @@ function refineNetwork!(
                r2 > maxSegLen
                 midCoord =
                     (
-                        SVector(coord[1, i], coord[2, i], coord[3, i]) + SVector(
+                        SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i]) +
+                        SVector{3, Float64}(
                             coord[1, link2_nodeOppI],
                             coord[2, link2_nodeOppI],
                             coord[3, link2_nodeOppI],
@@ -693,7 +694,8 @@ function refineNetwork!(
 
                 midVel =
                     (
-                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) + SVector(
+                        SVector{3, Float64}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) +
+                        SVector{3, Float64}(
                             nodeVel[1, link2_nodeOppI],
                             nodeVel[2, link2_nodeOppI],
                             nodeVel[3, link2_nodeOppI],
@@ -740,7 +742,8 @@ function refineNetwork!(
                r1 > maxSegLen
                 midCoord =
                     (
-                        SVector(coord[1, i], coord[2, i], coord[3, i]) + SVector(
+                        SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i]) +
+                        SVector{3, Float64}(
                             coord[1, link1_nodeOppI],
                             coord[2, link1_nodeOppI],
                             coord[3, link1_nodeOppI],
@@ -749,7 +752,8 @@ function refineNetwork!(
 
                 midVel =
                     (
-                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) + SVector(
+                        SVector{3, Float64}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) +
+                        SVector{3, Float64}(
                             nodeVel[1, link1_nodeOppI],
                             nodeVel[2, link1_nodeOppI],
                             nodeVel[3, link1_nodeOppI],
@@ -797,8 +801,8 @@ function refineNetwork!(
                 link = connectivity[2 * j, i]
                 colLink = connectivity[2 * j + 1, i]
                 colOppLink = 3 - colLink
-                link_nodeOpp = links[copOppLink, link]
-                t = SVector{3}(
+                link_nodeOpp = links[colOppLink, link]
+                t = SVector{3, Float64}(
                     coord[1, link_nodeOpp] - coord[1, i],
                     coord[2, link_nodeOpp] - coord[2, i],
                     coord[3, link_nodeOpp] - coord[3, i],
@@ -810,7 +814,8 @@ function refineNetwork!(
 
                 midCoord =
                     (
-                        SVector(coord[1, i], coord[2, i], coord[3, i]) + SVector(
+                        SVector{3, Float64}(coord[1, i], coord[2, i], coord[3, i]) +
+                        SVector{3, Float64}(
                             coord[1, link_nodeOpp],
                             coord[2, link_nodeOpp],
                             coord[3, link_nodeOpp],
@@ -819,7 +824,8 @@ function refineNetwork!(
 
                 midVel =
                     (
-                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) + SVector(
+                        SVector{3, Float64}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) +
+                        SVector{3, Float64}(
                             nodeVel[1, link_nodeOpp],
                             nodeVel[2, link_nodeOpp],
                             nodeVel[3, link_nodeOpp],
