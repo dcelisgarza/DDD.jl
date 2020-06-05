@@ -186,7 +186,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     @assert nodeKept <= network.numNode && nodeGone <= network.numNode "mergeNode!: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
 
     # Return if both nodes to be merged are the same.
-    nodeKept == nodeGone && return
+    nodeKept == nodeGone && return 0
 
     links = network.links
     slipPlane = network.slipPlane
@@ -439,7 +439,10 @@ function coarsenNetwork!(
         getSegmentIdx!(network)
 
         # If link2_nodeOppI no longer exists there is nothing to calculate and we proceed to the next iteration.
-        nodeMerged == 0 ? continue : nothing
+        if nodeMerged == 0
+            i += 1
+            continue
+        end
 
         for j in 1:connectivity[1, nodeMerged]
             # Find the new link that has been created between nodeMerged and nodeNotMerged.

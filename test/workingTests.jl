@@ -37,7 +37,7 @@ shearDecagon = DislocationLoop(
     dist = Zeros(),
 )
 
-network = DislocationNetwork(shearDecagon, memBuffer = 1)
+network = DislocationNetwork(shearDecagon)
 calcSegForce!(dlnParams, matParams, network)
 dlnMobility(dlnParams, matParams, network)
 isapprox(mean(network.coord, dims = 2), zeros(3), rtol = 1)
@@ -68,19 +68,35 @@ fig1 = plotNodes(
     legend = false,
 )
 
-
-
-# plotNodes!(
-#     fig1,
-#     network,
-#     m = 1,
-#     l = 3,
-#     linecolor = :red,
-#     markercolor = :red,
-#     legend = false,
-# )
-println(dlnParams)
-dlnParams
+network4 = deepcopy(network)
+network4.coord[:, 11] = vec(mean(network4.coord, dims=2))
+network4.label[11] = 1
+network4.links[:, 11] = [11; 2]
+network4.links[:, 12] = [11; 4]
+network4.links[:, 13] = [11; 5]
+network4.links[:, 14] = [11; 10]
+network4.bVec[:,11:14] .= network4.bVec[:,1]
+network4.slipPlane[:,11:14] .= network4.slipPlane[:,1]
+makeConnect!(network4)
+getSegmentIdx!(network4)
+fig1 = plotNodes(
+    network4,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+)
+network5 = deepcopy(network4)
+coarsenNetwork!(dlnParams, matParams, network5)
+fig1 = plotNodes(
+    network5,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+)
 
 ## Toy models
 prismPentagon = DislocationLoop(
