@@ -711,7 +711,6 @@ function refineNetwork!(
                 slipPlane = network.slipPlane
                 coord = network.coord
                 label = network.label
-                numNode = network.numNode
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
                 linksConnect = network.linksConnect
@@ -769,7 +768,6 @@ function refineNetwork!(
                 slipPlane = network.slipPlane
                 coord = network.coord
                 label = network.label
-                numNode = network.numNode
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
                 linksConnect = network.linksConnect
@@ -799,7 +797,7 @@ function refineNetwork!(
 
         elseif connectivity[1, i] > 2 && label[i] == 1
             # Loop through the connections of node i.
-            for j in connectivity[1, i]
+            for j in 1:connectivity[1, i]
                 # Find the line direction of the link.
                 link = connectivity[2 * j, i]
                 colLink = connectivity[2 * j + 1, i]
@@ -813,7 +811,7 @@ function refineNetwork!(
                 r1 = norm(t)
 
                 # If the link is smaller than the maximum segment length we skip to the next iteration.
-                ri < maxSegLen ? continue : nothing
+                r1 < maxSegLen ? continue : nothing
 
                 midCoord =
                     (
@@ -835,13 +833,12 @@ function refineNetwork!(
                         )
                     ) / 2
 
-                splitNode!(network, i, j, midCoord, miVel)
+                splitNode!(network, i, j, midCoord, midVel)
                 getSegmentIdx!(network)
                 links = network.links
                 slipPlane = network.slipPlane
                 coord = network.coord
                 label = network.label
-                numNode = network.numNode
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
                 linksConnect = network.linksConnect
@@ -850,11 +847,11 @@ function refineNetwork!(
                 newNode = network.numNode
                 newLink = network.numSeg
 
-                slipPlane[:, newLink] = slipPlane[:, link1]
+                slipPlane[:, newLink] = slipPlane[:, link]
 
-                for k in 1:connectivity[newNode, 1]
-                    link = connectivity[newNode, 2 * k]
-                    oldNode = connectivity[newNode, 2 * k + 1]
+                for k in 1:connectivity[1, newNode]
+                    link = connectivity[2 * k, newNode]
+                    oldNode = connectivity[2 * k + 1, newNode]
                     # Calculate segment force for segment link.
                     calcSegForce!(dlnParams, matParams, network, link)
                     # Calculate old node velocity.
