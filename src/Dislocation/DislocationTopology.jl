@@ -436,6 +436,14 @@ function coarsenNetwork!(
 
         # Merge node i into node link2_nodeOppI.
         nodeMerged = mergeNode!(network, link2_nodeOppI, i)
+        links = network.links
+        slipPlane = network.slipPlane
+        coord = network.coord
+        label = network.label
+        nodeVel = network.nodeVel
+        connectivity = network.connectivity
+        linksConnect = network.linksConnect
+        segForce = network.segForce
         getSegmentIdx!(network)
 
         # If link2_nodeOppI no longer exists there is nothing to calculate and we proceed to the next iteration.
@@ -851,7 +859,10 @@ function refineNetwork!(
 
                 for k in 1:connectivity[1, newNode]
                     link = connectivity[2 * k, newNode]
-                    oldNode = connectivity[2 * k + 1, newNode]
+                    colLink = connectivity[2 * k + 1, newNode]
+                    colOppLink = 3 - colLink
+                    oldNode = links[colOppLink, link]
+
                     # Calculate segment force for segment link.
                     calcSegForce!(dlnParams, matParams, network, link)
                     # Calculate old node velocity.
@@ -864,7 +875,6 @@ function refineNetwork!(
             end
         end
     end
-
     return network
 end
 #=
