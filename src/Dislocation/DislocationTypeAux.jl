@@ -86,13 +86,7 @@ The matrix `linksConnect` relates connections enabled by a link. Analogous to th
 
     # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
     idx = findfirst(x -> x == 0, links[1, :])
-    if isnothing(idx)
-        idx = lenLinks
-    elseif idx == 1
-        idx = 1
-    else
-        idx -= 1
-    end
+    isnothing(idx) ? idx = lenLinks : idx -= 1
 
     connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
@@ -134,13 +128,7 @@ In-place version of [`makeConnect`](@ref).
     maxConnect = network.maxConnect
     lenLinks = size(links, 2)
     idx = findfirst(x -> x == 0, links[1, :])
-    if isnothing(idx)
-        idx = lenLinks
-    elseif idx == 1
-        idx = 1
-    else
-        idx -= 1
-    end
+    isnothing(idx) ? idx = lenLinks : idx -= 1
     connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
     @inbounds @simd for i in 1:idx
@@ -179,13 +167,7 @@ Creates an indexing matrix for quick indexing of dislocation segments for quick 
 
     # Find all defined nodes.
     idx = findfirst(x -> x == 0, links[1, :])
-    if isnothing(idx)
-        idx = lenLinks
-    elseif idx == 1
-        idx = 1
-    else
-        idx -= 1
-    end
+    isnothing(idx) ? idx = lenLinks : idx -= 1
 
     numSeg::Int = 0 # Number of segments.
 
@@ -215,13 +197,7 @@ In-place version of [`getSegmentIdx`](@ref).
     lenLinks = size(links, 2)
     segIdx = zeros(Int, lenLinks, 3)
     idx = findfirst(x -> x == 0, links[1, :])
-    if isnothing(idx)
-        idx = lenLinks
-    elseif idx == 1
-        idx = 1
-    else
-        idx -= 1
-    end
+    isnothing(idx) ? idx = lenLinks : idx -= 1
     numSeg::Int = 0
     for i in 1:idx
         n1 = links[1, i]
@@ -258,13 +234,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
     linksConnect = network.linksConnect
 
     idx = findfirst(x -> x == 0, links[1, :])
-    if isnothing(idx)
-        idx = size(links, 2)
-    elseif idx == 1
-        idx = 1
-    else
-        idx -= 1
-    end
+    isnothing(idx) ? idx = lenLinks : idx -= 1
 
     # Max value of connectivity should be the last link.
     maximum(connectivity) == idx ? nothing :

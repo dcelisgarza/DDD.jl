@@ -255,6 +255,23 @@ end
     @test checkNetwork(network)
     network.label[1] = 4
     @test !compStruct(network, network3)
+
+    import DDD: loopKink
+
+    @test_logs (:warn, "DislocationLoop: rotation axis for DDD.loopKink not defined, defaulting to prismatic loop.") DislocationLoop(
+        loopKink();
+        numSides = 4,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = ones(4),#,300; 700; 1100; 1500; 1900
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 1; 1; 1],
+        buffer = 0.0,
+        range = Float64[0 0; 0 0; 0 0],
+        dist = Zeros(),
+    )
 end
 
 @testset "Overloaded type functions" begin

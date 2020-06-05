@@ -17,7 +17,7 @@ export AbstractDistribution, Zeros, Rand, Randn, Regular, mobBCC
 # Dislocation types.
 export nodeType, SlipSystem, AbstractDlnStr, loopPrism, loopShear
 export DislocationLoop, DislocationNetwork, DislocationNetwork!
-export getSegmentIdx!, getSegmentIdx, makeConnect!
+export getSegmentIdx!, getSegmentIdx, makeConnect!, makeConnect
 # Dislocation functions.
 export checkNetwork, loopDistribution, calcSelfForce, calcSelfForce!
 export calcSegSegForce, calcSegSegForce!, calcParSegSegForce, calcSegForce, calcSegForce!
