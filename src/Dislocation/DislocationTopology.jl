@@ -630,6 +630,7 @@ function refineNetwork!(
     twoMinSegLen = dlnParams.twoMinSegLen
 
     links = network.links
+    slipPlane = network.slipPlane
     coord = network.coord
     label = network.label
     numNode = network.numNode
@@ -677,53 +678,6 @@ function refineNetwork!(
             # Heron's formula for the area of a triangle when we know its sides.
             areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
-            # Check if we have to split the first link.
-            # Split node the area is greater than the maximum area and if by splitting we would not create two segments smaller than the minimum allowed and if the node is in the simulation. Or if r1 is longer than the maximum length allowed.
-            if (areaSq > maxAreaSq && r1 >= twoMinSegLen && link1_nodeOppI <= numNode) ||
-               r1 > maxSegLen
-                midCoord =
-                    (
-                        SVector(coord[1, i], coord[2, i], coord[3, i]) + SVector(
-                            coord[1, link1_nodeOppI],
-                            coord[2, link1_nodeOppI],
-                            coord[3, link1_nodeOppI],
-                        )
-                    ) / 2
-
-                midVel =
-                    (
-                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) + SVector(
-                            nodeVel[1, link1_nodeOppI],
-                            nodeVel[2, link1_nodeOppI],
-                            nodeVel[3, link1_nodeOppI],
-                        )
-                    ) / 2
-
-                splitNode!(network, i, 1, midCoord, midVel)
-                getSegmentIdx!(network)
-
-                newNode = network.numNode
-                newLink = network.numSeg
-
-                slipPlane[:, link1] == slipPlane[:, link2] ?
-                slipPlane[:, newlink] = slipPlane[:, link1] : nothing
-
-                for j in 1:connectivity[1, newNode]
-                    link = connectivity[2 * j, newNode]
-                    colLink = connectivity[2 * j + 1, newNode]
-                    oppColLink = 3 - colLink
-                    oldNode = links[oppColLink, link]
-                    # Calculate segment force for segment link.
-                    calcSegForce!(dlnParams, matParams, network, link)
-                    # Calculate old node velocity.
-                    missing, nodeVel[:, oldNode] =
-                        dlnMobility(dlnParams, matParams, network, oldNode)
-                end
-                # Calculate new node velocity.
-                missing, nodeVel[:, oldNode] =
-                    dlnMobility(dlnParams, matParams, network, oldNode)
-            end
-
             # Check if we have to split the second link.
             # Split node the area is greater than the maximum area and if by splitting we would not create two segments smaller than the minimum allowed and if the node is in the simulation. Or if r2 is longer than the maximum length allowed.
             if (areaSq > maxAreaSq && r2 >= twoMinSegLen && link2_nodeOppI <= numNode) ||
@@ -748,12 +702,21 @@ function refineNetwork!(
 
                 splitNode!(network, i, 2, midCoord, midVel)
                 getSegmentIdx!(network)
+                links = network.links
+                slipPlane = network.slipPlane
+                coord = network.coord
+                label = network.label
+                numNode = network.numNode
+                nodeVel = network.nodeVel
+                connectivity = network.connectivity
+                linksConnect = network.linksConnect
+                segForce = network.segForce
 
                 newNode = network.numNode
                 newLink = network.numSeg
 
                 slipPlane[:, link2] == slipPlane[:, link1] ?
-                slipPlane[:, newlink] = slipPlane[:, link2] : nothing
+                slipPlane[:, newLink] = slipPlane[:, link2] : nothing
 
                 for j in 1:connectivity[1, newNode]
                     link = connectivity[2 * j, newNode]
@@ -767,12 +730,132 @@ function refineNetwork!(
                         dlnMobility(dlnParams, matParams, network, oldNode)
                 end
                 # Calculate new node velocity.
-                missing, nodeVel[:, oldNode] =
-                    dlnMobility(dlnParams, matParams, network, oldNode)
+                missing, nodeVel[:, newNode] =
+                    dlnMobility(dlnParams, matParams, network, newNode)
+            end
+
+            # Check if we have to split the first link.
+            # Split node the area is greater than the maximum area and if by splitting we would not create two segments smaller than the minimum allowed and if the node is in the simulation. Or if r1 is longer than the maximum length allowed.
+            if (areaSq > maxAreaSq && r1 >= twoMinSegLen && link1_nodeOppI <= numNode) ||
+               r1 > maxSegLen
+                midCoord =
+                    (
+                        SVector(coord[1, i], coord[2, i], coord[3, i]) + SVector(
+                            coord[1, link1_nodeOppI],
+                            coord[2, link1_nodeOppI],
+                            coord[3, link1_nodeOppI],
+                        )
+                    ) / 2
+
+                midVel =
+                    (
+                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) + SVector(
+                            nodeVel[1, link1_nodeOppI],
+                            nodeVel[2, link1_nodeOppI],
+                            nodeVel[3, link1_nodeOppI],
+                        )
+                    ) / 2
+
+                splitNode!(network, i, 1, midCoord, midVel)
+                getSegmentIdx!(network)
+                links = network.links
+                slipPlane = network.slipPlane
+                coord = network.coord
+                label = network.label
+                numNode = network.numNode
+                nodeVel = network.nodeVel
+                connectivity = network.connectivity
+                linksConnect = network.linksConnect
+                segForce = network.segForce
+
+                newNode = network.numNode
+                newLink = network.numSeg
+
+                slipPlane[:, link1] == slipPlane[:, link2] ?
+                slipPlane[:, newLink] = slipPlane[:, link1] : nothing
+
+                for j in 1:connectivity[1, newNode]
+                    link = connectivity[2 * j, newNode]
+                    colLink = connectivity[2 * j + 1, newNode]
+                    oppColLink = 3 - colLink
+                    oldNode = links[oppColLink, link]
+                    # Calculate segment force for segment link.
+                    calcSegForce!(dlnParams, matParams, network, link)
+                    # Calculate old node velocity.
+                    missing, nodeVel[:, oldNode] =
+                        dlnMobility(dlnParams, matParams, network, oldNode)
+                end
+                # Calculate new node velocity.
+                missing, nodeVel[:, newNode] =
+                    dlnMobility(dlnParams, matParams, network, newNode)
             end
 
         elseif connectivity[1, i] > 2 && label[i] == 1
-            # remesh 163
+            # Loop through the connections of node i.
+            for j in connectivity[1, i]
+                # Find the line direction of the link.
+                link = connectivity[2 * j, i]
+                colLink = connectivity[2 * j + 1, i]
+                colOppLink = 3 - colLink
+                link_nodeOpp = links[copOppLink, link]
+                t = SVector{3}(
+                    coord[1, link_nodeOpp] - coord[1, i],
+                    coord[2, link_nodeOpp] - coord[2, i],
+                    coord[3, link_nodeOpp] - coord[3, i],
+                )
+                r1 = norm(t)
+
+                # If the link is smaller than the maximum segment length we skip to the next iteration.
+                ri < maxSegLen ? continue : nothing
+
+                midCoord =
+                    (
+                        SVector(coord[1, i], coord[2, i], coord[3, i]) + SVector(
+                            coord[1, link_nodeOpp],
+                            coord[2, link_nodeOpp],
+                            coord[3, link_nodeOpp],
+                        )
+                    ) / 2
+
+                midVel =
+                    (
+                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) + SVector(
+                            nodeVel[1, link_nodeOpp],
+                            nodeVel[2, link_nodeOpp],
+                            nodeVel[3, link_nodeOpp],
+                        )
+                    ) / 2
+
+                splitNode!(network, i, j, midCoord, miVel)
+                getSegmentIdx!(network)
+                links = network.links
+                slipPlane = network.slipPlane
+                coord = network.coord
+                label = network.label
+                numNode = network.numNode
+                nodeVel = network.nodeVel
+                connectivity = network.connectivity
+                linksConnect = network.linksConnect
+                segForce = network.segForce
+
+                newNode = network.numNode
+                newLink = network.numSeg
+
+                slipPlane[:, newLink] = slipPlane[:, link1]
+
+                for k in 1:connectivity[newNode, 1]
+                    link = connectivity[newNode, 2 * k]
+                    oldNode = connectivity[newNode, 2 * k + 1]
+                    # Calculate segment force for segment link.
+                    calcSegForce!(dlnParams, matParams, network, link)
+                    # Calculate old node velocity.
+                    missing, nodeVel[:, oldNode] =
+                        dlnMobility(dlnParams, matParams, network, oldNode)
+                end
+                # Calculate new node velocity.
+                missing, nodeVel[:, newNode] =
+                    dlnMobility(dlnParams, matParams, network, newNode)
+            end
         end
     end
 

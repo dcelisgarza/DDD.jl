@@ -31,30 +31,45 @@ shearDecagon = DislocationLoop(
     slipSystem = 4,
     _slipPlane = slipSystems.slipPlane[:, 4],
     _bVec = slipSystems.bVec[:, 4],
-    label = nodeType[1; 2; 1; 2; 1; 1; 2; 1; 2; 1],
+    label = nodeType[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
     buffer = 0.0,
-    range = Float64[-10000 10000; -10000 10000; -10000 10000],
+    range = Float64[0 0; 0 0; 0 0],
     dist = Zeros(),
 )
 
-# shearHexagon = DislocationLoop(
-#     loopShear();
-#     numSides = 6,
-#     nodeSide = 1,
-#     numLoops = 1,
-#     segLen = 10 * ones(6),
-#     slipSystem = 4,
-#     _slipPlane = slipSystems.slipPlane[:, 4],
-#     _bVec = slipSystems.bVec[:, 4],
-#     label = nodeType[1; 2; 1; 2; 1; 1],
-#     buffer = 0.0,
-#     range = Float64[-10000 10000; -10000 10000; -10000 10000],
-#     dist = Zeros(),
-# )
 network = DislocationNetwork(shearDecagon, memBuffer = 1)
+calcSegForce!(dlnParams, matParams, network)
+dlnMobility(dlnParams, matParams, network)
+isapprox(mean(network.coord, dims = 2), zeros(3), rtol = 1)
+
 plotlyjs()
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
+
+network2 = deepcopy(network)
+coarsenNetwork!(dlnParams, matParams, network2)
+fig1 = plotNodes(
+    network2,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+)
+
+network3 = deepcopy(network2)
+refineNetwork!(dlnParams, matParams, network3)
+fig1 = plotNodes(
+    network3,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+)
+
+
+
 # plotNodes!(
 #     fig1,
 #     network,
@@ -97,14 +112,13 @@ shearHexagon = DislocationLoop(
     range = Float64[-100 100; -100 100; -100 100],
     dist = Zeros(),
 )
+plotlyjs()
 network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
 network2 = deepcopy(network)
+calcSegForce!(dlnParams, matParams, network2)
+coarsenNetwork!(dlnParams, matParams, network2)
 refineNetwork!(dlnParams, matParams, network2)
 compStruct(network, network2)
-
-
-
-plotlyjs()
 fig1 = plotNodes(
     network2,
     m = 1,
@@ -114,17 +128,11 @@ fig1 = plotNodes(
     legend = false,
 )
 
-
-
-
 mean(shearHexagon.coord)
 mean(network.coord)
 
-
-
 network2 = deepcopy(network)
-calcSegForce!(dlnParams, matParams, network2)
-coarsenNetwork!(dlnParams, matParams, network2)
+
 network2.segIdx
 
 network3.segIdx
@@ -261,17 +269,19 @@ slipPlane = [
     0 0 0
 ]
 
-label = [2
-     2
-     1
-     2
-     1
-     1
-     1
-     2
-     0
-     0
-     0]
+label = [
+    2
+    2
+    1
+    2
+    1
+    1
+    1
+    2
+    0
+    0
+    0
+]
 
 network2.label == label
 isapprox(network2.slipPlane', slipPlane)
