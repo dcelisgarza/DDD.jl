@@ -85,7 +85,7 @@ cd(@__DIR__)
     network = DislocationNetwork(square, memBuffer = 1)
     network2 = deepcopy(network)
     coarsenNetwork!(dlnParams, matParams, network2)
-    compStruct(network, network2)
+    @test compStruct(network, network2)
 
     pentagon = DislocationLoop(
         loopPrism();

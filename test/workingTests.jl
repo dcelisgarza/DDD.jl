@@ -26,7 +26,7 @@ triangle = DislocationLoop(
     numSides = 3,
     nodeSide = 1,
     numLoops = 1,
-    segLen = ones(3),#,300; 700; 1100; 1500; 1900
+    segLen = 1000*ones(3),#,300; 700; 1100; 1500; 1900
     slipSystem = 4,
     _slipPlane = slipSystems.slipPlane[:, 4],
     _bVec = slipSystems.bVec[:, 4],
@@ -35,8 +35,9 @@ triangle = DislocationLoop(
     range = Float64[0 0; 0 0; 0 0],
     dist = Zeros(),
 )
-network = DislocationNetwork(square, memBuffer = 1)
+network = DislocationNetwork(triangle, memBuffer = 1)
 coarsenNetwork!(dlnParams, matParams, network)
+
 
 
 mergeNode!(network, 5, 10)
