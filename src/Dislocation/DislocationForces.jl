@@ -95,6 +95,8 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     bVec = network.bVec
     coord = network.coord
     segIdx = network.segIdx
+    bType = eltype(network.bVec)
+    cType = eltype(network.coord)
 
     # Indices for self force.
     if isnothing(idx)
@@ -122,8 +124,8 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
         Linv = inv(L)
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
-        tVecI = SVector(tVec[1, i] * Linv, tVec[2, i] * Linv, tVec[3, i] * Linv)
-        bVecI = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
+        tVecI = SVector{3, cType}(tVec[1, i] * Linv, tVec[2, i] * Linv, tVec[3, i] * Linv)
+        bVecI = SVector{3, bType}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
         # Screw component, scalar projection of bVec onto t.
         bScrew = tVecI ⋅ bVecI
@@ -178,6 +180,8 @@ end
     coord = network.coord
     segIdx = network.segIdx
     segForce = network.segForce
+    bType = eltype(network.bVec)
+    cType = eltype(network.coord)
 
     # Indices for self force.
     if isnothing(idx)
@@ -203,8 +207,8 @@ end
         Linv = inv(L)
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
-        tVecI = SVector(tVec[1, i] * Linv, tVec[2, i] * Linv, tVec[3, i] * Linv)
-        bVecI = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
+        tVecI = SVector{3, cType}(tVec[1, i] * Linv, tVec[2, i] * Linv, tVec[3, i] * Linv)
+        bVecI = SVector{3, bType}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
         # Screw component, scalar projection of bVec onto t.
         bScrew = tVecI ⋅ bVecI
@@ -291,6 +295,8 @@ At a high level this works by creating a local coordinate frame using the line d
     bVec = network.bVec
     coord = network.coord
     segIdx = network.segIdx
+    bType = eltype(network.bVec)
+    cType = eltype(network.coord)
 
     # Un normalised segment vectors. Views for speed.
     numSeg = network.numSeg
@@ -300,7 +306,6 @@ At a high level this works by creating a local coordinate frame using the line d
     bVec = @view bVec[:, idxBvec]
     node1 = @view coord[:, idxNode1]
     node2 = @view coord[:, idxNode2]
-
     # Calculate segseg forces on every segment.
     if isnothing(idx)
         segSegForce = zeros(3, 2, numSeg)
@@ -309,13 +314,13 @@ At a high level this works by creating a local coordinate frame using the line d
             TSegSegForce = zeros(Threads.nthreads(), 3, 2, numSeg)
             @fastmath @inbounds @sync for i in 1:numSeg
                 Threads.@spawn begin
-                    b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
-                    n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
-                    n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
+                    b1 = SVector{3, Float64}(bVec[1, i], bVec[2, i], bVec[3, i])
+                    n11 = SVector{3, Float64}(node1[1, i], node1[2, i], node1[3, i])
+                    n12 = SVector{3, Float64}(node2[1, i], node2[2, i], node2[3, i])
                     @simd for j in (i + 1):numSeg
-                        b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
-                        n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
-                        n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
+                        b2 = SVector{3, Float64}(bVec[1, j], bVec[2, j], bVec[3, j])
+                        n21 = SVector{3, Float64}(node1[1, j], node1[2, j], node1[3, j])
+                        n22 = SVector{3, Float64}(node2[1, j], node2[2, j], node2[3, j])
 
                         Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                             aSq,
@@ -370,13 +375,13 @@ At a high level this works by creating a local coordinate frame using the line d
         elseif parallel == false
             # Serial execution.
             @fastmath @inbounds for i in 1:numSeg
-                b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
-                n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
-                n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
+                b1 = SVector{3, bType}(bVec[1, i], bVec[2, i], bVec[3, i])
+                n11 = SVector{3, cType}(node1[1, i], node1[2, i], node1[3, i])
+                n12 = SVector{3, cType}(node2[1, i], node2[2, i], node2[3, i])
                 @simd for j in (i + 1):numSeg
-                    b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
-                    n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
-                    n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
+                    b2 = SVector{3, bType}(bVec[1, j], bVec[2, j], bVec[3, j])
+                    n21 = SVector{3, cType}(node1[1, j], node1[2, j], node1[3, j])
+                    n22 = SVector{3, cType}(node2[1, j], node2[2, j], node2[3, j])
 
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
@@ -415,14 +420,14 @@ At a high level this works by creating a local coordinate frame using the line d
         lenIdx = length(idx)
         segSegForce = zeros(3, 2, lenIdx)
         @fastmath @inbounds for (k, i) in enumerate(idx)
-            b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
-            n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
-            n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
+            b1 = SVector{3, bType}(bVec[1, i], bVec[2, i], bVec[3, i])
+            n11 = SVector{3, cType}(node1[1, i], node1[2, i], node1[3, i])
+            n12 = SVector{3, cType}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
                 i == j ? continue : nothing
-                b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
-                n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
-                n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
+                b2 = SVector{3, bType}(bVec[1, j], bVec[2, j], bVec[3, j])
+                n21 = SVector{3, cType}(node1[1, j], node1[2, j], node1[3, j])
+                n22 = SVector{3, cType}(node2[1, j], node2[2, j], node2[3, j])
 
                 Fnode1, Fnode2, missing, missing = calcSegSegForce(
                     aSq,
@@ -513,6 +518,8 @@ end
     bVec = network.bVec
     coord = network.coord
     segIdx = network.segIdx
+    bType = eltype(network.bVec)
+    cType = eltype(network.coord)
 
     # Un normalised segment vectors. Views for speed.
     numSeg = network.numSeg
@@ -531,13 +538,13 @@ end
             TSegSegForce = zeros(Threads.nthreads(), 3, 2, numSeg)
             @fastmath @inbounds @sync for i in 1:numSeg
                 Threads.@spawn begin
-                    b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
-                    n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
-                    n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
+                    b1 = SVector{3, Float64}(bVec[1, i], bVec[2, i], bVec[3, i])
+                    n11 = SVector{3, Float64}(node1[1, i], node1[2, i], node1[3, i])
+                    n12 = SVector{3, Float64}(node2[1, i], node2[2, i], node2[3, i])
                     @simd for j in (i + 1):numSeg
-                        b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
-                        n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
-                        n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
+                        b2 = SVector{3, Float64}(bVec[1, j], bVec[2, j], bVec[3, j])
+                        n21 = SVector{3, Float64}(node1[1, j], node1[2, j], node1[3, j])
+                        n22 = SVector{3, Float64}(node2[1, j], node2[2, j], node2[3, j])
 
                         Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                             aSq,
@@ -592,13 +599,13 @@ end
         else
             # Serial execution.
             @fastmath @inbounds for i in 1:numSeg
-                b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
-                n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
-                n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
+                b1 = SVector{3, bType}(bVec[1, i], bVec[2, i], bVec[3, i])
+                n11 = SVector{3, cType}(node1[1, i], node1[2, i], node1[3, i])
+                n12 = SVector{3, cType}(node2[1, i], node2[2, i], node2[3, i])
                 @simd for j in (i + 1):numSeg
-                    b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
-                    n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
-                    n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
+                    b2 = SVector{3, bType}(bVec[1, j], bVec[2, j], bVec[3, j])
+                    n21 = SVector{3, cType}(node1[1, j], node1[2, j], node1[3, j])
+                    n22 = SVector{3, cType}(node2[1, j], node2[2, j], node2[3, j])
 
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
@@ -634,14 +641,14 @@ end
         end
     else # Calculate segseg forces only on segments provided
         @fastmath @inbounds for i in idx
-            b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
-            n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
-            n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
+            b1 = SVector{3, bType}(bVec[1, i], bVec[2, i], bVec[3, i])
+            n11 = SVector{3, cType}(node1[1, i], node1[2, i], node1[3, i])
+            n12 = SVector{3, cType}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
                 i == j ? continue : nothing
-                b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
-                n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
-                n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
+                b2 = SVector{3, bType}(bVec[1, j], bVec[2, j], bVec[3, j])
+                n21 = SVector{3, cType}(node1[1, j], node1[2, j], node1[3, j])
+                n22 = SVector{3, cType}(node2[1, j], node2[2, j], node2[3, j])
 
                 Fnode1, Fnode2, missing, missing = calcSegSegForce(
                     aSq,

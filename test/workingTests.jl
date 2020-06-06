@@ -902,8 +902,8 @@ prisPentagon = DislocationLoop(
     numLoops = 20,  # Number of loops of this type to generate when making a network.
     segLen = 10 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
     slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystems.slipPlane,  # Slip plane of the segments.
-    _bVec = slipSystems.bVec,            # Burgers vector of the segments.
+    _slipPlane = slipSystems.slipPlane[:,1],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:,1],            # Burgers vector of the segments.
     label = nodeType[1; 2; 1; 2; 1],    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
     range = Float64[          # Distribution range
@@ -913,6 +913,8 @@ prisPentagon = DislocationLoop(
     ],
     dist = Rand(),  # Loop distribution.
 )
+
+
 shearHexagon = DislocationLoop(
     loopShear();    # Shear loop
     numSides = 6,
@@ -920,8 +922,8 @@ shearHexagon = DislocationLoop(
     numLoops = 20,
     segLen = 10 * ones(3 * 6) / 3,  # The hexagon's side length is 10, each segment is 10/3.
     slipSystem = 1,
-    _slipPlane = slipSystems.slipPlane,
-    _bVec = slipSystems.bVec,
+    _slipPlane = slipSystems.slipPlane[:,1],
+    _bVec = slipSystems.bVec[:,1],
     label = nodeType[1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2],
     buffer = 0.0,
     range = Float64[
