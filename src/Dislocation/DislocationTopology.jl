@@ -643,7 +643,7 @@ function refineNetwork!(
     nodeVel = network.nodeVel
     connectivity = network.connectivity
 
-    for i in 1:numNode
+    @inbounds for i in 1:numNode
         if connectivity[1, i] == 2 && label[i] == 1
             link1 = connectivity[2, i]  # First connection.
             link2 = connectivity[4, i]  # Second connection.

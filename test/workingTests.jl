@@ -5,6 +5,7 @@ using Revise, BenchmarkTools, Plots, LinearAlgebra
 
 using DDD
 cd(@__DIR__)
+plotlyjs()
 
 fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
 fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
@@ -310,8 +311,29 @@ fig1 = plotNodes(
     markercolor = :blue,
     legend = false,
 )
-network5 = deepcopy(network4)
-coarsenNetwork!(dlnParams, matParams, network5)
+
+function foooo(dlnParams, matParams, network)
+    network2 = deepcopy(network)
+    coarsenNetwork!(dlnParams, matParams, network2)
+end
+function baaar(dlnParams, matParams, network)
+    network2 = deepcopy(network)
+    refineNetwork!(dlnParams, matParams, network2)
+end
+
+
+
+test = deepcopy(network4)
+@time refineNetwork!(dlnParams, matParams, test)
+foooo(dlnParams, matParams, network4)
+@time baaar(dlnParams, matParams, network4)
+@btime deepcopy(network4)
+@btime foooo(dlnParams, matParams, network4)
+1.662533122116375e-04/30.037e-6
+@time baaar(dlnParams, matParams, network4)
+1.481626548073874e-04/217.770e-6
+refineNetwork!(dlnParams, matParams, network2)
+
 network5.segForce[:, 2, 1:13]'
 fig1 = plotNodes(
     network5,
@@ -4671,3 +4693,8 @@ mergeComp = 5.452575341614758e-05 / (17.066e-6 - copyTime)
 calcSegSegForce(dislocationP, materialP, network, nothing; parallel = false)
 @profile calcSegSegForce(dislocationP, materialP, network, nothing; parallel = false)
 @profiler calcSegSegForce(dislocationP, materialP, network, nothing; parallel = false)
+
+@allocated dlnMobility(dlnParams, matParams, network)
+@allocated dlnMobility(dlnParams, matParams, network)
+
+dlnMobility(dlnParams, matParams, network)
