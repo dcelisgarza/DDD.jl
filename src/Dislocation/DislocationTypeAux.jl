@@ -57,12 +57,47 @@ Translates coordinates using the limits and displacements calculated by [`limits
     lims::T1,
     disp::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
+
     @inbounds for i in 1:size(coord, 2)
         @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
     end
     return coord
+end
+
+## Segments
+"""
+```
+makeSegment(
+    type::T1,
+    slipPlane::T2,
+    bVec::T2
+) where {T1 <: AbstractDlnSeg, T2 <: AbstractVector{T} where {T}}
+```
+Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
+"""
+@inline function makeSegment(
+    type::T1,
+    slipPlane::T2,
+    bVec::T2,
+) where {T1 <: segEdge, T2 <: AbstractVector{T} where {T}}
+    edge = cross(slipPlane, bVec)
+    return edge ./ norm(edge)
+end
+@inline function makeSegment(
+    type::T1,
+    slipPlane::T2,
+    bVec::T2,
+) where {T1 <: segEdgeN, T2 <: AbstractVector{T} where {T}}
+    return slipPlane ./ norm(slipPlane)
+end
+@inline function makeSegment(
+    type::T1,
+    slipPlane::T2,
+    bVec::T2,
+) where {T1 <: segScrew, T2 <: AbstractVector{T} where {T}}
+    return bVec ./ norm(bVec)
 end
 
 ## Auxiliary matrices.
@@ -123,6 +158,7 @@ makeConnect!(network::DislocationNetwork)
 In-place version of [`makeConnect`](@ref).
 """
 @inline function makeConnect!(network::DislocationNetwork)
+
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
     links = network.links
     maxConnect = network.maxConnect
@@ -191,7 +227,8 @@ getSegmentIdx!(network::DislocationNetwork)
 ```
 In-place version of [`getSegmentIdx`](@ref).
 """
-@inline function getSegmentIdx!(network::DislocationNetwork)
+@inline function getSegmentIdx!(network::T1) where {T1 <: DislocationNetwork}
+
     links = network.links
     label = network.label
     lenLinks = size(links, 2)
@@ -226,7 +263,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
 1. consistency betwen `connectivity` and `linksConnect`
 
 """
-@inline function checkNetwork(network::DislocationNetwork)
+@inline function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
 
     links = network.links
     label = network.label

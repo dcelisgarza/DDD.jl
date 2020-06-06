@@ -31,14 +31,7 @@ struct IntegrationP{T1, T2}
     reltol::T1
     dt0::T1
 end
-function IntegrationP(;
-    tmin,
-    tmax,
-    method,
-    abstol = 1e-6,
-    reltol = 1e-6,
-    dt0 = 1.0,
-)
+function IntegrationP(; tmin, tmax, method, abstol = 1e-6, reltol = 1e-6, dt0 = 1.0)
     return IntegrationP(tmin, tmax, method, abstol, reltol, dt0)
 end
 mutable struct IntegrationVar{T1, T2}
@@ -46,12 +39,13 @@ mutable struct IntegrationVar{T1, T2}
     time::T1
     step::T2
 end
-function IntegrationVar(;dt = 0.0, time = 0.0, step = 0)
+function IntegrationVar(; dt = 0.0, time = 0.0, step = 0)
     return IntegrationVar(dt, time, step)
 end
 
-function deriv(du, u, p, t)
-end
+# function deriv(dlnParams::T1, matParams::T2, network::T3)
+#
+# end
 
 # function zero(::Type{IntegrationP})
 #     return IntegrationP(0.0, zeros(2), :empty)

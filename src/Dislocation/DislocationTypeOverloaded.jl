@@ -11,35 +11,6 @@ Base.iterate(x::nodeType, i = 1) = (length(x) < i ? nothing : (x[i], i + 1))
 Base.length(x::nodeType) = 1
 Base.size(x::nodeType) = 1
 
-"""
-```
-makeSegment(type::AbstractDlnSeg, slipPlane::AbstractVector{T}, bVec::AbstractVector{T})
-    where {T}
-```
-Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
-"""
-@inline function makeSegment(
-    type::segEdge,
-    slipPlane::AbstractVector{T},
-    bVec::AbstractVector{T},
-) where {T}
-    edge = cross(slipPlane, bVec)
-    return edge ./ norm(edge)
-end
-@inline function makeSegment(
-    type::segEdgeN,
-    slipPlane::AbstractVector{T},
-    bVec::AbstractVector{T},
-) where {T}
-    return slipPlane ./ norm(slipPlane)
-end
-@inline function makeSegment(
-    type::segScrew,
-    slipPlane::AbstractVector{T},
-    bVec::AbstractVector{T},
-) where {T}
-    return bVec ./ norm(bVec)
-end
 Base.length(::T) where {T <: AbstractDlnSeg} = 1
 
 # Dislocationloop.

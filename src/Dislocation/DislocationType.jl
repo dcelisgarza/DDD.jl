@@ -520,7 +520,6 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     end
 
     θ = extAngle(numSides)  # External angle of a regular polygon with numSides.
-    rseg = zeros(3)         # Rotated segment.
 
     # Loop over polygon's sides.
     @inbounds for i in 1:numSides
