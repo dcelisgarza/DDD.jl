@@ -16,11 +16,13 @@ cd(@__DIR__)
         fileSlipSystem,
         fileDislocationLoop,
     )
-    slipSystems
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+    fileIntegTime = "../inputs/simParams/sampleIntegrationTime.JSON"
+    integTime = loadIntegrationVar(fileIntegTime)
     network = DislocationNetwork(dislocationLoop, memBuffer = 1)
     # Dump simulation.
     paramDump = "../outputs/simParams/sampleDump.JSON"
-    save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
+    save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop, integTime)
     networkDump = "../outputs/dln/sampleNetwork.JSON"
     save(networkDump, network)
     # Reload simulation.
@@ -34,6 +36,7 @@ cd(@__DIR__)
         dislocationLoop2[i] = loadDislocationLoop(simulation[5][i], slipSystems2)
     end
     network2 = loadNetwork(networkDump)
+    integTime2 = loadIntegrationVar(simulation[6])
     # Ensure the data is all the same.
     @test compStruct(dlnParams, dlnParams2; verbose = true)
     @test compStruct(matParams, matParams2; verbose = true)
@@ -41,4 +44,5 @@ cd(@__DIR__)
     @test compStruct(slipSystems, slipSystems2; verbose = true)
     @test compStruct(dislocationLoop, dislocationLoop2; verbose = true)
     @test compStruct(network, network2; verbose = true)
+    @test compStruct(integTime, integTime2; verbose = true)
 end

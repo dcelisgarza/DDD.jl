@@ -31,7 +31,7 @@ include("./IO/IOBase.jl")
 # Imports.
 export load, loadDislocationP, loadMaterialP, loadIntegrationP
 export loadSlipSystem, loadDislocationLoop, loadParams
-export loadDislocationLoop, loadNetwork
+export loadDislocationLoop, loadNetwork, loadIntegrationVar
 # Export.
 export save
 include("./PostProcessing/Plotting.jl")

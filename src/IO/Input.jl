@@ -81,15 +81,13 @@ function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
-    integrationP = IntegrationP(
-        dt = convert(Float64, dict["dt"]),
+    integrationP = IntegrationP(;
         tmin = convert(Float64, dict["tmin"]),
         tmax = convert(Float64, dict["tmax"]),
         method = integDict[dict["method"]],
         abstol = convert(Float64, dict["abstol"]),
         reltol = convert(Float64, dict["reltol"]),
-        time = convert(Float64, dict["time"]),
-        step = convert(Int, dict["step"]),
+        dt0 = convert(Float64, dict["dt0"]),
     )
 
     return integrationP
@@ -253,4 +251,15 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     )
 
     return dislocationNetwork
+end
+
+function loadIntegrationVar(fileIntegrationVar::AbstractString)
+    dict = load(fileIntegrationVar)[1]
+    integrationVar = IntegrationVar(; dt = dict["dt"], time = dict["dt"], step = dict["dt"])
+    return integrationVar
+end
+
+function loadIntegrationVar(dict::Dict{T1, T2}) where {T1, T2}
+    integrationVar = IntegrationVar(; dt = dict["dt"], time = dict["dt"], step = dict["dt"])
+    return integrationVar
 end

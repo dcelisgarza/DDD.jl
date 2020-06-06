@@ -71,23 +71,17 @@ DislocationP{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45
 The integration parameters are placed into the following mutable structure.
 ```julia
 julia> integrationP = IntegrationP(;
-          dt = 1e3,
           tmin = 0.0,
           tmax = 1e10,
           method = CustomTrapezoid(),
           abstol = 1e-6,
           reltol = 1e-6,
-          time = 0.0,
-          step = 0,
+          dt0 = 1e3,
         )
-IntegrationP{Float64,CustomTrapezoid,Int64}(1000.0, 0.0, 1.0e10, CustomTrapezoid(), 1.0e-6, 1.0e-6, 0.0, 0)
+IntegrationP{Float64,CustomTrapezoid}(0.0, 1.0e10, CustomTrapezoid(), 1.0e-6, 1.0e-6, 1000.0)
 ```
 
->[!WARNING]
->
->`IntegrationP` will undergo revisions. Probably be split into two, or perhaps eliminated completely in order to use/extend the state of the art `DifferentialEquations.jl` framework.
-
-Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `n × 3` matrices rather than vectors.
+Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `3 × n` matrices rather than vectors.
 ```julia
 julia> slipSystems = SlipSystem(;
           crystalStruct = BCC(),
@@ -96,9 +90,6 @@ julia> slipSystems = SlipSystem(;
        )
 SlipSystem{BCC,Array{Float64,1}}(BCC(), [1.0, 1.0, 1.0], [1.0, -1.0, 0.0])
 ```
->[!WARNING]
->
->This may change to perform validity checks regarding the relationship between burgers vector and slip plane.
 
 We also need dislocation sources. We make use of Julia's type system to create standard functions for loop generation. We provide a way of easily and quickly generating loops whose segments inhabit the same slip system. However, new `DislocationLoop()` methods can be made by subtyping `AbstractDlnStr`, and dispatching on the new type. One may of also course also use the default constructor and build the initial structures manually.
 
