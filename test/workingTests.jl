@@ -320,17 +320,19 @@ function baaar(dlnParams, matParams, network)
     network2 = deepcopy(network)
     refineNetwork!(dlnParams, matParams, network2)
 end
+foooo(dlnParams, matParams, network4)
+baaar(dlnParams, matParams, network4)
 
 
 
 test = deepcopy(network4)
 @time refineNetwork!(dlnParams, matParams, test)
-foooo(dlnParams, matParams, network4)
 @time baaar(dlnParams, matParams, network4)
 @btime deepcopy(network4)
 @btime foooo(dlnParams, matParams, network4)
 1.662533122116375e-04/30.037e-6
-@time baaar(dlnParams, matParams, network4)
+
+@btime baaar(dlnParams, matParams, network4)
 1.481626548073874e-04/217.770e-6
 refineNetwork!(dlnParams, matParams, network2)
 

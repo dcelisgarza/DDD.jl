@@ -195,7 +195,11 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     if size(connectivity, 1) < 2 * totalConnect + 1
         network.connectivity = vcat(
             network.connectivity,
-            zeros(Int, 2 * totalConnect + 1 - size(network.connectivity, 1), length(network.label)),
+            zeros(
+                Int,
+                2 * totalConnect + 1 - size(network.connectivity, 1),
+                length(network.label),
+            ),
         )
         connectivity = network.connectivity
     end
@@ -721,17 +725,18 @@ function refineNetwork!(
                 slipPlane[:, link2] == slipPlane[:, link1] ?
                 slipPlane[:, newLink] = slipPlane[:, link2] : nothing
 
-                for j in 1:connectivity[1, newNode]
-                    link = connectivity[2 * j, newNode]
-                    colLink = connectivity[2 * j + 1, newNode]
-                    oppColLink = 3 - colLink
-                    oldNode = links[oppColLink, link]
-                    # Calculate segment force for segment link.
-                    calcSegForce!(dlnParams, matParams, network, link)
-                    # Calculate old node velocity.
-                    missing, nodeVel[:, oldNode] =
-                        dlnMobility(dlnParams, matParams, network, oldNode)
-                end
+                # Calculate force and mobility for the new node's connectivity.
+                j = 1:connectivity[1, newNode]
+                link = connectivity[2 * j, newNode]
+                colLink = connectivity[2 * j .+ 1, newNode]
+                oppColLink = 3 .- colLink
+                oldNode = links[oppColLink, link]
+                # Calculate segment force for segment link.
+                calcSegForce!(dlnParams, matParams, network, link)
+                # Calculate old node velocity.
+                missing, nodeVel[:, oldNode] =
+                    dlnMobility(dlnParams, matParams, network, oldNode)
+
                 # Calculate new node velocity.
                 missing, nodeVel[:, newNode] =
                     dlnMobility(dlnParams, matParams, network, newNode)
@@ -776,17 +781,18 @@ function refineNetwork!(
                 slipPlane[:, link1] == slipPlane[:, link2] ?
                 slipPlane[:, newLink] = slipPlane[:, link1] : nothing
 
-                for j in 1:connectivity[1, newNode]
-                    link = connectivity[2 * j, newNode]
-                    colLink = connectivity[2 * j + 1, newNode]
-                    oppColLink = 3 - colLink
-                    oldNode = links[oppColLink, link]
-                    # Calculate segment force for segment link.
-                    calcSegForce!(dlnParams, matParams, network, link)
-                    # Calculate old node velocity.
-                    missing, nodeVel[:, oldNode] =
-                        dlnMobility(dlnParams, matParams, network, oldNode)
-                end
+                # Calculate force and mobility for the new node's connectivity.
+                j = 1:connectivity[1, newNode]
+                link = connectivity[2 * j, newNode]
+                colLink = connectivity[2 * j .+ 1, newNode]
+                oppColLink = 3 .- colLink
+                oldNode = links[oppColLink, link]
+                # Calculate segment force for segment link.
+                calcSegForce!(dlnParams, matParams, network, link)
+                # Calculate old node velocity.
+                missing, nodeVel[:, oldNode] =
+                    dlnMobility(dlnParams, matParams, network, oldNode)
+
                 # Calculate new node velocity.
                 missing, nodeVel[:, newNode] =
                     dlnMobility(dlnParams, matParams, network, newNode)
@@ -844,18 +850,18 @@ function refineNetwork!(
 
                 slipPlane[:, newLink] = slipPlane[:, link]
 
-                for k in 1:connectivity[1, newNode]
-                    link = connectivity[2 * k, newNode]
-                    colLink = connectivity[2 * k + 1, newNode]
-                    colOppLink = 3 - colLink
-                    oldNode = links[colOppLink, link]
+                # Calculate force and mobility for the new node's connectivity.
+                k = 1:connectivity[1, newNode]
+                link = connectivity[2 * k, newNode]
+                colLink = connectivity[2 * k .+ 1, newNode]
+                colOppLink = 3 .- colLink
+                oldNode = links[colOppLink, link]
+                # Calculate segment force for segment link.
+                calcSegForce!(dlnParams, matParams, network, link)
+                # Calculate old node velocity.
+                missing, nodeVel[:, oldNode] =
+                    dlnMobility(dlnParams, matParams, network, oldNode)
 
-                    # Calculate segment force for segment link.
-                    calcSegForce!(dlnParams, matParams, network, link)
-                    # Calculate old node velocity.
-                    missing, nodeVel[:, oldNode] =
-                        dlnMobility(dlnParams, matParams, network, oldNode)
-                end
                 # Calculate new node velocity.
                 missing, nodeVel[:, newNode] =
                     dlnMobility(dlnParams, matParams, network, newNode)
