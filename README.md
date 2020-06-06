@@ -211,20 +211,18 @@ They also have the added advantage of being designed for sending over the web, s
 
 This is a sample `JSON` file for a dislocation loop. They can be compactified by editors to decrease storage space by removing unnecessary line breaks and spaces. Here we show a somewhat longified view which is very human readable and trivially easy to create manually. Note that arrays are recursively linearised as vectors of vectors, where the linearisation follows the calling language's memory order. This means arrays will keep their shape and dimensionality regardless of the language that opens the JSON file.
 ```JSON
-[
-  {
-    "loopType": "DDD.loopPrism()",
-    "numSides": 4,
-    "nodeSide": 2,
-    "numLoops": 1,
-    "segLen": [1, 1, 1, 1, 1, 1, 1, 1],
-    "slipSystem": 1,
-    "label": [2, 1, 2, 1, 2, 1, 2, 1],
-    "buffer": 0,
-    "range": [[0, 0, 0], [0, 0, 0]],
-    "dist": "DDD.Zeros()"
-  }
-]
+{
+  "loopType": "DDD.loopPrism()",
+  "numSides": 4,
+  "nodeSide": 2,
+  "numLoops": 1,
+  "segLen": [1, 1, 1, 1, 1, 1, 1, 1],
+  "slipSystem": 1,
+  "label": [2, 1, 2, 1, 2, 1, 2, 1],
+  "buffer": 0,
+  "range": [[0, 0, 0], [0, 0, 0]],
+  "dist": "DDD.Zeros()"
+}
 ```
 This file describes an array, denoted by the `[]` at the top and bottom of the file, of a structure denoted by the `{}` on the second and penultimate lines. We could remove the `[]` but having all files be represent arrays (even if they are of length 1) simplifies users' and developers' lives by letting the same IO functions work for every case.
 

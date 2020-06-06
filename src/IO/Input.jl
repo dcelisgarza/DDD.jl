@@ -174,16 +174,16 @@ function loadParams(
 )
     # We use JSON arrays because it lets us dump a variable number of args into a single JSON file. To keep things gonsistent we use them always. Hence the indices here.
     dictDislocationP = load(fileDislocationP)
-    dislocationP = loadDislocationP(dictDislocationP[1])
+    dislocationP = loadDislocationP(dictDislocationP)
 
     dictMaterialP = load(fileMaterialP)
-    materialP = loadMaterialP(dictMaterialP[1])
+    materialP = loadMaterialP(dictMaterialP)
 
     dictIntegrationP = load(fileIntegrationP)
-    integrationP = loadIntegrationP(dictIntegrationP[1])
+    integrationP = loadIntegrationP(dictIntegrationP)
 
     dictSlipSystem = load(fileSlipSystem)
-    slipSystems = loadSlipSystem(dictSlipSystem[1])
+    slipSystems = loadSlipSystem(dictSlipSystem)
     # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = load(fileDislocationLoop)
     dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
@@ -201,7 +201,7 @@ loadNetwork(fileDislocationNetwork::AbstractString)
 Loads a dislocation network from a JSON file. Returns a [`DislocationNetwork`](@ref).
 """
 function loadNetwork(fileDislocationNetwork::AbstractString)
-    dict = load(fileDislocationNetwork)[1]
+    dict = load(fileDislocationNetwork)
 
     lenLinks = length(dict["links"])
     lenCoord = length(dict["coord"])
@@ -254,7 +254,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
 end
 
 function loadIntegrationVar(fileIntegrationVar::AbstractString)
-    dict = load(fileIntegrationVar)[1]
+    dict = load(fileIntegrationVar)
     integrationVar = IntegrationVar(; dt = dict["dt"], time = dict["dt"], step = dict["dt"])
     return integrationVar
 end

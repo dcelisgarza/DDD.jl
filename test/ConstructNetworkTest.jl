@@ -33,9 +33,9 @@ cd(@__DIR__)
         slipPlane = testSlip,
         bVec = testBVec,
     )
-    fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
+    fileSlipSystem = "../data/slipSystems/BCC.JSON"
     dictSlipSystem = load(fileSlipSystem)
-    slipSystems = loadSlipSystem(dictSlipSystem[1])
+    slipSystems = loadSlipSystem(dictSlipSystem)
     slipSysInt = 1
     slipPlane = slipSystems.slipPlane[:, 1]
     bVec = slipSystems.bVec[:, 1]
@@ -162,11 +162,11 @@ end
 end
 
 @testset "Loop generation" begin
-    slipfile = "../data/slipSystems/SlipSystems.JSON"
+    slipfile = "../data/slipSystems/BCC.JSON"
     loopfile = "../inputs/dln/sampleDislocation.JSON"
 
     dictSlipSystem = load(slipfile)
-    slipSystems = loadSlipSystem(dictSlipSystem[1])
+    slipSystems = loadSlipSystem(dictSlipSystem)
 
     dictDislocationLoop = load(loopfile)
     loops = zeros(DislocationLoop, length(dictDislocationLoop))

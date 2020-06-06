@@ -41,7 +41,7 @@ Wrapper for `JSON.print` to a file, `args` are the variables or structures you w
 """
 function save(filename::AbstractString, args...; mode::AbstractString = "w")
     open(filename, mode) do io
-        JSON.print(io, args)
+        length(args) == 1 ? JSON.print(io, args...) : JSON.print(io, args)
     end
     return nothing
 end

@@ -6,10 +6,10 @@ cd(@__DIR__)
 
 @testset "Plot nodes" begin
     # Load and create.
-    fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
+    fileSlipSystem = "../data/slipSystems/BCC.JSON"
     fileDislocationLoop = "../inputs/dln/sampleDislocation.JSON"
     dictSlipSystem = load(fileSlipSystem)
-    slipSystems = loadSlipSystem(dictSlipSystem[1])
+    slipSystems = loadSlipSystem(dictSlipSystem)
     # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = load(fileDislocationLoop)
     loops = zeros(DislocationLoop, length(dictDislocationLoop))
