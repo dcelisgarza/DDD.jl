@@ -17,11 +17,7 @@ network.numNode
 network.connectivity
 ```
 """
-@inline function removeNode!(
-    network::DislocationNetwork,
-    nodeGone::Int,
-    lastNode = nothing,
-)
+@inline function removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = nothing)
     links = network.links
     coord = network.coord
     label = network.label
@@ -123,10 +119,7 @@ function removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = noth
     links = network.links
     slipPlane = network.slipPlane
     bVec = network.bVec
-    coord = network.coord
-    label = network.label
     segForce = network.segForce
-    nodeVel = network.nodeVel
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
@@ -191,9 +184,6 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     links = network.links
     slipPlane = network.slipPlane
     bVec = network.bVec
-    coord = network.coord
-    label = network.label
-    nodeVel = network.nodeVel
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
@@ -205,7 +195,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     if size(connectivity, 1) < 2 * totalConnect + 1
         network.connectivity = vcat(
             network.connectivity,
-            zeros(Int, 2 * totalConnect + 1 - size(network.connectivity, 1), length(label)),
+            zeros(Int, 2 * totalConnect + 1 - size(network.connectivity, 1), length(network.label)),
         )
         connectivity = network.connectivity
     end
@@ -224,6 +214,9 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     # Remove node from network and update index of nodeKept in case it changed.
     lastNode = maximum((network.numNode, 1))
     removeNode!(network, nodeGone, lastNode)
+    coord = network.coord
+    nodeVel = network.nodeVel
+    connectivity = network.connectivity
     nodeKept == lastNode ? nodeKept = nodeGone : nothing
 
     # Warning: connectivity can be updated by removeLink!().
@@ -236,6 +229,8 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
         nodeNotLink = links[colNotLink, link]   # Other node in the link.
         # If nodeKept and nodeNotLink are the same, this is a self-link, therefore delete. Else increase counter.
         nodeKept == nodeNotLink ? removeLink!(network, link) : i += 1
+        links = network.links
+        connectivity = network.connectivity
     end
 
     # Warning: connectivity can be updated in the while loop.
@@ -293,16 +288,23 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             # Remove link2 from network and update the index of link1 in case it changed.
             lastLink = maximum((network.numSeg, 1))
             removeLink!(network, link2, lastLink)
+            links = network.links
+            connectivity = network.connectivity
             link1 == lastLink ? link1 = link2 : nothing
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
             b = SVector{3, Float64}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             if isapprox(dot(b, b), 0)
                 removeLink!(network, link1)
+                links = network.links
+                connectivity = network.connectivity
                 # If the node that was connected to nodeKept has no connections, remove it from the network and update the index of nodeKept in case it changed.
                 if connectivity[1, nodeNotLink1] == 0
                     lastNode = maximum((network.numNode, 1))
                     removeNode!(network, nodeNotLink1, lastNode)
+                    coord = network.coord
+                    nodeVel = network.nodeVel
+                    connectivity = network.connectivity
                     nodeKept == lastNode ? nodeKept = nodeNotLink1 : nothing
                 end
             end
@@ -340,8 +342,6 @@ function coarsenNetwork!(
     coord = network.coord
     nodeVel = network.nodeVel
     connectivity = network.connectivity
-    linksConnect = network.linksConnect
-    segForce = network.segForce
 
     i = 1
     while i <= network.numNode
@@ -436,15 +436,12 @@ function coarsenNetwork!(
 
         # Merge node i into node link2_nodeOppI.
         nodeMerged = mergeNode!(network, link2_nodeOppI, i)
+        getSegmentIdx!(network)
         links = network.links
-        slipPlane = network.slipPlane
         coord = network.coord
         label = network.label
         nodeVel = network.nodeVel
         connectivity = network.connectivity
-        linksConnect = network.linksConnect
-        segForce = network.segForce
-        getSegmentIdx!(network)
 
         # If link2_nodeOppI no longer exists there is nothing to calculate and we proceed to the next iteration.
         if nodeMerged == 0
@@ -518,7 +515,6 @@ function splitNode!(
     network.coord[:, newNode] = midCoord
     network.label[newNode] = 1
     network.nodeVel[:, newNode] = midVel
-
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
@@ -641,14 +637,11 @@ function refineNetwork!(
     twoMinSegLen = dlnParams.twoMinSegLen
 
     links = network.links
-    slipPlane = network.slipPlane
     coord = network.coord
     label = network.label
     numNode = network.numNode
     nodeVel = network.nodeVel
     connectivity = network.connectivity
-    linksConnect = network.linksConnect
-    segForce = network.segForce
 
     for i in 1:numNode
         if connectivity[1, i] == 2 && label[i] == 1
@@ -721,8 +714,6 @@ function refineNetwork!(
                 label = network.label
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
-                linksConnect = network.linksConnect
-                segForce = network.segForce
 
                 newNode = network.numNode
                 newLink = network.numSeg
@@ -778,8 +769,6 @@ function refineNetwork!(
                 label = network.label
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
-                linksConnect = network.linksConnect
-                segForce = network.segForce
 
                 newNode = network.numNode
                 newLink = network.numSeg
@@ -849,8 +838,6 @@ function refineNetwork!(
                 label = network.label
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
-                linksConnect = network.linksConnect
-                segForce = network.segForce
 
                 newNode = network.numNode
                 newLink = network.numSeg

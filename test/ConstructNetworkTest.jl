@@ -258,7 +258,10 @@ end
 
     import DDD: loopKink
     loopType = loopKink
-    @test_logs (:warn, "DislocationLoop: rotation axis for $loopType not defined, defaulting to prismatic loop.") DislocationLoop(
+    @test_logs (
+        :warn,
+        "DislocationLoop: rotation axis for $loopType not defined, defaulting to prismatic loop.",
+    ) DislocationLoop(
         loopKink();
         numSides = 4,
         nodeSide = 1,

@@ -232,7 +232,7 @@ Keyword constructor for [`DislocationP`](@ref). Validates values and calculates 
         coreRadMag,
         minSegLen,
         maxSegLen,
-        minSegLen*2,
+        minSegLen * 2,
         minArea,
         maxArea,
         minArea^2,

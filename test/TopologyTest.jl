@@ -72,7 +72,7 @@ cd(@__DIR__)
         numSides = 4,
         nodeSide = 1,
         numLoops = 1,
-        segLen = 1000*ones(4),#,300; 700; 1100; 1500; 1900
+        segLen = 1000 * ones(4),#,300; 700; 1100; 1500; 1900
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
@@ -81,7 +81,6 @@ cd(@__DIR__)
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
     )
-    network = DislocationNetwork(square, memBuffer = 1)
     network = DislocationNetwork(square, memBuffer = 1)
     network2 = deepcopy(network)
     coarsenNetwork!(dlnParams, matParams, network2)

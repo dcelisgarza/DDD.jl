@@ -1,7 +1,15 @@
 using Documenter, DDD
 
 import DDD: nodeType, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution
-import DDD: AbstractMobility, SlipSystem, DislocationP, loopDln, loopDistribution, limits!, translatePoints, makeConnect
+import DDD:
+    AbstractMobility,
+    SlipSystem,
+    DislocationP,
+    loopDln,
+    loopDistribution,
+    limits!,
+    translatePoints,
+    makeConnect
 makedocs(;
     modules = [DDD],
     format = Documenter.HTML(),

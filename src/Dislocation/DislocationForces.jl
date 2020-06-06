@@ -57,7 +57,7 @@ end
         # Else, calculate forces only on idx.
         range = idx
     end
-    network.segForce[:,:,range] .= 0
+    network.segForce[:, :, range] .= 0
 
     # pkForce!(mesh, dlnFEM, network)
     calcSelfForce!(dlnParams, matParams, network, idx)
@@ -391,6 +391,7 @@ At a high level this works by creating a local coordinate frame using the line d
                         n21,
                         n22,
                     )
+
                     segSegForce[1, 1, i] += Fnode1[1]
                     segSegForce[2, 1, i] += Fnode1[2]
                     segSegForce[3, 1, i] += Fnode1[3]
@@ -1104,8 +1105,8 @@ end
             n11,
             n12,
         )
-        Fnode1 = Fnode1 + Fnode1Core
-        Fnode2 = Fnode2 + Fnode2Core
+        Fnode1 += Fnode1Core
+        Fnode2 += Fnode2Core
 
         nothing, nothing, Fnode1Core, Fnode2Core = calcSegSegForce(
             aSq,
@@ -1121,8 +1122,8 @@ end
             n11,
             n12,
         )
-        Fnode1 = Fnode1 + Fnode1Core
-        Fnode2 = Fnode2 + Fnode2Core
+        Fnode1 += Fnode1Core
+        Fnode2 += Fnode2Core
     end
 
     # Segment 2
@@ -1220,8 +1221,8 @@ end
             n21,
             n22,
         )
-        Fnode3 = Fnode3 + Fnode3Core
-        Fnode4 = Fnode4 + Fnode4Core
+        Fnode3 += Fnode3Core
+        Fnode4 += Fnode4Core
 
         nothing, nothing, Fnode3Core, Fnode4Core = calcSegSegForce(
             aSq,
@@ -1237,8 +1238,8 @@ end
             n21,
             n22,
         )
-        Fnode3 = Fnode3 + Fnode3Core
-        Fnode4 = Fnode4 + Fnode4Core
+        Fnode3 += Fnode3Core
+        Fnode4 += Fnode4Core
     end
 
     # If we flipped the first segment originally, flip the forces round.
