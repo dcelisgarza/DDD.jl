@@ -67,6 +67,21 @@ cd(@__DIR__)
     @test network.segIdx == zeros(Int, 4, 3)
     @test network.segForce == zeros(3, 2, 4)
 
+    square = DislocationLoop(
+        loopShear();
+        numSides = 4,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = 1000*ones(4),#,300; 700; 1100; 1500; 1900
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 1; 1; 1],
+        buffer = 0.0,
+        range = Float64[0 0; 0 0; 0 0],
+        dist = Zeros(),
+    )
+    network = DislocationNetwork(square, memBuffer = 1)
     network = DislocationNetwork(square, memBuffer = 1)
     network2 = deepcopy(network)
     coarsenNetwork!(dlnParams, matParams, network2)

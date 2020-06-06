@@ -21,21 +21,24 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
 network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 DislocationNetwork!(network, dislocationLoop)
 
-square = DislocationLoop(
+triangle = DislocationLoop(
     loopPrism();
-    numSides = 10,
+    numSides = 3,
     nodeSide = 1,
     numLoops = 1,
-    segLen = ones(10),#,300; 700; 1100; 1500; 1900
+    segLen = ones(3),#,300; 700; 1100; 1500; 1900
     slipSystem = 4,
     _slipPlane = slipSystems.slipPlane[:, 4],
     _bVec = slipSystems.bVec[:, 4],
-    label = nodeType[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
+    label = nodeType[1; 1; 1],
     buffer = 0.0,
     range = Float64[0 0; 0 0; 0 0],
     dist = Zeros(),
 )
 network = DislocationNetwork(square, memBuffer = 1)
+coarsenNetwork!(dlnParams, matParams, network)
+
+
 mergeNode!(network, 5, 10)
 compStruct(network, network2)
 
