@@ -20,7 +20,7 @@ network.connectivity
 @inline function removeNode!(
     network::DislocationNetwork,
     nodeGone::Int,
-    lastNode::Int = nothing,
+    lastNode = nothing,
 )
     links = network.links
     coord = network.coord

@@ -16,6 +16,62 @@ cd(@__DIR__)
         fileDislocationLoop,
     )
 
+    square = DislocationLoop(
+        loopShear();
+        numSides = 4,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = ones(4),#,300; 700; 1100; 1500; 1900
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 1; 1; 1],
+        buffer = 0.0,
+        range = Float64[0 0; 0 0; 0 0],
+        dist = Zeros(),
+    )
+    network = DislocationNetwork(square, memBuffer = 1)
+    mergeNode!(network, 3, 1)
+    @test network.links == zeros(Int, 2, 4)
+    @test network.slipPlane == zeros(3, 4)
+    @test network.bVec == zeros(3, 4)
+    @test network.coord == zeros(3, 4)
+    @test network.label == zeros(nodeType, 4)
+    @test network.nodeVel == zeros(3, 4)
+    @test network.numNode == 0
+    @test network.numSeg == 0
+    @test network.maxConnect == 4
+    @test network.connectivity == zeros(9, 4)
+    @test network.linksConnect == zeros(2, 4)
+    @test network.segIdx == [
+        1 1 2
+        2 2 3
+        3 3 4
+        4 4 1
+    ]
+    @test network.segForce == zeros(3, 2, 4)
+
+    network = DislocationNetwork(square, memBuffer = 1)
+    coarsenNetwork!(dlnParams, matParams, network)
+    @test network.links == zeros(Int, 2, 4)
+    @test network.slipPlane == zeros(3, 4)
+    @test network.bVec == zeros(3, 4)
+    @test network.coord == zeros(3, 4)
+    @test network.label == zeros(nodeType, 4)
+    @test network.nodeVel == zeros(3, 4)
+    @test network.numNode == 0
+    @test network.numSeg == 0
+    @test network.maxConnect == 4
+    @test network.connectivity == zeros(9, 4)
+    @test network.linksConnect == zeros(2, 4)
+    @test network.segIdx == zeros(Int, 4, 3)
+    @test network.segForce == zeros(3, 2, 4)
+
+    network = DislocationNetwork(square, memBuffer = 1)
+    network2 = deepcopy(network)
+    coarsenNetwork!(dlnParams, matParams, network2)
+    compStruct(network, network2)
+
     pentagon = DislocationLoop(
         loopPrism();
         numSides = 5,
@@ -1178,6 +1234,166 @@ cd(@__DIR__)
     @test networkTest.numSeg == 4
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
+
+    shearDecagon = DislocationLoop(
+        loopShear();
+        numSides = 10,
+        nodeSide = 1,
+        numLoops = 1,
+        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],
+        slipSystem = 4,
+        _slipPlane = slipSystems.slipPlane[:, 4],
+        _bVec = slipSystems.bVec[:, 4],
+        label = nodeType[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
+        buffer = 0.0,
+        range = Float64[0 0; 0 0; 0 0],
+        dist = Zeros(),
+    )
+
+    network = DislocationNetwork(shearDecagon)
+
+    network2 = deepcopy(network)
+    network2.coord[:, 11] = vec(mean(network2.coord, dims = 2))
+    network2.label[11] = 1
+    network2.numNode = 11
+    network2.links[:, 11] = [11; 2]
+    network2.links[:, 12] = [11; 4]
+    network2.links[:, 13] = [11; 5]
+    network2.links[:, 14] = [11; 10]
+    network2.bVec[:, 11:14] .= network2.bVec[:, 1]
+    network2.slipPlane[:, 11:14] .= network2.slipPlane[:, 1]
+    makeConnect!(network2)
+    getSegmentIdx!(network2)
+    calcSegForce!(dlnParams, matParams, network2)
+    network3 = deepcopy(network2)
+    retVal = mergeNode!(network3, 11, 3)
+    numNode = 10
+    numSeg = 11
+    links = [
+        1 2
+        3 10
+        3 4
+        4 5
+        5 6
+        6 7
+        7 8
+        8 9
+        9 10
+        10 1
+        3 5
+    ]
+    slipPlane = [
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186548 0.707106781186548 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+        -0.707106781186547 0.707106781186547 0
+    ]
+    bVec = [
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        1.154700538379252 1.154700538379252 -1.154700538379252
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+        0.577350269189626 0.577350269189626 -0.577350269189626
+    ]
+    coord =
+        1.0e+03 * [
+            0.398589381337062 0.398589381337062 -2.768451689518856
+            -0.070157063645514 -0.070157063645514 -2.993292834846829
+            -0.000000000000000 -0.000000000000000 -0.000000000000000
+            -1.447335912588014 -1.447335912588014 -1.464727194290905
+            -1.464584433169251 -1.464584433169251 0.435116214276106
+            -0.688912681287911 -0.688912681287911 1.986459718038786
+            0.315543986531893 0.315543986531893 2.468262172313013
+            1.058317221444842 1.058317221444842 2.141802614336981
+            1.354373174658633 1.354373174658633 1.580819775799698
+            1.357096625276723 1.357096625276723 1.280844500762801
+        ]
+    label = [
+        1
+        1
+        1
+        1
+        1
+        1
+        1
+        1
+        1
+        1
+    ]
+    connectivity = [
+        2 1 1 10 2 0 0 0 0 0 0 0 0
+        1 1 2 0 0 0 0 0 0 0 0 0 0
+        3 3 1 2 1 11 1 0 0 0 0 0 0
+        2 3 2 4 1 0 0 0 0 0 0 0 0
+        3 4 2 5 1 11 2 0 0 0 0 0 0
+        2 5 2 6 1 0 0 0 0 0 0 0 0
+        2 6 2 7 1 0 0 0 0 0 0 0 0
+        2 7 2 8 1 0 0 0 0 0 0 0 0
+        2 8 2 9 1 0 0 0 0 0 0 0 0
+        3 9 2 10 1 2 2 0 0 0 0 0 0
+    ]
+    linksConnect = [
+        1 1
+        2 3
+        1 1
+        2 1
+        2 1
+        2 1
+        2 1
+        2 1
+        2 1
+        2 2
+        3 3
+    ]
+    segForce1 = [
+        -0.748190754013096 -0.748190754013096 -0.786102761951949
+        0.855243581352852 0.855243581352852 0.599581450921586
+        -0.233297317766138 -0.233297317766138 1.047905121384469
+        0.615766816430661 0.615766816430661 1.265815476488130
+        0.859064491962699 0.859064491962699 0.841970051636730
+        0.790437965805707 0.790437965805707 0.609949680100975
+        0.723105797983762 0.723105797983762 -0.204135169996403
+        0.263097682188983 0.263097682188983 -1.016451127824425
+        -0.263089602621033 -0.263089602621033 -1.259411622198353
+        -0.963633758828130 -0.963633758828130 -0.974356114771111
+        -0.641421819573315 -0.641421819573315 0.844454937335996
+    ]
+    segForce2 = [
+        0.778870477488639 0.778870477488639 0.658181235033626
+        -0.351593620979522 -0.351593620979522 -1.666848650236328
+        0.307095354106118 0.307095354106118 -0.970012014882650
+        -0.163500245616148 -0.163500245616148 -1.257603295189690
+        -0.403463427228870 -0.403463427228870 -1.297571116370560
+        -0.722761341575280 -0.722761341575280 -0.892132702876100
+        -0.773403603691488 -0.773403603691488 -0.024743801023301
+        -0.348819045388820 -0.348819045388820 0.925973066288406
+        0.244396551334690 0.244396551334690 1.259072196876892
+        0.423285512800722 0.423285512800722 1.230167339107029
+        0.914302357491649 0.914302357491649 0.992555842025303
+    ]
+    @test retVal == 3
+    @test network3.links[:, 1:numSeg]' == links
+    @test isapprox(network3.slipPlane[:, 1:numSeg]', slipPlane)
+    @test isapprox(network3.bVec[:, 1:numSeg]', bVec)
+    @test isapprox(network3.coord[:, 1:numNode]', coord)
+    @test network3.label[1:numNode] == label
+    @test network3.connectivity[1:13, 1:numNode]' == connectivity
+    @test network3.linksConnect[:, 1:numSeg]' == linksConnect
+    @test isapprox(network3.segForce[:, 1, 1:numSeg]', segForce1)
+    @test isapprox(network3.segForce[:, 2, 1:numSeg]', segForce2)
 end
 
 @testset "Split node" begin
