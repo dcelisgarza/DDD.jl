@@ -187,7 +187,7 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
     sinθ = sin(θ)
     xyzDOTuvw = dot(xyz, uvw)
 
-    return SVector(
+    return SVector{3, typeof(xyzDOTuvw)}(
         (
             abc[1] * (uvw[2] * uvw[2] + uvw[3] * uvw[3]) -
             uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)

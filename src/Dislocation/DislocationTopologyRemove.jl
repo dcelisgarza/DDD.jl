@@ -195,6 +195,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     bVec = network.bVec
     connectivity = network.connectivity
     linksConnect = network.linksConnect
+    elemT = eltype(network.bVec)
 
     nodeKeptConnect = connectivity[1, nodeKept]
     nodeGoneConnect = connectivity[1, nodeGone]
@@ -276,25 +277,25 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
             # Fix slip plane.
             # Line direction and velocity of the resultant dislocation.
-            t = SVector(
+            t = SVector{3, elemT}(
                 coord[1, nodeKept] - coord[1, nodeNotLink1],
                 coord[2, nodeKept] - coord[2, nodeNotLink1],
                 coord[3, nodeKept] - coord[3, nodeNotLink1],
             )
 
-            v = SVector(
+            v = SVector{3, elemT}(
                 nodeVel[1, nodeKept] + nodeVel[1, nodeNotLink1],
                 nodeVel[2, nodeKept] + nodeVel[2, nodeNotLink1],
                 nodeVel[3, nodeKept] + nodeVel[3, nodeNotLink1],
             )
 
             # Burgers vector and potential new slip plane.
-            b = SVector(bVec[1, link1], bVec[2, link1], bVec[3, link1])
+            b = SVector{3, elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
-            if n1 ⋅ n1 > eps(eltype(n1)) # non-screw
+            if n1 ⋅ n1 > eps(elemT) # non-screw
                 slipPlane[:, link1] = n1 / norm(n1)
-            elseif n2 ⋅ n2 > eps(eltype(n2)) # screw
+            elseif n2 ⋅ n2 > eps(elemT) # screw
                 slipPlane[:, link1] = n2 / norm(n2)
             end
 
@@ -306,7 +307,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
             link1 == lastLink ? link1 = link2 : nothing
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
-            b = SVector(bVec[1, link1], bVec[2, link1], bVec[3, link1])
+            b = SVector{3, elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             if isapprox(dot(b, b), 0)
                 removeLink!(network, link1)
                 links = network.links
@@ -356,6 +357,7 @@ function coarsenNetwork!(
     coord = network.coord
     nodeVel = network.nodeVel
     connectivity = network.connectivity
+    elemT = eltype(network.coord)
 
     i = 1
     while i <= network.numNode
@@ -383,16 +385,16 @@ function coarsenNetwork!(
         end
 
         # Coordinate of node i
-        iCoord = SVector(coord[1, i], coord[2, i], coord[3, i])
+        iCoord = SVector{3, elemT}(coord[1, i], coord[2, i], coord[3, i])
         # Create a triangle formed by the three nodes involved in coarsening.
         coordVec1 =
-            SVector(
+            SVector{3, elemT}(
                 coord[1, link1_nodeOppI],
                 coord[2, link1_nodeOppI],
                 coord[3, link1_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
         coordVec2 =
-            SVector(
+            SVector{3, elemT}(
                 coord[1, link2_nodeOppI],
                 coord[2, link2_nodeOppI],
                 coord[3, link2_nodeOppI],
@@ -415,15 +417,15 @@ function coarsenNetwork!(
         areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
         # Node i velocities.
-        iVel = SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
+        iVel = SVector{3, elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
         velVec1 =
-            SVector(
+            SVector{3, elemT}(
                 nodeVel[1, link1_nodeOppI],
                 nodeVel[2, link1_nodeOppI],
                 nodeVel[3, link1_nodeOppI],
             ) - iVel
         velVec2 =
-            SVector(
+            SVector{3, elemT}(
                 nodeVel[1, link2_nodeOppI],
                 nodeVel[2, link2_nodeOppI],
                 nodeVel[3, link2_nodeOppI],
@@ -431,9 +433,9 @@ function coarsenNetwork!(
         velVec3 = velVec2 - velVec1
 
         # Rate of change of side length with respect to time. We add eps(typeof(r)) to avoid division by zero.
-        dr1dt = coordVec1 ⋅ velVec1 / (r1 + eps(typeof(r1)))
-        dr2dt = coordVec2 ⋅ velVec2 / (r2 + eps(typeof(r2)))
-        dr3dt = coordVec3 ⋅ velVec3 / (r3 + eps(typeof(r3)))
+        dr1dt = coordVec1 ⋅ velVec1 / (r1 + eps(elemT))
+        dr2dt = coordVec2 ⋅ velVec2 / (r2 + eps(elemT))
+        dr3dt = coordVec3 ⋅ velVec3 / (r3 + eps(elemT))
         dr0dt = (dr1dt + dr2dt + dr3dt) / 2
 
         # Rate of change of triangle area with respect to time.

@@ -7,6 +7,7 @@ function splitNode!(
     midVel::T3,
 ) where {T1 <: DislocationNetwork, T2 <: Int, T3 <: AbstractVector{T} where {T}}
 
+    elemT = eltype(network.bVec)
     # newNode gets inserted between splitNode and the node it is connected to via the connection splitConnect. We want to take this connection and remove it from splitNode. We then connect splitNode to newNode. Then we assign splitConnect to newNode so that it can connect to the node splitNode used to be connected to, this way we close the loop and the connections move from splitNode -> other, to splitNode -> newNode -> other. We copy the connection to a temporary variable, guaranteeing the data isn't modified by removeConnection!().
     tmpConnect = copy(network.connectivity[:, splitNode])
     # Remove connection from node in preparation of adding the new node.
@@ -20,22 +21,14 @@ function splitNode!(
     if newNode > length(network.label)
         # A good heuristic for memory allocation is to allocate an extra N log₂(N) entries.
         numNewEntries = Int(round(newNode * log2(newNode)))
-        network.coord = hcat(
-            network.coord,
-            zeros(eltype(network.coord), size(network.coord, 1), numNewEntries),
-        )
-        network.label = vcat(network.label, zeros(eltype(network.label), numNewEntries))
-        network.nodeVel = hcat(
-            network.nodeVel,
-            zeros(eltype(network.nodeVel), size(network.nodeVel, 1), numNewEntries),
-        )
+        network.coord =
+            hcat(network.coord, zeros(elemT, size(network.coord, 1), numNewEntries))
+        network.label = vcat(network.label, zeros(nodeType, numNewEntries))
+        network.nodeVel =
+            hcat(network.nodeVel, zeros(elemT, size(network.nodeVel, 1), numNewEntries))
         network.connectivity = hcat(
             network.connectivity,
-            zeros(
-                eltype(network.connectivity),
-                size(network.connectivity, 1),
-                numNewEntries,
-            ),
+            zeros(Int, size(network.connectivity, 1), numNewEntries),
         )
     end
 
@@ -57,7 +50,7 @@ function splitNode!(
     linksConnect[colLink, link] = 1
 
     # Check if we need a new link between newNode and splitNode for Burgers vector conservation.
-    b = SVector(bVec[1, link], bVec[2, link], bVec[3, link])
+    b = SVector{3, elemT}(bVec[1, link], bVec[2, link], bVec[3, link])
     # If burgers vector is conserved return.
     b ⋅ b == 0 && return network
 
@@ -69,29 +62,19 @@ function splitNode!(
     if newSeg > size(network.links, 2)
         # A good heuristic for memory allocation is to allocate an extra N log₂(N) entries.
         numNewEntries = Int(round(newSeg * log2(newSeg)))
-        network.links = hcat(
-            network.links,
-            zeros(eltype(network.links), size(network.links, 1), numNewEntries),
-        )
-        network.slipPlane = hcat(
-            network.slipPlane,
-            zeros(eltype(network.slipPlane), size(network.slipPlane, 1), numNewEntries),
-        )
-        network.bVec = hcat(
-            network.bVec,
-            zeros(eltype(network.bVec), size(network.bVec, 1), numNewEntries),
-        )
+        network.links =
+            hcat(network.links, zeros(Int, size(network.links, 1), numNewEntries))
+        network.slipPlane =
+            hcat(network.slipPlane, zeros(elemT, size(network.slipPlane, 1), numNewEntries))
+        network.bVec =
+            hcat(network.bVec, zeros(elemT, size(network.bVec, 1), numNewEntries))
         network.linksConnect = hcat(
             network.linksConnect,
-            zeros(
-                eltype(network.linksConnect),
-                size(network.linksConnect, 1),
-                numNewEntries,
-            ),
+            zeros(Int, size(network.linksConnect, 1), numNewEntries),
         )
         network.segForce = cat(
             network.segForce,
-            zeros(eltype(network.segForce), size(network.segForce, 1), 2, numNewEntries),
+            zeros(elemT, size(network.segForce, 1), 2, numNewEntries),
             dims = 3,
         )
     end
@@ -128,13 +111,13 @@ function splitNode!(
     nodeVel = network.nodeVel
 
     # WARNING This calculation's dodgy. Try using the cross product of the adjacent segments.
-    t = SVector(
+    t = SVector{3, elemT}(
         coord[1, splitNode] - coord[1, newNode],
         coord[2, splitNode] - coord[2, newNode],
         coord[3, splitNode] - coord[3, newNode],
     )
 
-    v = SVector(
+    v = SVector{3, elemT}(
         nodeVel[1, splitNode] + nodeVel[1, newNode],
         nodeVel[2, splitNode] + nodeVel[2, newNode],
         nodeVel[3, splitNode] + nodeVel[3, newNode],
@@ -143,9 +126,9 @@ function splitNode!(
     # Potential new slip plane.
     n1 = t × b  # For non-screw segments.
     n2 = t × v  # For screw segments.
-    if n1 ⋅ n1 > eps(eltype(n1)) # non-screw
+    if n1 ⋅ n1 > eps(elemT) # non-screw
         slipPlane[:, newSeg] = n1 / norm(n1)
-    elseif n2 ⋅ n2 > eps(eltype(n2)) # screw
+    elseif n2 ⋅ n2 > eps(elemT) # screw
         slipPlane[:, newSeg] = n2 / norm(n2)
     end
 
@@ -172,6 +155,8 @@ function refineNetwork!(
     nodeVel = network.nodeVel
     connectivity = network.connectivity
 
+    elemT = eltype(network.coord)
+
     @inbounds for i in 1:numNode
         if connectivity[1, i] == 2 && label[i] == 1
             link1 = connectivity[2, i]  # First connection.
@@ -184,17 +169,17 @@ function refineNetwork!(
             link2_nodeOppI = links[oppColLink2, link2] # Node i is connected to this node as part of link 2.
 
             # Create triangle formed by the node and its two links.
-            iCoord = SVector(coord[1, i], coord[2, i], coord[3, i])
+            iCoord = SVector{3, elemT}(coord[1, i], coord[2, i], coord[3, i])
             # Side 1
             coordVec1 =
-                SVector(
+                SVector{3, elemT}(
                     coord[1, link1_nodeOppI],
                     coord[2, link1_nodeOppI],
                     coord[3, link1_nodeOppI],
                 ) - iCoord
             # Side 2
             coordVec2 =
-                SVector(
+                SVector{3, elemT}(
                     coord[1, link2_nodeOppI],
                     coord[2, link2_nodeOppI],
                     coord[3, link2_nodeOppI],
@@ -216,23 +201,17 @@ function refineNetwork!(
             if (areaSq > maxAreaSq && r2 >= twoMinSegLen && link2_nodeOppI <= numNode) ||
                r2 > maxSegLen
                 midCoord =
-                    (
-                        SVector(coord[1, i], coord[2, i], coord[3, i]) +
-                        SVector(
-                            coord[1, link2_nodeOppI],
-                            coord[2, link2_nodeOppI],
-                            coord[3, link2_nodeOppI],
-                        )
+                    SVector{3, elemT}(
+                        coord[1, i] + coord[1, link2_nodeOppI],
+                        coord[2, i] + coord[2, link2_nodeOppI],
+                        coord[3, i] + coord[3, link2_nodeOppI],
                     ) / 2
 
                 midVel =
-                    (
-                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) +
-                        SVector(
-                            nodeVel[1, link2_nodeOppI],
-                            nodeVel[2, link2_nodeOppI],
-                            nodeVel[3, link2_nodeOppI],
-                        )
+                    SVector{3, elemT}(
+                        nodeVel[1, i] + nodeVel[1, link2_nodeOppI],
+                        nodeVel[2, i] + nodeVel[2, link2_nodeOppI],
+                        nodeVel[3, i] + nodeVel[3, link2_nodeOppI],
                     ) / 2
 
                 splitNode!(network, i, 2, midCoord, midVel)
@@ -272,23 +251,17 @@ function refineNetwork!(
             if (areaSq > maxAreaSq && r1 >= twoMinSegLen && link1_nodeOppI <= numNode) ||
                r1 > maxSegLen
                 midCoord =
-                    (
-                        SVector(coord[1, i], coord[2, i], coord[3, i]) +
-                        SVector(
-                            coord[1, link1_nodeOppI],
-                            coord[2, link1_nodeOppI],
-                            coord[3, link1_nodeOppI],
-                        )
+                    SVector{3, elemT}(
+                        coord[1, i] + coord[1, link1_nodeOppI],
+                        coord[2, i] + coord[2, link1_nodeOppI],
+                        coord[3, i] + coord[3, link1_nodeOppI],
                     ) / 2
 
                 midVel =
-                    (
-                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) +
-                        SVector(
-                            nodeVel[1, link1_nodeOppI],
-                            nodeVel[2, link1_nodeOppI],
-                            nodeVel[3, link1_nodeOppI],
-                        )
+                    SVector{3, elemT}(
+                        nodeVel[1, i] + nodeVel[1, link1_nodeOppI],
+                        nodeVel[2, i] + nodeVel[2, link1_nodeOppI],
+                        nodeVel[3, i] + nodeVel[3, link1_nodeOppI],
                     ) / 2
 
                 splitNode!(network, i, 1, midCoord, midVel)
@@ -331,7 +304,7 @@ function refineNetwork!(
                 colLink = connectivity[2 * j + 1, i]
                 colOppLink = 3 - colLink
                 link_nodeOpp = links[colOppLink, link]
-                t = SVector(
+                t = SVector{3, elemT}(
                     coord[1, link_nodeOpp] - coord[1, i],
                     coord[2, link_nodeOpp] - coord[2, i],
                     coord[3, link_nodeOpp] - coord[3, i],
@@ -342,23 +315,17 @@ function refineNetwork!(
                 r1 < maxSegLen ? continue : nothing
 
                 midCoord =
-                    (
-                        SVector(coord[1, i], coord[2, i], coord[3, i]) +
-                        SVector(
-                            coord[1, link_nodeOpp],
-                            coord[2, link_nodeOpp],
-                            coord[3, link_nodeOpp],
-                        )
+                    SVector{3, elemT}(
+                        coord[1, i] + coord[1, link_nodeOpp],
+                        coord[2, i] + coord[2, link_nodeOpp],
+                        coord[3, i] + coord[3, link_nodeOpp],
                     ) / 2
 
                 midVel =
-                    (
-                        SVector(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i]) +
-                        SVector(
-                            nodeVel[1, link_nodeOpp],
-                            nodeVel[2, link_nodeOpp],
-                            nodeVel[3, link_nodeOpp],
-                        )
+                    SVector{3, elemT}(
+                        nodeVel[1, i] + nodeVel[1, link_nodeOpp],
+                        nodeVel[2, i] + nodeVel[2, link_nodeOpp],
+                        nodeVel[3, i] + nodeVel[3, link_nodeOpp],
                     ) / 2
 
                 splitNode!(network, i, j, midCoord, midVel)

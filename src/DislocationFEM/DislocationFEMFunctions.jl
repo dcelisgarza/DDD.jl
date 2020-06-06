@@ -19,20 +19,26 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
 )
     # Unroll constants.
     numSeg = network.numSeg
-    idx = network.segIdx
+    segIdx = network.segIdx
+    bVec = network.bVec
     coord = network.coord
-    bVec = network.bVec[idx[:, 1], :]
-    node1 = coord[idx[:, 2], :]
-    node2 = coord[idx[:, 3], :]
-    tVec = node2 - node1            # Line vector.
-    midNode = 0.5 * (node1 + node2) # Midpoint of segment.
+    elemT = eltype(network.bVec)
+
+    idxBvec = @view segIdx[idx, 1]
+    idxNode1 = @view segIdx[idx, 2]
+    idxNode2 = @view segIdx[idx, 3]
+    # Un normalised segment vectors. Use views for speed.
+    bVec = @view bVec[:, idxBvec]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    midNode = @views (coord[:, idxNode2] + coord[:, idxNode1])/2
+
     PKForce = zeros(3, numSeg)      # Vector of PK force.
 
     # Loop over segments.
     @inbounds @simd for i in 1:numSeg
-        x0 = SVector{3, Float64}(midNode[i, 1], midNode[i, 2], midNode[i, 3])
-        b = SVector{3, Float64}(bVec[i, 1], bVec[i, 2], bVec[i, 3])
-        t = SVector{3, Float64}(tVec[i, 1], tVec[i, 2], tVec[i, 3])
+        x0 = SVector{3, elemT}(midNode[i, 1], midNode[i, 2], midNode[i, 3])
+        b = SVector{3, elemT}(bVec[i, 1], bVec[i, 2], bVec[i, 3])
+        t = SVector{3, elemT}(tVec[i, 1], tVec[i, 2], tVec[i, 3])
         σ_hat = calc_σ_hat(mesh, dlnFEM, x0)
         pkforce = (σ_hat * b) × t
         PKForce[1, i] = pkforce[1]

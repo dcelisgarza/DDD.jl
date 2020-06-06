@@ -65,7 +65,7 @@ end
         N[8, i] = omx * opy * opz
     end
 
-    N .*= 0.125
+    N /= 8
 
     return N
 end
@@ -82,7 +82,6 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
 
     # dNdS[n, x](x,y,z) := x'th derivative of shape function n.
     # dNdS[n, x](x,y,z) = dN[a, b] / dx
-    dNdS = zeros(8, 3)
     omx = 1 - x
     omy = 1 - y
     omz = 1 - z

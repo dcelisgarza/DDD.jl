@@ -22,6 +22,8 @@ end
     screwDrag = dlnParams.screwDrag
     climbDrag = dlnParams.climbDrag
     lineDrag = dlnParams.lineDrag
+    dType = typeof(dlnParams.lineDrag)
+    I3 = SMatrix{3, 3, dType}(I)
 
     links = network.links
     bVec = network.bVec
@@ -29,7 +31,7 @@ end
     maxConnect = network.maxConnect
     segForce = network.segForce
     connectivity = network.connectivity
-    I3 = SMatrix{3, 3, typeof(edgeDrag)}(I)
+    elemT = eltype(network.bVec)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
@@ -39,14 +41,14 @@ end
         numNode = length(idx)
     end
 
-    nodeForce = zeros(eltype(segForce), 3, numNode)
-    nodeVel = zeros(eltype(coord), 3, numNode)
+    nodeForce = zeros(elemT, 3, numNode)
+    nodeVel = zeros(elemT, 3, numNode)
 
     # Loop through nodes.
     @fastmath @inbounds for (i, node1) in enumerate(idx)
-        totalDrag = zeros(SMatrix{3, 3, typeof(edgeDrag)})
-        iNodeForce = zeros(SVector{3, eltype(segForce)})
-        iNodeVel = zeros(SVector{3, eltype(coord)})
+        totalDrag = zeros(SMatrix{3, 3, dType})
+        iNodeForce = zeros(SVector{3, elemT})
+        iNodeVel = zeros(SVector{3, elemT})
         numConnect = connectivity[1, node1]
 
         # Loop through number of connections.
@@ -57,42 +59,43 @@ end
             node2 = links[colOppLink, link]
 
             # Line direction, continue to next iteration if norm is 0 and normalise line direction.
-            t = SVector(
+            t = SVector{3, elemT}(
                 coord[1, node2] - coord[1, node1],
                 coord[2, node2] - coord[2, node1],
                 coord[3, node2] - coord[3, node1],
             )
             nT = norm(t)
             # If the segment length is zero, skip to the next iteration.
-            nT < eps(typeof(nT)) ? continue : nothing
+            nT < eps(elemT) ? continue : nothing
             tN = 1 / nT
             t *= tN # Normalise t.
 
             # Segment force relevant to node1.
-            iNodeConForce = SVector(
+            iNodeConForce = SVector{3, elemT}(
                 segForce[1, colLink, link],
                 segForce[2, colLink, link],
                 segForce[3, colLink, link],
             )
             # If the sress is lower than the Peierls-Nabarro stress, the node behaves as if the force acting on it is zero.
             norm(iNodeConForce) * tN < σPN ?
-            iNodeConForce = zeros(SVector{3, eltype(iNodeConForce)}) : nothing
+            iNodeConForce = zeros(SVector{3, elemT}) : nothing
             # Add force from this connection to the total force on the node.
             iNodeForce += iNodeConForce
 
             # Burgers Vector
-            b = SVector(bVec[1, link], bVec[2, link], bVec[3, link])
+            b = SVector{3, elemT}(bVec[1, link], bVec[2, link], bVec[3, link])
             nB = norm(b)
             # Burgers vector families of screw dislocations in BCC, in case there have been collisions and the Burgers vector norm is greater than 1.
             absB = abs.(b)
             absB /= minimum(absB)
-            bTypeArr1 = @. abs(1 - absB) < sqrt(eps(typeof(nB)))
-            bTypeArr2 = @. abs(2 - absB) < sqrt(eps(typeof(nB)))
-            bTypeArr3 = @. abs(3 - absB) < sqrt(eps(typeof(nB)))
+            sqrtBType = sqrt(eps(elemT))
+            bTypeArr1 = @. abs(1 - absB) < sqrtBType
+            bTypeArr2 = @. abs(2 - absB) < sqrtBType
+            bTypeArr3 = @. abs(3 - absB) < sqrtBType
             bType1 = sum(bTypeArr1)
             bType2 = sum(bTypeArr2)
             bType3 = sum(bTypeArr3)
-            screw = 1 - nB < sqrt(eps(typeof(nB)))
+            screw = 1 - nB < sqrtBType
             # Normalise Burgers vector.
             b /= nB
 
@@ -118,7 +121,7 @@ end
             totalDrag += nBnT_2 * (screwDrag * I3 + (lineDrag - screwDrag) * t ⊗ t)
 
             # If dislocation segment is pure screw skip to next iteration.
-            sinSqθ < eps(typeof(sinSqθ)) ? continue : nothing
+            sinSqθ < eps(typeof(tDb)) ? continue : nothing
 
             # P, Q vectors as new local axes.
             p = b × t / sqrt(sinSqθ)
@@ -149,7 +152,7 @@ end
             while true
                 try
                     totalDrag +=
-                        I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(typeof(edgeDrag)))
+                        I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))
                     iNodeVel = totalDrag \ iNodeForce
                     break
                 catch SingularSystem
