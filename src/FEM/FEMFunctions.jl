@@ -18,7 +18,7 @@ Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If
     opz = 1 + z
 
     N =
-        SVector(
+        SVector{8, typeof(x)}(
             omx * omy * omz,
             opx * omy * omz,
             opx * opy * omz,
@@ -38,15 +38,12 @@ end
     z::T2,
 ) where {T1 <: LinearQuadrangle3D, T2 <: AbstractVector{T} where {T}}
 
-    @assert length(x) == length(y) == length(z)
+    numPoints = length(x)
+    xType = eltype(x)
+    @assert numPoints == length(y) == length(z)
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
-    N = zeros(8, length(x))
-    omx = 0.0
-    omy = 0.0
-    omz = 0.0
-    opx = 0.0
-    opy = 0.0
-    opz = 0.0
+    N = Array{SVector{8, xType}}(undef, numPoints)
+
     @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
@@ -55,14 +52,16 @@ end
         opy = 1 + y[i]
         opz = 1 + z[i]
 
-        N[1, i] = omx * omy * omz
-        N[2, i] = opx * omy * omz
-        N[3, i] = opx * opy * omz
-        N[4, i] = omx * opy * omz
-        N[5, i] = omx * omy * opz
-        N[6, i] = opx * omy * opz
-        N[7, i] = opx * opy * opz
-        N[8, i] = omx * opy * opz
+        N[i] = SVector{8, xType}(
+            omx * omy * omz,
+            opx * omy * omz,
+            opx * opy * omz,
+            omx * opy * omz,
+            omx * omy * opz,
+            opx * omy * opz,
+            opx * opy * opz,
+            omx * opy * opz,
+        )
     end
 
     N /= 8
@@ -90,7 +89,7 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
     opz = 1 + z
 
     dNdS =
-        SMatrix{8, 3}(
+        SMatrix{8, 3, typeof(x)}(
             -omy * omz,
             omy * omz,
             opy * omz,
@@ -126,16 +125,13 @@ end
     z::T2,
 ) where {T1 <: LinearQuadrangle3D, T2 <: AbstractVector{T} where {T}}
 
-    @assert length(x) == length(y) == length(z)
+    numPoints = length(x)
+    xType = eltype(x)
+    @assert numPoints == length(y) == length(z)
     # dNdS[n, x, p](x,y,z) := x'th derivative of shape function n for point p.
     # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
-    dNdS = zeros(8, 3, length(x))
-    omx = 0.0
-    omy = 0.0
-    omz = 0.0
-    opx = 0.0
-    opy = 0.0
-    opz = 0.0
+    dNdS = Array{SMatrix{8, 3, xType}}(undef, numPoints)#zeros(8, 3, length(x))
+
     @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
@@ -144,35 +140,35 @@ end
         opy = 1 + y[i]
         opz = 1 + z[i]
 
-        dNdS[1, 1, i] = -omy * omz
-        dNdS[2, 1, i] = omy * omz
-        dNdS[3, 1, i] = opy * omz
-        dNdS[4, 1, i] = -opy * omz
-        dNdS[5, 1, i] = -omy * opz
-        dNdS[6, 1, i] = omy * opz
-        dNdS[7, 1, i] = opy * opz
-        dNdS[8, 1, i] = -opy * opz
-
-        dNdS[1, 2, i] = -omx * omz
-        dNdS[2, 2, i] = -opx * omz
-        dNdS[3, 2, i] = opx * omz
-        dNdS[4, 2, i] = omx * omz
-        dNdS[5, 2, i] = -omx * opz
-        dNdS[6, 2, i] = -opx * opz
-        dNdS[7, 2, i] = opx * opz
-        dNdS[8, 2, i] = omx * opz
-
-        dNdS[1, 3, i] = -omx * omy
-        dNdS[2, 3, i] = -opx * omy
-        dNdS[3, 3, i] = -opx * opy
-        dNdS[4, 3, i] = -omx * opy
-        dNdS[5, 3, i] = omx * omy
-        dNdS[6, 3, i] = opx * omy
-        dNdS[7, 3, i] = opx * opy
-        dNdS[8, 3, i] = omx * opy
+        dNdS[i] = SMatrix{8, 3, xType}(
+            -omy * omz,
+            omy * omz,
+            opy * omz,
+            -opy * omz,
+            -omy * opz,
+            omy * opz,
+            opy * opz,
+            -opy * opz,
+            -omx * omz,
+            -opx * omz,
+            opx * omz,
+            omx * omz,
+            -omx * opz,
+            -opx * opz,
+            opx * opz,
+            omx * opz,
+            -omx * omy,
+            -opx * omy,
+            -opx * opy,
+            -omx * opy,
+            omx * omy,
+            opx * omy,
+            opx * opy,
+            omx * opy,
+        )
     end
 
-    dNdS .*= 0.125
+    dNdS /= 8
 
     return dNdS
 end
