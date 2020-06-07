@@ -70,15 +70,20 @@ DislocationP{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45
 
 The integration parameters are placed into the following mutable structure.
 ```julia
-julia> integrationP = IntegrationP(;
-          tmin = 0.0,
-          tmax = 1e10,
-          method = CustomTrapezoid(),
-          abstol = 1e-6,
-          reltol = 1e-6,
-          dt0 = 1e3,
-        )
-IntegrationP{Float64,CustomTrapezoid}(0.0, 1.0e10, CustomTrapezoid(), 1.0e-6, 1.0e-6, 1000.0)
+julia> IntegrationP(;
+      method = CustomTrapezoid(),
+      tmin = 0.0,
+      tmax = 1e10,
+      dtmin = 1e-6,
+      dtmax = 1e15,
+      abstol = 1e-6,
+      reltol = 1e-6,
+      maxchange = 1.2,
+      exponent = 20.0,
+      maxiter = 10,
+  )
+
+IntegrationP{CustomTrapezoid,Float64,Int64}(CustomTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
 ```
 
 Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `3 × n` matrices rather than vectors.
