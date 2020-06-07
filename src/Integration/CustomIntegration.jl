@@ -87,7 +87,7 @@ function deriv!(
 
     # Fixed nodes do not move, internal fixed, surface fixed, external.
     idxFixed = findall(x -> x == 2 || x == 4 || x == 5, label)
-    !isnothing(idxFixed) ? nodeVel[:, idxFixed] = [0, 0, 0] : nothing
+    !isnothing(idxFixed) ? nodeVel[:, idxFixed] .= [0, 0, 0] : nothing
 
     # Make surface velocity zero along the surface normal.
     idxSurf = findall(x -> x == 3, label)

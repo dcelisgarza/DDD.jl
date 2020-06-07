@@ -22,6 +22,22 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 
 # Example
 
+## Shaky, move-y bois
+
+The integration may be buggy, I haven't tested it yet. Coarsen and refine have been tested have passed all of them.
+
+This is a WIP but it shows network remeshing (coarsen and refining) and time integration with no applied stress.
+![shaky](/examples/shaky.gif)
+
+This shows the same but without network coarsening.
+![nocoarsen](/examples/nocoarsen.gif)
+
+This shows the same but without network refining and lower error bounds.
+![norefine](/examples/norefine.gif)
+
+This is just the integration.
+![norefine](/examples/integ.gif)
+
 ## Initialisation
 
 Before running a simulation we need to initialise the simulation. For this example, we will use the keyword initialisers because they automatically calculate derived quantities, perform input validations, provide default values, and are make for self-documenting code.

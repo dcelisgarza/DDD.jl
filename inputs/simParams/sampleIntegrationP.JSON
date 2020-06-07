@@ -1,1 +1,1 @@
-{"method":"DDD.CustomTrapezoid()","tmin":0,"tmax":1e13,"dtmin":1e-6,"dtmax":1e15,"abstol":1e-6,"reltol":1e-6,"maxchange":1.2,"exponent":20,"maxiter":10}
+{"method":"DDD.CustomTrapezoid()","tmin":0,"tmax":1e13,"dtmin":1e-6,"dtmax":1e15,"abstol":10,"reltol":1,"maxchange":1.2,"exponent":20,"maxiter":10}

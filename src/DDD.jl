@@ -26,7 +26,7 @@ include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")
 include("./Integration/CustomIntegration.jl")
-export IntegrationP, CustomTrapezoid
+export IntegrationP, IntegrationVar, CustomTrapezoid, integrate!
 include("./PostProcessing/Plotting.jl")
 export plotNodes, plotNodes!
 include("./IO/IOBase.jl")
