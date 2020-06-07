@@ -30,7 +30,7 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
     # Un normalised segment vectors. Use views for speed.
     bVec = @view bVec[:, idxBvec]
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
-    midNode = @views (coord[:, idxNode2] + coord[:, idxNode1])/2
+    midNode = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
 
     PKForce = zeros(3, numSeg)      # Vector of PK force.
 
@@ -106,9 +106,9 @@ Calculate the reaction from a dislocation.
     n1 = label[idx, 1]
     n7 = label[idx, 7]
     # Find element midpoints.
-    xc = 0.5 * (coord[n1, 1] + coord[n7, 1])
-    yc = 0.5 * (coord[n1, 2] + coord[n7, 2])
-    zc = 0.5 * (coord[n1, 3] + coord[n7, 3])
+    xc = 0.5 * (coord[1, n1] + coord[1, n7])
+    yc = 0.5 * (coord[2, n1] + coord[2, n7])
+    zc = 0.5 * (coord[3, n1] + coord[3, n7])
     # Setting up Jacobian.
     #=
         # The code is this but simplified for performance.
@@ -130,9 +130,9 @@ Calculate the reaction from a dislocation.
     s3 = ds3dz * (z - zc)
 
     dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), s1, s2, s3)
-    dNdS[:, 1] .*= ds1dx
-    dNdS[:, 2] .*= ds2dy
-    dNdS[:, 3] .*= ds3dz
+    dNdS[1, :] *= ds1dx
+    dNdS[2, :] *= ds2dy
+    dNdS[3, :] *= ds3dz
 
     @inbounds for i in 1:size(dNdS, 1)
         # Indices calculated once for performance.
@@ -141,9 +141,9 @@ Calculate the reaction from a dislocation.
         # label[a, b] is the index of the node b, in FE element a.
         idx3 = 3 * label[i]
         # Constructing the Jacobian for node i.
-        B[1, idx2 + 1] = dNdS[i, 1]
-        B[2, idx2 + 2] = dNdS[i, 2]
-        B[3, idx2 + 3] = dNdS[i, 3]
+        B[1, idx2 + 1] = dNdS[1, i]
+        B[2, idx2 + 2] = dNdS[2, i]
+        B[3, idx2 + 3] = dNdS[3, i]
         B[4, idx2 + 1] = B[2, idx2 + 2]
         B[4, idx2 + 2] = B[1, idx2 + 1]
         B[5, idx2 + 1] = B[3, idx1 + 0]
@@ -151,9 +151,9 @@ Calculate the reaction from a dislocation.
         B[6, idx2 + 2] = B[3, idx1 + 0]
         B[6, idx1 + 0] = B[2, idx2 + 2]
         # Building uhat for the nodes of the finite element closest to the point of interest. From idx3, the finite element is the i2'th element and the the node we're looking at is the j'th node. The node index is idx3 = label[i2,j].
-        U[idx - 2] = uHat[idx3 - 2]
-        U[idx - 1] = uHat[idx3 - 1]
-        U[idx - 0] = uHat[idx3 - 0]
+        U[1, idx] = uHat[1, idx3]
+        U[2, idx] = uHat[2, idx3]
+        U[3, idx] = uHat[3, idx3]
     end
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
     return σ = C * B * U

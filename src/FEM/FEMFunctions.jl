@@ -89,30 +89,30 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
     opz = 1 + z
 
     dNdS =
-        SMatrix{8, 3, typeof(x)}(
+        SMatrix{3, 8, typeof(x)}(
             -omy * omz,
-            omy * omz,
-            opy * omz,
-            -opy * omz,
-            -omy * opz,
-            omy * opz,
-            opy * opz,
-            -opy * opz,
             -omx * omz,
-            -opx * omz,
-            opx * omz,
-            omx * omz,
-            -omx * opz,
-            -opx * opz,
-            opx * opz,
-            omx * opz,
             -omx * omy,
+            omy * omz,
+            -opx * omz,
             -opx * omy,
+            opy * omz,
+            opx * omz,
             -opx * opy,
+            -opy * omz,
+            omx * omz,
             -omx * opy,
+            -omy * opz,
+            -omx * opz,
             omx * omy,
+            omy * opz,
+            -opx * opz,
             opx * omy,
+            opy * opz,
+            opx * opz,
             opx * opy,
+            -opy * opz,
+            omx * opz,
             omx * opy,
         ) / 8
 
@@ -130,7 +130,7 @@ end
     @assert numPoints == length(y) == length(z)
     # dNdS[n, x, p](x,y,z) := x'th derivative of shape function n for point p.
     # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
-    dNdS = Array{SMatrix{8, 3, xType}}(undef, numPoints)#zeros(8, 3, length(x))
+    dNdS = Array{SMatrix{3, 8, xType}}(undef, numPoints)#zeros(8, 3, length(x))
 
     @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
@@ -140,30 +140,30 @@ end
         opy = 1 + y[i]
         opz = 1 + z[i]
 
-        dNdS[i] = SMatrix{8, 3, xType}(
+        dNdS[i] = SMatrix{3, 8, xType}(
             -omy * omz,
-            omy * omz,
-            opy * omz,
-            -opy * omz,
-            -omy * opz,
-            omy * opz,
-            opy * opz,
-            -opy * opz,
             -omx * omz,
-            -opx * omz,
-            opx * omz,
-            omx * omz,
-            -omx * opz,
-            -opx * opz,
-            opx * opz,
-            omx * opz,
             -omx * omy,
+            omy * omz,
+            -opx * omz,
             -opx * omy,
+            opy * omz,
+            opx * omz,
             -opx * opy,
+            -opy * omz,
+            omx * omz,
             -omx * opy,
+            -omy * opz,
+            -omx * opz,
             omx * omy,
+            omy * opz,
+            -opx * opz,
             opx * omy,
+            opy * opz,
+            opx * opz,
             opx * opy,
+            -opy * opz,
+            omx * opz,
             omx * opy,
         )
     end

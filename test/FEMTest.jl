@@ -24,10 +24,9 @@ cd(@__DIR__)
 
     dNdSall =
         shapeFunctionDeriv(LinearQuadrangle3D(), points[:, 1], points[:, 2], points[:, 3])
-    checkSum = sum.(dNdSall, dims = 1)
-
+    checkSum = sum.(dNdSall, dims = 2)
     for i in 1:size(points, 1)
-        @test checkSum[i] == SVector(0.0, 0.0, 0.0)'
+        @test vec(checkSum[i]) == SVector(0.0, 0.0, 0.0)
 
         N = shapeFunction(LinearQuadrangle3D(), points[i, 1], points[i, 2], points[i, 3])
         @test isapprox(Nall[i], N)
