@@ -82,12 +82,16 @@ function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
     integDict = makeTypeDict(AbstractIntegrator)
 
     integrationP = IntegrationP(;
+        method = integDict[dict["method"]],
         tmin = convert(Float64, dict["tmin"]),
         tmax = convert(Float64, dict["tmax"]),
-        method = integDict[dict["method"]],
+        dtmin = convert(Float64, dict["dtmin"]),
+        dtmax = convert(Float64, dict["dtmax"]),
         abstol = convert(Float64, dict["abstol"]),
         reltol = convert(Float64, dict["reltol"]),
-        dt0 = convert(Float64, dict["dt0"]),
+        maxchange = convert(Float64, dict["maxchange"]),
+        exponent = convert(Float64, dict["exponent"]),
+        maxiter = convert(Int, dict["exponent"]),
     )
 
     return integrationP

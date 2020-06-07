@@ -45,4 +45,4 @@ cd(@__DIR__)
     @test compStruct(dislocationLoop, dislocationLoop2; verbose = true)
     @test compStruct(network, network2; verbose = true)
     @test compStruct(integTime, integTime2; verbose = true)
-end
+    end

@@ -6,8 +6,6 @@ include("./Misc/Misc.jl")
 # Miscelaneous.
 export makeTypeDict, compStruct, intAngle, extAngle, rot3D, makeInstanceDict
 export translateEnum, inclusiveComparison, dimDot, dimNorm, ⊗
-include("./Integration/CustomIntegration.jl")
-export IntegrationP, CustomTrapezoid
 include("./Material/MaterialBase.jl")
 export MaterialP, AbstractCrystalStruct, BCC, FCC, HCP
 include("./Dislocation/DislocationBase.jl")
@@ -27,6 +25,10 @@ export removeNode!, mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
 include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")
+include("./Integration/CustomIntegration.jl")
+export IntegrationP, CustomTrapezoid
+include("./PostProcessing/Plotting.jl")
+export plotNodes, plotNodes!
 include("./IO/IOBase.jl")
 # Imports.
 export load, loadDislocationP, loadMaterialP, loadIntegrationP
@@ -34,6 +36,4 @@ export loadSlipSystem, loadDislocationLoop, loadParams
 export loadDislocationLoop, loadNetwork, loadIntegrationVar
 # Export.
 export save
-include("./PostProcessing/Plotting.jl")
-export plotNodes, plotNodes!
 end # module
