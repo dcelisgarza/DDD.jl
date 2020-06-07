@@ -231,8 +231,16 @@ In-place version of [`getSegmentIdx`](@ref).
 
     links = network.links
     label = network.label
+    segIdx = network.segIdx
+
     lenLinks = size(links, 2)
-    segIdx = zeros(Int, lenLinks, 3)
+    lenSegIdx = size(segIdx, 1)
+    diffLen = lenLinks - lenSegIdx
+    if diffLen > 0
+        segIdx = vcat(segIdx, zeros(Int, diffLen, 3))
+    end
+    segIdx .= 0
+
     idx = findfirst(x -> x == 0, links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
     numSeg::Int = 0
