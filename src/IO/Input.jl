@@ -215,6 +215,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     segIdx = zeros(Int, lenLinks, 3)
     segForce = zeros(3, 2, lenLinks)
     nodeVel = zeros(3, lenLinks)
+    nodeForce = zeros(3, lenLinks)
 
     for i in 1:lenLinks
         links[:, i] = dict["links"][i]
@@ -227,6 +228,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         bVec[:, i] = dict["bVec"][i]
         coord[:, i] = dict["coord"][i]
         nodeVel[:, i] = dict["nodeVel"][i]
+        nodeForce[:, i] = dict["nodeForce"][i]
         connectivity[:, i] = dict["connectivity"][i]
     end
 
@@ -242,6 +244,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         label = nodeType.(dict["label"]),
         segForce = segForce,
         nodeVel = nodeVel,
+        nodeForce = nodeForce,
         numNode = convert.(Int, dict["numNode"]),
         numSeg = convert.(Int, dict["numSeg"]),
         maxConnect = maxConnect,

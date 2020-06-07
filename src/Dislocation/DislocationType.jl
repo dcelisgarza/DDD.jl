@@ -578,6 +578,7 @@ mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     coord::T2
     label::T3
     nodeVel::T2
+    nodeForce::T2
     numNode::T4         # Number of nodes in network
     numSeg::T4          # Number of segments in network
     maxConnect::T4      # Maximum connections per node
@@ -596,6 +597,7 @@ mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     coord::T2
     label::T3
     nodeVel::T2
+    nodeForce::T2
     numNode::T4
     numSeg::T4
     maxConnect::T4
@@ -613,6 +615,7 @@ DislocationNetwork(;
     coord::T2,
     label::T3,
     nodeVel::T2,
+    nodeForce::T2,
     numNode::T4 = 0,
     numSeg::T4 = 0,
     maxConnect::T4 = 0,
@@ -638,6 +641,7 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
     coord::T2,
     label::T3,
     nodeVel::T2,
+    nodeForce::T2,
     numNode::T4 = 0,
     numSeg::T4 = 0,
     maxConnect::T4 = 0,
@@ -666,6 +670,7 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
         coord,
         label,
         nodeVel,
+        nodeForce,
         numNode,
         numSeg,
         maxConnect,
@@ -729,6 +734,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
     coord = zeros(3, nodeBuffer)
     label = zeros(nodeType, nodeBuffer)
     nodeVel = zeros(Float64, 3, nodeBuffer)
+    nodeForce = zeros(Float64, 3, nodeBuffer)
     numNode = nodeTotal
     numSeg = nodeTotal
     segForce = zeros(Float64, 3, 2, nodeBuffer)
@@ -777,6 +783,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
         coord,
         label,
         nodeVel,
+        nodeForce,
         numNode,
         numSeg,
         maxConnect,

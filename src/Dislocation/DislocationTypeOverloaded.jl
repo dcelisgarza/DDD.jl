@@ -43,6 +43,7 @@ function Base.zero(::Type{DislocationNetwork})
         coord = zeros(3, 0),
         label = zeros(nodeType, 0),
         nodeVel = zeros(3, 0),
+        nodeForce = zeros(3, 0),
         numNode = convert(Int, 0),
         numSeg = convert(Int, 0),
         maxConnect = convert(Int, 0),
@@ -57,6 +58,7 @@ function Base.push!(network::DislocationNetwork, n::Int)
     network.coord = hcat(network.coord, zeros(3, n))
     network.label = vcat(network.label, zeros(nodeType, n))
     network.nodeVel = hcat(network.nodeVel, zeros(3, n))
+    network.nodeForce = hcat(network.nodeVel, zeros(3, n))
     network.connectivity =
         hcat(network.connectivity, zeros(size(network.connectivity, 1), n))
     network.linksConnect = hcat(network.linksConnect, zeros(2, n))
@@ -71,6 +73,7 @@ function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector
     network.coord[:, i],
     network.label[i],
     network.nodeVel[:, i],
+    network.nodeForce[:, i],
     network.connectivity[:, i],
     network.linksConnect[:, i],
     network.segIdx[i, :],

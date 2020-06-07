@@ -24,6 +24,7 @@ network.connectivity
     coord = network.coord
     label = network.label
     nodeVel = network.nodeVel
+    nodeForce = network.nodeForce
     connectivity = network.connectivity
 
     isnothing(lastNode) ? lastNode = maximum((network.numNode, 1)) : nothing
@@ -33,6 +34,7 @@ network.connectivity
         coord[:, nodeGone] .= coord[:, lastNode]
         label[nodeGone] = label[lastNode]
         nodeVel[:, nodeGone] .= nodeVel[:, lastNode]
+        nodeForce[:, nodeGone] .= nodeForce[:, lastNode]
         connectivity[:, nodeGone] .= connectivity[:, lastNode]
         # Change the link
         @simd for j in 1:connectivity[1, nodeGone]
@@ -45,6 +47,7 @@ network.connectivity
     coord[:, lastNode] .= 0
     label[lastNode] = 0
     nodeVel[:, lastNode] .= 0
+    nodeForce[:, lastNode] .= 0
     network.numNode -= 1
     connectivity[:, lastNode] .= 0
 

@@ -26,6 +26,8 @@ function splitNode!(
         network.label = vcat(network.label, zeros(nodeType, numNewEntries))
         network.nodeVel =
             hcat(network.nodeVel, zeros(elemT, size(network.nodeVel, 1), numNewEntries))
+        network.nodeForce =
+            hcat(network.nodeForce, zeros(elemT, size(network.nodeForce, 1), numNewEntries))
         network.connectivity = hcat(
             network.connectivity,
             zeros(Int, size(network.connectivity, 1), numNewEntries),
