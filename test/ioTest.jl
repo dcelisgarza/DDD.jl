@@ -22,7 +22,15 @@ cd(@__DIR__)
     network = DislocationNetwork(dislocationLoop, memBuffer = 1)
     # Dump simulation.
     paramDump = "../outputs/simParams/sampleDump.JSON"
-    save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop, integTime)
+    save(
+        paramDump,
+        dlnParams,
+        matParams,
+        intParams,
+        slipSystems,
+        dislocationLoop,
+        integTime,
+    )
     networkDump = "../outputs/dln/sampleNetwork.JSON"
     save(networkDump, network)
     # Reload simulation.
@@ -45,4 +53,4 @@ cd(@__DIR__)
     @test compStruct(dislocationLoop, dislocationLoop2; verbose = true)
     @test compStruct(network, network2; verbose = true)
     @test compStruct(integTime, integTime2; verbose = true)
-    end
+end

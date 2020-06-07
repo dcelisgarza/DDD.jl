@@ -273,8 +273,8 @@ end
 function loadIntegrationVar(dict::Dict{T1, T2}) where {T1, T2}
     integrationVar = IntegrationVar(;
         dt = convert(Float64, dict["dt"]),
-        time = convert(Float64, dict["dt"]),
-        step = convert(Int, dict["dt"]),
+        time = convert(Float64, dict["time"]),
+        step = convert(Int, dict["step"]),
     )
     return integrationVar
 end

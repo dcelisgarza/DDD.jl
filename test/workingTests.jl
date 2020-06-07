@@ -111,7 +111,7 @@ function baar(intParams, intVars, dlnParams, matParams, network)
             # plot!(fig)
         # end
     end every 5
-    gif(anim, "../examples/norefine.gif")
+    gif(anim, "../examples/integ.gif")
 end
 
 baar(intParams, intVars, dlnParams, matParams, network)
