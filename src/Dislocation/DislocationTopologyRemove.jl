@@ -480,8 +480,8 @@ function coarsenNetwork!(
                 calcSegForce!(dlnParams, matParams, network, linkMerged)
                 # Calculate node velocity.
                 nodes = links[:, linkMerged]
-                missing, nodeVel[:, nodes] =
-                    dlnMobility(dlnParams, matParams, network, nodes)
+                dlnMobility!(dlnParams, matParams, network, nodes)
+                nodeVel = network.nodeVel
             end
         end
     end

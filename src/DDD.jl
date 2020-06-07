@@ -21,7 +21,7 @@ export getSegmentIdx!, getSegmentIdx, makeConnect!, makeConnect
 # Dislocation functions.
 export checkNetwork, loopDistribution, calcSelfForce, calcSelfForce!
 export calcSegSegForce, calcSegSegForce!, calcParSegSegForce, calcSegForce, calcSegForce!
-export dlnMobility
+export dlnMobility, dlnMobility!
 # Topology
 export removeNode!, mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
 include("./FEM/FEMBase.jl")

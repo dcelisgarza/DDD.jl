@@ -48,6 +48,9 @@ cd(@__DIR__)
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
     calcSegForce!(dlnParams, matParams, network)
 
+    network2 = deepcopy(network)
+    dlnMobility!(dlnParams, matParams, network2)
+
     force, vel = dlnMobility(dlnParams, matParams, network)
     testVel = [
         -0.036175006034684 -0.036175006034656 0.088938030619749
@@ -79,14 +82,24 @@ cd(@__DIR__)
 
     @test isapprox(vel', testVel, rtol = 1e-5)
     @test isapprox(force', testForce)
+    @test isapprox(vel, network2.nodeVel)
+    @test isapprox(force, network2.nodeForce)
 
     idx = rand(1:(network.numNode))
     forceIdx, velIdx = dlnMobility(dlnParams, matParams, network, idx)
     @test isapprox(force[:, idx], forceIdx)
     @test isapprox(vel[:, idx], velIdx)
+    network3 = deepcopy(network)
+    dlnMobility!(dlnParams, matParams, network3, idx)
+    @test isapprox(force[:, idx], network3.nodeForce[:, idx])
+    @test isapprox(vel[:, idx], network3.nodeVel[:, idx])
 
     idx = rand(1:(network.numNode), 5)
     forceIdx, velIdx = dlnMobility(dlnParams, matParams, network, idx)
     @test isapprox(force[:, idx], forceIdx)
     @test isapprox(vel[:, idx], velIdx)
+    network4 = deepcopy(network)
+    dlnMobility!(dlnParams, matParams, network4, idx)
+    @test isapprox(force[:, idx], network4.nodeForce[:, idx])
+    @test isapprox(vel[:, idx], network4.nodeVel[:, idx])
 end

@@ -240,12 +240,12 @@ function refineNetwork!(
                 # Calculate segment force for segment link.
                 calcSegForce!(dlnParams, matParams, network, link)
                 # Calculate old node velocity.
-                missing, nodeVel[:, oldNode] =
-                    dlnMobility(dlnParams, matParams, network, oldNode)
+                dlnMobility!(dlnParams, matParams, network, oldNode)
+                nodeVel = network.nodeVel
 
                 # Calculate new node velocity.
-                missing, nodeVel[:, newNode] =
-                    dlnMobility(dlnParams, matParams, network, newNode)
+                dlnMobility!(dlnParams, matParams, network, newNode)
+                nodeVel = network.nodeVel
             end
 
             # Check if we have to split the first link.
@@ -290,12 +290,12 @@ function refineNetwork!(
                 # Calculate segment force for segment link.
                 calcSegForce!(dlnParams, matParams, network, link)
                 # Calculate old node velocity.
-                missing, nodeVel[:, oldNode] =
-                    dlnMobility(dlnParams, matParams, network, oldNode)
+                dlnMobility!(dlnParams, matParams, network, oldNode)
+                nodeVel = network.nodeVel
 
                 # Calculate new node velocity.
-                missing, nodeVel[:, newNode] =
-                    dlnMobility(dlnParams, matParams, network, newNode)
+                dlnMobility!(dlnParams, matParams, network, newNode)
+                nodeVel = network.nodeVel
             end
 
         elseif connectivity[1, i] > 2 && label[i] == 1
@@ -353,12 +353,12 @@ function refineNetwork!(
                 # Calculate segment force for segment link.
                 calcSegForce!(dlnParams, matParams, network, link)
                 # Calculate old node velocity.
-                missing, nodeVel[:, oldNode] =
-                    dlnMobility(dlnParams, matParams, network, oldNode)
+                dlnMobility!(dlnParams, matParams, network, oldNode)
+                nodeVel = network.nodeVel
 
                 # Calculate new node velocity.
-                missing, nodeVel[:, newNode] =
-                    dlnMobility(dlnParams, matParams, network, newNode)
+                dlnMobility!(dlnParams, matParams, network, newNode)
+                nodeVel = network.nodeVel
             end
         end
     end
