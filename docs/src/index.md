@@ -1,4 +1,26 @@
-# Using DDD.jl
+# DDD
+
+<!-- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://dcelisgarza.github.io/DDD.jl/stable) -->
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://dcelisgarza.github.io/DDD.jl/dev)
+[![Build Status](https://travis-ci.com/dcelisgarza/DDD.jl.svg?branch=master)](https://travis-ci.com/dcelisgarza/DDD.jl)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/dcelisgarza/DDD.jl?svg=true)](https://ci.appveyor.com/project/dcelisgarza/DDD-jl)
+[![Codecov](https://codecov.io/gh/dcelisgarza/DDD.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/dcelisgarza/DDD.jl)
+[![Coveralls](https://coveralls.io/repos/github/dcelisgarza/DDD.jl/badge.svg?branch=master)](https://coveralls.io/github/dcelisgarza/DDD.jl?branch=master)
+
+New generation of 3D Discrete Dislocation Dynamics codes.
+
+Dislocation dynamics is a complex field with an enormous barrier to entry. The aim of this project is to create a codebase that is:
+
+- Easy to use.
+- Easy to maintain.
+- Easy to develop for.
+- Modular.
+- Idiot proof.
+- Well documented and tested.
+- Performant.
+- Easily parallelisable.
+
+# Example
 
 ## Initialisation
 
@@ -46,26 +68,34 @@ julia> dislocationP = DislocationP(;
 DislocationP{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45000.0, 900000.0, 4, true, true, true, true, 1.0, 2.0, 1.0e10, 0.0, mobBCC())
 ```
 
-The integration parameters are placed into the following mutable structure.
+The integration parameters are placed into the following structure.
 ```julia
-julia> integrationP = IntegrationP(;
-          dt = 1e3,
-          tmin = 0.0,
-          tmax = 1e10,
-          method = CustomTrapezoid(),
-          abstol = 1e-6,
-          reltol = 1e-6,
-          time = 0.0,
-          step = 0,
-        )
-IntegrationP{Float64,CustomTrapezoid,Int64}(1000.0, 0.0, 1.0e10, CustomTrapezoid(), 1.0e-6, 1.0e-6, 0.0, 0)
+julia> IntegrationP(;
+      method = CustomTrapezoid(),
+      tmin = 0.0,
+      tmax = 1e10,
+      dtmin = 1e-6,
+      dtmax = 1e15,
+      abstol = 1e-6,
+      reltol = 1e-6,
+      maxchange = 1.2,
+      exponent = 20.0,
+      maxiter = 10,
+  )
+
+IntegrationP{CustomTrapezoid,Float64,Int64}(CustomTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
+```
+And we keep track of the time, step, and time step in the following structure.
+```julia
+julia> IntegrationVar(;
+      dt = 100,
+      time = 0.0,
+      step = 0,
+)
+IntegrationVar{Float64,Int64}(100.0, 0.0, 0)
 ```
 
->[!WARNING]
->
->`IntegrationP` will undergo revisions. Probably be split into two, or perhaps eliminated completely in order to use/extend the state of the art `DifferentialEquations.jl` framework.
-
-Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `n × 3` matrices rather than vectors.
+Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `3 × n` matrices rather than vectors.
 ```julia
 julia> slipSystems = SlipSystem(;
           crystalStruct = BCC(),
@@ -74,9 +104,6 @@ julia> slipSystems = SlipSystem(;
        )
 SlipSystem{BCC,Array{Float64,1}}(BCC(), [1.0, 1.0, 1.0], [1.0, -1.0, 0.0])
 ```
->[!WARNING]
->
->This may change to perform validity checks regarding the relationship between burgers vector and slip plane.
 
 We also need dislocation sources. We make use of Julia's type system to create standard functions for loop generation. We provide a way of easily and quickly generating loops whose segments inhabit the same slip system. However, new `DislocationLoop()` methods can be made by subtyping `AbstractDlnStr`, and dispatching on the new type. One may of also course also use the default constructor and build the initial structures manually.
 
@@ -198,20 +225,18 @@ They also have the added advantage of being designed for sending over the web, s
 
 This is a sample `JSON` file for a dislocation loop. They can be compactified by editors to decrease storage space by removing unnecessary line breaks and spaces. Here we show a somewhat longified view which is very human readable and trivially easy to create manually. Note that arrays are recursively linearised as vectors of vectors, where the linearisation follows the calling language's memory order. This means arrays will keep their shape and dimensionality regardless of the language that opens the JSON file.
 ```JSON
-[
-  {
-    "loopType": "DDD.loopPrism()",
-    "numSides": 4,
-    "nodeSide": 2,
-    "numLoops": 1,
-    "segLen": [1, 1, 1, 1, 1, 1, 1, 1],
-    "slipSystem": 1,
-    "label": [2, 1, 2, 1, 2, 1, 2, 1],
-    "buffer": 0,
-    "range": [[0, 0, 0], [0, 0, 0]],
-    "dist": "DDD.Zeros()"
-  }
-]
+{
+  "loopType": "DDD.loopPrism()",
+  "numSides": 4,
+  "nodeSide": 2,
+  "numLoops": 1,
+  "segLen": [1, 1, 1, 1, 1, 1, 1, 1],
+  "slipSystem": 1,
+  "label": [2, 1, 2, 1, 2, 1, 2, 1],
+  "buffer": 0,
+  "range": [[0, 0, 0], [0, 0, 0]],
+  "dist": "DDD.Zeros()"
+}
 ```
 This file describes an array, denoted by the `[]` at the top and bottom of the file, of a structure denoted by the `{}` on the second and penultimate lines. We could remove the `[]` but having all files be represent arrays (even if they are of length 1) simplifies users' and developers' lives by letting the same IO functions work for every case.
 
@@ -228,6 +253,7 @@ fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
 fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
 fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+fileIntVar = "../inputs/simParams/sampleIntegrationTime.JSON"
 dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileDislocationP,
     fileMaterialP,
@@ -235,22 +261,23 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileSlipSystem,
     fileDislocationLoop,
 )
+intVars = loadIntegrationVar(fileIntVar)
 ```
 which not only loads the data but returns the aforementioned structures. If there is a single file holding all the parameters, then all the filenames would be the same, but nothing else would change as the file would be loaded into a large dictionary and only the relevant `(key, value)` pairs are used in each case.
 
 Users may also load individual structures as follows.
 ```julia
 dictDislocationP = load(fileDislocationP)
-dislocationP = loadDislocationP(dictDislocationP[1])
+dislocationP = loadDislocationP(dictDislocationP)
 
 dictMaterialP = load(fileMaterialP)
-materialP = loadMaterialP(dictMaterialP[1])
+materialP = loadMaterialP(dictMaterialP)
 
 dictIntegrationP = load(fileIntegrationP)
-integrationP = loadIntegrationP(dictIntegrationP[1])
+integrationP = loadIntegrationP(dictIntegrationP)
 
 dictSlipSystem = load(fileSlipSystem)
-slipSystems = loadSlipSystem(dictSlipSystem[1])
+slipSystems = loadSlipSystem(dictSlipSystem)
 
 # There can be multiple dislocation types per simulation.
 dictDislocationLoop = load(fileDislocationLoop)
@@ -300,7 +327,27 @@ For the sake of open, reproducible and portable science it is recommended users 
 
 TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
 
-# TODO
+# TODO/WIP
+
+## Shaky, move-y bois
+
+The integration may be buggy, I haven't tested it yet. Coarsen and refine have been tested have passed all of them.
+
+This is a WIP but it shows network remeshing (coarsen and refining) and time integration with no applied stress.
+
+![shaky](/examples/shaky.gif)
+
+This shows the same but without network coarsening.
+
+![nocoarsen](/examples/nocoarsen.gif)
+
+This shows the same but without network refining and lower error bounds.
+
+![norefine](/examples/norefine.gif)
+
+This is just the integration.
+
+![integ](/examples/integ.gif)
 
 ## Working Objectives
 - [x] IO
@@ -311,13 +358,10 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
     - [ ] Asyncronicity
 - [ ] Topology functions
   - [ ] Internal Remeshing
-    - [ ] Coarsen mesh
-      - [x] Merge nodes
-        - [ ] Test all edge cases
-    - [ ] Refine mesh
-      - [x] Split nodes
-    - [ ] Surface remeshing
-    - [ ] Virtual node remeshing
+    - [x] Coarsen mesh
+    - [x] Refine mesh
+  - [ ] Surface remeshing
+  - [ ] Virtual node remeshing
 - [x] Self-segment force
 - [x] Seg-seg force
   - [ ] Test tiny segment edge case
@@ -331,10 +375,14 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
   - [ ] Plot recipe
   - [ ] Statistical analysis
 - [ ] Mobility function
-  - [ ] BCC
+  - [x] Generic mobility function
+  - [x] BCC
   - [ ] FCC
 - [ ] Integration
-  - [ ] Refactor integrator structures
+  - [x] Refactor integrator structures
+  - [ ] CustomTrapezoid
+    - [x] Implementation
+    - [ ] Testing
   - [ ] Look into using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for structure and perhaps use/extension of methods
   - [ ] Make integrator
 - [ ] Couple to FEM, perhaps use a package from [JuliaFEM](http://www.juliafem.org/).

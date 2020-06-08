@@ -22,22 +22,6 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 
 # Example
 
-## Shaky, move-y bois
-
-The integration may be buggy, I haven't tested it yet. Coarsen and refine have been tested have passed all of them.
-
-This is a WIP but it shows network remeshing (coarsen and refining) and time integration with no applied stress.
-![shaky](/examples/shaky.gif)
-
-This shows the same but without network coarsening.
-![nocoarsen](/examples/nocoarsen.gif)
-
-This shows the same but without network refining and lower error bounds.
-![norefine](/examples/norefine.gif)
-
-This is just the integration.
-![norefine](/examples/integ.gif)
-
 ## Initialisation
 
 Before running a simulation we need to initialise the simulation. For this example, we will use the keyword initialisers because they automatically calculate derived quantities, perform input validations, provide default values, and are make for self-documenting code.
@@ -84,7 +68,7 @@ julia> dislocationP = DislocationP(;
 DislocationP{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45000.0, 900000.0, 4, true, true, true, true, 1.0, 2.0, 1.0e10, 0.0, mobBCC())
 ```
 
-The integration parameters are placed into the following mutable structure.
+The integration parameters are placed into the following structure.
 ```julia
 julia> IntegrationP(;
       method = CustomTrapezoid(),
@@ -100,6 +84,15 @@ julia> IntegrationP(;
   )
 
 IntegrationP{CustomTrapezoid,Float64,Int64}(CustomTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
+```
+And we keep track of the time, step, and time step in the following structure.
+```julia
+julia> IntegrationVar(;
+      dt = 100,
+      time = 0.0,
+      step = 0,
+)
+IntegrationVar{Float64,Int64}(100.0, 0.0, 0)
 ```
 
 Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `3 × n` matrices rather than vectors.
@@ -260,6 +253,7 @@ fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
 fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
 fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+fileIntVar = "../inputs/simParams/sampleIntegrationTime.JSON"
 dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileDislocationP,
     fileMaterialP,
@@ -267,22 +261,23 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
     fileSlipSystem,
     fileDislocationLoop,
 )
+intVars = loadIntegrationVar(fileIntVar)
 ```
 which not only loads the data but returns the aforementioned structures. If there is a single file holding all the parameters, then all the filenames would be the same, but nothing else would change as the file would be loaded into a large dictionary and only the relevant `(key, value)` pairs are used in each case.
 
 Users may also load individual structures as follows.
 ```julia
 dictDislocationP = load(fileDislocationP)
-dislocationP = loadDislocationP(dictDislocationP[1])
+dislocationP = loadDislocationP(dictDislocationP)
 
 dictMaterialP = load(fileMaterialP)
-materialP = loadMaterialP(dictMaterialP[1])
+materialP = loadMaterialP(dictMaterialP)
 
 dictIntegrationP = load(fileIntegrationP)
-integrationP = loadIntegrationP(dictIntegrationP[1])
+integrationP = loadIntegrationP(dictIntegrationP)
 
 dictSlipSystem = load(fileSlipSystem)
-slipSystems = loadSlipSystem(dictSlipSystem[1])
+slipSystems = loadSlipSystem(dictSlipSystem)
 
 # There can be multiple dislocation types per simulation.
 dictDislocationLoop = load(fileDislocationLoop)
@@ -332,7 +327,27 @@ For the sake of open, reproducible and portable science it is recommended users 
 
 TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
 
-# TODO
+# TODO/WIP
+
+## Shaky, move-y bois
+
+The integration may be buggy, I haven't tested it yet. Coarsen and refine have been tested have passed all of them.
+
+This is a WIP but it shows network remeshing (coarsen and refining) and time integration with no applied stress.
+
+![shaky](/examples/shaky.gif)
+
+This shows the same but without network coarsening.
+
+![nocoarsen](/examples/nocoarsen.gif)
+
+This shows the same but without network refining and lower error bounds.
+
+![norefine](/examples/norefine.gif)
+
+This is just the integration.
+
+![integ](/examples/integ.gif)
 
 ## Working Objectives
 - [x] IO
@@ -343,11 +358,8 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
     - [ ] Asyncronicity
 - [ ] Topology functions
   - [ ] Internal Remeshing
-    - [ ] Coarsen mesh
-      - [x] Merge nodes
-        - [ ] Test all edge cases
-    - [ ] Refine mesh
-      - [x] Split nodes
+    - [x] Coarsen mesh
+    - [x] Refine mesh
     - [ ] Surface remeshing
     - [ ] Virtual node remeshing
 - [x] Self-segment force
@@ -363,10 +375,14 @@ TO BE WRITTEN: HOW TO EXTEND METHODS TO EXPAND FUNCTIONALITY
   - [ ] Plot recipe
   - [ ] Statistical analysis
 - [ ] Mobility function
-  - [ ] BCC
+  - [x] Generic mobility function
+  - [x] BCC
   - [ ] FCC
 - [ ] Integration
-  - [ ] Refactor integrator structures
+  - [x] Refactor integrator structures
+  - [ ] CustomTrapezoid
+    - [x] Implementation
+    - [ ] Testing
   - [ ] Look into using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for structure and perhaps use/extension of methods
   - [ ] Make integrator
 - [ ] Couple to FEM, perhaps use a package from [JuliaFEM](http://www.juliafem.org/).
