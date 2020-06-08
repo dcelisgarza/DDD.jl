@@ -176,13 +176,8 @@ function integrate!(
 
     # Store current position and velocity.
     idx = 1:numNode
-    initCoord = copy(network.coord[:, idx])
-    initVel = copy(network.nodeVel[:, idx])
-
-    # Preallocate arrays.
-    sizeCoord = size(initCoord)
-    distance = zeros(sizeCoord)
-    err = zeros(sizeCoord)
+    initCoord = network.coord[:, idx]
+    initVel = network.nodeVel[:, idx]
 
     dtmin = intParams.dtmin
     dtmax = intParams.dtmax
@@ -199,7 +194,7 @@ function integrate!(
     count = 0
     for i in 1:maxiter
         # Advance coordinates with forward euler.
-        network.coord[:, idx] .= initCoord + initVel * dt
+        network.coord[:, idx] = initCoord + initVel * dt
 
         # Calculate new velocity from new coords.
         deriv!(dlnParams, matParams, network; parallel = parallel)
@@ -207,11 +202,11 @@ function integrate!(
         nodeVel = network.nodeVel
 
         # Calculate the distance moved.
-        distance .= coord[:, idx] - initCoord
+        distance = @views coord[:, idx] - initCoord
         maxDist = maximum(abs.(distance))
 
         # Calculate the error with Euler trapezoid method.
-        err .= distance - (nodeVel[:, idx] + initVel) / 2 * dt
+        err = @views distance - (nodeVel[:, idx] + initVel) / 2 * dt
         maxErr = maximum(abs.(err))
 
         # Tentative new timestep.
@@ -230,7 +225,7 @@ function integrate!(
             # If the errors are over the tolerances, check if the previous time step is good.
             if dtOldGood
                 # If it was, use the previous time step.
-                network.coord[:, idx] .= initCoord + initVel * dtOld
+                network.coord[:, idx] = initCoord + initVel * dtOld
                 deriv!(dlnParams, matParams, network; parallel = parallel)
                 break
             else

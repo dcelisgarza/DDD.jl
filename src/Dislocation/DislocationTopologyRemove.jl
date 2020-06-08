@@ -31,11 +31,11 @@ network.connectivity
 
     # The if nodeGone is not the last node in the relevant arrays, replace it by lastNode.
     if nodeGone < lastNode
-        coord[:, nodeGone] .= coord[:, lastNode]
+        coord[:, nodeGone] = coord[:, lastNode]
         label[nodeGone] = label[lastNode]
-        nodeVel[:, nodeGone] .= nodeVel[:, lastNode]
-        nodeForce[:, nodeGone] .= nodeForce[:, lastNode]
-        connectivity[:, nodeGone] .= connectivity[:, lastNode]
+        nodeVel[:, nodeGone] = nodeVel[:, lastNode]
+        nodeForce[:, nodeGone] = nodeForce[:, lastNode]
+        connectivity[:, nodeGone] = connectivity[:, lastNode]
         # Change the link
         @simd for j in 1:connectivity[1, nodeGone]
             idx = 2 * j

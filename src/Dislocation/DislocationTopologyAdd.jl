@@ -9,7 +9,7 @@ function splitNode!(
 
     elemT = eltype(network.bVec)
     # newNode gets inserted between splitNode and the node it is connected to via the connection splitConnect. We want to take this connection and remove it from splitNode. We then connect splitNode to newNode. Then we assign splitConnect to newNode so that it can connect to the node splitNode used to be connected to, this way we close the loop and the connections move from splitNode -> other, to splitNode -> newNode -> other. We copy the connection to a temporary variable, guaranteeing the data isn't modified by removeConnection!().
-    tmpConnect = copy(network.connectivity[:, splitNode])
+    tmpConnect = network.connectivity[:, splitNode]
     # Remove connection from node in preparation of adding the new node.
     removeConnection!(network, splitNode, splitConnect)
 

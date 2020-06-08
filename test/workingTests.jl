@@ -74,12 +74,18 @@ fig2 = plotNodes(
 network2 = deepcopy(network)
 refineNetwork!(dlnParams, matParams, network2)
 
-foo(intParams, intVars, dlnParams, matParams, network2)
 function foo(intParams, intVars, dlnParams, matParams, network)
     # coarsenNetwork!(dlnParams, matParams, network)
     # refineNetwork!(dlnParams, matParams, network)
     integrate!(intParams, intVars, dlnParams, matParams, network)
 end
+network2 = deepcopy(network)
+@allocated foo(intParams, intVars, dlnParams, matParams, network2)
+@allocated foo(intParams, intVars, dlnParams, matParams, network2)
+
+@allocated foo(intParams, intVars, dlnParams, matParams, network2)
+@allocated foo(intParams, intVars, dlnParams, matParams, network2)
+gr()
 function baar(intParams, intVars, dlnParams, matParams, network)
 
     network2 = deepcopy(network)
@@ -111,7 +117,7 @@ function baar(intParams, intVars, dlnParams, matParams, network)
             # plot!(fig)
         # end
     end every 5
-    gif(anim, "../examples/integ.gif")
+    gif(anim, "test2.gif")
 end
 
 baar(intParams, intVars, dlnParams, matParams, network)
