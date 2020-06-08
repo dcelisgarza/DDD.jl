@@ -397,5 +397,4 @@ This is just the integration.
 
 ### Tentative Objectives
 
-- [ ] Custom 3-vec type, place x,y,z coordinates in contiguous memory instead of columns, ie [x1 y1 z1; x2 y2 z2] -> [x1;y1;z1;x2;y2;z2], have to define custom array type, `getindex(arr, (a,b)) = arr[3*(a-1)+b]`, out of bounds and all the rest. Watch [this](https://www.youtube.com/watch?v=jS9eouMJf_Y).
 - [ ] Keep an eye on [JuliaIO](https://github.com/JuliaIO), [JuliaFEM](https://github.com/JuliaFEM/), [SciML](https://github.com/sciml) because their methods might be useful.
