@@ -394,6 +394,7 @@ This is just the integration.
     - [ ] Parallelisation
   - [ ] Tractions
     - [ ] Parallelisation
+- [ ] Polyhedral operations for FEM coupling. [Create convex hull and check if a point is inside the convex hull.](https://juliareach.github.io/LazySets.jl/release-1.11/man/convex_hulls.html)
 
 ### Tentative Objectives
 
