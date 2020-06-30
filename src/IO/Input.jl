@@ -135,7 +135,7 @@ function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
-    dislocationP = DislocationP(
+    dislocationP = DislocationP(;
         coreRad = convert(Float64, dict["coreRad"]),
         coreRadMag = convert(Float64, dict["coreRadMag"]),
         minSegLen = convert(Float64, dict["minSegLen"]),
@@ -147,6 +147,8 @@ function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
         collision = dict["collision"],
         separation = dict["separation"],
         virtualRemesh = dict["virtualRemesh"],
+        parCPU = dict["parCPU"],
+        parGPU = dict["parGPU"],
         edgeDrag = convert(Float64, dict["edgeDrag"]),
         screwDrag = convert(Float64, dict["screwDrag"]),
         climbDrag = convert(Float64, dict["climbDrag"]),

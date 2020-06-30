@@ -32,7 +32,7 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
     midNode = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
 
-    PKForce = zeros(3, numSeg)      # Vector of PK force.
+    PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
 
     # Loop over segments.
     @inbounds @simd for i in 1:numSeg

@@ -148,6 +148,8 @@ struct DislocationP{T1, T2, T3, T4}
     collision::T3       # Collision flag
     separation::T3      # Separation flag
     virtualRemesh::T3   # Virtual remeshing flag
+    parCPU::T3          # Parallelise on CPU
+    parGPU::T3          # Parallelise on GPU
     edgeDrag::T1        # Drag coefficient edge dislocation
     screwDrag::T1       # Drag coefficient screw dislocation
     climbDrag::T1       # Drag coefficient climb direction
@@ -173,6 +175,8 @@ struct DislocationP{T1, T2, T3, T4}
     collision::T3
     separation::T3
     virtualRemesh::T3
+    parCPU::T3
+    parGPU::T3
     edgeDrag::T1
     screwDrag::T1
     climbDrag::T1
@@ -214,6 +218,8 @@ Keyword constructor for [`DislocationP`](@ref). Validates values and calculates 
     collision::T3,
     separation::T3,
     virtualRemesh::T3,
+    parCPU::T3 = false,
+    parGPU::T3 = false,
     edgeDrag::T1,
     screwDrag::T1,
     climbDrag::T1,
@@ -242,6 +248,8 @@ Keyword constructor for [`DislocationP`](@ref). Validates values and calculates 
         collision,
         separation,
         virtualRemesh,
+        parCPU,
+        parGPU,
         edgeDrag,
         screwDrag,
         climbDrag,

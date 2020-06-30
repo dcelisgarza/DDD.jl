@@ -286,13 +286,14 @@ Checks the validity of the dislocation network. It ensures the following conditi
     error("Non-empty entries of connectivity should be the same as the non-empty entries of links.")
 
     bVec = network.bVec
+    elemT = eltype(network.bVec)
     bSum = zeros(3)
     @inbounds for i in 1:idx
         iLinkBuffer = zeros(Int, 0)
         col = connectivity[1, i]
 
         # Check for zero Burgers vectors.
-        norm(bVec[:, i]) < eps(eltype(bVec)) ? error("Burgers vector must be non-zero.
+        norm(bVec[:, i]) < eps(elemT) ? error("Burgers vector must be non-zero.
                                        norm(bVec) = $(norm(bVec[i,:]))") :
         nothing
 
@@ -333,7 +334,7 @@ links[:, $(connectivity[j2, i])] = [$(links[1, connectivity[j2, i]]), $(links[2,
         end
 
         # Check for Burgers vector conservation.
-        abs(dot(bSum, bSum)) > eps(eltype(bSum)) ?
+        abs(dot(bSum, bSum)) > eps(elemT) ?
         error("Burgers vector is not conserved, bSum = $(bSum).") : nothing
 
         # Find unique neighbours.

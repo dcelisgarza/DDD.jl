@@ -72,11 +72,10 @@ end
 function deriv!(
     dlnParams::T1,
     matParams::T2,
-    network::T3;
-    parallel::Bool = false,
+    network::T3,
 ) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
 
-    calcSegForce!(dlnParams, matParams, network; parallel = parallel)
+    calcSegForce!(dlnParams, matParams, network)
     dlnMobility!(dlnParams, matParams, network)
 
     links = network.links
@@ -123,43 +122,12 @@ function deriv!(
 end
 
 function integrate!(
-    intParams::T1,
-    intVars::T2,
-    dlnParams::T3,
-    matParams::T4,
-    network::T5;
-    parallel::Bool = false,
-) where {
-    T1 <: IntegrationP,
-    T2 <: IntegrationVar,
-    T3 <: DislocationP,
-    T4 <: MaterialP,
-    T5 <: DislocationNetwork,
-}
-    return integrate!(
-        intParams.method,
-        intParams,
-        intVars,
-        dlnParams,
-        matParams,
-        network;
-        parallel = false,
-    )
-    # Calculate current velocity.
-    deriv!(dlnParams, matParams, network; parallel = parallel)
-    # Store current position and velocity.
-    initCoord = copy(network.coord)
-    initVel = copy(network.nodeVel)
-end
-
-function integrate!(
     intMethod::CustomTrapezoid,
     intParams::T1,
     intVars::T2,
     dlnParams::T3,
     matParams::T4,
-    network::T5;
-    parallel::Bool = false,
+    network::T5,
 ) where {
     T1 <: IntegrationP,
     T2 <: IntegrationVar,
@@ -172,7 +140,7 @@ function integrate!(
     numNode == 0 && return network
 
     # Calculate current velocity.
-    deriv!(dlnParams, matParams, network; parallel = parallel)
+    deriv!(dlnParams, matParams, network)
 
     # Store current position and velocity.
     idx = 1:numNode
@@ -197,7 +165,7 @@ function integrate!(
         network.coord[:, idx] = initCoord + initVel * dt
 
         # Calculate new velocity from new coords.
-        deriv!(dlnParams, matParams, network; parallel = parallel)
+        deriv!(dlnParams, matParams, network)
         coord = network.coord
         nodeVel = network.nodeVel
 
@@ -226,7 +194,7 @@ function integrate!(
             if dtOldGood
                 # If it was, use the previous time step.
                 network.coord[:, idx] = initCoord + initVel * dtOld
-                deriv!(dlnParams, matParams, network; parallel = parallel)
+                deriv!(dlnParams, matParams, network)
                 break
             else
                 # If it wasn't, make the timestep smaller.

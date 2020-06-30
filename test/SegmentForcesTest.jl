@@ -15,6 +15,26 @@ cd(@__DIR__)
         fileSlipSystem,
         fileDislocationLoop,
     )
+    dlnParamsPar = DislocationP(;
+        coreRad = dlnParams.coreRad,
+        coreRadMag = dlnParams.coreRadMag,
+        minSegLen = dlnParams.minSegLen,
+        maxSegLen = dlnParams.maxSegLen,
+        minArea = dlnParams.minArea,
+        maxArea = dlnParams.maxArea,
+        maxConnect = dlnParams.maxConnect,
+        remesh = dlnParams.remesh,
+        collision = dlnParams.collision,
+        separation = dlnParams.separation,
+        virtualRemesh = dlnParams.virtualRemesh,
+        parCPU = true,
+        parGPU = dlnParams.parGPU,
+        edgeDrag = dlnParams.edgeDrag,
+        screwDrag = dlnParams.screwDrag,
+        climbDrag = dlnParams.climbDrag,
+        lineDrag = dlnParams.lineDrag,
+        mobility = dlnParams.mobility,
+    )
 
     pentagon = DislocationLoop(
         loopPrism();
@@ -93,8 +113,8 @@ cd(@__DIR__)
         dist = Zeros(),
     )
     network = DislocationNetwork(pentagon, memBuffer = 1)
-    remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
-    remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
+    remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
+    remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
     f1 = [
         0.000330019407456 0.001179598001408 0.001509617408864
         0.001578610251880 -0.000645615383196 0.000932994868684
@@ -140,8 +160,8 @@ cd(@__DIR__)
     )
     network = DislocationNetwork(pentagon, memBuffer = 1)
     network.coord[:, 6:end] .+= [20; 20; 20]
-    remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
-    remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
+    remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
+    remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
     f1 = [
         0.000217825304625 0.000839481257576 0.001128278735983
         0.001146987202523 -0.000492397907541 0.000704213490464
@@ -210,8 +230,8 @@ cd(@__DIR__)
         dist = Zeros(),
     )
     network = DislocationNetwork([hexagonPris, hexagonShear], memBuffer = 1)
-    remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
-    remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
+    remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
+    remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
 
     f1 = [
         0.000148330200377 0.000867173203941 -0.001163833604695
@@ -247,14 +267,14 @@ cd(@__DIR__)
     @test isapprox(remoteForcePar[:, 2, :], f2')
 
     selfForce = calcSelfForce(dlnParams, matParams, network)
-    remoteForceSer = calcSegSegForce(dlnParams, matParams, network, parallel = false)
-    remoteForcePar = calcSegSegForce(dlnParams, matParams, network, parallel = true)
+    remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
+    remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
     sumForceSer =
         (selfForce[1] .+ remoteForceSer[:, 1, :], selfForce[2] .+ remoteForceSer[:, 2, :])
     sumForcePar =
         (selfForce[1] .+ remoteForcePar[:, 1, :], selfForce[2] .+ remoteForcePar[:, 2, :])
-    totalForceSer = calcSegForce(dlnParams, matParams, network, parallel = false)
-    totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
+    totalForceSer = calcSegForce(dlnParams, matParams, network)
+    totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
 
     @test isapprox(totalForceSer[:, 1, :], sumForceSer[1])
     @test isapprox(totalForcePar[:, 2, :], sumForcePar[2])
@@ -263,15 +283,15 @@ cd(@__DIR__)
 
     idx = rand(1:(network.numSeg), Int(network.numSeg / 2))
     totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
-    totalForceSer = calcSegForce(dlnParams, matParams, network, parallel = false)
-    totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
+    totalForceSer = calcSegForce(dlnParams, matParams, network)
+    totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
     idx = rand(1:(network.numSeg))
     totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
-    totalForceSer = calcSegForce(dlnParams, matParams, network, parallel = false)
-    totalForcePar = calcSegForce(dlnParams, matParams, network, parallel = true)
+    totalForceSer = calcSegForce(dlnParams, matParams, network)
+    totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
@@ -291,20 +311,20 @@ cd(@__DIR__)
     @test isapprox(self[1][:, idx], network.segForce[:, 1, idx])
     @test isapprox(self[2][:, idx], network.segForce[:, 2, idx])
 
-    ser = calcSegSegForce(dlnParams, matParams, network; parallel = false)
+    ser = calcSegSegForce(dlnParams, matParams, network)
     network.segForce .= 0
-    calcSegSegForce!(dlnParams, matParams, network; parallel = false)
+    calcSegSegForce!(dlnParams, matParams, network)
     @test isapprox(network.segForce[:, :, 1:numSeg], ser)
     network.segForce .= 0
-    calcSegSegForce!(dlnParams, matParams, network, idx; parallel = false)
+    calcSegSegForce!(dlnParams, matParams, network, idx)
     @test isapprox(network.segForce[:, :, idx], ser[:, :, idx])
 
-    par = calcSegSegForce(dlnParams, matParams, network; parallel = true)
+    par = calcSegSegForce(dlnParamsPar, matParams, network)
     network.segForce .= 0
-    calcSegSegForce!(dlnParams, matParams, network; parallel = true)
+    calcSegSegForce!(dlnParamsPar, matParams, network)
     @test isapprox(network.segForce[:, :, 1:numSeg], par)
     network.segForce .= 0
-    calcSegSegForce!(dlnParams, matParams, network, idx; parallel = true)
+    calcSegSegForce!(dlnParamsPar, matParams, network, idx)
     @test isapprox(network.segForce[:, :, idx], par[:, :, idx])
     @test isapprox(par, ser)
 

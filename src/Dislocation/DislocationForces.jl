@@ -16,8 +16,7 @@ calcSegForce(
     network::T3,
     # dlnFEM::T4,
     # mesh::T5,
-    idx = nothing;
-    parallel::Bool = true,
+    idx = nothing,
 ) where {
     T1 <: DislocationP,
     T2 <: MaterialP,
@@ -30,7 +29,7 @@ calcSegForce(
 
     # pkForce = pkForce(mesh, dlnFEM, network)
     selfForce = calcSelfForce(dlnParams, matParams, network, idx)
-    segForce = calcSegSegForce(dlnParams, matParams, network, idx; parallel = parallel)
+    segForce = calcSegSegForce(dlnParams, matParams, network, idx)
 
     @inbounds for i in 1:numSeg
         @simd for j in 1:2
@@ -44,10 +43,9 @@ end
     dlnParams::T1,
     matParams::T2,
     network::T3,
-    idx = nothing;
+    idx = nothing,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-    parallel::Bool = false,
 ) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
 
     if isnothing(idx)
@@ -62,7 +60,7 @@ end
 
     # pkForce!(mesh, dlnFEM, network)
     calcSelfForce!(dlnParams, matParams, network, idx)
-    calcSegSegForce!(dlnParams, matParams, network, idx; parallel = parallel)
+    calcSegSegForce!(dlnParams, matParams, network, idx)
 
     return network
 end
@@ -277,8 +275,7 @@ At a high level this works by creating a local coordinate frame using the line d
     dlnParams::T1,
     matParams::T2,
     network::T3,
-    idx = nothing;
-    parallel::T4 = false,
+    idx = nothing,
 ) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork, T4 <: Bool}
 
     # Constants.
@@ -306,7 +303,7 @@ At a high level this works by creating a local coordinate frame using the line d
     # Calculate segseg forces on every segment.
     if isnothing(idx)
         segSegForce = zeros(3, 2, numSeg)
-        if parallel
+        if dlnParams.parCPU
             # Threadid parallelisation + parallelised reduction.
             TSegSegForce = zeros(Threads.nthreads(), 3, 2, numSeg)
             @fastmath @inbounds @sync for i in 1:numSeg
@@ -369,7 +366,7 @@ At a high level this works by creating a local coordinate frame using the line d
             end
             # This allows type inference and reduces memory allocation.
             segSegForce .= getproperty.(TSegSegForce2, :value)
-        elseif parallel == false
+        else
             # Serial execution.
             @fastmath @inbounds for i in 1:numSeg
                 b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
@@ -499,8 +496,7 @@ end
     dlnParams::T1,
     matParams::T2,
     network::T3,
-    idx = nothing;
-    parallel::T4 = true,
+    idx = nothing,
 ) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork, T4 <: Bool}
 
     # Constants.
@@ -529,7 +525,7 @@ end
 
     # Calculate segseg forces on every segment.
     if isnothing(idx)
-        if parallel
+        if dlnParams.parCPU
             # Threadid parallelisation + parallelised reduction.
             TSegSegForce = zeros(Threads.nthreads(), 3, 2, numSeg)
             @fastmath @inbounds @sync for i in 1:numSeg

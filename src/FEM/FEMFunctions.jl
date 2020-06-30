@@ -61,10 +61,8 @@ end
             opx * omy * opz,
             opx * opy * opz,
             omx * opy * opz,
-        )
+        ) / 8
     end
-
-    N /= 8
 
     return N
 end
@@ -165,10 +163,8 @@ end
             -opy * opz,
             omx * opz,
             omx * opy,
-        )
+        ) / 8
     end
-
-    dNdS /= 8
 
     return dNdS
 end
