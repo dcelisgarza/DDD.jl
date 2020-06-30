@@ -51,10 +51,28 @@ network.bVec[:, 11:14] .= network.bVec[:, 1]
 network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
 makeConnect!(network)
 getSegmentIdx!(network)
-plotlyjs()
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
+using Serialization, BSON
+
+@time serialize("test2.jls", (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop))
+@time save("test3.json", (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop))
+@time bson("test4.bson", a=(network, dlnParams, matParams, intParams, slipSystems, dislocationLoop))
+
+networkOUT1, dlnParamsOUT1, matParamsOUT1 = open("test.txt", "r") do io
+    deserialize(io)
+end
+
+networkOUT1
+dlnParamsOUT1
+
+networkOUT2 = deserialize("test2.txt")
+
+compStruct(networkOUT1, network)
+compStruct(networkOUT2, network)
+
+## Remeshing and integration
 network2 = deepcopy(network)
 intVars2 = deepcopy(intVars)
 numSeg = network.numSeg

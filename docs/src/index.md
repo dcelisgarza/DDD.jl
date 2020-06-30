@@ -26,7 +26,7 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 
 Before running a simulation we need to initialise the simulation. For this example, we will use the keyword initialisers because they automatically calculate derived quantities, perform input validations, provide default values, and are make for self-documenting code.
 
-Dislocations live in a material, as such we need a few constants that describe it. These are encapsulated in the immutable <sup>[1](#1)</sup> structure `MaterialP`. Note that we use unicode to denote variables as per convention written `\mu -> μ` and `\nu -> ν`. Here we create a basic material.
+Dislocations live in a material, as such we need a few constants that describe it. These are encapsulated in the immutable <sup>[1](#1)</sup> structure `MaterialP`. Note that we use unicode to denote variables as per convention, `\mu -> μ` and `\nu -> ν`. Here we create a basic material.
 ```julia
 julia> materialP = MaterialP(;
           μ = 1.0,                  # Shear modulus.
@@ -38,14 +38,14 @@ julia> materialP = MaterialP(;
         )
 MaterialP{Float64,BCC}(1.0, 145000.0, 0.28, 1.0, 1.3888888888888888, 0.3888888888888889, 0.07957747154594767, 0.039788735772973836, 0.11052426603603843, BCC(), 0.0)
 ```
-Note that a few extra constants have been automatically calculated by the constructor. We find what these correspond to using the `fieldnames()` on the type of `materialP`, which is `MaterialP`.
+Note that a few extra constants have been automatically calculated by the constructor. We find these using `fieldnames()`.
 ```julia
 julia> fieldnames(typeof(materialP))
 (:μ, :μMag, :ν, :E, :σPN, :omνInv, :νomνInv, :μ4π, :μ8π, :μ4πν, :crystalStruct)
 ```
-Where `omνInv = 1/(1-ν)`, `νomνInv = v/(1-ν)`, `μ4π = μ/(4π)`, `μ8π = μ/(8π)`, `μ4πν = μ/[4π(1-ν)]`. These precomputed variables are used in various places and are there to avoid recalculating them later.
+Where `omνInv = 1/(1-ν)`, `νomνInv = v/(1-ν)`, `μ4π = μ/(4π)`, `μ8π = μ/(8π)`, `μ4πν = μ/[4π(1-ν)]`. This avoids recomputing them later.
 
-Our dislocations also have certain constant characteristics that are encapsulated in their own immutable structure, `DislocationP`. These parameters are somewhat arbitrary as long as they approximately hold certain proportions.
+Our dislocations also have certain constant parameters and flags that are encapsulated in their own immutable structure, `DislocationP`. The numeric parameters are somewhat arbitrary as long as they hold certain proportions.
 ```julia
 julia> dislocationP = DislocationP(;
           coreRad = 90.0,       # Dislocation core radius, referred to as a.
@@ -59,16 +59,18 @@ julia> dislocationP = DislocationP(;
           collision = true,     # Flag for collision checking.
           separation = true,    # Flag for node separation.
           virtualRemesh = true, # Flag for remeshing virtual nodes.
+          parCPU = false,       # Parallelise on CPU
+          parGPU = false,       # Parallelise on GPU
           edgeDrag = 1.0,       # Drag coefficient for edge segments.
           screwDrag = 2.0,      # Drag coefficient for screw segments.
           climbDrag = 1e10,     # Drag coefficient along the climb direction.
           lineDrag = 0.0,       # Drag coefficient along the line direction.
           mobility = mobBCC(),  # Mobility type for mobility function specialisation.
         )
-DislocationP{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45000.0, 900000.0, 4, true, true, true, true, 1.0, 2.0, 1.0e10, 0.0, mobBCC())
+DislocationP{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45000.0, 900000.0, 4, true, true, true, true, true, true, 1.0, 2.0, 1.0e10, 0.0, mobBCC())
 ```
 
-The integration parameters are placed into the following structure.
+The integration parameters are placed into the following immutable structure.
 ```julia
 julia> IntegrationP(;
       method = CustomTrapezoid(),
@@ -85,7 +87,7 @@ julia> IntegrationP(;
 
 IntegrationP{CustomTrapezoid,Float64,Int64}(CustomTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
 ```
-And we keep track of the time, step, and time step in the following structure.
+And we keep track of the time, step, and time step in this mutable one.
 ```julia
 julia> IntegrationVar(;
       dt = 100,
@@ -95,7 +97,7 @@ julia> IntegrationVar(;
 IntegrationVar{Float64,Int64}(100.0, 0.0, 0)
 ```
 
-Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding more by making the `slipPlane` and `bVec` arguments `3 × n` matrices rather than vectors.
+Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding `n` slip systems by making the `slipPlane` and `bVec` arguments `m × n` matrices rather than `m` vectors.
 ```julia
 julia> slipSystems = SlipSystem(;
           crystalStruct = BCC(),
@@ -105,9 +107,9 @@ julia> slipSystems = SlipSystem(;
 SlipSystem{BCC,Array{Float64,1}}(BCC(), [1.0, 1.0, 1.0], [1.0, -1.0, 0.0])
 ```
 
-We also need dislocation sources. We make use of Julia's type system to create standard functions for loop generation. We provide a way of easily and quickly generating loops whose segments inhabit the same slip system. However, new `DislocationLoop()` methods can be made by subtyping `AbstractDlnStr`, and dispatching on the new type. One may of also course also use the default constructor and build the initial structures manually.
+We also need dislocation sources. We make use of Julia's type system to create standard functions for loop generation. We provide a way to easily and quickly generate loops whose segments inhabit the same slip system. However, new `DislocationLoop()` methods can be made by subtyping `AbstractDlnStr`, and dispatching on the new type. One may of also course also use the default constructor and build the initial structures manually.
 
-Here we make a regular pentagonal prismatic dislocation loop, and a regular hexagonal prismatic dislocation loop. Note that the segments may be of arbitrary length, but having asymmetric sides may result in a very ugly and irregular dislocations that may be unphysical or may end up remeshing once the simulation gets under way. As such we recommend making the segment lengths symmetric.
+Here we make a regular pentagonal prismatic dislocation loop, and a regular hexagonal prismatic dislocation loop. The segments may be of arbitrary length, but having asymmetric sides may result in very ugly, irregular dislocations that may be unphysical or may end up remeshing as soon as the simulation gets under way. As such, we recommend making the segment lengths symmetric.
 ```julia
 julia> prisPentagon = DislocationLoop(
           loopPrism();    # Prismatic loop, all segments are edge segments.
@@ -150,11 +152,11 @@ julia> shearHexagon = DislocationLoop(
 DislocationLoop{loopShear,Int64,Array{Float64,1},Int64,Array{Int64,2},Array{Float64,2},Array{nodeType,1},Float64,Rand}(loopShear(), 6, 3, 20, [3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335, 3.3333333333333335], 1, [1 2 … 17 18; 2 3 … 18 1], [0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; -0.7071067811865475 -0.7071067811865475 … -0.7071067811865475 -0.7071067811865475; 0.0 0.0 … 0.0 0.0], [5.443310539518175 6.8041381743977185 … 1.3608276348795458 4.082482904638633; -6.804138174397717 -5.443310539518174 … -6.804138174397715 -8.164965809277255; 1.3608276348795436 -1.3608276348795432
 … 5.443310539518167 4.082482904638622], nodeType[DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix], 0.0, [-100.0 100.0; -100.0 100.0; -100.0 100.0], Rand())
 ```
-The dislocation loops will be centred about the origin, but the `range`, `buffer` and `dist` parameters will distribute the dislocations about the simulation domain once the dislocation network is generated. The type of `dist` must be a concrete subtype of `AbstractDistribution` and `loopDistribution()` method should dispatch on this concrete subtype. If a non-suported distribution is required, you only need to create a concrete subtype of `AbstractDistribution` and a new method of `loopDistribution()` to dispatch on the new type. This is all the reworking needed, since multiple dispatch will take care of any new distributions when generating the dislocation network.
+The dislocation loops will be centred about the origin, but the `range`, `buffer` and `dist` parameters will distribute them about the simulation domain when the network is generated. The type of `dist` must be a concrete subtype of `AbstractDistribution` and a corresponding `loopDistribution()` method should be defined. If a non-suported distribution is required, you only need to create a concrete subtype of `AbstractDistribution` and a new method of `loopDistribution()` to dispatch on the new type. This is all the reworking needed, since multiple dispatch will take care of any new distributions when generating the dislocation network.
 
-Note also the array of `nodeType`, this is an enumerated type which ensures node types are limited to only those supported by the model, lowers memory footprint and increases performance.
+Note the use of a `nodeType` array. This is an enumerated type which ensures node types are limited to only those supported by the model while lowering the memory footprint and increasing performance.
 
-We can then plot our loops to see our handy work. We use `plotlyjs()` because it provides a nice interactive experience, but of course, since this is Julia any plotting backend will work. Note that since they have the same slip system but one is a shear and the other a prismatic loop, they are orthogonal to each other.
+We can plot our loops with `plotNodes`. We use `plotlyjs()` because it provides a nice interactive experience but any `Plots.jl` compatible backend will work. Since both loops have the same slip system but one is a shear and the other a prismatic loop, they are orthogonal to each other.
 ```julia
 julia> using Plots
 julia> plotlyjs()
@@ -174,7 +176,7 @@ julia> plot!(fig1, camera=(100,35), size=(400,400))
 
 After generating our primitive loops, we can create a network using either a vector of dislocation loops or a single dislocation loop. The network may also be created manually, and new constructor methods may be defined for bespoke cases. For our purposes, we use the constructor that dispatches on `Union{DislocationLoop, AbstractVector{<:DislocationLoop}}`, meaning a single variable whose type is `DislocationLoop` or a vector of them. Here we use a vector with both our loop structures.
 
-Since the dislocation network is a constantly evolving entity, this necessarily means this is a mutable structure.
+Since the networks are constantly evolving entities, this necessarily means we need a mutable structure.
 ```julia
 julia> network = DislocationNetwork(
           [shearHexagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
@@ -189,7 +191,7 @@ julia> network = DislocationNetwork(
  [0.0 0.0; 0.0 0.0; 0.0 0.0]
  [0.0 0.0; 0.0 0.0; 0.0 0.0])
 ```
-This method automatically takes the previously defined loops and scatters them according to the parameters provided in the `DislocationLoop` structure. Furthermore, the `memBuffer` defaults to 10. The number of entries allocated for the matrices is the total number of nodes in the network times `memBuffer`. Here we allocate enough memory for all the nodes but no more. Since julia is dynamic we can allocate memory when needed. However for performance reasons it is advisable to minimise memory management as much as possible.
+This method automatically takes the previously defined loops, and scatters them according to the parameters provided in the `DislocationLoop` structure. Furthermore, `memBuffer` defaults to `N log2(N)` loops where `N` is the total number of nodes and links. If `memBuffer` is provided, the number of nodes allocated is `memBuffer * N`. Here we allocate just enough memory for all the nodes but no more. The software is capable of expanding the arrays as needed using the same `N log2(N)` heuristic as it approximates graph growth. Minimising memory management is advisable to increase performance.
 
 This function will also automatically calculate other quantities to keep track of the network's links, nodes and segments.
 ```julia
@@ -219,7 +221,7 @@ The package provides a way to load and save its parameters using `JSON` files. W
 
 `JSON` files are representations of dictionaries with `(key, value)` pairs, which are analogous to the `(key, value)` pair of structures. This makes it so any changes to any structure will automatically be taken care of by the `JSON` library. Arrays are recursively linearised into vectors of vectors using the calling language's preferred storage order. This means arrays preserve their shape and dimensionality regardless of whether the inputting or outputting language stores arrays in column- or row-major order.
 
-They also have the added advantage of being designed for sending over the web, so they have small compressed and uncompressed file sizes, smaller than `BSON`, `HDF5` and its variants such as `MAT` and `JLD2` formats. They also aren't plagued by the portability issues these other formats have, as well as being generally easier to read, create and work with, while being within a factor of ≈3 of the aforementioned filetypes. They do however, allocate more memory than the others while being created, but the end result is half the size or less of these other file formats.
+`JSON.jl` is surprisingly performant, on par with the in-built serialiser and faster than other specialised IO libraries, only `JLD2` is faster. However `JLD2` is no longer actively maintained. However, the memory allocated during writing is quite a lot larger with `JSON.jl` than all other methods, but it also generates the smallest compressed and uncompressed files.
 
 ### Sample JSON File
 
@@ -238,11 +240,9 @@ This is a sample `JSON` file for a dislocation loop. They can be compactified by
   "dist": "DDD.Zeros()"
 }
 ```
-This file describes an array, denoted by the `[]` at the top and bottom of the file, of a structure denoted by the `{}` on the second and penultimate lines. We could remove the `[]` but having all files be represent arrays (even if they are of length 1) simplifies users' and developers' lives by letting the same IO functions work for every case.
-
 The keys are on the left side of the colon and the values on the right. This would get loaded to a dictionary with the same `(key, value)` pair shown here. Since the keys are the structure's field names and the values their value, everything can be easily matched to the constructor function.
 
-Also, with since `JSON` files represent dictionaries, users can add irrelevant data to the file either as extra entries to the top level array, or into the structure definition without breaking their ability to use the file.
+Since `JSON` files represent dictionaries, they automatically accommodate changes to structures. Irrelevant data can also be added as long as all keys remain unique. `JSON` also allows for arrays of dictionaries, so multiple structures can be loaded/read at the same time, this is achieved simply by wrapping the entries in square brackets and separating by commas just like other arrays.
 
 ### Initialisation, Data Dump, and Reloading
 
@@ -286,7 +286,7 @@ for i in eachindex(dislocationLoop)
     dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
 end
 ```
-The reason why all the dictionary arguments of the `load<struct_name>` all have an index is that the files specify an array, as that keeps all files consistent with each other, particularly when saving more than one variable or constant in a single file. Individually loading files like this is useful when recovering previous save states where the data was dumped into a single file, as shown here.
+Individually loading files like this is useful when recovering previous save states where the data was dumped into a single file, as shown here.
 ```julia
 # Dump simulation parameters into a single file. Creates an array where each entry is one of the structs.
 paramDump = "../outputs/simParams/sampleDump.JSON"
@@ -294,7 +294,7 @@ save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
 
 # Dump network data into a separate file.
 networkDump = "../outputs/dln/sampleNetwork.JSON"
-save(networkDump, network)
+save(networkDump, network, intVars)
 
 # Reload parameters.
 simulation = load(paramDump)
@@ -308,9 +308,10 @@ for i in eachindex(dislocationLoop2)
 end
 
 # Reload network.
-network2 = loadNetwork(networkDump)
+network2 = loadNetwork(networkDump[1])
+intVars2 = loadIntegrationVar(networkDump[2])
 ```
-The reason why `loadNetwork()` is different from the others is that the other values are constants, so for record keeping they would only need to be saved once per simulation. The network might have to be saved at multiple times so it gets a simpler function that calls `load()` internally.
+The reason why `network` and `intVars` are saved separately is because they change as the simulation advances, while the parameters stay the same. Saving the parameters multiple times per simulation is redundant.
 
 ### Against the Unbridled Pursuit of Performance
 
@@ -318,8 +319,8 @@ For the sake of open, reproducible and portable science it is recommended users 
 
 1. Use buffered IO.
 1. Use Julia's in-built task and asyncronous functionality via `tasks` and `async` for either multiple IO streams or an asyncronous IO process while the other threads/cores carry on with the simulation.
-1. Use [`BSON`](https://github.com/JuliaIO/BSON.jl), `JSON`'s binary counterpart, though this may break compatibility with other systems, particularly those with different word size and architecture. Furthermore, the binary nature of `BSON` may be used to inject code into a programme so should only be used for self-generated files.
-1. Use [`JLD2`](https://github.com/JuliaIO/JLD2.jl). Though the package currently says it has remained largely untested in the wild.
+1. Use internal serialiser, as of June 30, 2020 it offers no performance improvement other than in memory allocation during io stream buffering.
+1. Use [`JLD2`](https://github.com/JuliaIO/JLD2.jl). Though the package is no longer under active development.
 1. Use `DelimitedFiles`.
 1. Use binary streams.
 1. Use [`Parquet`](https://github.com/JuliaIO/Parquet.jl)
@@ -394,6 +395,7 @@ This is just the integration.
     - [ ] Parallelisation
   - [ ] Tractions
     - [ ] Parallelisation
+- [ ] Polyhedral operations for FEM coupling. [Create convex hull and check if a point is inside the convex hull.](https://juliareach.github.io/LazySets.jl/release-1.11/man/convex_hulls.html)
 
 ### Tentative Objectives
 
