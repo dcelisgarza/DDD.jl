@@ -86,8 +86,8 @@ end
                 segForce[3, colLink, link],
             )
             # If the sress is lower than the Peierls-Nabarro stress, the node behaves as if the force acting on it is zero.
-            norm(iNodeConForce) * tN < σPN ?
-            iNodeConForce = zeros(SVector{3, elemT}) : nothing
+            norm(iNodeConForce) * tN < σPN ? iNodeConForce = zeros(SVector{3, elemT}) :
+            nothing
             # Add force from this connection to the total force on the node.
             iNodeForce += iNodeConForce
 
@@ -160,8 +160,7 @@ end
             origTotalDrag = totalDrag
             while true
                 try
-                    totalDrag +=
-                        I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))
+                    totalDrag += I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))
                     iNodeVel = totalDrag \ iNodeForce
                     break
                 catch SingularSystem
@@ -244,8 +243,8 @@ end
                 segForce[3, colLink, link],
             )
             # If the sress is lower than the Peierls-Nabarro stress, the node behaves as if the force acting on it is zero.
-            norm(iNodeConForce) * tN < σPN ?
-            iNodeConForce = zeros(SVector{3, elemT}) : nothing
+            norm(iNodeConForce) * tN < σPN ? iNodeConForce = zeros(SVector{3, elemT}) :
+            nothing
             # Add force from this connection to the total force on the node.
             iNodeForce += iNodeConForce
 
@@ -318,8 +317,7 @@ end
             origTotalDrag = totalDrag
             while true
                 try
-                    totalDrag +=
-                        I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))
+                    totalDrag += I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))
                     iNodeVel = totalDrag \ iNodeForce
                     break
                 catch SingularSystem

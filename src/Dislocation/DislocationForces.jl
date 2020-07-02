@@ -305,19 +305,20 @@ At a high level this works by creating a local coordinate frame using the line d
         if dlnParams.parCPU
             # Threadid parallelisation + parallelised reduction.
             nthreads = Threads.nthreads()
-            parSegSegForce = [Threads.Atomic{elemT}(0) for i in 1:3, j in 1:2, k in 1:numSeg]
+            parSegSegForce =
+                [Threads.Atomic{elemT}(0) for i in 1:3, j in 1:2, k in 1:numSeg]
             @fastmath @inbounds @sync for tid in 1:nthreads
                 Threads.@spawn begin
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
                     for i in start:stop
-                        b1 = SVector{3, Float64}(bVec[1, i], bVec[2, i], bVec[3, i])
-                        n11 = SVector{3, Float64}(node1[1, i], node1[2, i], node1[3, i])
-                        n12 = SVector{3, Float64}(node2[1, i], node2[2, i], node2[3, i])
+                        b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
+                        n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
+                        n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
                         @simd for j in (i + 1):numSeg
-                            b2 = SVector{3, Float64}(bVec[1, j], bVec[2, j], bVec[3, j])
-                            n21 = SVector{3, Float64}(node1[1, j], node1[2, j], node1[3, j])
-                            n22 = SVector{3, Float64}(node2[1, j], node2[2, j], node2[3, j])
+                            b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
+                            n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
+                            n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
 
                             Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                                 aSq,
@@ -477,19 +478,20 @@ end
         if dlnParams.parCPU
             # Threadid parallelisation + parallelised reduction.
             nthreads = Threads.nthreads()
-            parSegSegForce = [Threads.Atomic{elemT}(0) for i in 1:3, j in 1:2, k in 1:numSeg]
+            parSegSegForce =
+                [Threads.Atomic{elemT}(0) for i in 1:3, j in 1:2, k in 1:numSeg]
             @fastmath @inbounds @sync for tid in 1:nthreads
                 Threads.@spawn begin
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
                     for i in start:stop
-                        b1 = SVector{3, Float64}(bVec[1, i], bVec[2, i], bVec[3, i])
-                        n11 = SVector{3, Float64}(node1[1, i], node1[2, i], node1[3, i])
-                        n12 = SVector{3, Float64}(node2[1, i], node2[2, i], node2[3, i])
+                        b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
+                        n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
+                        n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
                         @simd for j in (i + 1):numSeg
-                            b2 = SVector{3, Float64}(bVec[1, j], bVec[2, j], bVec[3, j])
-                            n21 = SVector{3, Float64}(node1[1, j], node1[2, j], node1[3, j])
-                            n22 = SVector{3, Float64}(node2[1, j], node2[2, j], node2[3, j])
+                            b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
+                            n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
+                            n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
 
                             Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                                 aSq,

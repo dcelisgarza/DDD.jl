@@ -56,9 +56,18 @@ fig1 =
 
 using Serialization, BSON
 
-@time serialize("test2.jls", (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop))
-@time save("test3.json", (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop))
-@time bson("test4.bson", a=(network, dlnParams, matParams, intParams, slipSystems, dislocationLoop))
+@time serialize(
+    "test2.jls",
+    (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop),
+)
+@time save(
+    "test3.json",
+    (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop),
+)
+@time bson(
+    "test4.bson",
+    a = (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop),
+)
 
 networkOUT1, dlnParamsOUT1, matParamsOUT1 = open("test.txt", "r") do io
     deserialize(io)
@@ -87,7 +96,6 @@ fig2 = plotNodes(
     markercolor = :blue,
     legend = false,
 )
-
 
 network2 = deepcopy(network)
 refineNetwork!(dlnParams, matParams, network2)
@@ -121,17 +129,17 @@ function baar(intParams, intVars, dlnParams, matParams, network)
         )
         foo(intParams, intVars2, dlnParams, matParams, network2)
         # if mod(i, 10) == 0
-            # plotNodes!(
-            #     fig,
-            #     network2,
-            #     m = 1,
-            #     l = 3,
-            #     linecolor = :blue,
-            #     markercolor = :blue,
-            #     legend = false,
-            #     show=true
-            # )
-            # plot!(fig)
+        # plotNodes!(
+        #     fig,
+        #     network2,
+        #     m = 1,
+        #     l = 3,
+        #     linecolor = :blue,
+        #     markercolor = :blue,
+        #     legend = false,
+        #     show=true
+        # )
+        # plot!(fig)
         # end
         # println(network2.numNode)
     end every 10
@@ -164,70 +172,67 @@ refineNetwork!(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
-
-
 prisPentagon = DislocationLoop(
-          loopPrism();    # Prismatic loop, all segments are edge segments.
-          numSides = 5,   # 5-sided loop.
-          nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-          numLoops = 20,  # Number of loops of this type to generate when making a network.
-          segLen = 500 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
-          slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
-          _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
-          _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-          label = nodeType[1; 1; 1; 1; 1],    # Node labels, has to be equal to the number of nodes.
-          buffer = 0.0,   # Buffer to increase the dislocation spread.
-          range = Float64[          # Distribution range
-                        -5000 5000; # xmin, xmax
-                        -5000 5000; # ymin, ymax
-                        -5000 5000  # zmin, zmax
-                      ],
-          dist = Rand(),  # Loop distribution.
-      )
+    loopPrism();    # Prismatic loop, all segments are edge segments.
+    numSides = 5,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 20,  # Number of loops of this type to generate when making a network.
+    segLen = 500 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
+    label = nodeType[1; 1; 1; 1; 1],    # Node labels, has to be equal to the number of nodes.
+    buffer = 0.0,   # Buffer to increase the dislocation spread.
+    range = Float64[          # Distribution range
+        -5000 5000 # xmin, xmax
+        -5000 5000 # ymin, ymax
+        -5000 5000  # zmin, zmax
+    ],
+    dist = Rand(),  # Loop distribution.
+)
 
 prismHeptagon = DislocationLoop(
-        loopPrism();    # Shear loop
-        numSides = 7,
-        nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
-        numLoops = 20,
-        segLen = 700 * ones(7),  # The hexagon's side length is 10, each segment is 10/3.
-        slipSystem = 1,
-        _slipPlane = slipSystems.slipPlane[:, 1],
-        _bVec = slipSystems.bVec[:, 1],
-        label = nodeType[1; 1; 1; 1; 1; 2; 1],
-        buffer = 0.0,
-        range = Float64[
-                      -5000 5000;
-                      -5000 5000;
-                      -5000 5000
-                    ],
-        dist = Rand(),
-    )
+    loopPrism();    # Shear loop
+    numSides = 7,
+    nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
+    numLoops = 20,
+    segLen = 700 * ones(7),  # The hexagon's side length is 10, each segment is 10/3.
+    slipSystem = 1,
+    _slipPlane = slipSystems.slipPlane[:, 1],
+    _bVec = slipSystems.bVec[:, 1],
+    label = nodeType[1; 1; 1; 1; 1; 2; 1],
+    buffer = 0.0,
+    range = Float64[
+        -5000 5000
+        -5000 5000
+        -5000 5000
+    ],
+    dist = Rand(),
+)
 
 network = DislocationNetwork(
-        [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
-        memBuffer = 1 # Buffer for memory allocation.
-       )
+    [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
+    memBuffer = 1, # Buffer for memory allocation.
+)
 
 DislocationNetwork!(
-        network,
-        [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
-        memBuffer = 1 # Buffer for memory allocation.
-      )
+    network,
+    [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
+    memBuffer = 1, # Buffer for memory allocation.
+)
 
 network.numNode
 
-
 fig = plotNodes(
-        network,
-        m = 1,
-        l = 3,
-        linecolor = :blue,
-        markercolor = :blue,
-        legend = false,
-        # camera=(60,30),
-        # size=(400,400)
-      )
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    markercolor = :blue,
+    legend = false,
+    # camera=(60,30),
+    # size=(400,400)
+)
 
 dlnParamsPar = DislocationP(;
     coreRad = dlnParams.coreRad,
@@ -254,10 +259,10 @@ remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
 remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
 isapprox(remoteForceSer, remoteForcePar)
 calcSegSegForce!(dlnParams, matParams, network)
-isapprox(remoteForceSer, network.segForce[:, :, 1:network.numSeg])
+isapprox(remoteForceSer, network.segForce[:, :, 1:(network.numSeg)])
 network.segForce .= 0
 calcSegSegForce!(dlnParamsPar, matParams, network)
-isapprox(remoteForcePar, network.segForce[:, :, 1:network.numSeg])
+isapprox(remoteForcePar, network.segForce[:, :, 1:(network.numSeg)])
 network.segForce .= 0
 
 using BenchmarkTools
@@ -268,10 +273,26 @@ network.segForce .= 0
 @time calcSegSegForce!(dlnParamsPar, matParams, network)
 network.segForce .= 0
 
+@code_warntype calcSegForce(dlnParamsPar, matParams, network)
 
+@code_warntype calcSegSegForce(
+    0.5,
+    0.2,
+    0.55,
+    0.70,
+    0.13,
+    0.4,
+    SVector(0, 2, 3),
+    SVector(1, -5, 6),
+    SVector(1, 1, 1),
+    SVector(-1, 5, 2),
+    SVector(1, 2, 3),
+    SVector(1, 2, -3),
+)
 
-@code_typed calcSegSegForce(dlnParamsPar, matParams, network)
+network.segForce[:,1,1] = [1,2,3]
 
+network.segForce
 remoteForcePar
 remoteForceSer
 baar(intParams, intVars, dlnParams, matParams, network)

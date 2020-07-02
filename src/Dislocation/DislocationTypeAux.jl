@@ -294,8 +294,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
 
         # Check for zero Burgers vectors.
         norm(bVec[:, i]) < eps(elemT) ? error("Burgers vector must be non-zero.
-                                       norm(bVec) = $(norm(bVec[i,:]))") :
-        nothing
+                                       norm(bVec) = $(norm(bVec[i,:]))") : nothing
 
         # Trailing columns must be zero.
         sum(connectivity[(2 * (col + 1)):end, i]) != 0 ?

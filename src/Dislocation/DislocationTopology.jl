@@ -2,7 +2,6 @@
 include("DislocationTopologyRemove.jl")
 include("DislocationTopologyAdd.jl")
 
-
 #=
 end
 

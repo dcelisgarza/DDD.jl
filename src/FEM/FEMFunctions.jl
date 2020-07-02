@@ -52,16 +52,17 @@ end
         opy = 1 + y[i]
         opz = 1 + z[i]
 
-        N[i] = SVector{8, xType}(
-            omx * omy * omz,
-            opx * omy * omz,
-            opx * opy * omz,
-            omx * opy * omz,
-            omx * omy * opz,
-            opx * omy * opz,
-            opx * opy * opz,
-            omx * opy * opz,
-        ) / 8
+        N[i] =
+            SVector{8, xType}(
+                omx * omy * omz,
+                opx * omy * omz,
+                opx * opy * omz,
+                omx * opy * omz,
+                omx * omy * opz,
+                opx * omy * opz,
+                opx * opy * opz,
+                omx * opy * opz,
+            ) / 8
     end
 
     return N
@@ -138,32 +139,33 @@ end
         opy = 1 + y[i]
         opz = 1 + z[i]
 
-        dNdS[i] = SMatrix{3, 8, xType}(
-            -omy * omz,
-            -omx * omz,
-            -omx * omy,
-            omy * omz,
-            -opx * omz,
-            -opx * omy,
-            opy * omz,
-            opx * omz,
-            -opx * opy,
-            -opy * omz,
-            omx * omz,
-            -omx * opy,
-            -omy * opz,
-            -omx * opz,
-            omx * omy,
-            omy * opz,
-            -opx * opz,
-            opx * omy,
-            opy * opz,
-            opx * opz,
-            opx * opy,
-            -opy * opz,
-            omx * opz,
-            omx * opy,
-        ) / 8
+        dNdS[i] =
+            SMatrix{3, 8, xType}(
+                -omy * omz,
+                -omx * omz,
+                -omx * omy,
+                omy * omz,
+                -opx * omz,
+                -opx * omy,
+                opy * omz,
+                opx * omz,
+                -opx * opy,
+                -opy * omz,
+                omx * omz,
+                -omx * opy,
+                -omy * opz,
+                -omx * opz,
+                omx * omy,
+                omy * opz,
+                -opx * opz,
+                opx * omy,
+                opy * opz,
+                opx * opz,
+                opx * opy,
+                -opy * opz,
+                omx * opz,
+                omx * opy,
+            ) / 8
     end
 
     return dNdS
