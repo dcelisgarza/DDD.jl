@@ -205,15 +205,22 @@ prismHeptagon = DislocationLoop(
     )
 
 network = DislocationNetwork(
-          [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
-          memBuffer = 1 # Buffer for memory allocation.
+        [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
+        memBuffer = 1 # Buffer for memory allocation.
        )
-gr()
+
+DislocationNetwork!(
+        network,
+        [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
+        memBuffer = 1 # Buffer for memory allocation.
+      )
+
+network.numNode
 
 
 fig = plotNodes(
         network,
-        m = 3,
+        m = 1,
         l = 3,
         linecolor = :blue,
         markercolor = :blue,
@@ -222,4 +229,49 @@ fig = plotNodes(
         # size=(400,400)
       )
 
+dlnParamsPar = DislocationP(;
+    coreRad = dlnParams.coreRad,
+    coreRadMag = dlnParams.coreRadMag,
+    minSegLen = dlnParams.minSegLen,
+    maxSegLen = dlnParams.maxSegLen,
+    minArea = dlnParams.minArea,
+    maxArea = dlnParams.maxArea,
+    maxConnect = dlnParams.maxConnect,
+    remesh = dlnParams.remesh,
+    collision = dlnParams.collision,
+    separation = dlnParams.separation,
+    virtualRemesh = dlnParams.virtualRemesh,
+    parCPU = true,
+    parGPU = dlnParams.parGPU,
+    edgeDrag = dlnParams.edgeDrag,
+    screwDrag = dlnParams.screwDrag,
+    climbDrag = dlnParams.climbDrag,
+    lineDrag = dlnParams.lineDrag,
+    mobility = dlnParams.mobility,
+)
+
+remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
+remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
+isapprox(remoteForceSer, remoteForcePar)
+calcSegSegForce!(dlnParams, matParams, network)
+isapprox(remoteForceSer, network.segForce[:, :, 1:network.numSeg])
+network.segForce .= 0
+calcSegSegForce!(dlnParamsPar, matParams, network)
+isapprox(remoteForcePar, network.segForce[:, :, 1:network.numSeg])
+network.segForce .= 0
+
+using BenchmarkTools
+@time calcSegSegForce(dlnParams, matParams, network)
+@time calcSegSegForce!(dlnParams, matParams, network)
+network.segForce .= 0
+@time calcSegSegForce(dlnParamsPar, matParams, network)
+@time calcSegSegForce!(dlnParamsPar, matParams, network)
+network.segForce .= 0
+
+
+
+@code_typed calcSegSegForce(dlnParamsPar, matParams, network)
+
+remoteForcePar
+remoteForceSer
 baar(intParams, intVars, dlnParams, matParams, network)
