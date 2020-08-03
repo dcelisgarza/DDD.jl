@@ -296,3 +296,19 @@ network.segForce
 remoteForcePar
 remoteForceSer
 baar(intParams, intVars, dlnParams, matParams, network)
+
+
+struct test{T1,T2,T3}
+    a::T1
+    b::T2
+    c::T3
+end
+
+var = test(1,2.5,[4,3,5])
+
+var.c[:] = [5,6,7,9]
+
+push!(var.c, 2)
+
+resize!(var.c, 2)
+var.c

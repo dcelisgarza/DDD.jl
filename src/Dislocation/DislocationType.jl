@@ -577,6 +577,7 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     )
 end
 
+# TODO: Make DislocationNetwork immutable to take advantage of Julia 1.5's immutable struct optimisations.
 """
 ```
 mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
