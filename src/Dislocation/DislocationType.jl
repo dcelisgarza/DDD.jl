@@ -858,7 +858,7 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
     initIdx::Int = 1
     nodeTotal = 0
     first = findfirst(x -> x == 0, network.label)
-    first == nothing ? initIdx = 1 : initIdx = first
+    isnothing(first) ? initIdx = 1 : initIdx = first
     @inbounds for i in eachindex(sources)
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
