@@ -1,1 +1,43 @@
-[{"loopType":"DDD.loopPrism()","numSides":4,"nodeSide":2,"numLoops":1,"segLen":[1,1,1,1,1,1,1,1],"slipSystem":1,"label":[2,1,2,1,2,1,2,1],"buffer":0,"range":[[0,0,0],[0,0,0]],"dist":"DDD.Zeros()"}]
+[
+    {
+        "loopType": "DDD.loopPrism()",
+        "numSides": 4,
+        "nodeSide": 2,
+        "numLoops": 1,
+        "segLen": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+        ],
+        "slipSystem": 1,
+        "label": [
+            2,
+            1,
+            2,
+            1,
+            2,
+            1,
+            2,
+            1
+        ],
+        "buffer": 0,
+        "range": [
+            [
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0
+            ]
+        ],
+        "dist": "DDD.Zeros()"
+    }
+]

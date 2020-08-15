@@ -222,6 +222,7 @@ DislocationNetwork!(
 )
 
 network.numNode
+network.numSeg
 
 fig = plotNodes(
     network,
