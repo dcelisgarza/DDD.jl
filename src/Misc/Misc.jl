@@ -17,7 +17,7 @@ end
 ```
 subTypeTree(t; dict = Dict(), level = 1, cutoff = 0)
 ```
-Create subtype dictionary. . Adapted from https://github.com/JuliaLang/julia/issues/24741
+Create subtype dictionary. Adapted from https://github.com/JuliaLang/julia/issues/24741
 """
 function subTypeTree(t; dict = Dict(), level = 1, cutoff = 0)
     level > cutoff ? push!(dict, t => supertype(t)) : nothing

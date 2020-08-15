@@ -98,11 +98,11 @@ fig2 = plotNodes(
 )
 
 network2 = deepcopy(network)
-refineNetwork!(dlnParams, matParams, network2)
+refineNetwork(dlnParams, matParams, network2)
 
 function foo(intParams, intVars, dlnParams, matParams, network)
-    coarsenNetwork!(dlnParams, matParams, network)
-    refineNetwork!(dlnParams, matParams, network)
+    coarsenNetwork(dlnParams, matParams, network)
+    refineNetwork(dlnParams, matParams, network)
     integrate!(intParams, intVars, dlnParams, matParams, network)
 end
 network2 = deepcopy(network)
@@ -162,13 +162,13 @@ baar(intParams, intVars, dlnParams, matParams, network)
 #     )
 # end
 
-coarsenNetwork!(dlnParams, matParams, network)
+coarsenNetwork(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
-refineNetwork!(dlnParams, matParams, network)
+refineNetwork(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
-refineNetwork!(dlnParams, matParams, network)
+refineNetwork(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
@@ -304,11 +304,26 @@ struct test{T1,T2,T3}
     c::T3
 end
 
-var = test(1,2.5,[4,3,5])
+var = test(1,2.5,Float64[1 2 3; 4 5 6])
 
-var.c[:] = [5,6,7,9]
+var
+var.c[:] = Float64[5,6,7,9]
 
-push!(var.c, 2)
+var.a .= 2
+var.c[1] = -5
+var.c[2:3] = [-10, 25]
+
+var.c
+var.c .= vcat(var.c, [7 8 9])
+
+var.c .= resize!(reshape(var.c, :), 9)
+var.c
+
+var.c
+var.c .= [-1,-1,-1,-1]
+
+var.c
+
 
 resize!(var.c, 2)
 var.c

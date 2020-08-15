@@ -161,7 +161,7 @@ In-place version of [`makeConnect`](@ref).
 
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
     links = network.links
-    maxConnect = network.maxConnect
+    maxConnect = network.numNodeSegConnect[3]
     lenLinks = size(links, 2)
     idx = findfirst(x -> x == 0, links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
@@ -179,8 +179,8 @@ In-place version of [`makeConnect`](@ref).
         linksConnect[1, i] = connectivity[1, n1]
         linksConnect[2, i] = connectivity[1, n2]
     end
-    network.connectivity = connectivity
-    network.linksConnect = linksConnect
+    network.connectivity[:, :] = connectivity[:, :]
+    network.linksConnect[:, :] = linksConnect[:, :]
     return network
 end
 
@@ -231,15 +231,11 @@ In-place version of [`getSegmentIdx`](@ref).
 
     links = network.links
     label = network.label
-    segIdx = network.segIdx
+
 
     lenLinks = size(links, 2)
-    lenSegIdx = size(segIdx, 1)
-    diffLen = lenLinks - lenSegIdx
-    if diffLen > 0
-        segIdx = vcat(segIdx, zeros(Int, diffLen, 3))
-    end
-    segIdx .= 0
+    lenSegIdx = size(network.segIdx, 1)
+    network.segIdx .= 0
 
     idx = findfirst(x -> x == 0, links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
@@ -249,10 +245,9 @@ In-place version of [`getSegmentIdx`](@ref).
         n2 = links[2, i]
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1
-        segIdx[numSeg, :] = [i, n1, n2]
+        network.segIdx[numSeg, :] = [i, n1, n2]
     end
-    network.numSeg = numSeg
-    network.segIdx = segIdx
+    network.numNodeSegConnect[2] = numSeg
     return network
 end
 

@@ -21,7 +21,7 @@ removeLink!
 
 removeUpdate
 
-mergeNode!
+mergeNode
 ```
 
 ## FEM

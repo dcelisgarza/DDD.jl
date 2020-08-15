@@ -580,7 +580,7 @@ end
 # TODO: Make DislocationNetwork immutable to take advantage of Julia 1.5's immutable struct optimisations.
 """
 ```
-mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
+struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     links::T1
     slipPlane::T2
     bVec::T2
@@ -588,18 +588,16 @@ mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     label::T3
     nodeVel::T2
     nodeForce::T2
-    numNode::T4         # Number of nodes in network
-    numSeg::T4          # Number of segments in network
-    maxConnect::T4      # Maximum connections per node
-    connectivity::T5    # Connectivity matrix
-    linksConnect::T5    # Links involved in connection
-    segIdx::T5          # Contains segment index and the nodes of the nodes in said link
-    segForce::T6        # Force on each node of each segment
+    numNodeSegConnect::T4   # Number of nodes, segments and max connectivity in network
+    connectivity::T5        # Connectivity matrix
+    linksConnect::T5        # Links involved in connection
+    segIdx::T5              # Contains segment index and the nodes of the nodes in said link
+    segForce::T6            # Force on each node of each segment
 end
 ```
 Structure to store dislocation network.
 """
-mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
+struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     links::T1
     slipPlane::T2
     bVec::T2
@@ -607,9 +605,7 @@ mutable struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     label::T3
     nodeVel::T2
     nodeForce::T2
-    numNode::T4
-    numSeg::T4
-    maxConnect::T4
+    numNodeSegConnect::T4
     connectivity::T5
     linksConnect::T5
     segIdx::T5
@@ -625,9 +621,7 @@ DislocationNetwork(;
     label::T3,
     nodeVel::T2,
     nodeForce::T2,
-    numNode::T4 = 0,
-    numSeg::T4 = 0,
-    maxConnect::T4 = 0,
+    numNodeSegConnect::T4 = [0, 0, 0],
     connectivity::T5 = zeros(Int, 0, 0),
     linksConnect::T5 = zeros(Int, 2, 0),
     segIdx::T5 = zeros(Int, 2, 3),
@@ -651,9 +645,7 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
     label::T3,
     nodeVel::T2,
     nodeForce::T2,
-    numNode::T4 = 0,
-    numSeg::T4 = 0,
-    maxConnect::T4 = 0,
+    numNodeSegConnect::T4 = zeros(Int, 3),
     connectivity::T5 = zeros(Int, 0, 0),
     linksConnect::T5 = zeros(Int, 2, 0),
     segIdx::T5 = zeros(Int, 2, 3),
@@ -662,7 +654,7 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
     T1 <: AbstractArray{T, N} where {T, N},
     T2 <: AbstractArray{T, N} where {T, N},
     T3 <: AbstractVector{nodeType},
-    T4 <: Int,
+    T4 <: AbstractVector{Int},
     T5 <: AbstractArray{Int, N} where {N},
     T6 <: AbstractArray{T, N} where {T, N},
 }
@@ -680,9 +672,7 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
         label,
         nodeVel,
         nodeForce,
-        numNode,
-        numSeg,
-        maxConnect,
+        numNodeSegConnect,
         connectivity,
         linksConnect,
         segIdx,
@@ -793,9 +783,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
         label,
         nodeVel,
         nodeForce,
-        numNode,
-        numSeg,
-        maxConnect,
+        [numNode, numSeg, maxConnect],
         connectivity,
         linksConnect,
         segIdx,
@@ -843,7 +831,7 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
 
     nodeTotal::Int = 0
     lims = zeros(3, 2)
-    network.maxConnect = maxConnect
+    network.numNodeSegConnect[3] = maxConnect
     @inbounds for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
@@ -852,7 +840,7 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
     available = length(findall(x -> x == 0, network.label))
     if nodeTotal > available
         newEntries = Int(round(nodeTotal * log2(nodeTotal)))
-        push!(network, newEntries)
+        network = push!(network, newEntries)
     end
 
     initIdx::Int = 1
@@ -880,7 +868,7 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
             nodeTotal += nodesLoop
         end
     end
-    network.numNode += nodeTotal
+    network.numNodeSegConnect[1] += nodeTotal
 
     getSegmentIdx!(network)
     makeConnect!(network)

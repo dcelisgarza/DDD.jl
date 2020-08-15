@@ -1,5 +1,5 @@
 ## Addition
-function splitNode!(
+function splitNode(
     network::T1,
     splitNode::T2,
     splitConnect::T2,
@@ -14,24 +14,30 @@ function splitNode!(
     removeConnection!(network, splitNode, splitConnect)
 
     # New node created at the very end.
-    network.numNode += 1
-    newNode = network.numNode
+    network.numNodeSegConnect[1] += 1
+    newNode = network.numNodeSegConnect[1]
 
     # Allocate memory.
     if newNode > length(network.label)
         # A good heuristic for memory allocation is to allocate an extra N log₂(N) entries.
         numNewEntries = Int(round(newNode * log2(newNode)))
-        network.coord =
-            hcat(network.coord, zeros(elemT, size(network.coord, 1), numNewEntries))
-        network.label = vcat(network.label, zeros(nodeType, numNewEntries))
-        network.nodeVel =
-            hcat(network.nodeVel, zeros(elemT, size(network.nodeVel, 1), numNewEntries))
-        network.nodeForce =
-            hcat(network.nodeForce, zeros(elemT, size(network.nodeForce, 1), numNewEntries))
-        network.connectivity = hcat(
-            network.connectivity,
-            zeros(Int, size(network.connectivity, 1), numNewEntries),
-        )
+        network = DislocationNetwork(;
+            links = network.links,
+            slipPlane = network.slipPlane,
+            bVec = network.bVec,
+            coord = hcat(network.coord, zeros(elemT, size(network.coord, 1), numNewEntries)),
+            label = vcat(network.label, zeros(nodeType, numNewEntries)),
+            nodeVel = hcat(network.nodeVel, zeros(elemT, size(network.nodeVel, 1), numNewEntries)),
+            nodeForce = hcat(network.nodeForce, zeros(elemT, size(network.nodeForce, 1), numNewEntries)),
+            numNodeSegConnect = network.numNodeSegConnect,
+            connectivity = hcat(
+                network.connectivity,
+                zeros(Int, size(network.connectivity, 1), numNewEntries),
+            ),
+            linksConnect = network.linksConnect,
+            segIdx = network.segIdx,
+            segForce = network.segForce,
+    )
     end
 
     links = network.links
@@ -57,27 +63,34 @@ function splitNode!(
     b ⋅ b == 0 && return network
 
     # New link created at the end.
-    network.numSeg += 1
-    newSeg = network.numSeg
+    network.numNodeSegConnect[2] += 1
+    newSeg = network.numNodeSegConnect[2]
 
     # Allocate memory.
     if newSeg > size(network.links, 2)
         # A good heuristic for memory allocation is to allocate an extra N log₂(N) entries.
         numNewEntries = Int(round(newSeg * log2(newSeg)))
-        network.links =
-            hcat(network.links, zeros(Int, size(network.links, 1), numNewEntries))
-        network.slipPlane =
-            hcat(network.slipPlane, zeros(elemT, size(network.slipPlane, 1), numNewEntries))
-        network.bVec =
-            hcat(network.bVec, zeros(elemT, size(network.bVec, 1), numNewEntries))
-        network.linksConnect = hcat(
-            network.linksConnect,
-            zeros(Int, size(network.linksConnect, 1), numNewEntries),
-        )
-        network.segForce = cat(
-            network.segForce,
-            zeros(elemT, size(network.segForce, 1), 2, numNewEntries),
-            dims = 3,
+
+        network = DislocationNetwork(;
+            links = hcat(network.links, zeros(Int, size(network.links, 1), numNewEntries)),
+            slipPlane = hcat(network.slipPlane, zeros(elemT, size(network.slipPlane, 1), numNewEntries)),
+            bVec = hcat(network.bVec, zeros(elemT, size(network.bVec, 1), numNewEntries)),
+            coord = network.coord,
+            label = network.label,
+            nodeVel = network.nodeVel,
+            nodeForce = network.nodeForce,
+            numNodeSegConnect = network.numNodeSegConnect,
+            connectivity = network.connectivity,
+            linksConnect = hcat(
+                network.linksConnect,
+                zeros(Int, size(network.linksConnect, 1), numNewEntries),
+            ),
+            segIdx = vcat(network.segIdx, zeros(Int, numNewEntries, 3)),
+            segForce = cat(
+                network.segForce,
+                zeros(elemT, size(network.segForce, 1), 2, numNewEntries),
+                dims = 3,
+            ),
         )
     end
 
@@ -137,7 +150,7 @@ function splitNode!(
     return network
 end
 
-function refineNetwork!(
+function refineNetwork(
     dlnParams::T1,
     matParams::T2,
     network::T3,
@@ -152,7 +165,7 @@ function refineNetwork!(
     links = network.links
     coord = network.coord
     label = network.label
-    numNode = network.numNode
+    numNode = network.numNodeSegConnect[1]
     nodeVel = network.nodeVel
     connectivity = network.connectivity
 
@@ -215,7 +228,7 @@ function refineNetwork!(
                         nodeVel[3, i] + nodeVel[3, link2_nodeOppI],
                     ) / 2
 
-                splitNode!(network, i, 2, midCoord, midVel)
+                splitNode(network, i, 2, midCoord, midVel)
                 getSegmentIdx!(network)
                 links = network.links
                 slipPlane = network.slipPlane
@@ -224,8 +237,8 @@ function refineNetwork!(
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
 
-                newNode = network.numNode
-                newLink = network.numSeg
+                newNode = network.numNodeSegConnect[1]
+                newLink = network.numNodeSegConnect[2]
 
                 slipPlane[:, link2] == slipPlane[:, link1] ?
                 slipPlane[:, newLink] = slipPlane[:, link2] : nothing
@@ -265,7 +278,7 @@ function refineNetwork!(
                         nodeVel[3, i] + nodeVel[3, link1_nodeOppI],
                     ) / 2
 
-                splitNode!(network, i, 1, midCoord, midVel)
+                network = splitNode(network, i, 1, midCoord, midVel)
                 getSegmentIdx!(network)
                 links = network.links
                 slipPlane = network.slipPlane
@@ -274,8 +287,8 @@ function refineNetwork!(
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
 
-                newNode = network.numNode
-                newLink = network.numSeg
+                newNode = network.numNodeSegConnect[1]
+                newLink = network.numNodeSegConnect[2]
 
                 slipPlane[:, link1] == slipPlane[:, link2] ?
                 slipPlane[:, newLink] = slipPlane[:, link1] : nothing
@@ -329,7 +342,7 @@ function refineNetwork!(
                         nodeVel[3, i] + nodeVel[3, link_nodeOpp],
                     ) / 2
 
-                splitNode!(network, i, j, midCoord, midVel)
+                network = splitNode(network, i, j, midCoord, midVel)
                 getSegmentIdx!(network)
                 links = network.links
                 slipPlane = network.slipPlane
@@ -338,8 +351,8 @@ function refineNetwork!(
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
 
-                newNode = network.numNode
-                newLink = network.numSeg
+                newNode = network.numNodeSegConnect[1]
+                newLink = network.numNodeSegConnect[2]
 
                 slipPlane[:, newLink] = slipPlane[:, link]
 

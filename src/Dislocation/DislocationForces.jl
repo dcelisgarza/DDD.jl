@@ -25,7 +25,7 @@ calcSegForce(
     # T5 <: AbstractMesh,
 }
 
-    isnothing(idx) ? numSeg = network.numSeg : numSeg = length(idx)
+    isnothing(idx) ? numSeg = network.numNodeSegConnect[2] : numSeg = length(idx)
 
     # pkForce = pkForce(mesh, dlnFEM, network)
     selfForce = calcSelfForce(dlnParams, matParams, network, idx)
@@ -50,7 +50,7 @@ end
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg
+        numSeg = network.numNodeSegConnect[2]
         range = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -98,7 +98,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     # Indices for self force.
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg
+        numSeg = network.numNodeSegConnect[2]
         idx = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -182,7 +182,7 @@ end
     # Indices for self force.
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg
+        numSeg = network.numNodeSegConnect[2]
         idx = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -293,7 +293,7 @@ At a high level this works by creating a local coordinate frame using the line d
     elemT = eltype(network.bVec)
 
     # Un normalised segment vectors. Views for speed.
-    numSeg = network.numSeg
+    numSeg = network.numNodeSegConnect[2]
     idxBvec = @view segIdx[1:numSeg, 1]
     idxNode1 = @view segIdx[1:numSeg, 2]
     idxNode2 = @view segIdx[1:numSeg, 3]
@@ -464,7 +464,7 @@ end
     elemT = eltype(network.bVec)
 
     # Un normalised segment vectors. Views for speed.
-    numSeg = network.numSeg
+    numSeg = network.numNodeSegConnect[2]
     idxBvec = @view segIdx[1:numSeg, 1]
     idxNode1 = @view segIdx[1:numSeg, 2]
     idxNode2 = @view segIdx[1:numSeg, 3]

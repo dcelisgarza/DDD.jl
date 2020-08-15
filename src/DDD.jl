@@ -21,7 +21,7 @@ export checkNetwork, loopDistribution, calcSelfForce, calcSelfForce!
 export calcSegSegForce, calcSegSegForce!, calcParSegSegForce, calcSegForce, calcSegForce!
 export dlnMobility, dlnMobility!
 # Topology
-export removeNode!, mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
+export removeNode!, mergeNode, splitNode, coarsenNetwork, refineNetwork
 include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")

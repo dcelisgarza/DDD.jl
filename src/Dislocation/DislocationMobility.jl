@@ -37,14 +37,14 @@ end
     links = network.links
     bVec = network.bVec
     coord = network.coord
-    maxConnect = network.maxConnect
+    maxConnect = network.numNodeSegConnect[3]
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
-        numNode = network.numNode
+        numNode = network.numNodeSegConnect[1]
         idx = 1:numNode
     else
         numNode = length(idx)
@@ -197,14 +197,14 @@ end
     coord = network.coord
     nodeVel = network.nodeVel
     nodeForce = network.nodeForce
-    maxConnect = network.maxConnect
+    maxConnect = network.numNodeSegConnect[3]
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
-        numNode = network.numNode
+        numNode = network.numNodeSegConnect[1]
         idx = 1:numNode
     else
         numNode = length(idx)

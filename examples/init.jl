@@ -32,8 +32,7 @@ integrationP = IntegrationP(;
     abstol = 1e-6,
     reltol = 1e-6,
     time = 0.0,
-    step = 0,
-)
+    step = 0)
 # Define the slip system.
 slipSystems =
     SlipSystem(crystalStruct = BCC(), slipPlane = [1.0; 1.0; 1.0], bVec = [1.0; -1.0; 0.0])

@@ -18,7 +18,7 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
     network::DislocationNetwork,
 )
     # Unroll constants.
-    numSeg = network.numSeg
+    numSeg = network.numNodeSegConnect[2]
     segIdx = network.segIdx
     bVec = network.bVec
     coord = network.coord
