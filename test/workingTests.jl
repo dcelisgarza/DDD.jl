@@ -98,7 +98,7 @@ fig2 = plotNodes(
 )
 
 network2 = deepcopy(network)
-network2 = refineNetwork(dlnParams, matParams, network2)
+@btime refineNetwork(dlnParams, matParams, network2)
 
 numSeg
 network.numNodeSegConnect[2]
@@ -164,8 +164,8 @@ baar(intParams, intVars, dlnParams, matParams, network)
 #         legend = false,
 #     )
 # end
-
-@btime coarsenNetwork(dlnParams, matParams, network)
+network2 = deepcopy(network)
+@btime network3 = coarsenNetwork(dlnParams, matParams, network2)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 refineNetwork(dlnParams, matParams, network)
