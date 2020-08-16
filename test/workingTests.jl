@@ -209,6 +209,7 @@ prismHeptagon = DislocationLoop(
     ],
     dist = Rand(),
 )
+
 using Random
 Random.seed!(1337)
 network = DislocationNetwork(
@@ -216,21 +217,17 @@ network = DislocationNetwork(
     memBuffer = 1, # Buffer for memory allocation.
 )
 
-
-for _ in 1:20
-    global network
-    network = DislocationNetwork!(
+@time for _ in 1:50
+    global network = DislocationNetwork!(
         network,
         [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
         memBuffer = 1, # Buffer for memory allocation.
     )
 end
 
-
-
-length(network.connectivity[1,:])
-length(network.linksConnect[1,:])
-network.numNodeSegConnect[1]
+network.numNodeSegConnect
+size(network.connectivity)
+size(network.links)
 
 network.coord[:,network.numNodeSegConnect[2]-1:network.numNodeSegConnect[2]+1]
 fig = plotNodes(
@@ -275,7 +272,6 @@ calcSegSegForce!(dlnParamsPar, matParams, network)
 isapprox(remoteForcePar, network.segForce[:, :, 1:(network.numNodeSegConnect[2])])
 network.segForce .= 0
 
-using BenchmarkTools
 @btime calcSegSegForce(dlnParams, matParams, network)
 @btime calcSegSegForce!(dlnParams, matParams, network)
 network.segForce .= 0

@@ -165,7 +165,6 @@ In-place version of [`makeConnect`](@ref).
     linksConnect = network.linksConnect
     connectivity .= 0
     linksConnect .= 0
-    maxConnect = network.numNodeSegConnect[3]
     lenLinks = size(links, 2)
     idx = findfirst(x -> x == 0, links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
@@ -181,7 +180,6 @@ In-place version of [`makeConnect`](@ref).
         linksConnect[1, i] = connectivity[1, n1]
         linksConnect[2, i] = connectivity[1, n2]
     end
-
     return network
 end
 
