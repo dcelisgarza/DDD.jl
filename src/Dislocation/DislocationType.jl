@@ -577,7 +577,6 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     )
 end
 
-# TODO: Make DislocationNetwork immutable to take advantage of Julia 1.5's immutable struct optimisations.
 """
 ```
 struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
@@ -646,10 +645,10 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
     nodeVel::T2,
     nodeForce::T2,
     numNodeSegConnect::T4 = zeros(Int, 3),
-    connectivity::T5 = zeros(Int, 0, 0),
-    linksConnect::T5 = zeros(Int, 2, 0),
-    segIdx::T5 = zeros(Int, 2, 3),
-    segForce::T6 = zeros(3, 2, 0),
+    connectivity::T5 = zeros(Int, 1 + 2 * numNodeSegConnect[3], numNodeSegConnect[1]),
+    linksConnect::T5 = zeros(Int, 2, numNodeSegConnect[2]),
+    segIdx::T5 = zeros(Int, size(links, 2), 3),
+    segForce::T6 = zeros(3, size(links, 2), 0),
 ) where {
     T1 <: AbstractArray{T, N} where {T, N},
     T2 <: AbstractArray{T, N} where {T, N},
@@ -870,8 +869,8 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
     end
     network.numNodeSegConnect[1] += nodeTotal
 
-    getSegmentIdx!(network)
-    makeConnect!(network)
+    network = getSegmentIdx!(network)
+    network = makeConnect!(network)
 
     checkConsistency ? checkNetwork(network) : nothing
 

@@ -165,22 +165,21 @@ In-place version of [`makeConnect`](@ref).
     lenLinks = size(links, 2)
     idx = findfirst(x -> x == 0, links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
-    connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
-    linksConnect = zeros(Int, 2, lenLinks)
+    # connectivity = network.connectivity
+    # linksConnect = network.linksConnect
     @inbounds @simd for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
-        connectivity[1, n1] += 1
-        connectivity[1, n2] += 1
-        tmp1 = 2 * connectivity[1, n1]
-        tmp2 = 2 * connectivity[1, n2]
-        connectivity[tmp1:(tmp1 + 1), n1] = [i, 1]
-        connectivity[tmp2:(tmp2 + 1), n2] = [i, 2]
-        linksConnect[1, i] = connectivity[1, n1]
-        linksConnect[2, i] = connectivity[1, n2]
+        network.connectivity[1, n1] += 1
+        network.connectivity[1, n2] += 1
+        tmp1 = 2 * network.connectivity[1, n1]
+        tmp2 = 2 * network.connectivity[1, n2]
+        network.connectivity[tmp1:(tmp1 + 1), n1] = [i, 1]
+        network.connectivity[tmp2:(tmp2 + 1), n2] = [i, 2]
+        network.linksConnect[1, i] = network.connectivity[1, n1]
+        network.linksConnect[2, i] = network.connectivity[1, n2]
     end
-    network.connectivity[:, :] = connectivity[:, :]
-    network.linksConnect[:, :] = linksConnect[:, :]
+    
     return network
 end
 

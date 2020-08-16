@@ -1,21 +1,21 @@
 using SafeTestsets
 
 timeStart = time_ns()
-@safetestset "Miscelaneous" begin
-    include("./MiscTest.jl")
-end
-@safetestset "IO" begin
-    include("./ioTest.jl")
-end
-@safetestset "Construct Dln" begin
-    include("./ConstructNetworkTest.jl")
-end
-@safetestset "Segment Force" begin
-    include("./SegmentForcesTest.jl")
-end
-@safetestset "Mobility" begin
-    include("./MobilityTest.jl")
-end
+# @safetestset "Miscelaneous" begin
+#     include("./MiscTest.jl")
+# end
+# @safetestset "IO" begin
+#     include("./ioTest.jl")
+# end
+# @safetestset "Construct Dln" begin
+#     include("./ConstructNetworkTest.jl")
+# end
+# @safetestset "Segment Force" begin
+#     include("./SegmentForcesTest.jl")
+# end
+# @safetestset "Mobility" begin
+#     include("./MobilityTest.jl")
+# end
 @safetestset "Topology" begin
     include("./TopologyTest.jl")
 end

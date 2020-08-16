@@ -2,7 +2,7 @@ using DDD
 using Test, Statistics
 cd(@__DIR__)
 
-@testset "Merge nodes" begin
+#@testset "Merge nodes" begin
     fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
     fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
     fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
@@ -31,7 +31,7 @@ cd(@__DIR__)
         dist = Zeros(),
     )
     network = DislocationNetwork(square, memBuffer = 1)
-    mergeNode(network, 3, 1)
+    missing, network = mergeNode(network, 3, 1)
     @test network.links == zeros(Int, 2, 4)
     @test network.slipPlane == zeros(3, 4)
     @test network.bVec == zeros(3, 4)
@@ -113,11 +113,11 @@ cd(@__DIR__)
     end
 
     networkTest = deepcopy(network)
-    mergeNode(networkTest, 1, 1)
+    missing, networkTest = mergeNode(networkTest, 1, 1)
     @test compStruct(networkTest, network)
 
     networkTest = deepcopy(network)
-    mergeNode(networkTest, 1, 2)
+    missing, networkTest = mergeNode(networkTest, 1, 2)
     @test !compStruct(networkTest, network)
     links = [
         2 6
@@ -243,7 +243,7 @@ cd(@__DIR__)
     @test isapprox(networkTest.linksConnect, linksConnect')
 
     networkTest = deepcopy(network)
-    mergeNode(networkTest, 1, 3)
+    missing, networkTest = mergeNode(networkTest, 1, 3)
     @test !compStruct(networkTest, network)
     links = [
         2 3
@@ -369,7 +369,7 @@ cd(@__DIR__)
     @test isapprox(networkTest.linksConnect, linksConnect')
 
     networkTest = deepcopy(network)
-    mergeNode(networkTest, 10, 7)
+    missing, networkTest = mergeNode(networkTest, 10, 7)
     @test !compStruct(networkTest, network)
     links = [
         1 2
@@ -494,7 +494,7 @@ cd(@__DIR__)
     @test isapprox(networkTest.linksConnect, linksConnect')
 
     networkTest = deepcopy(network)
-    mergeNode(networkTest, 7, 10)
+    missing, networkTest = mergeNode(networkTest, 7, 10)
     @test !compStruct(networkTest, network)
     links = [
         1 2
@@ -619,7 +619,7 @@ cd(@__DIR__)
     @test isapprox(networkTest.linksConnect, linksConnect')
 
     networkTest = deepcopy(network)
-    mergeNode(networkTest, 1, 10)
+    missing, networkTest = mergeNode(networkTest, 1, 10)
     @test !compStruct(networkTest, network)
     links = [
         1 2
@@ -744,7 +744,7 @@ cd(@__DIR__)
     @test isapprox(networkTest.linksConnect, linksConnect')
 
     networkTest = deepcopy(network)
-    mergeNode(networkTest, 10, 1)
+    missing, networkTest = mergeNode(networkTest, 10, 1)
     @test !compStruct(networkTest, network)
     links = [
         1 2
@@ -1276,8 +1276,8 @@ cd(@__DIR__)
     network2.links[:, 14] = [11; 10]
     network2.bVec[:, 11:14] .= network2.bVec[:, 1]
     network2.slipPlane[:, 11:14] .= network2.slipPlane[:, 1]
-    makeConnect!(network2)
-    getSegmentIdx!(network2)
+    network2 = makeConnect!(network2)
+    network2 = getSegmentIdx!(network2)
     calcSegForce!(dlnParams, matParams, network2)
     network3 = deepcopy(network2)
     retVal, network3 = mergeNode(network3, 11, 3)
@@ -1408,8 +1408,8 @@ cd(@__DIR__)
     @test network3.linksConnect[:, 1:numSeg]' == linksConnect
     @test isapprox(network3.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network3.segForce[:, 2, 1:numSeg]', segForce2)
-end
-
+#end
+#=
 @testset "Split node" begin
     fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
     fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
@@ -2464,3 +2464,4 @@ end
     @test isapprox(network.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network.segForce[:, 2, 1:numSeg]', segForce2)
 end
+=#

@@ -188,24 +188,20 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     nodeGone::T2,
 ) where {T1 <: DislocationNetwork, T2 <: Int}
 
-    @assert nodeKept <= network.numNodeSegConnect[1] && nodeGone <= network.numNodeSegConnect[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
+    @assert nodeKept <= network.numNodeSegConnect[1] &&
+            nodeGone <= network.numNodeSegConnect[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
 
     # Return if both nodes to be merged are the same.
-    nodeKept == nodeGone && return 0
+    nodeKept == nodeGone && return 0, network
 
-    links = network.links
-    slipPlane = network.slipPlane
-    bVec = network.bVec
-    connectivity = network.connectivity
-    linksConnect = network.linksConnect
     elemT = eltype(network.bVec)
 
-    nodeKeptConnect = connectivity[1, nodeKept]
-    nodeGoneConnect = connectivity[1, nodeGone]
+    nodeKeptConnect = network.connectivity[1, nodeKept]
+    nodeGoneConnect = network.connectivity[1, nodeGone]
     totalConnect = nodeKeptConnect + nodeGoneConnect
 
     # Pass connections from nodeGone to nodeKept.
-    if size(connectivity, 1) < 2 * totalConnect + 1
+    if size(network.connectivity, 1) < 2 * totalConnect + 1
 
         network = DislocationNetwork(;
             links = network.links,
@@ -227,15 +223,16 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
                 ),
             ),
             segIdx = network.segIdx,
-    )
-        
-        links = network.links
-        slipPlane = network.slipPlane
-        bVec = network.bVec
-        connectivity = network.connectivity
-        linksConnect = network.linksConnect
+        )
 
     end
+
+    links = network.links
+    slipPlane = network.slipPlane
+    bVec = network.bVec
+    connectivity = network.connectivity
+    linksConnect = network.linksConnect
+
     connectivity[(2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1), nodeKept] =
         connectivity[2:(2 * nodeGoneConnect + 1), nodeGone]
     connectivity[1, nodeKept] = totalConnect
