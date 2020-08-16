@@ -97,8 +97,18 @@ fig2 = plotNodes(
     legend = false,
 )
 
-network2 = deepcopy(network)
-@btime refineNetwork!(dlnParams, matParams, network2)
+function foo(dlnParams, matParams, network)
+    network2 = deepcopy(network)
+    refineNetwork!(dlnParams, matParams, network2)
+end
+
+function bar(dlnParams, matParams, network)
+    network2 = deepcopy(network)
+    coarsenNetwork!(dlnParams, matParams, network2)
+end
+@btime foo(dlnParams, matParams, network)
+@btime bar(dlnParams, matParams, network)
+
 network2.numSeg
 
 function foo(intParams, intVars, dlnParams, matParams, network)
