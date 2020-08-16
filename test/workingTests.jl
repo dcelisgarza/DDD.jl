@@ -98,13 +98,15 @@ fig2 = plotNodes(
 )
 
 function foo(dlnParams, matParams, network)
-    network2 = refineNetwork(dlnParams, matParams, network)
+    network = refineNetwork(dlnParams, matParams, network)
 end
 function bar(dlnParams, matParams, network)
-    network2 = coarsenNetwork(dlnParams, matParams, network)
+    network = coarsenNetwork(dlnParams, matParams, network)
 end
 foo(dlnParams, matParams, network)
 bar(dlnParams, matParams, network)
+
+
 
 @btime foo(dlnParams, matParams, network)
 @btime bar(dlnParams, matParams, network)
@@ -345,3 +347,48 @@ var.c
 
 resize!(var.c, 2)
 var.c
+
+
+
+mutable struct mutate_me
+    a :: Array{Int, 2}
+end
+
+struct immutate_me
+    a :: Array{Int, 2}
+end
+
+function foo!(variable, condition)
+    if condition
+          variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+    end
+    variable.a .= LinearIndices(variable.a)
+    return nothing
+end
+
+function foo(variable, condition)
+    if condition
+        variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+    end
+    variable.a .= LinearIndices(variable.a)
+    return variable
+end
+
+mutating_var = mutate_me([0 0 0; 0 0 0])
+immutating_var = immutate_me([0 0 0; 0 0 0])
+
+# Always works
+foo!(mutating_var, rand(Bool))
+mutating_var
+
+# Works when no resizing is needed, obviously
+foo!(immutating_var, rand(Bool)) 
+immutating_var
+
+# immutating_var changes when no resizing is needed, does't work otherwise
+foo(immutating_var, rand(Bool))
+
+# immutating_var always changes
+immutating_var = foo(immutating_var, rand(Bool)) 
+
+immutating_var
