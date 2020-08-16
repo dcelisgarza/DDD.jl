@@ -210,16 +210,20 @@ prismHeptagon = DislocationLoop(
     dist = Rand(),
 )
 
+using Random
+Random.seed!(1337)
 network = DislocationNetwork(
     [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
     memBuffer = 1, # Buffer for memory allocation.
 )
 
-DislocationNetwork!(
-    network,
-    [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
-    memBuffer = 1, # Buffer for memory allocation.
-)
+for _ in 1:20
+    DislocationNetwork!(
+        network,
+        [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
+        memBuffer = 1, # Buffer for memory allocation.
+    )
+end
 
 network.numNode
 
