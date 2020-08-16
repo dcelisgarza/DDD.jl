@@ -52,6 +52,12 @@ function Base.zero(::Type{DislocationNetwork})
     )
 end
 function Base.push!(network::DislocationNetwork, n::Int)
+    if size(network.connectivity, 1) > 1
+        connectivity = hcat(network.connectivity, zeros(Int, size(network.connectivity, 1), n))
+    else
+        connectivity = zeros(Int, 1 + 2 * network.maxConnect, network.numNode + n)
+    end
+
     network.links = hcat(network.links, zeros(Int, 2, n))
     network.slipPlane = hcat(network.slipPlane, zeros(3, n))
     network.bVec = hcat(network.bVec, zeros(3, n))
@@ -59,8 +65,7 @@ function Base.push!(network::DislocationNetwork, n::Int)
     network.label = vcat(network.label, zeros(nodeType, n))
     network.nodeVel = hcat(network.nodeVel, zeros(3, n))
     network.nodeForce = hcat(network.nodeVel, zeros(3, n))
-    network.connectivity =
-        hcat(network.connectivity, zeros(size(network.connectivity, 1), n))
+    network.connectivity = connectivity
     network.linksConnect = hcat(network.linksConnect, zeros(2, n))
     network.segIdx = vcat(network.segIdx, zeros(n, 3))
     network.segForce = cat(network.segForce, zeros(3, 2, n), dims = 3)

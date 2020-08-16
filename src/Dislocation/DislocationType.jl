@@ -654,8 +654,8 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
     numNode::T4 = 0,
     numSeg::T4 = 0,
     maxConnect::T4 = 0,
-    connectivity::T5 = zeros(Int, 0, 0),
-    linksConnect::T5 = zeros(Int, 2, 0),
+    connectivity::T5 = zeros(Int, 1 + 2 * maxConnect, numNode),
+    linksConnect::T5 = zeros(Int, 2, numSeg),
     segIdx::T5 = zeros(Int, 2, 3),
     segForce::T6 = zeros(3, 2, 0),
 ) where {
