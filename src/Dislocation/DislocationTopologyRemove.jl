@@ -200,6 +200,8 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     nodeGoneConnect = network.connectivity[1, nodeGone]
     totalConnect = nodeKeptConnect + nodeGoneConnect
 
+
+
     # Pass connections from nodeGone to nodeKept.
     if size(network.connectivity, 1) < 2 * totalConnect + 1
 

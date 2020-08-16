@@ -2,7 +2,7 @@ using DDD
 using Test, Statistics
 cd(@__DIR__)
 
-#@testset "Merge nodes" begin
+@testset "Merge nodes" begin
     fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
     fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
     fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
@@ -1408,8 +1408,8 @@ cd(@__DIR__)
     @test network3.linksConnect[:, 1:numSeg]' == linksConnect
     @test isapprox(network3.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network3.segForce[:, 2, 1:numSeg]', segForce2)
-#end
-#=
+end
+
 @testset "Split node" begin
     fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
     fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
@@ -2464,4 +2464,3 @@ end
     @test isapprox(network.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network.segForce[:, 2, 1:numSeg]', segForce2)
 end
-=#
