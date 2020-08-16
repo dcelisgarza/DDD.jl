@@ -60,7 +60,7 @@ function Base.push!(network::DislocationNetwork, n::Int)
         nodeVel = hcat(network.nodeVel, zeros(3, n)),
         nodeForce = hcat(network.nodeForce, zeros(3, n)),
         numNodeSegConnect = network.numNodeSegConnect,
-        connectivity = zeros(Int, 1 + 2 * network.numNodeSegConnect[3], network.numNodeSegConnect[1] + n),
+        connectivity = zeros(Int, 1 + 2 * network.numNodeSegConnect[3], size(network.coord, 2) + n),
         linksConnect = hcat(network.linksConnect, zeros(Int, 2, n)),
         segIdx = vcat(network.segIdx, zeros(Int, n, 3)),
         segForce = cat(network.segForce, zeros(3, 2, n), dims = 3),

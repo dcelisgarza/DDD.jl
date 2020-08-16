@@ -209,19 +209,28 @@ prismHeptagon = DislocationLoop(
     ],
     dist = Rand(),
 )
-
+using Random
+Random.seed!(1337)
 network = DislocationNetwork(
     [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
     memBuffer = 1, # Buffer for memory allocation.
 )
 
-network = DislocationNetwork!(
-    network,
-    [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
-    memBuffer = 1, # Buffer for memory allocation.
-)
 
-network.numNodeSegConnect
+for _ in 1:20
+    global network
+    network = DislocationNetwork!(
+        network,
+        [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
+        memBuffer = 1, # Buffer for memory allocation.
+    )
+end
+
+
+
+length(network.connectivity[1,:])
+length(network.linksConnect[1,:])
+network.numNodeSegConnect[1]
 
 network.coord[:,network.numNodeSegConnect[2]-1:network.numNodeSegConnect[2]+1]
 fig = plotNodes(
@@ -260,18 +269,18 @@ remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
 remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
 isapprox(remoteForceSer, remoteForcePar)
 calcSegSegForce!(dlnParams, matParams, network)
-isapprox(remoteForceSer, network.segForce[:, :, 1:(network.numSeg)])
+isapprox(remoteForceSer, network.segForce[:, :, 1:(network.numNodeSegConnect[2])])
 network.segForce .= 0
 calcSegSegForce!(dlnParamsPar, matParams, network)
-isapprox(remoteForcePar, network.segForce[:, :, 1:(network.numSeg)])
+isapprox(remoteForcePar, network.segForce[:, :, 1:(network.numNodeSegConnect[2])])
 network.segForce .= 0
 
 using BenchmarkTools
-@time calcSegSegForce(dlnParams, matParams, network)
-@time calcSegSegForce!(dlnParams, matParams, network)
+@btime calcSegSegForce(dlnParams, matParams, network)
+@btime calcSegSegForce!(dlnParams, matParams, network)
 network.segForce .= 0
-@time calcSegSegForce(dlnParamsPar, matParams, network)
-@time calcSegSegForce!(dlnParamsPar, matParams, network)
+@btime calcSegSegForce(dlnParamsPar, matParams, network)
+@btime calcSegSegForce!(dlnParamsPar, matParams, network)
 network.segForce .= 0
 
 @code_warntype calcSegForce(dlnParamsPar, matParams, network)
