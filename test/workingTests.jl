@@ -217,7 +217,7 @@ network = DislocationNetwork(
     memBuffer = 1, # Buffer for memory allocation.
 )
 
-for _ in 1:20
+@time for _ in 1:50
     DislocationNetwork!(
         network,
         [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
@@ -227,7 +227,7 @@ end
 
 network.numNode
 
-network.coord[:,network.numNodeSegConnect[2]-1:network.numNodeSegConnect[2]+1]
+network.coord[:,network.numSeg-1:network.numSeg+1]
 fig = plotNodes(
     network,
     m = 1,
