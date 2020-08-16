@@ -360,7 +360,8 @@ var.c
 
     function foo!(variable, condition)
         if condition
-            variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+            # variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
         end
         variable.a .= LinearIndices(variable.a)
         return nothing
@@ -368,7 +369,8 @@ var.c
 
     function foo(variable, condition)
         if condition
-            variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+            # variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
         end
         variable.a .= LinearIndices(variable.a)
         return variable
@@ -390,3 +392,17 @@ var.c
 
     # immutating_var always changes
     immutating_var = foo(immutating_var, rand(Bool))
+
+    function watanabe(var)
+        resize!(vec(mutating_var.a), 2*prod(size(mutating_var.a)))
+        return var
+    end
+
+    watanabe(mutating_var)
+
+    prod(size(mutating_var.a))
+
+
+    # Methods to implement for linear arrays
+    # https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array-1
+    struct LinearArray{T,N} <: AbstractArray{T,N} end
