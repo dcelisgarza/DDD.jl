@@ -161,12 +161,15 @@ In-place version of [`makeConnect`](@ref).
 
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
     links = network.links
+    connectivity = network.connectivity
+    linksConnect = network.linksConnect
+    connectivity .= 0
+    linksConnect .= 0
+
     maxConnect = network.maxConnect
     lenLinks = size(links, 2)
     idx = findfirst(x -> x == 0, links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
-    connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
-    linksConnect = zeros(Int, 2, lenLinks)
     @inbounds @simd for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
@@ -179,8 +182,6 @@ In-place version of [`makeConnect`](@ref).
         linksConnect[1, i] = connectivity[1, n1]
         linksConnect[2, i] = connectivity[1, n2]
     end
-    network.connectivity = connectivity
-    network.linksConnect = linksConnect
     return network
 end
 
