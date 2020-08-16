@@ -42,15 +42,15 @@ shearDecagon = DislocationLoop(
 network = DislocationNetwork(shearDecagon)
 network.coord[:, 11] = vec(mean(network.coord, dims = 2))
 network.label[11] = 1
-network.numNode = 11
+network.numNodeSegConnect[1] = 11
 network.links[:, 11] = [11; 2]
 network.links[:, 12] = [11; 4]
 network.links[:, 13] = [11; 5]
 network.links[:, 14] = [11; 10]
 network.bVec[:, 11:14] .= network.bVec[:, 1]
 network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
-makeConnect!(network)
-getSegmentIdx!(network)
+network = makeConnect!(network)
+network = getSegmentIdx!(network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
@@ -84,7 +84,7 @@ compStruct(networkOUT2, network)
 ## Remeshing and integration
 network2 = deepcopy(network)
 intVars2 = deepcopy(intVars)
-numSeg = network.numSeg
+numSeg = network.numNodeSegConnect[2]
 intVars2
 intParams
 network2.coord[:, 1:numSeg] - network.coord[:, 1:numSeg]
@@ -98,7 +98,10 @@ fig2 = plotNodes(
 )
 
 network2 = deepcopy(network)
-refineNetwork(dlnParams, matParams, network2)
+network2 = refineNetwork(dlnParams, matParams, network2)
+
+numSeg
+network.numNodeSegConnect[2]
 
 function foo(intParams, intVars, dlnParams, matParams, network)
     coarsenNetwork(dlnParams, matParams, network)
@@ -162,7 +165,7 @@ baar(intParams, intVars, dlnParams, matParams, network)
 #     )
 # end
 
-coarsenNetwork(dlnParams, matParams, network)
+@btime coarsenNetwork(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 refineNetwork(dlnParams, matParams, network)
@@ -280,7 +283,7 @@ network.segForce .= 0
 network.segForce .= 0
 
 @code_warntype calcSegForce(dlnParamsPar, matParams, network)
-
+using StaticArrays
 @code_warntype calcSegSegForce(
     0.5,
     0.2,
