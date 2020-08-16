@@ -106,6 +106,13 @@ function bar(dlnParams, matParams, network)
     network2 = deepcopy(network)
     coarsenNetwork!(dlnParams, matParams, network2)
 end
+
+foo(dlnParams, matParams, network)
+bar(dlnParams, matParams, network)
+
+network.numSeg
+network2.numSeg
+
 @btime foo(dlnParams, matParams, network)
 @btime bar(dlnParams, matParams, network)
 
