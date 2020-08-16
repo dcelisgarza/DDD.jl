@@ -350,45 +350,43 @@ var.c
 
 
 
-mutable struct mutate_me
-    a :: Array{Int, 2}
-end
-
-struct immutate_me
-    a :: Array{Int, 2}
-end
-
-function foo!(variable, condition)
-    if condition
-          variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+    mutable struct mutate_me
+        a :: Array{Int, 2}
     end
-    variable.a .= LinearIndices(variable.a)
-    return nothing
-end
 
-function foo(variable, condition)
-    if condition
-        variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+    struct immutate_me
+        a :: Array{Int, 2}
     end
-    variable.a .= LinearIndices(variable.a)
-    return variable
-end
 
-mutating_var = mutate_me([0 0 0; 0 0 0])
-immutating_var = immutate_me([0 0 0; 0 0 0])
+    function foo!(variable, condition)
+        if condition
+            variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+        end
+        variable.a .= LinearIndices(variable.a)
+        return nothing
+    end
 
-# Always works
-foo!(mutating_var, rand(Bool))
-mutating_var
+    function foo(variable, condition)
+        if condition
+            variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+        end
+        variable.a .= LinearIndices(variable.a)
+        return variable
+    end
 
-# Works when no resizing is needed, obviously
-foo!(immutating_var, rand(Bool)) 
-immutating_var
+    mutating_var = mutate_me([0 0 0; 0 0 0])
+    immutating_var = immutate_me([0 0 0; 0 0 0])
 
-# immutating_var changes when no resizing is needed, does't work otherwise
-foo(immutating_var, rand(Bool))
+    # Always works
+    foo!(mutating_var, rand(Bool))
+    mutating_var
 
-# immutating_var always changes
-immutating_var = foo(immutating_var, rand(Bool)) 
+    # Works when no resizing is needed, obviously
+    foo!(immutating_var, rand(Bool)) 
+    immutating_var
 
-immutating_var
+    # immutating_var changes when no resizing is needed, does't work otherwise
+    foo(immutating_var, rand(Bool))
+
+    # immutating_var always changes
+    immutating_var = foo(immutating_var, rand(Bool))
