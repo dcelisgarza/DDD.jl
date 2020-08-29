@@ -367,7 +367,7 @@ function coarsenNetwork(
     network::T3,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     minAreaSq = dlnParams.minAreaSq
     minSegLen = dlnParams.minSegLen

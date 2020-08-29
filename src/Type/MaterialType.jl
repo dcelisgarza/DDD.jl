@@ -1,4 +1,5 @@
 """
+Dislocation structure types.
 ```
 abstract type AbstractCrystalStruct end
 struct BCC <: AbstractCrystalStruct end
@@ -13,6 +14,7 @@ struct FCC <: AbstractCrystalStruct end
 struct HCP <: AbstractCrystalStruct end
 
 """
+Material parameters.
 ```
 struct MaterialParameters{T1, T2}
     μ::T1
@@ -36,15 +38,3 @@ struct MaterialParameters{T1, T2}
     crystalStruct::T2
     σPN::T1
 end
-@inline function MaterialParameters(; μ, μMag, ν, E, crystalStruct::AbstractCrystalStruct, σPN = 0.0)
-    omνInv = 1 / (1 - ν)
-    νomνInv = ν * omνInv
-    μ4π = μ / (4π)
-    μ8π = μ4π / 2
-    μ4πν = μ4π * omνInv
-    return MaterialParameters(μ, μMag, ν, E, omνInv, νomνInv, μ4π, μ8π, μ4πν, crystalStruct, σPN)
-end
-
-# function zero(::Type{MaterialParameters})
-#     return MaterialParameters(0.0, 0.0, 0.0, :empty)
-# end

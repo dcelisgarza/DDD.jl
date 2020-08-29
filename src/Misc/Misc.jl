@@ -209,32 +209,4 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
     )
 end
 
-"""
-```
-dimDot(
-    x::AbstractArray{T1, N},
-    y::AbstractArray{T2, N};
-    dim::Int = 2,
-) where {T1, T2, N}
-```
-Perform dot product along dimension `dim` of an array, returns a vector of dot products.
-"""
-@inline function dimDot(
-    x::AbstractArray{T1, N},
-    y::AbstractArray{T2, N};
-    dim::Int = 2,
-) where {T1, T2, N}
-    return vec(sum(x .* y, dims = dim))
-end
-
-"""
-```
-dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
-```
-Calculate norms along dimension `dim` of an array, returns a vector of norms.
-"""
-@inline function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
-    return vec(sqrt.(dimDot(x, x; dim = dim)))
-end
-
 ⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1, T2} = x * y'

@@ -10,7 +10,7 @@ struct CustomTrapezoid <: AbstractIntegrator end
 
 """
 ```
-mutable struct IntegrationP{T1, T2, T3}
+struct IntegrationParameters{T1, T2, T3}
     dt::T1
     tmin::T1
     tmax::T1
@@ -23,7 +23,7 @@ end
 ```
 This structure contains the integration parameters for the simulation.
 """
-struct IntegrationP{T1, T2, T3}
+struct IntegrationParameters{T1, T2, T3}
     method::T1
     tmin::T2
     tmax::T2
@@ -35,7 +35,7 @@ struct IntegrationP{T1, T2, T3}
     exponent::T2
     maxiter::T3
 end
-function IntegrationP(;
+function IntegrationParameters(;
     method,
     tmin,
     tmax,
@@ -47,7 +47,7 @@ function IntegrationP(;
     exponent = 20,
     maxiter = 10,
 )
-    return IntegrationP(
+    return IntegrationParameters(
         method,
         tmin,
         tmax,
@@ -60,20 +60,20 @@ function IntegrationP(;
         maxiter,
     )
 end
-mutable struct IntegrationVar{T1, T2}
+mutable struct IntegrationTime{T1, T2}
     dt::T1
     time::T1
     step::T2
 end
-function IntegrationVar(; dt = 0.0, time = 0.0, step = 0)
-    return IntegrationVar(dt, time, step)
+function IntegrationTime(; dt = 0.0, time = 0.0, step = 0)
+    return IntegrationTime(dt, time, step)
 end
 
 function deriv!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     calcSegForce!(dlnParams, matParams, network)
     dlnMobility!(dlnParams, matParams, network)
@@ -129,10 +129,10 @@ function integrate!(
     matParams::T4,
     network::T5,
 ) where {
-    T1 <: IntegrationP,
-    T2 <: IntegrationVar,
-    T3 <: DislocationP,
-    T4 <: MaterialP,
+    T1 <: IntegrationParameters,
+    T2 <: IntegrationTime,
+    T3 <: DislocationParameters,
+    T4 <: MaterialParameters,
     T5 <: DislocationNetwork,
 }
 

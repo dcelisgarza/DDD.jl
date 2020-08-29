@@ -26,9 +26,9 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 
 Before running a simulation we need to initialise the simulation. For this example, we will use the keyword initialisers because they automatically calculate derived quantities, perform input validations, provide default values, and are make for self-documenting code.
 
-Dislocations live in a material, as such we need a few constants that describe it. These are encapsulated in the immutable <sup>[1](#1)</sup> structure `MaterialP`. Note that we use unicode to denote variables as per convention, `\mu -> μ` and `\nu -> ν`. Here we create a basic material.
+Dislocations live in a material, as such we need a few constants that describe it. These are encapsulated in the immutable <sup>[1](#1)</sup> structure `MaterialParameters`. Note that we use unicode to denote variables as per convention, `\mu -> μ` and `\nu -> ν`. Here we create a basic material.
 ```julia
-julia> materialP = MaterialP(;
+julia> MaterialParameters = MaterialParameters(;
           μ = 1.0,                  # Shear modulus.
           μMag = 145e3,             # Shear modulus magnitude.
           ν = 0.28,                 # Poisson ratio.
@@ -36,18 +36,18 @@ julia> materialP = MaterialP(;
           crystalStruct = BCC(),    # Crystal structure.
           σPN = 0.0                 # Peierls-Nabarro stress for the material.
         )
-MaterialP{Float64,BCC}(1.0, 145000.0, 0.28, 1.0, 1.3888888888888888, 0.3888888888888889, 0.07957747154594767, 0.039788735772973836, 0.11052426603603843, BCC(), 0.0)
+MaterialParameters{Float64,BCC}(1.0, 145000.0, 0.28, 1.0, 1.3888888888888888, 0.3888888888888889, 0.07957747154594767, 0.039788735772973836, 0.11052426603603843, BCC(), 0.0)
 ```
 Note that a few extra constants have been automatically calculated by the constructor. We find these using `fieldnames()`.
 ```julia
-julia> fieldnames(typeof(materialP))
+julia> fieldnames(typeof(MaterialParameters))
 (:μ, :μMag, :ν, :E, :σPN, :omνInv, :νomνInv, :μ4π, :μ8π, :μ4πν, :crystalStruct)
 ```
 Where `omνInv = 1/(1-ν)`, `νomνInv = v/(1-ν)`, `μ4π = μ/(4π)`, `μ8π = μ/(8π)`, `μ4πν = μ/[4π(1-ν)]`. This avoids recomputing them later.
 
-Our dislocations also have certain constant parameters and flags that are encapsulated in their own immutable structure, `DislocationP`. The numeric parameters are somewhat arbitrary as long as they hold certain proportions.
+Our dislocations also have certain constant parameters and flags that are encapsulated in their own immutable structure, `DislocationParameters`. The numeric parameters are somewhat arbitrary as long as they hold certain proportions.
 ```julia
-julia> dislocationP = DislocationP(;
+julia> DislocationParameters = DislocationParameters(;
           coreRad = 90.0,       # Dislocation core radius, referred to as a.
           coreRadMag = 3.2e-4,  # Magnitude of the core radius.
           minSegLen = 320.0,    # Minimum segment length.
@@ -67,12 +67,12 @@ julia> dislocationP = DislocationP(;
           lineDrag = 0.0,       # Drag coefficient along the line direction.
           mobility = mobBCC(),  # Mobility type for mobility function specialisation.
         )
-DislocationP{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45000.0, 900000.0, 4, true, true, true, true, true, true, 1.0, 2.0, 1.0e10, 0.0, mobBCC())
+DislocationParameters{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1600.0, 45000.0, 900000.0, 4, true, true, true, true, true, true, 1.0, 2.0, 1.0e10, 0.0, mobBCC())
 ```
 
 The integration parameters are placed into the following immutable structure.
 ```julia
-julia> IntegrationP(;
+julia> IntegrationParameters(;
       method = CustomTrapezoid(),
       tmin = 0.0,
       tmax = 1e10,
@@ -85,16 +85,16 @@ julia> IntegrationP(;
       maxiter = 10,
   )
 
-IntegrationP{CustomTrapezoid,Float64,Int64}(CustomTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
+IntegrationParameters{CustomTrapezoid,Float64,Int64}(CustomTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
 ```
 And we keep track of the time, step, and time step in this mutable one.
 ```julia
-julia> IntegrationVar(;
+julia> IntegrationTime(;
       dt = 100,
       time = 0.0,
       step = 0,
 )
-IntegrationVar{Float64,Int64}(100.0, 0.0, 0)
+IntegrationTime{Float64,Int64}(100.0, 0.0, 0)
 ```
 
 Within a given material, we have multiple slip systems, which can be loaded into their own immutable structure. Here we only define a single slip system, but we have the capability of adding `n` slip systems by making the `slipPlane` and `bVec` arguments `m × n` matrices rather than `m` vectors.
@@ -248,33 +248,33 @@ Since `JSON` files represent dictionaries, they automatically accommodate change
 
 One can load all their parameters at once like so.
 ```julia
-fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
-fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
-fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
+fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
+fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
+fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
 fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
 fileIntVar = "../inputs/simParams/sampleIntegrationTime.JSON"
 dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
-    fileDislocationP,
-    fileMaterialP,
-    fileIntegrationP,
+    fileDislocationParameters,
+    fileMaterialParameters,
+    fileIntegrationParameters,
     fileSlipSystem,
     fileDislocationLoop,
 )
-intVars = loadIntegrationVar(fileIntVar)
+intVars = loadIntegrationTime(fileIntVar)
 ```
 which not only loads the data but returns the aforementioned structures. If there is a single file holding all the parameters, then all the filenames would be the same, but nothing else would change as the file would be loaded into a large dictionary and only the relevant `(key, value)` pairs are used in each case.
 
 Users may also load individual structures as follows.
 ```julia
-dictDislocationP = load(fileDislocationP)
-dislocationP = loadDislocationP(dictDislocationP)
+dictDislocationParameters = load(fileDislocationParameters)
+DislocationParameters = loadDislocationParameters(dictDislocationParameters)
 
-dictMaterialP = load(fileMaterialP)
-materialP = loadMaterialP(dictMaterialP)
+dictMaterialParameters = load(fileMaterialParameters)
+MaterialParameters = loadMaterialParameters(dictMaterialParameters)
 
-dictIntegrationP = load(fileIntegrationP)
-integrationP = loadIntegrationP(dictIntegrationP)
+dictIntegrationParameters = load(fileIntegrationParameters)
+IntegrationParameters = loadIntegrationParameters(dictIntegrationParameters)
 
 dictSlipSystem = load(fileSlipSystem)
 slipSystems = loadSlipSystem(dictSlipSystem)
@@ -298,9 +298,9 @@ save(networkDump, network, intVars)
 
 # Reload parameters.
 simulation = load(paramDump)
-dlnParams2 = loadDislocationP(simulation[1])
-matParams2 = loadMaterialP(simulation[2])
-intParams2 = loadIntegrationP(simulation[3])
+dlnParams2 = loadDislocationParameters(simulation[1])
+matParams2 = loadMaterialParameters(simulation[2])
+intParams2 = loadIntegrationParameters(simulation[3])
 slipSystems2 = loadSlipSystem(simulation[4])
 dislocationLoop2 = zeros(DislocationLoop, length(simulation[5]))
 for i in eachindex(dislocationLoop2)
@@ -309,7 +309,7 @@ end
 
 # Reload network.
 network2 = loadNetwork(networkDump[1])
-intVars2 = loadIntegrationVar(networkDump[2])
+intVars2 = loadIntegrationTime(networkDump[2])
 ```
 The reason why `network` and `intVars` are saved separately is because they change as the simulation advances, while the parameters stay the same. Saving the parameters multiple times per simulation is redundant.
 
@@ -400,3 +400,4 @@ This is just the integration.
 ### Tentative Objectives
 
 - [ ] Keep an eye on [JuliaIO](https://github.com/JuliaIO), [JuliaFEM](https://github.com/JuliaFEM/), [SciML](https://github.com/sciml) because their methods might be useful.
+- [ ] https://www.youtube.com/watch?v=hKHdbfxCV44

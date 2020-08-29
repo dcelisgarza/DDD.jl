@@ -156,7 +156,7 @@ function refineNetwork(
     network::T3,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     maxAreaSq = dlnParams.maxAreaSq
     maxSegLen = dlnParams.maxSegLen

@@ -5,11 +5,11 @@ using LinearAlgebra, Plots, Statistics, InteractiveUtils, JSON, StaticArrays
 include("./Misc/Misc.jl")
 # Miscelaneous.
 export makeTypeDict, compStruct, intAngle, extAngle, rot3D, makeInstanceDict
-export translateEnum, inclusiveComparison, dimDot, dimNorm, ⊗
+export translateEnum, inclusiveComparison, ⊗
 include("./Material/MaterialBase.jl")
-export MaterialP, AbstractCrystalStruct, BCC, FCC, HCP
+export MaterialParameters, AbstractCrystalStruct, BCC, FCC, HCP
 include("./Dislocation/DislocationBase.jl")
-export DislocationP
+export DislocationParameters
 # Distributions.
 export AbstractDistribution, Zeros, Rand, Randn, Regular, mobBCC
 # Dislocation types.
@@ -26,14 +26,14 @@ include("./FEM/FEMBase.jl")
 export shapeFunction, shapeFunctionDeriv, LinearQuadrangle3D
 include("./DislocationFEM/DislocationFEMBase.jl")
 include("./Integration/CustomIntegration.jl")
-export IntegrationP, IntegrationVar, CustomTrapezoid, integrate!
+export IntegrationParameters, IntegrationTime, CustomTrapezoid, integrate!
 include("./PostProcessing/Plotting.jl")
 export plotNodes, plotNodes!
 include("./IO/IOBase.jl")
 # Imports.
-export load, loadDislocationP, loadMaterialP, loadIntegrationP
+export load, loadDislocationParameters, loadMaterialParameters, loadIntegrationParameters
 export loadSlipSystem, loadDislocationLoop, loadParams
-export loadDislocationLoop, loadNetwork, loadIntegrationVar
+export loadDislocationLoop, loadNetwork, loadIntegrationTime
 # Export.
 export save
 end # module

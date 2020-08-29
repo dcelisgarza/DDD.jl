@@ -45,11 +45,11 @@ SlipSystem(;
 
 The simulation requires certain parameters pertaining to the dislocation network being modelled. These values control certain aspects of the simulation and are stored in the following structure.
 ```@docs
-DislocationP
+DislocationParameters
 ```
 We recommend the use of the keyword constructor as it performs sanity checks on various parameters, ensuring a hierarchy of values is maintained.
 ```@docs
-DislocationP(;
+DislocationParameters(;
     coreRad::T1,
     coreRadMag::T1,
     minSegLen::T1,

@@ -1,8 +1,8 @@
 """
 ```
 calcSegForce(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
     network::DislocationNetwork;
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
@@ -18,8 +18,8 @@ calcSegForce(
     # mesh::T5,
     idx = nothing,
 ) where {
-    T1 <: DislocationP,
-    T2 <: MaterialP,
+    T1 <: DislocationParameters,
+    T2 <: MaterialParameters,
     T3 <: DislocationNetwork,
     # T4 <: DislocationFEMCorrective,
     # T5 <: AbstractMesh,
@@ -46,7 +46,7 @@ end
     idx = nothing,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
@@ -68,8 +68,8 @@ end
 """
 ```
 calcSelfForce(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
     network::DislocationNetwork,
 )
 ```
@@ -80,7 +80,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -163,7 +163,7 @@ end
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -276,7 +276,7 @@ At a high level this works by creating a local coordinate frame using the line d
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     # Constants.
     μ = matParams.μ
@@ -447,7 +447,7 @@ end
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     # Constants.
     μ = matParams.μ

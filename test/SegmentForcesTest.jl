@@ -3,19 +3,19 @@ using Test
 cd(@__DIR__)
 
 @testset "Forces" begin
-    fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
-    fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
-    fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
+    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
+    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
+    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
     fileSlipSystem = "../data/slipSystems/BCC.JSON"
     fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
     dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
-        fileDislocationP,
-        fileMaterialP,
-        fileIntegrationP,
+        fileDislocationParameters,
+        fileMaterialParameters,
+        fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
     )
-    dlnParamsPar = DislocationP(;
+    dlnParamsPar = DislocationParameters(;
         coreRad = dlnParams.coreRad,
         coreRadMag = dlnParams.coreRadMag,
         minSegLen = dlnParams.minSegLen,

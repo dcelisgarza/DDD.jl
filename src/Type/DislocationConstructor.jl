@@ -1,122 +1,17 @@
-## Primitives
 """
 ```
-@enum nodeType begin
-    none = 0    # Undefined node, value at initialisation.
-    intMob = 1  # Internal mobile node.
-    intFix = 2  # Internal fixed node.
-    srfMob = 3  # Mobile surface node.
-    srfFix = 4  # Fixed surface node.
-    ext = 5     # External node.
-end
-```
-"""
-@enum nodeType begin
-    none = 0
-    intMob = 1
-    intFix = 2
-    srfMob = 3
-    srfFix = 4
-    ext = 5
-end
-
-"""
-```
-abstract type AbstractDlnSeg end
-struct segNone <: AbstractDlnSeg end    # Undefined segment
-struct segEdge <: AbstractDlnSeg end    # Edge segment
-struct segEdgeN <: AbstractDlnSeg end   # Edge segment
-struct segScrew <: AbstractDlnSeg end   # Screw segment
-struct segMixed <: AbstractDlnSeg end   # Mixed segment
-```
-where `segEdge` have ``(\\bm{b} \\perp \\bm{t}) \\perp \\bm{n}``, `segEdgeN` have ``(\\bm{b} \\perp \\bm{t}) \\parallel \\bm{n}``, `segScrew` have ``\\bm{b} \\parallel \\bm{t}``, `segMixed` have ``\\bm{b} \\not\\perp \\bm{t}~ \\&~ \\bm{b} \\not\\perp \\bm{n}`` and ``\\bm{b}`` is the Burgers vector and ``\\bm{n}`` the slip plane.
-"""
-abstract type AbstractDlnSeg end
-struct segNone <: AbstractDlnSeg end
-struct segEdge <: AbstractDlnSeg end
-struct segEdgeN <: AbstractDlnSeg end
-struct segScrew <: AbstractDlnSeg end
-struct segMixed <: AbstractDlnSeg end
-
-"""
-```
-abstract type AbstractDlnStr end
-struct loopDln <: AbstractDlnStr end    # Unclassified loop
-struct loopPrism <: AbstractDlnStr end  # Prismatic loop
-struct loopShear <: AbstractDlnStr end  # Shear loop
-struct loopJog <: AbstractDlnStr end    # Jog
-struct loopKink <: AbstractDlnStr end   # Kink
-```
-"""
-abstract type AbstractDlnStr end
-struct loopPrism <: AbstractDlnStr end
-struct loopShear <: AbstractDlnStr end
-struct loopMixed <: AbstractDlnStr end
-struct loopDln <: AbstractDlnStr end
-struct loopJog <: AbstractDlnStr end
-struct loopKink <: AbstractDlnStr end
-
-"""
-```
-abstract type AbstractDistribution end
-struct Zeros <: AbstractDistribution end
-struct Rand <: AbstractDistribution end
-struct Randn <: AbstractDistribution end
-struct Regular <: AbstractDistribution end
-```
-Distributions for dislocation sources.
-"""
-abstract type AbstractDistribution end
-struct Zeros <: AbstractDistribution end
-struct Rand <: AbstractDistribution end
-struct Randn <: AbstractDistribution end
-struct Regular <: AbstractDistribution end
-
-"""
-```
-abstract type AbstractMobility end
-struct mobBCC <: AbstractMobility end
-struct mobFCC <: AbstractMobility end
-struct mobHCP <: AbstractMobility end
-```
-Mobility functions.
-"""
-abstract type AbstractMobility end
-struct mobBCC <: AbstractMobility end
-struct mobFCC <: AbstractMobility end
-struct mobHCP <: AbstractMobility end
-
-## Structures
-"""
-```
-struct SlipSystem{T1, T2}
-    crystalStruct::T1   # Crystal structure
-    slipPlane::T2       # Slip plane
-    bVec::T2            # Burgers vector
-end
-```
-Structure to store slip systems.
-"""
-struct SlipSystem{T1, T2}
-    crystalStruct::T1
-    slipPlane::T2
-    bVec::T2
-end
-"""
-```
-SlipSystem(;
-    crystalStruct::T1,
-    slipPlane::T2,
-    bVec::T2,
-) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
+SlipSystem(crystalStruct::T1, slipPlane::T2, bVec::T2) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
 ```
 Keyword constructor for [`SlipSystem`](@ref). Throws error if ``\\bm{b} \\not\\perp \\bm{n}`` where ``\\bm{b}`` is the Burgers vector and ``\\bm{n}`` the slip plane.
 """
-@inline function SlipSystem(;
+function SlipSystem(
     crystalStruct::T1,
     slipPlane::T2,
-    bVec::T2,
-) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
+    bVec::T2
+) where {
+    T1 <: AbstractCrystalStruct,
+    T2 <: AbstractArray{T, N} where {T, N}
+}
 
     if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
         if ndims(slipPlane) == 1
@@ -129,85 +24,25 @@ Keyword constructor for [`SlipSystem`](@ref). Throws error if ``\\bm{b} \\not\\p
 
     return SlipSystem(crystalStruct, slipPlane, bVec)
 end
+function SlipSystem(;
+    crystalStruct::T1,
+    slipPlane::T2,
+    bVec::T2
+) where {
+    T1 <: AbstractCrystalStruct,
+    T2 <: AbstractArray{T, N} where {T, N}
+}
+    return SlipSystem(crystalStruct, slipPlane, bVec)
+end
 
 """
 ```
-struct DislocationParameters{T1, T2, T3, T4}
-    coreRad::T1         # Core radius
-    coreRadSq::T1       # Square of core radius
-    coreRadMag::T1      # Magnitude of core radius
-    minSegLen::T1       # Minimum segment length
-    maxSegLen::T1       # Maximum segment length
-    twoMinSegLen::T1    # Twice minimum segment length
-    minArea::T1         # Minimum area enclosed by 3 segments
-    maxArea::T1         # Maximum area enclosed by 3 segments
-    minAreaSq::T1       # Squared min area
-    maxAreaSq::T1       # Squared max area
-    maxConnect::T2      # Maximum connectivity
-    remesh::T3          # Remesh flag
-    collision::T3       # Collision flag
-    separation::T3      # Separation flag
-    virtualRemesh::T3   # Virtual remeshing flag
-    parCPU::T3          # Parallelise on CPU
-    parGPU::T3          # Parallelise on GPU
-    edgeDrag::T1        # Drag coefficient edge dislocation
-    screwDrag::T1       # Drag coefficient screw dislocation
-    climbDrag::T1       # Drag coefficient climb direction
-    lineDrag::T1        # Drag coefficient line direction
-    mobility::T4        # Mobility law
-end
-```
-Structure to store dislocation parameters.
-"""
-struct DislocationParameters{T1, T2, T3, T4}
-    coreRad::T1
-    coreRadSq::T1
-    coreRadMag::T1
-    minSegLen::T1
-    maxSegLen::T1
-    twoMinSegLen::T1
-    minArea::T1
-    maxArea::T1
-    minAreaSq::T1
-    maxAreaSq::T1
-    maxConnect::T2
-    remesh::T3
-    collision::T3
-    separation::T3
-    virtualRemesh::T3
-    parCPU::T3
-    parGPU::T3
-    edgeDrag::T1
-    screwDrag::T1
-    climbDrag::T1
-    lineDrag::T1
-    mobility::T4
-end
-"""
-```
-DislocationParameters(;
-    coreRad::T1,
-    coreRadMag::T1,
-    minSegLen::T1,
-    maxSegLen::T1,
-    minArea::T1,
-    maxArea::T1,
-    maxConnect::T2,
-    remesh::T3,
-    collision::T3,
-    separation::T3,
-    virtualRemesh::T3,
-    edgeDrag::T1,
-    screwDrag::T1,
-    climbDrag::T1,
-    lineDrag::T1,
-    mobility::T4,
-) where {T1, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
+function DislocationParameters(coreRad::T1, coreRadMag::T1, minSegLen::T1, maxSegLen::T1, minArea::T1, maxArea::T1, maxConnect::T2, remesh::T3, collision::T3, separation::T3, virtualRemesh::T3, edgeDrag::T1, screwDrag::T1, climbDrag::T1, lineDrag::T1, mobility::T4, parCPU::T3 = false, parGPU::T3 = false) where {T1, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
 ```
 Keyword constructor for [`DislocationParameters`](@ref). Validates values and calculates derived quantities.
 """
-@inline function DislocationParameters(;
-    coreRad::T1,
+function DislocationParameters(
+    coreRad::T1, 
     coreRadMag::T1,
     minSegLen::T1,
     maxSegLen::T1,
@@ -218,14 +53,19 @@ Keyword constructor for [`DislocationParameters`](@ref). Validates values and ca
     collision::T3,
     separation::T3,
     virtualRemesh::T3,
-    parCPU::T3 = false,
-    parGPU::T3 = false,
     edgeDrag::T1,
     screwDrag::T1,
     climbDrag::T1,
     lineDrag::T1,
     mobility::T4,
-) where {T1, T2 <: Int, T3 <: Bool, T4 <: AbstractMobility}
+    parCPU::T3 = false,
+    parGPU::T3 = false
+) where {
+    T1,
+    T2 <: Int,
+    T3 <: Bool,
+    T4 <: AbstractMobility
+}
 
     coreRad == minSegLen == maxSegLen == 0 ? nothing :
     @assert coreRad < minSegLen < maxSegLen
@@ -248,125 +88,66 @@ Keyword constructor for [`DislocationParameters`](@ref). Validates values and ca
         collision,
         separation,
         virtualRemesh,
+        edgeDrag,
+        screwDrag,
+        climbDrag,
+        lineDrag,
         parCPU,
         parGPU,
+        mobility
+    )
+end
+function DislocationParameters(;
+    coreRad::T1,
+    coreRadMag::T1,
+    minSegLen::T1,
+    maxSegLen::T1,
+    minArea::T1,
+    maxArea::T1,
+    maxConnect::T2,
+    remesh::T3,
+    collision::T3,
+    separation::T3,
+    virtualRemesh::T3,
+    edgeDrag::T1,
+    screwDrag::T1,
+    climbDrag::T1,
+    lineDrag::T1,
+    mobility::T4,
+    parCPU::T3 = false,
+    parGPU::T3 = false
+) where {
+    T1,
+    T2 <: Int,
+    T3 <: Bool,
+    T4 <: AbstractMobility
+}
+    return DislocationParameters(
+        coreRad,
+        coreRadMag,
+        minSegLen,
+        maxSegLen,
+        minArea,
+        maxArea,
+        maxConnect,
+        remesh,
+        collision,
+        separation,
+        virtualRemesh,
         edgeDrag,
         screwDrag,
         climbDrag,
         lineDrag,
         mobility,
+        parCPU = false,
+        parGPU = false
     )
 end
 
-"""
-```
-struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
-    loopType::T1    # Loop type
-    numSides::T2    # Number of sides per loop
-    nodeSide::T2    # Number of nodes per side
-    numLoops::T2    # Number of loops to generate
-    segLen::T3      # Segment lengths
-    slipSystem::T4  # Slip system
-    links::T5       # Links matrix
-    slipPlane::T6   # Slip plane for each link
-    bVec::T6        # Burgers vector for each link
-    coord::T6       # Coordinates of each node
-    label::T7       # Label of each node
-    buffer::T8      # Mean distance buffer separating each loop centre
-    range::T6       # Distribution range of generated loops
-    dist::T9        # Distribution of generated loops
-end
-```
-Structure to store dislocation loop.
-"""
-struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
-    loopType::T1
-    numSides::T2
-    nodeSide::T2
-    numLoops::T2
-    segLen::T3
-    slipSystem::T4
-    links::T5
-    slipPlane::T6
-    bVec::T6
-    coord::T6
-    label::T7
-    buffer::T8
-    range::T6
-    dist::T9
-end
-"""
-```
-DislocationLoop(;
-    loopType::T1,
-    numSides::T2,
-    nodeSide::T2,
-    numLoops::T2,
-    segLen::T3,
-    slipSystem::T2,
-    _slipPlane::T4,
-    _bVec::T4,
-    label::T5,
-    buffer::T6,
-    range::T7,
-    dist::T8,
-) where {
-    T1 <: AbstractDlnStr,
-    T2 <: Int,
-    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
-    T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{nodeType},
-    T6,
-    T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution,
-}
-```
-Generic keyword constructor for [`DislocationLoop`](@ref). Calls other constructors that dispatch on [`loopType`](@ref).
-"""
-@inline function DislocationLoop(;
-    loopType::T1,
-    numSides::T2,
-    nodeSide::T2,
-    numLoops::T2,
-    segLen::T3,
-    slipSystem::T2,
-    _slipPlane::T4,
-    _bVec::T4,
-    label::T5,
-    buffer::T6,
-    range::T7,
-    dist::T8,
-) where {
-    T1 <: AbstractDlnStr,
-    T2 <: Int,
-    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
-    T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{nodeType},
-    T6,
-    T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution,
-}
-
-    return DislocationLoop(
-        loopType;
-        numSides = numSides,
-        nodeSide = nodeSide,
-        numLoops = numLoops,
-        segLen = segLen,
-        slipSystem = slipSystem,
-        _slipPlane = _slipPlane,
-        _bVec = _bVec,
-        label = label,
-        buffer = buffer,
-        range = range,
-        dist = dist,
-    )
-
-end
 """
 ```
 DislocationLoop(
-    loopType::T1;
+    loopType::T1,
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
@@ -391,8 +172,8 @@ DislocationLoop(
 ```
 Constructor for a "zero" [`DislocationLoop`](@ref).
 """
-@inline function DislocationLoop(
-    loopType::T1;
+function DislocationLoop(
+    loopType::T1,
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
@@ -403,7 +184,7 @@ Constructor for a "zero" [`DislocationLoop`](@ref).
     label::T5,
     buffer::T6,
     range::T7,
-    dist::T8,
+    dist::T8
 ) where {
     T1 <: loopDln,
     T2 <: Int,
@@ -412,7 +193,7 @@ Constructor for a "zero" [`DislocationLoop`](@ref).
     T5 <: AbstractVector{nodeType},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution,
+    T8 <: AbstractDistribution
 }
 
     nodeTotal::Int = 0
@@ -435,13 +216,14 @@ Constructor for a "zero" [`DislocationLoop`](@ref).
         label,
         buffer,
         range,
-        dist,
+        dist
     )
 end
+
 """
 ```
 DislocationLoop(
-    loopType::T1;
+    loopType::T1,
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
@@ -466,8 +248,8 @@ DislocationLoop(
 ```
 Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined by the arguments.
 """
-@inline function DislocationLoop(
-    loopType::T1;
+function DislocationLoop(
+    loopType::T1,
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
@@ -478,7 +260,7 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     label::T5,
     buffer::T6,
     range::T7,
-    dist::T8,
+    dist::T8
 ) where {
     T1 <: AbstractDlnStr,
     T2 <: Int,
@@ -487,7 +269,7 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     T5 <: AbstractVector{nodeType},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution,
+    T8 <: AbstractDistribution
 }
 
     nodeTotal = numSides * nodeSide # Calculate total number of nodes for memory allocation.
@@ -523,14 +305,14 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     seg = zeros(3, numSegLen)
 
     # Create initial segments.
-    @inbounds @simd for i in eachindex(segLen)
+    for i in eachindex(segLen)
         seg[:, i] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
 
     θ = extAngle(numSides)  # External angle of a regular polygon with numSides.
 
     # Loop over polygon's sides.
-    @inbounds for i in 1:numSides
+    for i in 1:numSides
         # Index for side i.
         idx = (i - 1) * nodeSide
         # Rotate segments by external angle of polygon to make polygonal loop.
@@ -554,7 +336,7 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     coord .-= meanCoord
 
     # Create links matrix.
-    @inbounds @simd for j in 1:(nodeTotal - 1)
+    for j in 1:(nodeTotal - 1)
         links[:, j] = [j; j + 1]
     end
     links[:, nodeTotal] = [nodeTotal; 1]
@@ -579,37 +361,71 @@ end
 
 """
 ```
-struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
-    links::T1
-    slipPlane::T2
-    bVec::T2
-    coord::T2
-    label::T3
-    nodeVel::T2
-    nodeForce::T2
-    numNodeSegConnect::T4   # Number of nodes, segments and max connectivity in network
-    connectivity::T5        # Connectivity matrix
-    linksConnect::T5        # Links involved in connection
-    segIdx::T5              # Contains segment index and the nodes of the nodes in said link
-    segForce::T6            # Force on each node of each segment
-end
+DislocationLoop(;
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8,
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
+    T6,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: AbstractDistribution,
+}
 ```
-Structure to store dislocation network.
+Generic keyword constructor for [`DislocationLoop`](@ref). Calls other constructors that dispatch on [`loopType`](@ref).
 """
-struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
-    links::T1
-    slipPlane::T2
-    bVec::T2
-    coord::T2
-    label::T3
-    nodeVel::T2
-    nodeForce::T2
-    numNodeSegConnect::T4
-    connectivity::T5
-    linksConnect::T5
-    segIdx::T5
-    segForce::T6
+function DislocationLoop(;
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen::T3,
+    slipSystem::T2,
+    _slipPlane::T4,
+    _bVec::T4,
+    label::T5,
+    buffer::T6,
+    range::T7,
+    dist::T8
+) where {
+    T1 <: AbstractDlnStr,
+    T2 <: Int,
+    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
+    T4 <: AbstractArray{T, N} where {T, N},
+    T5 <: AbstractVector{nodeType},
+    T6,
+    T7 <: AbstractArray{T, N} where {T, N},
+    T8 <: AbstractDistribution
+}
+    return DislocationLoop(
+        loopType,
+        numSides,
+        nodeSide,
+        numLoops,
+        segLen,
+        slipSystem,
+        _slipPlane,
+        _bVec,
+        label,
+        buffer,
+        range,
+        dist
+    )
 end
+
 """
 ```
 DislocationNetwork(;
@@ -636,7 +452,7 @@ DislocationNetwork(;
 ```
 Keyword constructor for [`DislocationNetwork`](@ref), performs validations but creates dislocation network as provided.
 """
-@inline function DislocationNetwork(;
+function DislocationNetwork(
     links::T1,
     slipPlane::T2,
     bVec::T2,
@@ -644,9 +460,11 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
     label::T3,
     nodeVel::T2,
     nodeForce::T2,
-    numNodeSegConnect::T4 = zeros(Int, 3),
-    connectivity::T5 = zeros(Int, 1 + 2 * numNodeSegConnect[3], numNodeSegConnect[1]),
-    linksConnect::T5 = zeros(Int, 2, numNodeSegConnect[2]),
+    numNode::T4 = zeros(Int, 1),
+    numSeg::T4 = zeros(Int, 1),
+    maxConnect::T4 = zeros(Int, 1),
+    connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[1], numNode[1]),
+    linksConnect::T5 = zeros(Int, 2, numSeg[1]),
     segIdx::T5 = zeros(Int, size(links, 2), 3),
     segForce::T6 = zeros(3, size(links, 2), 0),
 ) where {
@@ -671,13 +489,58 @@ Keyword constructor for [`DislocationNetwork`](@ref), performs validations but c
         label,
         nodeVel,
         nodeForce,
-        numNodeSegConnect,
+        numNode,
+        numSeg,
+        maxConnect,
         connectivity,
         linksConnect,
         segIdx,
         segForce,
     )
 end
+
+function DislocationNetwork(;
+    links::T1,
+    slipPlane::T2,
+    bVec::T2,
+    coord::T2,
+    label::T3,
+    nodeVel::T2,
+    nodeForce::T2,
+    numNode::T4 = zeros(Int, 1),
+    numSeg::T4 = zeros(Int, 1),
+    maxConnect::T4 = zeros(Int, 1),
+    connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[3], numNode[1]),
+    linksConnect::T5 = zeros(Int, 2, numSeg[2]),
+    segIdx::T5 = zeros(Int, size(links, 2), 3),
+    segForce::T6 = zeros(3, size(links, 2), 0),
+) where {
+    T1 <: AbstractArray{T, N} where {T, N},
+    T2 <: AbstractArray{T, N} where {T, N},
+    T3 <: AbstractVector{nodeType},
+    T4 <: AbstractVector{Int},
+    T5 <: AbstractArray{Int, N} where {N},
+    T6 <: AbstractArray{T, N} where {T, N},
+}
+
+    return DislocationNetwork(
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        nodeVel,
+        nodeForce,
+        numNode,
+        numSeg,
+        maxConnect,
+        connectivity,
+        linksConnect,
+        segIdx,
+        segForce,
+    )
+end
+
 """
 ```
 DislocationNetwork(
@@ -701,7 +564,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
 - `kw...` are optional keyword arguments that will also be passed to `loopDistribution`.
 - `memBuffer` is the numerical value for allocating memory in advance, the quantity ``\\textrm{memBuffer} \\times N`` where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data, if it is `nothing` then the number of entries is ``\\textrm{round}(N \\log_{2}(N))``.
 """
-@inline function DislocationNetwork(
+function DislocationNetwork(
     sources::T1,
     maxConnect::T2 = 4,
     args...;
@@ -718,7 +581,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
     nodeTotal::Int = 0
     lims = zeros(3, 2)
     # Calculate node total.
-    @inbounds for i in eachindex(sources)
+    for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
     # Memory buffer.
@@ -738,7 +601,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
     segForce = zeros(Float64, 3, 2, nodeBuffer)
 
     nodeTotal = 0
-    @inbounds for i in eachindex(sources)
+    for i in eachindex(sources)
         # Indices.
         idx = 1 + nodeTotal
         nodesLoop = length(sources[i].label)    # Number of nodes in a loop from sources[i].
@@ -782,7 +645,9 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
         label,
         nodeVel,
         nodeForce,
-        [numNode, numSeg, maxConnect],
+        [numNode], 
+        [numSeg], 
+        [maxConnect],
         connectivity,
         linksConnect,
         segIdx,
@@ -867,12 +732,12 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
             nodeTotal += nodesLoop
         end
     end
-    network.numNodeSegConnect[1] += nodeTotal
+    network.numNode[1] += nodeTotal
 
-    network = getSegmentIdx!(network)
-    network = makeConnect!(network)
+    getSegmentIdx!(network)
+    makeConnect!(network)
 
     checkConsistency ? checkNetwork(network) : nothing
 
-    return network
+    return nothing
 end

@@ -51,15 +51,15 @@ end
 
 """
 ```
-loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
+loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
-Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialP`](@ref).
+Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialParameters`](@ref).
 """
-function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
+function loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
-    materialP = MaterialP(
+    MaterialParameters = MaterialParameters(
         μ = convert(Float64, dict["μ"]),
         μMag = convert(Float64, dict["μMag"]),
         ν = convert(Float64, dict["ν"]),
@@ -68,20 +68,20 @@ function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
         σPN = convert(Float64, dict["σPN"]),
     )
 
-    return materialP
+    return MaterialParameters
 end
 
 """
 ```
-loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
+loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
-Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationP`](@ref).
+Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationParameters`](@ref).
 """
-function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
-    integrationP = IntegrationP(;
+    IntegrationParameters = IntegrationParameters(;
         method = integDict[dict["method"]],
         tmin = convert(Float64, dict["tmin"]),
         tmax = convert(Float64, dict["tmax"]),
@@ -94,7 +94,7 @@ function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
         maxiter = convert(Int, dict["exponent"]),
     )
 
-    return integrationP
+    return IntegrationParameters
 end
 
 """
@@ -127,15 +127,15 @@ end
 
 """
 ```
-loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
+loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
-Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationP`](@ref).
+Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationParameters`](@ref).
 """
-function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
+function loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
-    dislocationP = DislocationP(;
+    DislocationParameters = DislocationParameters(;
         coreRad = convert(Float64, dict["coreRad"]),
         coreRadMag = convert(Float64, dict["coreRadMag"]),
         minSegLen = convert(Float64, dict["minSegLen"]),
@@ -156,37 +156,37 @@ function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
         mobility = mobDict[dict["mobility"]],
     )
 
-    return dislocationP
+    return DislocationParameters
 end
 
 """
 ```
 loadParams(
-    fileDislocationP::AbstractString,
-    fileMaterialP::AbstractString,
-    fileIntegrationP::AbstractString,
+    fileDislocationParameters::AbstractString,
+    fileMaterialParameters::AbstractString,
+    fileIntegrationParameters::AbstractString,
     fileSlipSystem::AbstractString,
     fileDislocationLoop::AbstractString,
 )
 ```
-Loads simulation parameters out of a dictionary loaded from a JSON file. Returns a tuple of variable types ([`DislocationP`](@ref), [`MaterialP`](@ref), [`IntegrationP`](@ref), [`SlipSystem`](@ref), [`DislocationLoop`](@ref)) or vectors of those types.
+Loads simulation parameters out of a dictionary loaded from a JSON file. Returns a tuple of variable types ([`DislocationParameters`](@ref), [`MaterialParameters`](@ref), [`IntegrationParameters`](@ref), [`SlipSystem`](@ref), [`DislocationLoop`](@ref)) or vectors of those types.
 """
 function loadParams(
-    fileDislocationP::AbstractString,
-    fileMaterialP::AbstractString,
-    fileIntegrationP::AbstractString,
+    fileDislocationParameters::AbstractString,
+    fileMaterialParameters::AbstractString,
+    fileIntegrationParameters::AbstractString,
     fileSlipSystem::AbstractString,
     fileDislocationLoop::AbstractString,
 )
     # We use JSON arrays because it lets us dump a variable number of args into a single JSON file. To keep things gonsistent we use them always. Hence the indices here.
-    dictDislocationP = load(fileDislocationP)
-    dislocationP = loadDislocationP(dictDislocationP)
+    dictDislocationParameters = load(fileDislocationParameters)
+    DislocationParameters = loadDislocationParameters(dictDislocationParameters)
 
-    dictMaterialP = load(fileMaterialP)
-    materialP = loadMaterialP(dictMaterialP)
+    dictMaterialParameters = load(fileMaterialParameters)
+    MaterialParameters = loadMaterialParameters(dictMaterialParameters)
 
-    dictIntegrationP = load(fileIntegrationP)
-    integrationP = loadIntegrationP(dictIntegrationP)
+    dictIntegrationParameters = load(fileIntegrationParameters)
+    IntegrationParameters = loadIntegrationParameters(dictIntegrationParameters)
 
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem)
@@ -197,7 +197,7 @@ function loadParams(
         dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
     end
 
-    return dislocationP, materialP, integrationP, slipSystems, dislocationLoop
+    return DislocationParameters, MaterialParameters, IntegrationParameters, slipSystems, dislocationLoop
 end
 
 """
@@ -260,21 +260,21 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     return dislocationNetwork
 end
 
-function loadIntegrationVar(fileIntegrationVar::AbstractString)
-    dict = load(fileIntegrationVar)
-    integrationVar = IntegrationVar(;
+function loadIntegrationTime(fileIntegrationTime::AbstractString)
+    dict = load(fileIntegrationTime)
+    IntegrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
         step = convert(Int, dict["step"]),
     )
-    return integrationVar
+    return IntegrationTime
 end
 
-function loadIntegrationVar(dict::Dict{T1, T2}) where {T1, T2}
-    integrationVar = IntegrationVar(;
+function loadIntegrationTime(dict::Dict{T1, T2}) where {T1, T2}
+    IntegrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
         step = convert(Int, dict["step"]),
     )
-    return integrationVar
+    return IntegrationTime
 end

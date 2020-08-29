@@ -6,8 +6,8 @@ include("DislocationTopologyAdd.jl")
 end
 
 function remeshNetwork(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
     network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;
@@ -15,8 +15,8 @@ function remeshNetwork(
 ) end
 
 function remeshInternal(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
     network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;
@@ -26,8 +26,8 @@ function remeshInternal(
 end
 
 function remeshSurface(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
     network::DislocationNetwork,
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective;

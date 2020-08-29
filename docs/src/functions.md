@@ -57,8 +57,4 @@ intAngle
 extAngle
 
 rot3D
-
-dimDot
-
-dimNorm
 ```

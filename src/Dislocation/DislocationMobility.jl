@@ -3,7 +3,7 @@
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
@@ -12,7 +12,7 @@ end
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     return dlnMobility!(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
@@ -22,7 +22,7 @@ end
     matParams::T3,
     network::T4,
     idx = nothing,
-) where {T1 <: mobBCC, T2 <: DislocationP, T3 <: MaterialP, T4 <: DislocationNetwork}
+) where {T1 <: mobBCC, T2 <: DislocationParameters, T3 <: MaterialParameters, T4 <: DislocationNetwork}
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -180,7 +180,7 @@ end
     matParams::T3,
     network::T4,
     idx = nothing,
-) where {T1 <: mobBCC, T2 <: DislocationP, T3 <: MaterialP, T4 <: DislocationNetwork}
+) where {T1 <: mobBCC, T2 <: DislocationParameters, T3 <: MaterialParameters, T4 <: DislocationNetwork}
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
