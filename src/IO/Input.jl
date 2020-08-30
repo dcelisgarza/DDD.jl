@@ -190,11 +190,16 @@ function loadParams(
 
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem)
+
     # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = load(fileDislocationLoop)
-    dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
-    for i in eachindex(dislocationLoop)
-        dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+    if typeof(dictDislocationLoop) <: AbstractArray
+        dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
+        for i in eachindex(dislocationLoop)
+            dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+        end
+    else
+        dislocationLoop = loadDislocationLoop(dictDislocationLoop, slipSystems)
     end
 
     return DislocationParams, MaterialParams, IntegrationParams, slipSystems, dislocationLoop

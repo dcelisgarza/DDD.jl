@@ -45,7 +45,9 @@ function Base.zero(::Type{DislocationNetwork})
         label = zeros(nodeType, 0),
         nodeVel = zeros(3, 0),
         nodeForce = zeros(3, 0),
-        numNodeSegConnect = [convert(Int, 0), convert(Int, 0), convert(Int, 0)],
+        numNode = [convert(Int, 0)],
+        numSeg = [convert(Int, 0)],
+        maxConnect = [convert(Int, 0)],
         segForce = zeros(3, 2, 0),
         linksConnect = zeros(Int, 2, 0),
         segIdx = zeros(Int, 0, 3),
@@ -59,21 +61,22 @@ function Base.push!(network::DislocationNetwork, n::Int)
         connectivity = zeros(Int, 1 + 2 * network.maxConnect[1], network.numNode[1] + n)
     end
 
+    elemT = eltype(network.coord)
     network = DislocationNetwork(;
         links = hcat(network.links, zeros(Int, 2, n)),
-        slipPlane = hcat(network.slipPlane, zeros(3, n)),
-        bVec = hcat(network.bVec, zeros(3, n)),
-        coord = hcat(network.coord, zeros(3, n)),
+        slipPlane = hcat(network.slipPlane, zeros(elemT, 3, n)),
+        bVec = hcat(network.bVec, zeros(elemT, 3, n)),
+        coord = hcat(network.coord, zeros(elemT, 3, n)),
         label = vcat(network.label, zeros(nodeType, n)),
-        nodeVel = hcat(network.nodeVel, zeros(3, n)),
-        nodeForce = hcat(network.nodeForce, zeros(3, n)),
+        nodeVel = hcat(network.nodeVel, zeros(elemT, 3, n)),
+        nodeForce = hcat(network.nodeForce, zeros(elemT, 3, n)),
         numNode = copy(network.numNode),
         numSeg = copy(network.numSeg),
         maxConnect = copy(network.maxConnect),
         connectivity = connectivity,
         linksConnect = hcat(network.linksConnect, zeros(Int, 2, n)),
         segIdx = vcat(network.segIdx, zeros(Int, n, 3)),
-        segForce = cat(network.segForce, zeros(3, 2, n), dims = 3),
+        segForce = cat(network.segForce, zeros(elemT, 3, 2, n), dims = 3),
     )
 
     return network

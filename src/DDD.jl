@@ -5,11 +5,13 @@ using LinearAlgebra, Plots, Statistics, InteractiveUtils, JSON, StaticArrays
 # Miscelaneous.
 include("./Misc/Misc.jl")
 export makeTypeDict, compStruct, intAngle, externalAngle, rot3D, makeInstanceDict
-export translateEnum, inclusiveComparison, ⊗
+export inclusiveComparison, ⊗
 
 include("./Type/TypeBase.jl")
 export BCC, FCC, HCP
+export MaterialParameters
 export SlipSystem, DislocationParameters, DislocationLoop, DislocationNetwork, DislocationNetwork!
+export IntegrationParameters
 # include("./Material/MaterialBase.jl")
 # export MaterialParameters, AbstractCrystalStruct, BCC, FCC, HCP
 # include("./Dislocation/DislocationBase.jl")
