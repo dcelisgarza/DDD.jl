@@ -36,7 +36,7 @@ struct MaterialParameters{T1, T2}
     crystalStruct::T2
     σPN::T1
 end
-@inline function MaterialParameters(; μ, μMag, ν, E, crystalStruct::AbstractCrystalStruct, σPN = 0.0)
+function MaterialParameters(; μ, μMag, ν, E, crystalStruct::AbstractCrystalStruct, σPN = 0.0)
     omνInv = 1 / (1 - ν)
     νomνInv = ν * omνInv
     μ4π = μ / (4π)

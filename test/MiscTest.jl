@@ -8,9 +8,9 @@ cd(@__DIR__)
     @test isapprox(intAngle(arr[1]), π / 3)
     @test isapprox(intAngle(arr[2]), π / 2)
     @test isapprox(intAngle(arr[3]), 2π / 3)
-    @test isapprox(extAngle(arr[1]), 2π / 3)
-    @test isapprox(extAngle(arr[2]), π / 2)
-    @test isapprox(extAngle(arr[3]), π / 3)
+    @test isapprox(externalAngle(arr[1]), 2π / 3)
+    @test isapprox(externalAngle(arr[2]), π / 2)
+    @test isapprox(externalAngle(arr[3]), π / 3)
     xyz = [1.0, 0.0, 0.0]
     θ = pi / 2
     uvw = [0.0, 5.0, 0.0]

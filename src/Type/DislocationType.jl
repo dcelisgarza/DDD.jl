@@ -106,6 +106,23 @@ struct SlipSystem{T1, T2}
     crystalStruct::T1
     slipPlane::T2
     bVec::T2
+
+    function SlipSystem(crystalStruct::T1, slipPlane::T2, bVec::T2) where {
+        T1 <: AbstractCrystalStruct,
+        T2 <: AbstractArray{T, N} where {T, N}
+    }
+        if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
+            if ndims(slipPlane) == 1
+                @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n == $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
+            else
+                idx = findall(x -> !isapprox(x, 0), vec(sum(slipPlane .* bVec, dims = 1)))
+                @assert isempty(idx) "SlipSystem: entries of the slip plane, n[$idx, :] = $(slipPlane[idx,:]), and Burgers vector, b[$idx, :] = $(bVec[idx,:]), are not orthogonal."
+            end
+        end
+
+        new{T1, T2}(crystalStruct, slipPlane, bVec)
+    end
+    
 end
 
 """
@@ -153,16 +170,13 @@ struct DislocationParameters{T1, T2, T3, T4}
     climbDrag::T1
     lineDrag::T1
     maxConnect::T2
-    remesh::T3
-    collision::T3
-    separation::T3
-    virtualRemesh::T3
-    parCPU::T3
-    parGPU::T3
-    mobility::T4
-    function DislocationParameters(coreRad, coreRadSq, coreRadMag, minSegLen, maxSegLen, twoMinSegLen, minArea, maxArea, minAreaSq, maxAreaSq, edgeDrag, screwDrag, climbDrag, lineDrag, maxConnect, remesh, collision, separation, virtualRemesh, parCPU, parGPU, mobility)
-        new(coreRad, coreRadSq, coreRadMag, minSegLen, maxSegLen, twoMinSegLen, minArea, maxArea, minAreaSq, maxAreaSq, edgeDrag, screwDrag, climbDrag, lineDrag, maxConnect, remesh, collision, separation, virtualRemesh, parCPU, parGPU, mobility)
-    end
+    mobility::T3
+    remesh::T4
+    collision::T4
+    separation::T4
+    virtualRemesh::T4
+    parCPU::T4
+    parGPU::T4
 end
 
 """
@@ -201,9 +215,6 @@ struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     buffer::T8
     range::T6
     dist::T9
-    function DislocationLoop(loopType, numSides, nodeSide, numLoops, segLen, slipSystem, links, slipPlane, bVec, coord, label, buffer, range, dist)
-        new(loopType, numSides, nodeSide, numLoops, segLen, slipSystem, links, slipPlane, bVec, coord, label, buffer, range, dist)
-    end
 end
 
 """
@@ -240,7 +251,36 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     linksConnect::T5
     segIdx::T5
     segForce::T6
-    function DislocationNetwork(links, slipPlane, bVec, coord, label, nodeVel, nodeForce, numNode, numSeg, maxConnect, connectivity, linksConnect, segIdx, segForce)
-        new(links, slipPlane, bVec, coord, label, nodeVel, nodeForce, numNode, numSeg, maxConnect, connectivity, linksConnect, segIdx, segForce)
+
+    function DislocationNetwork(
+        links::T1,
+        slipPlane::T2,
+        bVec::T2,
+        coord::T2,
+        label::T3,
+        nodeVel::T2,
+        nodeForce::T2,
+        numNode::T4 = zeros(Int, 1),
+        numSeg::T4 = zeros(Int, 1),
+        maxConnect::T4 = zeros(Int, 1),
+        connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[1], numNode[1]),
+        linksConnect::T5 = zeros(Int, 2, numSeg[1]),
+        segIdx::T5 = zeros(Int, size(links, 2), 3),
+        segForce::T6 = zeros(3, size(links, 2), 0),
+    ) where {
+        T1 <: AbstractArray{T, N} where {T, N},
+        T2 <: AbstractArray{T, N} where {T, N},
+        T3 <: AbstractVector{nodeType},
+        T4 <: AbstractVector{Int},
+        T5 <: AbstractArray{Int, N} where {N},
+        T6 <: AbstractArray{T, N} where {T, N},
+    }
+
+        @assert size(links, 1) == size(segForce, 2) == 2
+        @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
+        @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
+        @assert size(coord, 2) == length(label)
+
+        new{T1, T2, T3, T4, T5, T6}(links, slipPlane, bVec, coord, label, nodeVel, nodeForce, numNode, numSeg, maxConnect, connectivity, linksConnect, segIdx, segForce)
     end
 end

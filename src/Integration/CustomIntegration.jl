@@ -90,7 +90,7 @@ function deriv!(
 
     # Make surface velocity zero along the surface normal.
     idxSurf = findall(x -> x == 3, label)
-    @inbounds for node in idxSurf
+    for node in idxSurf
         # Find the links where node appears.
         nodeLink1 = links[1, :] .== node
         nodeLink2 = links[2, :] .== node

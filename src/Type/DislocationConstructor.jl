@@ -4,26 +4,6 @@ SlipSystem(crystalStruct::T1, slipPlane::T2, bVec::T2) where {T1 <: AbstractCrys
 ```
 Keyword constructor for [`SlipSystem`](@ref). Throws error if ``\\bm{b} \\not\\perp \\bm{n}`` where ``\\bm{b}`` is the Burgers vector and ``\\bm{n}`` the slip plane.
 """
-function SlipSystem(
-    crystalStruct::T1,
-    slipPlane::T2,
-    bVec::T2
-) where {
-    T1 <: AbstractCrystalStruct,
-    T2 <: AbstractArray{T, N} where {T, N}
-}
-
-    if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
-        if ndims(slipPlane) == 1
-            @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n == $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
-        else
-            idx = findall(x -> !isapprox(x, 0), vec(sum(slipPlane .* bVec, dims = 1)))
-            @assert isempty(idx) "SlipSystem: entries of the slip plane, n[$idx, :] = $(slipPlane[idx,:]), and Burgers vector, b[$idx, :] = $(bVec[idx,:]), are not orthogonal."
-        end
-    end
-
-    return SlipSystem(crystalStruct, slipPlane, bVec)
-end
 function SlipSystem(;
     crystalStruct::T1,
     slipPlane::T2,
@@ -48,99 +28,98 @@ function DislocationParameters(
     maxSegLen::T1,
     minArea::T1,
     maxArea::T1,
-    maxConnect::T2,
-    remesh::T3,
-    collision::T3,
-    separation::T3,
-    virtualRemesh::T3,
     edgeDrag::T1,
     screwDrag::T1,
     climbDrag::T1,
     lineDrag::T1,
-    mobility::T4,
-    parCPU::T3 = false,
-    parGPU::T3 = false
+    maxConnect::T2,
+    mobility::T3,
+    remesh::T4 = true,
+    collision::T4 = true,
+    separation::T4 = true,
+    virtualRemesh::T4 = true,
+    parCPU::T4 = false,
+    parGPU::T4 = false
 ) where {
     T1,
     T2 <: Int,
-    T3 <: Bool,
-    T4 <: AbstractMobility
+    T3 <: AbstractMobility,
+    T4 <: Bool
 }
 
     coreRad == minSegLen == maxSegLen == 0 ? nothing :
     @assert coreRad < minSegLen < maxSegLen
     minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
-    coreRadSq = coreRad^2
 
     return DislocationParameters(
         coreRad,
-        coreRadSq,
+        coreRad^2,
         coreRadMag,
         minSegLen,
         maxSegLen,
-        minSegLen * 2,
+        minSegLen*2,
         minArea,
         maxArea,
         minArea^2,
         maxArea^2,
-        maxConnect,
-        remesh,
-        collision,
-        separation,
-        virtualRemesh,
         edgeDrag,
         screwDrag,
         climbDrag,
         lineDrag,
+        maxConnect,
+        mobility,
+        remesh,
+        collision,
+        separation,
+        virtualRemesh,
         parCPU,
-        parGPU,
-        mobility
+        parGPU
     )
 end
 function DislocationParameters(;
-    coreRad::T1,
+    coreRad::T1, 
     coreRadMag::T1,
     minSegLen::T1,
     maxSegLen::T1,
     minArea::T1,
     maxArea::T1,
-    maxConnect::T2,
-    remesh::T3,
-    collision::T3,
-    separation::T3,
-    virtualRemesh::T3,
     edgeDrag::T1,
     screwDrag::T1,
     climbDrag::T1,
     lineDrag::T1,
-    mobility::T4,
-    parCPU::T3 = false,
-    parGPU::T3 = false
+    maxConnect::T2,
+    mobility::T3,
+    remesh::T4 = true,
+    collision::T4 = true,
+    separation::T4 = true,
+    virtualRemesh::T4 = true,
+    parCPU::T4 = false,
+    parGPU::T4 = false
 ) where {
     T1,
     T2 <: Int,
-    T3 <: Bool,
-    T4 <: AbstractMobility
+    T3 <: AbstractMobility,
+    T4 <: Bool
 }
     return DislocationParameters(
-        coreRad,
+        coreRad, 
         coreRadMag,
         minSegLen,
         maxSegLen,
         minArea,
         maxArea,
-        maxConnect,
-        remesh,
-        collision,
-        separation,
-        virtualRemesh,
         edgeDrag,
         screwDrag,
         climbDrag,
         lineDrag,
+        maxConnect,
         mobility,
-        parCPU = false,
-        parGPU = false
+        remesh,
+        collision,
+        separation,
+        virtualRemesh,
+        parCPU,
+        parGPU
     )
 end
 
@@ -309,7 +288,7 @@ function DislocationLoop(
         seg[:, i] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
 
-    θ = extAngle(numSides)  # External angle of a regular polygon with numSides.
+    θ = externalAngle(numSides)  # External angle of a regular polygon with numSides.
 
     # Loop over polygon's sides.
     for i in 1:numSides
@@ -452,53 +431,6 @@ DislocationNetwork(;
 ```
 Keyword constructor for [`DislocationNetwork`](@ref), performs validations but creates dislocation network as provided.
 """
-function DislocationNetwork(
-    links::T1,
-    slipPlane::T2,
-    bVec::T2,
-    coord::T2,
-    label::T3,
-    nodeVel::T2,
-    nodeForce::T2,
-    numNode::T4 = zeros(Int, 1),
-    numSeg::T4 = zeros(Int, 1),
-    maxConnect::T4 = zeros(Int, 1),
-    connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[1], numNode[1]),
-    linksConnect::T5 = zeros(Int, 2, numSeg[1]),
-    segIdx::T5 = zeros(Int, size(links, 2), 3),
-    segForce::T6 = zeros(3, size(links, 2), 0),
-) where {
-    T1 <: AbstractArray{T, N} where {T, N},
-    T2 <: AbstractArray{T, N} where {T, N},
-    T3 <: AbstractVector{nodeType},
-    T4 <: AbstractVector{Int},
-    T5 <: AbstractArray{Int, N} where {N},
-    T6 <: AbstractArray{T, N} where {T, N},
-}
-
-    @assert size(links, 1) == size(segForce, 2) == 2
-    @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
-    @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
-    @assert size(coord, 2) == length(label)
-
-    return DislocationNetwork(
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        nodeVel,
-        nodeForce,
-        numNode,
-        numSeg,
-        maxConnect,
-        connectivity,
-        linksConnect,
-        segIdx,
-        segForce,
-    )
-end
-
 function DislocationNetwork(;
     links::T1,
     slipPlane::T2,
@@ -678,7 +610,7 @@ DislocationNetwork!(
 ```
 In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocation network from already generated sources. If the matrices already in `network` are not large enough to accommodate the additions from `sources`, it will automatically allocate ``\\textrm{round}(N \\log_{2}(N))`` new entries where `N` is the total number of nodes in `sources`.
 """
-@inline function DislocationNetwork!(
+function DislocationNetwork!(
     network::T1,
     sources::T2,
     maxConnect::T3 = 4,
@@ -695,8 +627,8 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
 
     nodeTotal::Int = 0
     lims = zeros(3, 2)
-    network.numNodeSegConnect[3] = maxConnect
-    @inbounds for i in eachindex(sources)
+    network.maxConnect[1] = maxConnect
+    for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
 
@@ -711,7 +643,7 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
     nodeTotal = 0
     first = findfirst(x -> x == 0, network.label)
     isnothing(first) ? initIdx = 1 : initIdx = first
-    @inbounds for i in eachindex(sources)
+    for i in eachindex(sources)
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
         numLoops = sources[i].numLoops
@@ -738,6 +670,5 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
     makeConnect!(network)
 
     checkConsistency ? checkNetwork(network) : nothing
-
-    return nothing
+    return network
 end

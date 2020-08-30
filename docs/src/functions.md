@@ -54,7 +54,7 @@ compStruct
 
 intAngle
 
-extAngle
+externalAngle
 
 rot3D
 ```

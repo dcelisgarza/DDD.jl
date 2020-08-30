@@ -27,15 +27,15 @@ limits!(
 ```
 In-place addition of `buffer × segLen` to `range` in order to calculate the limits in which dislocations will exist.
 """
-@inline function limits!(
+function limits!(
     lims::T1,
     segLen::T2,
     range::T1,
     buffer::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
 
-    @inbounds for i in 1:size(lims, 2)
-        @simd for j in 1:size(lims, 1)
+    for i in 1:size(lims, 2)
+        for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
         end
     end
@@ -52,14 +52,14 @@ translatePoints(
 ```
 Translates coordinates using the limits and displacements calculated by [`limits!`](@ref) and [`loopDistribution`](@ref).
 """
-@inline function translatePoints(
+function translatePoints(
     coord::T1,
     lims::T1,
     disp::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
 
-    @inbounds for i in 1:size(coord, 2)
-        @simd for j in 1:size(coord, 1)
+    for i in 1:size(coord, 2)
+        for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
     end
@@ -77,7 +77,7 @@ makeSegment(
 ```
 Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
-@inline function makeSegment(
+function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
@@ -85,14 +85,14 @@ Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
     edge = cross(slipPlane, bVec)
     return edge ./ norm(edge)
 end
-@inline function makeSegment(
+function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
 ) where {T1 <: segEdgeN, T2 <: AbstractVector{T} where {T}}
     return slipPlane ./ norm(slipPlane)
 end
-@inline function makeSegment(
+function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
@@ -112,7 +112,7 @@ Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the 
 
 The matrix `linksConnect` relates connections enabled by a link. Analogous to the connectivity of a link.
 """
-@inline function makeConnect(
+function makeConnect(
     links::T1,
     maxConnect::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
@@ -157,7 +157,7 @@ makeConnect!(network::DislocationNetwork)
 ```
 In-place version of [`makeConnect`](@ref).
 """
-@inline function makeConnect!(network::DislocationNetwork)
+function makeConnect!(network::DislocationNetwork)
 
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
     links = network.links
@@ -192,7 +192,7 @@ getSegmentIdx(
 ```
 Creates an indexing matrix for quick indexing of dislocation segments for quick access to slip planes, burgers vectors and line vectors. The return `3 × n` matrix is of the form `[i, node1, node2]`. Index `i` can be used to find the Burgers vector, slip plane and segment forces of a segment, eg `bVec[:, i]`. While `node1` and `node2` can be used to find the coordinate and velocity of the nodes, eg `t = coord[:, node2] - coord[:, node1]`.
 """
-@inline function getSegmentIdx(
+function getSegmentIdx(
     links::T1,
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
@@ -226,7 +226,7 @@ getSegmentIdx!(network::DislocationNetwork)
 ```
 In-place version of [`getSegmentIdx`](@ref).
 """
-@inline function getSegmentIdx!(network::T1) where {T1 <: DislocationNetwork}
+function getSegmentIdx!(network::T1) where {T1 <: DislocationNetwork}
 
     links = network.links
     label = network.label
@@ -265,7 +265,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
 1. consistency betwen `connectivity` and `linksConnect`
 
 """
-@inline function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
+function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
 
     links = network.links
     label = network.label
@@ -282,7 +282,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
     bVec = network.bVec
     elemT = eltype(network.bVec)
     bSum = zeros(3)
-    @inbounds for i in 1:idx
+    for i in 1:idx
         iLinkBuffer = zeros(Int, 0)
         col = connectivity[1, i]
 

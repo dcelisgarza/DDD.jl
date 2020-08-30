@@ -1,4 +1,4 @@
-@inline function dlnMobility(
+function dlnMobility(
     dlnParams::T1,
     matParams::T2,
     network::T3,
@@ -7,7 +7,7 @@
 
     return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
-@inline function dlnMobility!(
+function dlnMobility!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
@@ -16,7 +16,7 @@ end
 
     return dlnMobility!(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
-@inline function dlnMobility(
+function dlnMobility(
     mobility::T1,
     dlnParams::T2,
     matParams::T3,
@@ -54,7 +54,7 @@ end
     nodeVel = zeros(elemT, 3, numNode)
 
     # Loop through nodes.
-    @fastmath @inbounds for (i, node1) in enumerate(idx)
+    for (i, node1) in enumerate(idx)
         totalDrag = zeros(SMatrix{3, 3, dType})
         iNodeForce = zeros(SVector{3, elemT})
         iNodeVel = zeros(SVector{3, elemT})
@@ -174,7 +174,7 @@ end
 
     return nodeForce, nodeVel
 end
-@inline function dlnMobility!(
+function dlnMobility!(
     mobility::T1,
     dlnParams::T2,
     matParams::T3,
@@ -211,7 +211,7 @@ end
     end
 
     # Loop through nodes.
-    @fastmath @inbounds for node1 in idx
+    for node1 in idx
         totalDrag = zeros(SMatrix{3, 3, dType})
         iNodeForce = zeros(SVector{3, elemT})
         iNodeVel = zeros(SVector{3, elemT})

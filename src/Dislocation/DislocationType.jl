@@ -112,7 +112,7 @@ SlipSystem(;
 ```
 Keyword constructor for [`SlipSystem`](@ref). Throws error if ``\\bm{b} \\not\\perp \\bm{n}`` where ``\\bm{b}`` is the Burgers vector and ``\\bm{n}`` the slip plane.
 """
-@inline function SlipSystem(;
+function SlipSystem(;
     crystalStruct::T1,
     slipPlane::T2,
     bVec::T2,
@@ -206,7 +206,7 @@ DislocationParameters(;
 ```
 Keyword constructor for [`DislocationParameters`](@ref). Validates values and calculates derived quantities.
 """
-@inline function DislocationParameters(;
+function DislocationParameters(;
     coreRad::T1,
     coreRadMag::T1,
     minSegLen::T1,
@@ -323,7 +323,7 @@ DislocationLoop(;
 ```
 Generic keyword constructor for [`DislocationLoop`](@ref). Calls other constructors that dispatch on [`loopType`](@ref).
 """
-@inline function DislocationLoop(;
+function DislocationLoop(;
     loopType::T1,
     numSides::T2,
     nodeSide::T2,
@@ -391,7 +391,7 @@ DislocationLoop(
 ```
 Constructor for a "zero" [`DislocationLoop`](@ref).
 """
-@inline function DislocationLoop(
+function DislocationLoop(
     loopType::T1;
     numSides::T2,
     nodeSide::T2,
@@ -466,7 +466,7 @@ DislocationLoop(
 ```
 Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined by the arguments.
 """
-@inline function DislocationLoop(
+function DislocationLoop(
     loopType::T1;
     numSides::T2,
     nodeSide::T2,
@@ -523,14 +523,14 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     seg = zeros(3, numSegLen)
 
     # Create initial segments.
-    @inbounds @simd for i in eachindex(segLen)
+    for i in eachindex(segLen)
         seg[:, i] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
     end
 
-    θ = extAngle(numSides)  # External angle of a regular polygon with numSides.
+    θ = externalAngle(numSides)  # External angle of a regular polygon with numSides.
 
     # Loop over polygon's sides.
-    @inbounds for i in 1:numSides
+    for i in 1:numSides
         # Index for side i.
         idx = (i - 1) * nodeSide
         # Rotate segments by external angle of polygon to make polygonal loop.
@@ -554,7 +554,7 @@ Validates inputs and generates a [`DislocationLoop`](@ref) of `loopType` defined
     coord .-= meanCoord
 
     # Create links matrix.
-    @inbounds @simd for j in 1:(nodeTotal - 1)
+    for j in 1:(nodeTotal - 1)
         links[:, j] = [j; j + 1]
     end
     links[:, nodeTotal] = [nodeTotal; 1]
@@ -636,7 +636,7 @@ DislocationNetwork(;
 ```
 Keyword constructor for [`DislocationNetwork`](@ref), performs validations but creates dislocation network as provided.
 """
-@inline function DislocationNetwork(;
+function DislocationNetwork(;
     links::T1,
     slipPlane::T2,
     bVec::T2,
@@ -701,7 +701,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
 - `kw...` are optional keyword arguments that will also be passed to `loopDistribution`.
 - `memBuffer` is the numerical value for allocating memory in advance, the quantity ``\\textrm{memBuffer} \\times N`` where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data, if it is `nothing` then the number of entries is ``\\textrm{round}(N \\log_{2}(N))``.
 """
-@inline function DislocationNetwork(
+function DislocationNetwork(
     sources::T1,
     maxConnect::T2 = 4,
     args...;
@@ -718,7 +718,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
     nodeTotal::Int = 0
     lims = zeros(3, 2)
     # Calculate node total.
-    @inbounds for i in eachindex(sources)
+    for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
     # Memory buffer.
@@ -738,7 +738,7 @@ Out of place constructor for [`DislocationNetwork`](@ref). Generates a new dislo
     segForce = zeros(Float64, 3, 2, nodeBuffer)
 
     nodeTotal = 0
-    @inbounds for i in eachindex(sources)
+    for i in eachindex(sources)
         # Indices.
         idx = 1 + nodeTotal
         nodesLoop = length(sources[i].label)    # Number of nodes in a loop from sources[i].
@@ -813,7 +813,7 @@ DislocationNetwork!(
 ```
 In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocation network from already generated sources. If the matrices already in `network` are not large enough to accommodate the additions from `sources`, it will automatically allocate ``\\textrm{round}(N \\log_{2}(N))`` new entries where `N` is the total number of nodes in `sources`.
 """
-@inline function DislocationNetwork!(
+function DislocationNetwork!(
     network::T1,
     sources::T2,
     maxConnect::T3 = 4,
@@ -831,7 +831,7 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
     nodeTotal::Int = 0
     lims = zeros(3, 2)
     network.numNodeSegConnect[3] = maxConnect
-    @inbounds for i in eachindex(sources)
+    for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
 
@@ -846,7 +846,7 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
     nodeTotal = 0
     first = findfirst(x -> x == 0, network.label)
     isnothing(first) ? initIdx = 1 : initIdx = first
-    @inbounds for i in eachindex(sources)
+    for i in eachindex(sources)
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
         numLoops = sources[i].numLoops

@@ -59,7 +59,7 @@ function loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
-    MaterialParameters = MaterialParameters(
+    MaterialParams = MaterialParameters(
         μ = convert(Float64, dict["μ"]),
         μMag = convert(Float64, dict["μMag"]),
         ν = convert(Float64, dict["ν"]),
@@ -68,7 +68,7 @@ function loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
         σPN = convert(Float64, dict["σPN"]),
     )
 
-    return MaterialParameters
+    return MaterialParams
 end
 
 """
@@ -81,7 +81,7 @@ function loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
-    IntegrationParameters = IntegrationParameters(;
+    IntegrationParams = IntegrationParameters(;
         method = integDict[dict["method"]],
         tmin = convert(Float64, dict["tmin"]),
         tmax = convert(Float64, dict["tmax"]),
@@ -94,7 +94,7 @@ function loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
         maxiter = convert(Int, dict["exponent"]),
     )
 
-    return IntegrationParameters
+    return IntegrationParams
 end
 
 """
@@ -135,7 +135,7 @@ function loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
-    DislocationParameters = DislocationParameters(;
+    DislocationParams = DislocationParameters(;
         coreRad = convert(Float64, dict["coreRad"]),
         coreRadMag = convert(Float64, dict["coreRadMag"]),
         minSegLen = convert(Float64, dict["minSegLen"]),
@@ -156,7 +156,7 @@ function loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
         mobility = mobDict[dict["mobility"]],
     )
 
-    return DislocationParameters
+    return DislocationParams
 end
 
 """
@@ -180,13 +180,13 @@ function loadParams(
 )
     # We use JSON arrays because it lets us dump a variable number of args into a single JSON file. To keep things gonsistent we use them always. Hence the indices here.
     dictDislocationParameters = load(fileDislocationParameters)
-    DislocationParameters = loadDislocationParameters(dictDislocationParameters)
+    DislocationParams = loadDislocationParameters(dictDislocationParameters)
 
     dictMaterialParameters = load(fileMaterialParameters)
-    MaterialParameters = loadMaterialParameters(dictMaterialParameters)
+    MaterialParams = loadMaterialParameters(dictMaterialParameters)
 
     dictIntegrationParameters = load(fileIntegrationParameters)
-    IntegrationParameters = loadIntegrationParameters(dictIntegrationParameters)
+    IntegrationParams = loadIntegrationParameters(dictIntegrationParameters)
 
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem)
@@ -197,7 +197,7 @@ function loadParams(
         dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
     end
 
-    return DislocationParameters, MaterialParameters, IntegrationParameters, slipSystems, dislocationLoop
+    return DislocationParams, MaterialParams, IntegrationParams, slipSystems, dislocationLoop
 end
 
 """
@@ -229,7 +229,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         segForce[:, 1, i] = dict["segForce"][i][1]
         segForce[:, 2, i] = dict["segForce"][i][2]
     end
-    @inbounds @simd for i in 1:lenCoord
+    for i in 1:lenCoord
         slipPlane[:, i] = dict["slipPlane"][i]
         bVec[:, i] = dict["bVec"][i]
         coord[:, i] = dict["coord"][i]
@@ -238,7 +238,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         connectivity[:, i] = dict["connectivity"][i]
     end
 
-    @inbounds @simd for i in 1:3
+    for i in 1:3
         segIdx[:, i] = dict["segIdx"][i]
     end
 

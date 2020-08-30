@@ -14,7 +14,7 @@ network.numNodeSegConnect[1]
 network.connectivity
 ```
 """
-@inline function removeNode!(
+function removeNode!(
     network::T1,
     nodeGone::T2,
     lastNode = nothing,
@@ -37,7 +37,7 @@ network.connectivity
         nodeForce[:, nodeGone] = nodeForce[:, lastNode]
         connectivity[:, nodeGone] = connectivity[:, lastNode]
         # Change the link
-        @simd for j in 1:connectivity[1, nodeGone]
+        for j in 1:connectivity[1, nodeGone]
             idx = 2 * j
             links[connectivity[idx + 1, nodeGone], connectivity[idx, nodeGone]] = nodeGone
         end
@@ -66,7 +66,7 @@ network.connectivity
 network.linksConnect
 ```
 """
-@inline function removeConnection!(
+function removeConnection!(
     network::T1,
     nodeKept::T2,
     connectGone::T2,
@@ -182,7 +182,7 @@ mergeNode(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
 ```
 Merges `nodeGone` into `nodeKept`. After calling this function there are no repeated entries, self-links or double links.
 """
-@inline @fastmath function mergeNode(
+function mergeNode(
     network::T1,
     nodeKept::T2,
     nodeGone::T2,
@@ -240,7 +240,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     connectivity[1, nodeKept] = totalConnect
 
     # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.
-    @inbounds @simd for i in 1:nodeGoneConnect
+    for i in 1:nodeGoneConnect
         link = connectivity[2 * i, nodeGone]      # Link id for nodeGone
         colLink = connectivity[2 * i + 1, nodeGone] # Position of links where link appears.
         links[colLink, link] = nodeKept         # Replace nodeGone with nodeKept.
@@ -258,7 +258,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     # Warning: connectivity can be updated by removeLink!().
     # Delete self links of nodeKept.
     i = 1
-    @inbounds while i < connectivity[1, nodeKept]
+    while i < connectivity[1, nodeKept]
         link = connectivity[2 * i, nodeKept]      # Link id for nodeKept
         colLink = connectivity[2 * i + 1, nodeKept] # Position of links where link appears.
         colNotLink = 3 - colLink # The column of the other node in the position of link in links.
@@ -272,7 +272,7 @@ Merges `nodeGone` into `nodeKept`. After calling this function there are no repe
     # Warning: connectivity can be updated in the while loop.
     # Delete duplicate links.
     i = 1
-    @inbounds while i < connectivity[1, nodeKept]
+    while i < connectivity[1, nodeKept]
         link1 = connectivity[2 * i, nodeKept]         # Link id for nodeKept
         colLink1 = connectivity[2 * i + 1, nodeKept]    # Position of links where link appears.
         colNotLink1 = 3 - colLink1 # The column of the other node in the position of link in links.
