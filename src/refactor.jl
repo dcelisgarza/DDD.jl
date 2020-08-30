@@ -35,4 +35,4 @@ network = DislocationNetwork(dislocationLoop)
 network = DislocationNetwork!(network, dislocationLoop)
 network.numSeg
 network.numNode
-network.label
+network.coord
