@@ -19,3 +19,10 @@ network = DislocationNetwork!(network, dislocationLoop)
 network.numSeg
 network.numNode
 network.coord
+
+
+fileIntegTime = "DDD/inputs/simParams/sampleIntegrationTime.JSON"
+load(fileIntegTime)
+integTime = loadIntegrationTime(fileIntegTime)
+
+    

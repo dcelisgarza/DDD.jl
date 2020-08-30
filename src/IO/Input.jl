@@ -216,12 +216,14 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
 
     lenLinks = length(dict["links"])
     lenCoord = length(dict["coord"])
-    numNodeSegConnect = convert.(Int, dict["numNodeSegConnect"])
+    numNode = [convert(Int, dict["numNode"][1])]
+    numSeg = [convert(Int, dict["numSeg"][1])]
+    maxConnect = [convert(Int, dict["maxConnect"][1])]
     links = zeros(Int, 2, lenLinks)
     slipPlane = zeros(3, lenLinks)
     bVec = zeros(3, lenLinks)
     coord = zeros(3, lenCoord)
-    connectivity = zeros(Int, 2 * numNodeSegConnect[3] + 1, lenLinks)
+    connectivity = zeros(Int, 2 * maxConnect[1] + 1, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
     segIdx = zeros(Int, lenLinks, 3)
     segForce = zeros(3, 2, lenLinks)
@@ -256,7 +258,9 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         segForce = segForce,
         nodeVel = nodeVel,
         nodeForce = nodeForce,
-        numNodeSegConnect = numNodeSegConnect,
+        numNode = numNode,
+        numSeg = numSeg,
+        maxConnect = maxConnect,
         linksConnect = linksConnect,
         connectivity = connectivity,
         segIdx = segIdx,
@@ -267,19 +271,19 @@ end
 
 function loadIntegrationTime(fileIntegrationTime::AbstractString)
     dict = load(fileIntegrationTime)
-    IntegrationTime = IntegrationTime(;
+    integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
         step = convert(Int, dict["step"]),
     )
-    return IntegrationTime
+    return integrationTime
 end
 
 function loadIntegrationTime(dict::Dict{T1, T2}) where {T1, T2}
-    IntegrationTime = IntegrationTime(;
+    integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
         step = convert(Int, dict["step"]),
     )
-    return IntegrationTime
+    return integrationTime
 end

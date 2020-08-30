@@ -4,11 +4,11 @@ using Test
 cd(@__DIR__)
 @testset "Compare loading input and output parameters" begin
     # Load and create.
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+    fileDislocationParameters = "./testData/sampleDislocationParameters.JSON"
+    fileMaterialParameters = "./testData/sampleMaterialParameters.JSON"
+    fileIntegrationParameters = "./testData/sampleIntegrationParameters.JSON"
+    fileSlipSystem = "./testData/BCC.JSON"
+    fileDislocationLoop = "./testData/samplePrismShear.JSON"
     dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
         fileDislocationParameters,
         fileMaterialParameters,
@@ -16,12 +16,12 @@ cd(@__DIR__)
         fileSlipSystem,
         fileDislocationLoop,
     )
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
-    fileIntegTime = "../inputs/simParams/sampleIntegrationTime.JSON"
+    fileDislocationLoop = "./testData/samplePrismShear.JSON"
+    fileIntegTime = "./testData/sampleIntegrationTime.JSON"
     integTime = loadIntegrationTime(fileIntegTime)
     network = DislocationNetwork(dislocationLoop, memBuffer = 1)
     # Dump simulation.
-    paramDump = "../outputs/simParams/sampleDump.JSON"
+    paramDump = "./testData/sampleDump.JSON"
     save(
         paramDump,
         dlnParams,
@@ -31,7 +31,7 @@ cd(@__DIR__)
         dislocationLoop,
         integTime,
     )
-    networkDump = "../outputs/dln/sampleNetwork.JSON"
+    networkDump = "./testData/sampleNetwork.JSON"
     save(networkDump, network)
     # Reload simulation.
     simulation = load(paramDump)

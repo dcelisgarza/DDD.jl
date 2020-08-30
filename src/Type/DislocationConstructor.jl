@@ -442,8 +442,8 @@ function DislocationNetwork(;
     numNode::T4 = zeros(Int, 1),
     numSeg::T4 = zeros(Int, 1),
     maxConnect::T4 = zeros(Int, 1),
-    connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[3], numNode[1]),
-    linksConnect::T5 = zeros(Int, 2, numSeg[2]),
+    connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[1], numNode[1]),
+    linksConnect::T5 = zeros(Int, 2, numSeg[1]),
     segIdx::T5 = zeros(Int, size(links, 2), 3),
     segForce::T6 = zeros(3, size(links, 2), 0),
 ) where {

@@ -10,8 +10,9 @@ export inclusiveComparison, ⊗
 include("./Type/TypeBase.jl")
 export BCC, FCC, HCP
 export MaterialParameters
-export SlipSystem, DislocationParameters, DislocationLoop, DislocationNetwork, DislocationNetwork!
-export IntegrationParameters
+export nodeType, SlipSystem, DislocationParameters, DislocationLoop, DislocationNetwork, DislocationNetwork!, checkNetwork
+export IntegrationParameters, IntegrationTime
+export Rand, Randn, Zeros, Regular, loopDistribution
 # include("./Material/MaterialBase.jl")
 # export MaterialParameters, AbstractCrystalStruct, BCC, FCC, HCP
 # include("./Dislocation/DislocationBase.jl")

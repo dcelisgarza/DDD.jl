@@ -55,7 +55,7 @@ mutable struct IntegrationTime{T1, T2}
     dt::T1
     time::T1
     step::T2
-    function IntegrationTime(dt::T1 = 0.0, time::T1 = 0.0, step::T2 = 0) where {T1 <: AbstractFloat, T2 <: Integer}
+    function IntegrationTime(dt::T1, time::T1, step::T2) where {T1 <: AbstractFloat, T2 <: Integer}
         new{T1, T2}(dt, time, step)
     end
 end

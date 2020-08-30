@@ -37,7 +37,7 @@ end
 
 # DislocationNetwork
 function Base.zero(::Type{DislocationNetwork})
-    return DislocationNetwork(
+    return DislocationNetwork(;
         links = zeros(Int, 2, 0),
         slipPlane = zeros(3, 0),
         bVec = zeros(3, 0),
