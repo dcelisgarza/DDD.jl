@@ -532,9 +532,8 @@ function DislocationNetwork(
     numSeg = nodeTotal
     segForce = zeros(Float64, 3, 2, nodeBuffer)
 
-    nodeTotal = 0
     initIdx = 1
-    makeNetwork!(links, slipPlane, bVec, coord, label, nodeTotal, sources, lims, initIdx, args...; kw...)
+    makeNetwork!(links, slipPlane, bVec, coord, label, sources, lims, initIdx, args...; kw...)
 
     # Calculate number of segments and indexing matrix.
     numSeg, segIdx = getSegmentIdx(links, label)
@@ -567,17 +566,16 @@ end
 
 """
 ```
-DislocationNetwork(
+function DislocationNetwork!(
     network::T1,
     sources::T2,
     args...;
-    checkConsistency::T4 = true,
+    checkConsistency::T3 = true,
     kw...,
 ) where {
     T1 <: DislocationNetwork,
     T2 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
-    T3 <: Int,
-    T4 <: Bool,
+    T3 <: Bool,
 }
 ```
 In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocation network from already generated sources. If the matrices already in `network` are not large enough to accommodate the additions from `sources`, it will automatically allocate ``\\textrm{round}(N \\log_{2}(N))`` new entries where `N` is the total number of nodes in `sources`.
@@ -595,7 +593,7 @@ function DislocationNetwork!(
 }
     # For comments see DislocationNetwork. It is a 1-to-1 translation except that this one modifies the network in-place.
 
-    iszero(network) && return DislocationNetwork(sources, args...; checkConsistency, kw...)
+    iszero(network) && return DislocationNetwork(sources, args...; checkConsistency = checkConsistency, kw...)
 
     nodeTotal::Int = 0
     lims = zeros(3, 2)
@@ -618,10 +616,9 @@ function DislocationNetwork!(
     label = network.label
 
     initIdx::Int = 1
-    nodeTotal = 0
     first = findfirst(x -> x == 0, label)
     isnothing(first) ? initIdx = 1 : initIdx = first
-    makeNetwork!(links, slipPlane, bVec, coord, label, nodeTotal, sources, lims, initIdx, args...; kw...)
+    makeNetwork!(links, slipPlane, bVec, coord, label, sources, lims, initIdx, args...; kw...)
     network.numNode[1] += numNode
 
     getSegmentIdx!(network)
@@ -631,23 +628,30 @@ function DislocationNetwork!(
     return network
 end
 
-function makeNetwork!(links, slipPlane, bVec, coord, label, nodeTotal, sources, lims, initIdx, args...; kw...)
+function makeNetwork!(links, slipPlane, bVec, coord, label, sources, lims, initIdx, args...; kw...)
+    nodeTotal::Int = 0
     for i in eachindex(sources)
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
         numLoops = sources[i].numLoops
         numNodes = numLoops * nodesLoop
+        # Calculate the normalised displacements for all loops in sources[i] according to their distribution.
         disp = loopDistribution(sources[i].dist, numLoops, args...; kw...)
+        # Calculate the real spatial limits of the distributions.
         limits!(lims, mean(sources[i].segLen), sources[i].range, sources[i].buffer)
+        # Fill out the data for all loops specified in sources[i].
         for j in 1:numLoops
+            # The number of nodes in the loop is nodesLoop, so that's our stride inside sources[i]
             idxi = idx + (j - 1) * nodesLoop
             idxf = idxi + nodesLoop - 1
+            # Links are numbered sequentially in network so we have to account for previously assigned links.
             links[:, idxi:idxf] =
                 sources[i].links[:, 1:nodesLoop] .+ (nodeTotal + initIdx - 1)
             slipPlane[:, idxi:idxf] .= sources[i].slipPlane[:, 1:nodesLoop]
             bVec[:, idxi:idxf] .= sources[i].bVec[:, 1:nodesLoop]
             coord[:, idxi:idxf] .= sources[i].coord[:, 1:nodesLoop]
             label[idxi:idxf] .= sources[i].label[1:nodesLoop]
+            # Map the normalised displacements to real space using the real limits and translate the nodes' coordinates accordingly.
             coord[:, idxi:idxf] .=
                 translatePoints(sources[i].coord[:, 1:nodesLoop], lims, disp[:, j])
             nodeTotal += nodesLoop
