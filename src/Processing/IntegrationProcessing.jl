@@ -1,3 +1,4 @@
+#=
 function deriv!(
     dlnParams::T1,
     matParams::T2,
@@ -11,7 +12,7 @@ function deriv!(
     coord = network.coord
     nodeVel = network.nodeVel
     label = network.label
-    numNode = network.numNode
+    numNode = network.numNode[1]
 
     # Fixed nodes do not move, internal fixed, surface fixed, external.
     idxFixed = findall(x -> x == 2 || x == 4 || x == 5, label)
@@ -65,7 +66,7 @@ function integrate!(
     T5 <: DislocationNetwork,
 }
 
-    numNode = network.numNode
+    numNode = network.numNode[1]
     numNode == 0 && return network
 
     # Calculate current velocity.
@@ -138,3 +139,4 @@ function integrate!(
 
     return intVars
 end
+=#

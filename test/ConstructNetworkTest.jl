@@ -251,4 +251,8 @@ end
         @test node == 2
     end
     @test size(node) == 1
+    @test isequal(1, nodeType(1))
+    @test isequal(nodeType(1), 1)
+    @test !isequal(1, nodeType(2))
+    @test !isequal(nodeType(2), 1)
 end

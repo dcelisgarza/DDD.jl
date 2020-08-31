@@ -159,6 +159,8 @@ function dlnMobility(
         end
         # Solve for velocity.
         # ξ v = f
+        iNodeVel = totalDrag \ iNodeForce
+        #=
         try
             iNodeVel = totalDrag \ iNodeForce
         catch SingularSystem
@@ -172,6 +174,7 @@ function dlnMobility(
                 end
             end
         end
+        =#
 
         nodeForce[:, i] = iNodeForce
         nodeVel[:, i] = iNodeVel
@@ -321,6 +324,9 @@ function dlnMobility!(
         end
         # Solve for velocity.
         # ξ v = f
+
+        iNodeVel = totalDrag \ iNodeForce
+        #=
         try
             iNodeVel = totalDrag \ iNodeForce
         catch SingularSystem
@@ -334,6 +340,7 @@ function dlnMobility!(
                 end
             end
         end
+        =#
 
         nodeForce[:, node1] = iNodeForce
         nodeVel[:, node1] = iNodeVel
