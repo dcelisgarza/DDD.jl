@@ -232,27 +232,8 @@ end
 end
 
 @testset "Overloaded type functions" begin
-    var = segEdge()
-    @test length(var) == 1
-    @test zero(nodeType) == 0
-    loop = zero(DislocationLoop)
-    @test length(loop) == 1
-    @test loop[1] == loop
-    @test_throws BoundsError loop[2]
-    @test eachindex(loop[1]) == 1
-    @test nodeType(3) < 4.3
-    @test nodeType(4) > 1.6
-    @test isless(nodeType(3), 4.3)
-    @test isless(1.6, nodeType(4))
-    node = nodeType(2)
-    @test_throws BoundsError node[3]
-    @test node[1] == node
-    for i in node
-        @test node == 2
-    end
-    @test size(node) == 1
-    @test isequal(1, nodeType(1))
-    @test isequal(nodeType(1), 1)
-    @test !isequal(1, nodeType(2))
-    @test !isequal(nodeType(2), 1)
+    @test nodeType(1) == 1
+    @test 1 == nodeType(1)
+    @test convert(nodeType, 2) == nodeType(2)
+    @test zero(nodeType) == nodeType(0)
 end

@@ -1,21 +1,10 @@
 ## Overloaded functions
-Base.isequal(x::Real, y::nodeType) = isequal(x, Int(y))
-Base.isequal(x::nodeType, y::Real) = isequal(Int(x), y)
 Base.:(==)(x::nodeType, y::Real) = ==(Int(x), y)
 Base.:(==)(x::Real, y::nodeType) = ==(x, Int(y))
-Base.isless(x::Real, y::nodeType) = isless(x, Int(y))
-Base.isless(x::nodeType, y::Real) = isless(Int(x), y)
 Base.convert(::Type{nodeType}, x::Real) = nodeType(Int(x))
-Base.zero(::Type{nodeType}) = 0
-Base.getindex(x::nodeType, i::Int) = i == 1 ? Int(x) : throw(BoundsError())
-Base.iterate(x::nodeType, i = 1) = (length(x) < i ? nothing : (x[i], i + 1))
-Base.length(x::nodeType) = 1
-Base.size(x::nodeType) = 1
-
-Base.length(::T) where {T <: AbstractDlnSeg} = 1
+Base.zero(::Type{nodeType}) = nodeType(0)
 
 # Dislocationloop.
-Base.length(::DislocationLoop) = 1
 Base.getindex(x::DislocationLoop, i::Int) = i == 1 ? x : throw(BoundsError())
 Base.eachindex(x::DislocationLoop) = 1
 function Base.zero(::Type{DislocationLoop})
@@ -106,10 +95,10 @@ loopDistribution(dist::Regular, n::Int, args...; kw...) = error("loopDistributio
 ```
 Returns a `3 × n` matrix whose points follow the distribution defined by the method dispatching on the concrete subtype of `dist`. When creating custom [`AbstractDistribution`](@ref) subtypes, a corresponding `loopDistribution` method must be created for the custom distribution to be used in the [`DislocationLoop`](@ref) constructors.
 """
-loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(3, n)
-loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(3, n)
-loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(3, n)
-function loopDistribution(dist::Regular, n::Int, args...; kw...)
+loopDistribution(::Rand, n::Int, args...; kw...) = rand(3, n)
+loopDistribution(::Zeros, n::Int, args...; kw...) = zeros(3, n)
+loopDistribution(::Randn, n::Int, args...; kw...) = randn(3, n)
+function loopDistribution(::Regular, n::Int, args...; kw...)
     return error("loopDistribution: regular distribution yet not implemented")
 end
 
