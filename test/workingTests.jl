@@ -24,8 +24,8 @@ intVars = loadIntegrationTime(fileIntVar)
 # network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 # DislocationNetwork!(network, dislocationLoop)
 
-shearDecagon = DislocationLoop(
-    loopShear();
+shearDecagon = DislocationLoop(;
+    loopType = loopShear(),
     numSides = 10,
     nodeSide = 1,
     numLoops = 1,
@@ -42,17 +42,113 @@ shearDecagon = DislocationLoop(
 network = DislocationNetwork(shearDecagon)
 network.coord[:, 11] = vec(mean(network.coord, dims = 2))
 network.label[11] = 1
-network.numNodeSegConnect[1] = 11
+network.numNode[1] = 11
 network.links[:, 11] = [11; 2]
 network.links[:, 12] = [11; 4]
 network.links[:, 13] = [11; 5]
 network.links[:, 14] = [11; 10]
 network.bVec[:, 11:14] .= network.bVec[:, 1]
 network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
-network = makeConnect!(network)
-network = getSegmentIdx!(network)
+makeConnect!(network)
+getSegmentIdx!(network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
+
+using JSON3, StructTypes
+StructTypes.StructType(::Type{<:DislocationNetwork}) = StructTypes.Struct()
+StructTypes.StructType(::Type{nodeType}) = StructTypes.NumberType()
+StructTypes.numbertype(::Type{nodeType}) = Int
+string = JSON3.write(network)
+newvar = JSON3.read(string)
+
+
+links = reshape(newvar["links"], 2, :)
+slipPlane = reshape(newvar["slipPlane"], 3, :)
+bVec = reshape(newvar["bVec"], 3, :)
+coord = reshape(newvar["coord"], 3, :)
+label = nodeType.(newvar["label"])
+nodeVel = reshape(newvar["nodeVel"], 3, :)
+nodeForce = reshape(newvar["nodeForce"], 3, :)
+numNode = newvar["numNode"]
+numSeg = newvar["numSeg"]
+maxConnect = newvar["maxConnect"]
+connectivity = reshape(newvar["connectivity"], 1+2*newvar["maxConnect"], :)
+linksConnect = reshape(newvar["linksConnect"], 2, :)
+segIdx = reshape(newvar["segIdx"], :, 3)
+segForce = reshape(newvar["segForce"], 3, 2, :)
+
+network2 = DislocationNetwork(;
+    links = copy(reshape(newvar["links"], 2, :)),
+    slipPlane = copy(reshape(newvar["slipPlane"], 3, :)),
+    bVec = copy(reshape(newvar["bVec"], 3, :)),
+    coord = copy(reshape(newvar["coord"], 3, :)),
+    label = copy(nodeType.(newvar["label"])),
+    nodeVel = copy(Float64.(reshape(newvar["nodeVel"], 3, :))),
+    nodeForce = copy(Float64.(reshape(newvar["nodeForce"], 3, :))),
+    numNode = copy(newvar["numNode"]),
+    numSeg = copy(newvar["numSeg"]),
+    maxConnect = copy(newvar["maxConnect"]),
+    connectivity = copy(reshape(newvar["connectivity"], 1+2*newvar["maxConnect"], :)),
+    linksConnect = copy(reshape(newvar["linksConnect"], 2, :)),
+    segIdx = copy(reshape(newvar["segIdx"], :, 3)),
+    segForce = copy(Float64.(reshape(newvar["segForce"], 3, 2, :))),
+)
+
+compStruct(network, network2)
+
+network.segForce
+
+
+abstract type Vehicle end
+
+struct Car <: Vehicle
+    type::String
+    make::String
+    model::String
+    seatingCapacity::Int
+    topSpeed::Float64
+end
+
+struct Truck <: Vehicle
+    type::String
+    make::String
+    model::String
+    payloadCapacity::Float64
+end
+
+StructTypes.StructType(::Type{Vehicle}) = StructTypes.AbstractType()
+StructTypes.StructType(::Type{Car}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Truck}) = StructTypes.Struct()
+StructTypes.subtypekey(::Type{Vehicle}) = :type
+StructTypes.subtypes(::Type{Vehicle}) = (car=Car, truck=Truck)
+
+car = JSON3.read("""
+{
+    "type": "car",
+    "make": "Mercedes-Benz",
+    "model": "S500",
+    "seatingCapacity": 5,
+    "topSpeed": 250.1
+}""", Vehicle)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 using Serialization, BSON
 
