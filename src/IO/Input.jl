@@ -51,15 +51,15 @@ end
 
 """
 ```
-loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
+loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
-Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialP`](@ref).
+Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialParameters`](@ref).
 """
-function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
+function loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
-    materialP = MaterialP(
+    MaterialParams = MaterialParameters(
         μ = convert(Float64, dict["μ"]),
         μMag = convert(Float64, dict["μMag"]),
         ν = convert(Float64, dict["ν"]),
@@ -68,20 +68,20 @@ function loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
         σPN = convert(Float64, dict["σPN"]),
     )
 
-    return materialP
+    return MaterialParams
 end
 
 """
 ```
-loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
+loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
-Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationP`](@ref).
+Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationParameters`](@ref).
 """
-function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
-    integrationP = IntegrationP(;
+    IntegrationParams = IntegrationParameters(;
         method = integDict[dict["method"]],
         tmin = convert(Float64, dict["tmin"]),
         tmax = convert(Float64, dict["tmax"]),
@@ -94,7 +94,7 @@ function loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
         maxiter = convert(Int, dict["exponent"]),
     )
 
-    return integrationP
+    return IntegrationParams
 end
 
 """
@@ -127,15 +127,15 @@ end
 
 """
 ```
-loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
+loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
-Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationP`](@ref).
+Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationParameters`](@ref).
 """
-function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
+function loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
-    dislocationP = DislocationP(;
+    DislocationParams = DislocationParameters(;
         coreRad = convert(Float64, dict["coreRad"]),
         coreRadMag = convert(Float64, dict["coreRadMag"]),
         minSegLen = convert(Float64, dict["minSegLen"]),
@@ -156,48 +156,53 @@ function loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
         mobility = mobDict[dict["mobility"]],
     )
 
-    return dislocationP
+    return DislocationParams
 end
 
 """
 ```
 loadParams(
-    fileDislocationP::AbstractString,
-    fileMaterialP::AbstractString,
-    fileIntegrationP::AbstractString,
+    fileDislocationParameters::AbstractString,
+    fileMaterialParameters::AbstractString,
+    fileIntegrationParameters::AbstractString,
     fileSlipSystem::AbstractString,
     fileDislocationLoop::AbstractString,
 )
 ```
-Loads simulation parameters out of a dictionary loaded from a JSON file. Returns a tuple of variable types ([`DislocationP`](@ref), [`MaterialP`](@ref), [`IntegrationP`](@ref), [`SlipSystem`](@ref), [`DislocationLoop`](@ref)) or vectors of those types.
+Loads simulation parameters out of a dictionary loaded from a JSON file. Returns a tuple of variable types ([`DislocationParameters`](@ref), [`MaterialParameters`](@ref), [`IntegrationParameters`](@ref), [`SlipSystem`](@ref), [`DislocationLoop`](@ref)) or vectors of those types.
 """
 function loadParams(
-    fileDislocationP::AbstractString,
-    fileMaterialP::AbstractString,
-    fileIntegrationP::AbstractString,
+    fileDislocationParameters::AbstractString,
+    fileMaterialParameters::AbstractString,
+    fileIntegrationParameters::AbstractString,
     fileSlipSystem::AbstractString,
     fileDislocationLoop::AbstractString,
 )
     # We use JSON arrays because it lets us dump a variable number of args into a single JSON file. To keep things gonsistent we use them always. Hence the indices here.
-    dictDislocationP = load(fileDislocationP)
-    dislocationP = loadDislocationP(dictDislocationP)
+    dictDislocationParameters = load(fileDislocationParameters)
+    DislocationParams = loadDislocationParameters(dictDislocationParameters)
 
-    dictMaterialP = load(fileMaterialP)
-    materialP = loadMaterialP(dictMaterialP)
+    dictMaterialParameters = load(fileMaterialParameters)
+    MaterialParams = loadMaterialParameters(dictMaterialParameters)
 
-    dictIntegrationP = load(fileIntegrationP)
-    integrationP = loadIntegrationP(dictIntegrationP)
+    dictIntegrationParameters = load(fileIntegrationParameters)
+    IntegrationParams = loadIntegrationParameters(dictIntegrationParameters)
 
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem)
+
     # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = load(fileDislocationLoop)
-    dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
-    for i in eachindex(dislocationLoop)
-        dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+    if typeof(dictDislocationLoop) <: AbstractArray
+        dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
+        for i in eachindex(dislocationLoop)
+            dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+        end
+    else
+        dislocationLoop = loadDislocationLoop(dictDislocationLoop, slipSystems)
     end
 
-    return dislocationP, materialP, integrationP, slipSystems, dislocationLoop
+    return DislocationParams, MaterialParams, IntegrationParams, slipSystems, dislocationLoop
 end
 
 """
@@ -211,12 +216,14 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
 
     lenLinks = length(dict["links"])
     lenCoord = length(dict["coord"])
-    numNodeSegConnect = convert.(Int, dict["numNodeSegConnect"])
+    numNode = [convert(Int, dict["numNode"][1])]
+    numSeg = [convert(Int, dict["numSeg"][1])]
+    maxConnect = convert(Int, dict["maxConnect"])
     links = zeros(Int, 2, lenLinks)
     slipPlane = zeros(3, lenLinks)
     bVec = zeros(3, lenLinks)
     coord = zeros(3, lenCoord)
-    connectivity = zeros(Int, 2 * numNodeSegConnect[3] + 1, lenLinks)
+    connectivity = zeros(Int, 2 * maxConnect[1] + 1, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
     segIdx = zeros(Int, lenLinks, 3)
     segForce = zeros(3, 2, lenLinks)
@@ -229,7 +236,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         segForce[:, 1, i] = dict["segForce"][i][1]
         segForce[:, 2, i] = dict["segForce"][i][2]
     end
-    @inbounds @simd for i in 1:lenCoord
+    for i in 1:lenCoord
         slipPlane[:, i] = dict["slipPlane"][i]
         bVec[:, i] = dict["bVec"][i]
         coord[:, i] = dict["coord"][i]
@@ -238,7 +245,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         connectivity[:, i] = dict["connectivity"][i]
     end
 
-    @inbounds @simd for i in 1:3
+    for i in 1:3
         segIdx[:, i] = dict["segIdx"][i]
     end
 
@@ -251,7 +258,9 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
         segForce = segForce,
         nodeVel = nodeVel,
         nodeForce = nodeForce,
-        numNodeSegConnect = numNodeSegConnect,
+        numNode = numNode,
+        numSeg = numSeg,
+        maxConnect = maxConnect,
         linksConnect = linksConnect,
         connectivity = connectivity,
         segIdx = segIdx,
@@ -260,21 +269,21 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     return dislocationNetwork
 end
 
-function loadIntegrationVar(fileIntegrationVar::AbstractString)
-    dict = load(fileIntegrationVar)
-    integrationVar = IntegrationVar(;
+function loadIntegrationTime(fileIntegrationTime::AbstractString)
+    dict = load(fileIntegrationTime)
+    integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
         step = convert(Int, dict["step"]),
     )
-    return integrationVar
+    return integrationTime
 end
 
-function loadIntegrationVar(dict::Dict{T1, T2}) where {T1, T2}
-    integrationVar = IntegrationVar(;
+function loadIntegrationTime(dict::Dict{T1, T2}) where {T1, T2}
+    integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
         step = convert(Int, dict["step"]),
     )
-    return integrationVar
+    return integrationTime
 end

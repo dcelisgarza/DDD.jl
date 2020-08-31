@@ -8,9 +8,9 @@ cd(@__DIR__)
     @test isapprox(intAngle(arr[1]), π / 3)
     @test isapprox(intAngle(arr[2]), π / 2)
     @test isapprox(intAngle(arr[3]), 2π / 3)
-    @test isapprox(extAngle(arr[1]), 2π / 3)
-    @test isapprox(extAngle(arr[2]), π / 2)
-    @test isapprox(extAngle(arr[3]), π / 3)
+    @test isapprox(externalAngle(arr[1]), 2π / 3)
+    @test isapprox(externalAngle(arr[2]), π / 2)
+    @test isapprox(externalAngle(arr[3]), π / 3)
     xyz = [1.0, 0.0, 0.0]
     θ = pi / 2
     uvw = [0.0, 5.0, 0.0]
@@ -48,10 +48,4 @@ end
     data = rand(5)
     @test inclusiveComparison(data[rand(1:5)], data...)
     @test !inclusiveComparison(data, data[rand(1:5)] * 6)
-
-    arr = [1 2 3; 5 7 11]
-    @test dimDot(arr, arr, dim = 1) == [26, 53, 130]
-    @test dimDot(arr, arr, dim = 2) == [14, 195]
-    @test dimNorm(arr, dim = 1) == [sqrt(1^2 + 5^2), sqrt(2^2 + 7^2), sqrt(3^2 + 11^2)]
-    @test dimNorm(arr, dim = 2) == [sqrt(1^2 + 2^2 + 3^2), sqrt(5^2 + 7^2 + 11^2)]
 end

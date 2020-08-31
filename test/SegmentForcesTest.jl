@@ -3,19 +3,19 @@ using Test
 cd(@__DIR__)
 
 @testset "Forces" begin
-    fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
-    fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
-    fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+    fileDislocationParameters = "./testData/sampleDislocationParameters.JSON"
+    fileMaterialParameters = "./testData/sampleMaterialParameters.JSON"
+    fileIntegrationParameters = "./testData/sampleIntegrationParameters.JSON"
+    fileSlipSystem = "./testData/BCC.JSON"
+    fileDislocationLoop = "./testData/samplePrismShear.JSON"
     dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
-        fileDislocationP,
-        fileMaterialP,
-        fileIntegrationP,
+        fileDislocationParameters,
+        fileMaterialParameters,
+        fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
     )
-    dlnParamsPar = DislocationP(;
+    dlnParamsPar = DislocationParameters(;
         coreRad = dlnParams.coreRad,
         coreRadMag = dlnParams.coreRadMag,
         minSegLen = dlnParams.minSegLen,
@@ -36,8 +36,8 @@ cd(@__DIR__)
         mobility = dlnParams.mobility,
     )
 
-    pentagon = DislocationLoop(
-        loopPrism();
+    pentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 2,
@@ -88,18 +88,18 @@ cd(@__DIR__)
     @test isapprox(selfForce[1], f1')
     @test isapprox(selfForce[2], f2')
 
-    idx = rand(1:(network.numNodeSegConnect[1]), Int(network.numNodeSegConnect[1] / 2))
+    idx = rand(1:(network.numNode[1]), Int(network.numNode[1] / 2))
     selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
     @test isapprox(selfForce[1][:, idx], selfIdx[1])
     @test isapprox(selfForce[2][:, idx], selfIdx[2])
 
-    idx = rand(1:(network.numNodeSegConnect[1]))
+    idx = rand(1:(network.numNode[1]))
     selfIdx = calcSelfForce(dlnParams, matParams, network, idx)
     @test isapprox(selfForce[1][:, idx], selfIdx[1])
     @test isapprox(selfForce[2][:, idx], selfIdx[2])
 
-    pentagon = DislocationLoop(
-        loopPrism();
+    pentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 2,
@@ -144,8 +144,8 @@ cd(@__DIR__)
     @test isapprox(remoteForcePar[:, 1, :], f1')
     @test isapprox(remoteForcePar[:, 2, :], f2')
 
-    pentagon = DislocationLoop(
-        loopPrism();
+    pentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 2,
@@ -191,18 +191,18 @@ cd(@__DIR__)
     @test isapprox(remoteForcePar[:, 1, :], f1')
     @test isapprox(remoteForcePar[:, 2, :], f2')
 
-    idx = rand(1:(network.numNodeSegConnect[2]), Int(network.numNodeSegConnect[2] / 2))
+    idx = rand(1:(network.numSeg[1]), Int(network.numSeg[1] / 2))
     serIdx = calcSegSegForce(dlnParams, matParams, network, idx)
     @test isapprox(remoteForceSer[:, :, idx], serIdx)
     @test isapprox(remoteForcePar[:, :, idx], serIdx)
 
-    idx = rand(1:(network.numNodeSegConnect[2]))
+    idx = rand(1:(network.numSeg[1]))
     serIdx = calcSegSegForce(dlnParams, matParams, network, idx)
     @test isapprox(remoteForceSer[:, :, idx], serIdx)
     @test isapprox(remoteForcePar[:, :, idx], serIdx)
 
-    hexagonPris = DislocationLoop(
-        loopPrism();
+    hexagonPris = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 6,
         nodeSide = 1,
         numLoops = 1,
@@ -215,8 +215,8 @@ cd(@__DIR__)
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
-    hexagonShear = DislocationLoop(
-        loopShear();
+    hexagonShear = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 6,
         nodeSide = 1,
         numLoops = 1,
@@ -281,14 +281,14 @@ cd(@__DIR__)
     @test isapprox(totalForceSer[:, 1, :], totalForcePar[:, 1, :])
     @test isapprox(totalForceSer[:, 2, :], totalForcePar[:, 2, :])
 
-    idx = rand(1:(network.numNodeSegConnect[2]), Int(network.numNodeSegConnect[2] / 2))
+    idx = rand(1:(network.numSeg[1]), Int(network.numSeg[1] / 2))
     totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
     totalForceSer = calcSegForce(dlnParams, matParams, network)
     totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
-    idx = rand(1:(network.numNodeSegConnect[2]))
+    idx = rand(1:(network.numSeg[1]))
     totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
     totalForceSer = calcSegForce(dlnParams, matParams, network)
     totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
@@ -296,7 +296,7 @@ cd(@__DIR__)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
     # In-place functions.
-    numSeg = network.numNodeSegConnect[2]
+    numSeg = network.numSeg[1]
     idx = rand(1:numSeg)
     self = calcSelfForce(dlnParams, matParams, network)
     selfIdx = calcSelfForce(dlnParams, matParams, network, idx)

@@ -7,20 +7,20 @@ using DDD
 cd(@__DIR__)
 plotlyjs()
 
-fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
-fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
-fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
+fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
+fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
+fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
 fileSlipSystem = "../data/slipSystems/BCC.JSON"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
 fileIntVar = "../inputs/simParams/sampleIntegrationTime.JSON"
 dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
-    fileDislocationP,
-    fileMaterialP,
-    fileIntegrationP,
+    fileDislocationParameters,
+    fileMaterialParameters,
+    fileIntegrationParameters,
     fileSlipSystem,
     fileDislocationLoop,
 )
-intVars = loadIntegrationVar(fileIntVar)
+intVars = loadIntegrationTime(fileIntVar)
 # network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 # DislocationNetwork!(network, dislocationLoop)
 
@@ -255,7 +255,7 @@ fig = plotNodes(
     # size=(400,400)
 )
 
-dlnParamsPar = DislocationP(;
+dlnParamsPar = DislocationParameters(;
     coreRad = dlnParams.coreRad,
     coreRadMag = dlnParams.coreRadMag,
     minSegLen = dlnParams.minSegLen,
@@ -352,15 +352,18 @@ var.c
 
     mutable struct mutate_me
         a :: Array{Int, 2}
+        b :: Vector{Int}
     end
 
     struct immutate_me
         a :: Array{Int, 2}
+        b :: Vector{Int}
     end
 
     function foo!(variable, condition)
         if condition
-            variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+            # variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
         end
         variable.a .= LinearIndices(variable.a)
         return nothing
@@ -368,14 +371,15 @@ var.c
 
     function foo(variable, condition)
         if condition
-            variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+            # variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
         end
         variable.a .= LinearIndices(variable.a)
         return variable
     end
 
-    mutating_var = mutate_me([0 0 0; 0 0 0])
-    immutating_var = immutate_me([0 0 0; 0 0 0])
+    mutating_var = mutate_me([0 0 0; 0 0 0], [0,0,0])
+    immutating_var = immutate_me([0 0 0; 0 0 0], [0,0,0])
 
     # Always works
     foo!(mutating_var, rand(Bool))
@@ -390,3 +394,133 @@ var.c
 
     # immutating_var always changes
     immutating_var = foo(immutating_var, rand(Bool))
+
+    function watanabe(var)
+        append!(var.b, zeros(Int, 2*length(var.b)))
+        var.b .= LinearIndices(var.b)
+        return nothing
+    end
+
+
+    mutating_var = mutate_me([0 0 0; 0 0 0], [0,0,0])
+    immutating_var = immutate_me([0 0 0; 0 0 0], [0,0,0])
+    watanabe(mutating_var)
+    watanabe(immutating_var)
+    mutating_var
+    immutating_var
+
+    prod(size(mutating_var.a))
+
+
+    # Methods to implement for linear arrays
+    # https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array-1
+    struct LinearArray{T,N} <: AbstractArray{T,N} end
+    struct VectorisedArray{T, N} <: AbstractArray{T, N} 
+        size::NTuple{N, Int}
+        data::Vector{T}
+    end
+
+    Base.size(V::VectorisedArray) = V.size
+    Base.IndexStyle(::Type{<:VectorisedArray}) = IndexLinear()
+    Base.getindex(V::VectorisedArray, i::Int) = V.data[i]
+    function Base.getindex(V::VectorisedArray, I::Vararg{Int, N}) where N 
+        idx = I[1]
+
+        for i in 2:N
+            idx += prod(V.size[1:i-1]) * (I[i] - 1)
+        end
+
+        return V.data[idx]
+    end
+    function Base.setindex!(V::VectorisedArray, v, i::Int)
+        return V.data[i] = v
+    end
+    function Base.setindex!(V::VectorisedArray, v, I::Vararg{Int, N}) where N 
+        return V.data[I] = v
+    end
+    function Base.hcat(V::VectorisedArray, i::Int)
+        size = zeros(Int, length(V.size))
+        size .= V.size
+        size[end] += i
+        append!(V.data, zeros(eltype(V.data), prod(V.size)*i))
+        V = VectorisedArray(Tuple(size), V.data)
+        return V
+    end
+
+a = [5,6]
+
+b = (7,8)
+c = zeros(Int, length(b))
+
+c .= b
+vec(b)
+Tuple(a)
+dim = (3, 2)
+I = (2, 2)
+data = [1,2,3,4,5,6]
+
+data[I[1] + dim[2]*(I[2]-1)]
+
+
+I[1] + dim[2]*(I[2]-1) + dim[2]*dim[3]*(I[3]-1)
+
+
+
+println(wak...)
+
+sum(wak[end:-1:1].*(test[1:end].-1))
+sum(I[end:-1:1]*(V.dim[1:end]-1))
+
+VectorisedArray((4,2), [1,2,3,4,5,6,7,8])
+size([1 2])
+test = VectorisedArray((4,2), [1,2,3,4,5,6,7,8])
+
+test = push!(test, 5)
+
+
+
+test[2,1]
+
+test = (3,2)
+test[1]
+
+
+VectorisedArray{T, N}(init, I...) where {T, N} = 1
+
+test = (5, 6)
+println(test...)
+
+
+var = LinearArray{Int, 2}(undef, 2, 5)
+size(var)
+
+
+struct foo{T1, T2}
+    a::T1
+    b::T2
+end
+
+function bar(foo)
+
+    a = foo.a
+    b = foo.b
+
+    a .= -1
+    a[1,1:2] = [50, -50]
+    b .-= 30
+    return nothing
+end
+
+
+test = foo([4 -5; 5 2; 6 57],[5])
+test
+
+bar(test)
+
+test
+
+test.a
+
+test.a .= 0
+
+test

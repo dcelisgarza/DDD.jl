@@ -3,9 +3,9 @@ using Plots, BenchmarkTools, LinearAlgebra, Interact
 using DDD
 
 # Define material parameters.
-materialP = MaterialP(; μ = 1.0, μMag = 1.45e5, ν = 0.28, E = 1.0, crystalStruct = BCC())
+MaterialParameters = MaterialParameters(; μ = 1.0, μMag = 1.45e5, ν = 0.28, E = 1.0, crystalStruct = BCC())
 # Define dislocation parameters.
-dislocationP = DislocationP(;
+DislocationParameters = DislocationParameters(;
     coreRad = 90.78,
     coreRadMag = 1e-3,
     minSegLen = 300.0,
@@ -24,7 +24,7 @@ dislocationP = DislocationP(;
     mobility = mobBCC(),
 )
 # Define integration parameters
-integrationP = IntegrationP(;
+IntegrationParameters = IntegrationParameters(;
     dt = 1e3,
     tmin = 0.0,
     tmax = 1e10,

@@ -1,28 +1,28 @@
-@inline function dlnMobility(
+function dlnMobility(
     dlnParams::T1,
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
-@inline function dlnMobility!(
+function dlnMobility!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     return dlnMobility!(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
-@inline function dlnMobility(
+function dlnMobility(
     mobility::T1,
     dlnParams::T2,
     matParams::T3,
     network::T4,
     idx = nothing,
-) where {T1 <: mobBCC, T2 <: DislocationP, T3 <: MaterialP, T4 <: DislocationNetwork}
+) where {T1 <: mobBCC, T2 <: DislocationParameters, T3 <: MaterialParameters, T4 <: DislocationNetwork}
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -37,14 +37,14 @@ end
     links = network.links
     bVec = network.bVec
     coord = network.coord
-    maxConnect = network.numNodeSegConnect[3]
+    maxConnect = network.maxConnect
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
-        numNode = network.numNodeSegConnect[1]
+        numNode = network.numNode[1]
         idx = 1:numNode
     else
         numNode = length(idx)
@@ -54,7 +54,7 @@ end
     nodeVel = zeros(elemT, 3, numNode)
 
     # Loop through nodes.
-    @fastmath @inbounds for (i, node1) in enumerate(idx)
+    for (i, node1) in enumerate(idx)
         totalDrag = zeros(SMatrix{3, 3, dType})
         iNodeForce = zeros(SVector{3, elemT})
         iNodeVel = zeros(SVector{3, elemT})
@@ -174,13 +174,13 @@ end
 
     return nodeForce, nodeVel
 end
-@inline function dlnMobility!(
+function dlnMobility!(
     mobility::T1,
     dlnParams::T2,
     matParams::T3,
     network::T4,
     idx = nothing,
-) where {T1 <: mobBCC, T2 <: DislocationP, T3 <: MaterialP, T4 <: DislocationNetwork}
+) where {T1 <: mobBCC, T2 <: DislocationParameters, T3 <: MaterialParameters, T4 <: DislocationNetwork}
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -197,21 +197,21 @@ end
     coord = network.coord
     nodeVel = network.nodeVel
     nodeForce = network.nodeForce
-    maxConnect = network.numNodeSegConnect[3]
+    maxConnect = network.maxConnect
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
-        numNode = network.numNodeSegConnect[1]
+        numNode = network.numNode[1]
         idx = 1:numNode
     else
         numNode = length(idx)
     end
 
     # Loop through nodes.
-    @fastmath @inbounds for node1 in idx
+    for node1 in idx
         totalDrag = zeros(SMatrix{3, 3, dType})
         iNodeForce = zeros(SVector{3, elemT})
         iNodeVel = zeros(SVector{3, elemT})

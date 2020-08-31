@@ -4,7 +4,7 @@ import DDD: nodeType, AbstractDlnSeg, AbstractDlnStr, AbstractDistribution
 import DDD:
     AbstractMobility,
     SlipSystem,
-    DislocationP,
+    DislocationParameters,
     loopDln,
     loopDistribution,
     limits!,

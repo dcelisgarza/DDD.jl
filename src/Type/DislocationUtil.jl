@@ -1,3 +1,106 @@
+## Overloaded functions
+Base.isequal(x::Real, y::nodeType) = isequal(x, Int(y))
+Base.isequal(x::nodeType, y::Real) = isequal(Int(x), y)
+Base.:(==)(x::nodeType, y::Real) = ==(Int(x), y)
+Base.:(==)(x::Real, y::nodeType) = ==(x, Int(y))
+Base.isless(x::Real, y::nodeType) = isless(x, Int(y))
+Base.isless(x::nodeType, y::Real) = isless(Int(x), y)
+Base.convert(::Type{nodeType}, x::Real) = nodeType(Int(x))
+Base.zero(::Type{nodeType}) = 0
+Base.getindex(x::nodeType, i::Int) = i == 1 ? Int(x) : throw(BoundsError())
+Base.iterate(x::nodeType, i = 1) = (length(x) < i ? nothing : (x[i], i + 1))
+Base.length(x::nodeType) = 1
+Base.size(x::nodeType) = 1
+
+Base.length(::T) where {T <: AbstractDlnSeg} = 1
+
+# Dislocationloop.
+Base.length(::DislocationLoop) = 1
+Base.getindex(x::DislocationLoop, i::Int) = i == 1 ? x : throw(BoundsError())
+Base.eachindex(x::DislocationLoop) = 1
+function Base.zero(::Type{DislocationLoop})
+    return DislocationLoop(;
+        loopType = loopDln(),
+        numSides = convert(Int, 0),
+        nodeSide = convert(Int, 0),
+        numLoops = convert(Int, 0),
+        segLen = convert(Float64, 0),
+        slipSystem = convert(Int, 0),
+        _slipPlane = zeros(3, 0),
+        _bVec = zeros(3, 0),
+        label = zeros(nodeType, 0),
+        buffer = convert(Float64, 0),
+        range = zeros(3, 0),
+        dist = Zeros(),
+    )
+end
+
+# DislocationNetwork
+function Base.zero(::Type{DislocationNetwork})
+    return DislocationNetwork(;
+        links = zeros(Int, 2, 0),
+        slipPlane = zeros(3, 0),
+        bVec = zeros(3, 0),
+        coord = zeros(3, 0),
+        label = zeros(nodeType, 0),
+        nodeVel = zeros(3, 0),
+        nodeForce = zeros(3, 0),
+        numNode = [0],
+        numSeg = [0],
+        maxConnect = 0,
+        segForce = zeros(3, 2, 0),
+        linksConnect = zeros(Int, 2, 0),
+        segIdx = zeros(Int, 0, 3),
+    )
+end
+function Base.push!(network::DislocationNetwork, n::Int)
+
+    if size(network.connectivity, 1) > 1
+        connectivity = hcat(network.connectivity, zeros(Int, size(network.connectivity, 1), n))
+    else
+        connectivity = zeros(Int, 1 + 2 * network.maxConnect, length(network.label) + n)
+    end
+
+    elemT = eltype(network.coord)
+    network = DislocationNetwork(;
+        links = hcat(network.links, zeros(Int, 2, n)),
+        slipPlane = hcat(network.slipPlane, zeros(elemT, 3, n)),
+        bVec = hcat(network.bVec, zeros(elemT, 3, n)),
+        coord = hcat(network.coord, zeros(elemT, 3, n)),
+        label = vcat(network.label, zeros(nodeType, n)),
+        nodeVel = hcat(network.nodeVel, zeros(elemT, 3, n)),
+        nodeForce = hcat(network.nodeForce, zeros(elemT, 3, n)),
+        numNode = copy(network.numNode),
+        numSeg = copy(network.numSeg),
+        maxConnect = copy(network.maxConnect),
+        connectivity = connectivity,
+        linksConnect = hcat(network.linksConnect, zeros(Int, 2, n)),
+        segIdx = vcat(network.segIdx, zeros(Int, n, 3)),
+        segForce = cat(network.segForce, zeros(elemT, 3, 2, n), dims = 3),
+    )
+
+    return network
+end
+function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector{Int}})
+    return network.links[:, i],
+    network.slipPlane[:, i],
+    network.bVec[:, i],
+    network.coord[:, i],
+    network.label[i],
+    network.nodeVel[:, i],
+    network.nodeForce[:, i],
+    network.connectivity[:, i],
+    network.linksConnect[:, i],
+    network.segIdx[i, :],
+    network.segForce[:, :, i]
+end
+function Base.iszero(network::DislocationNetwork)
+    network.maxConnect == 0 && return true
+    return false
+end
+
+
+
 ## Distributions
 """
 ```
@@ -27,15 +130,9 @@ limits!(
 ```
 In-place addition of `buffer × segLen` to `range` in order to calculate the limits in which dislocations will exist.
 """
-@inline function limits!(
-    lims::T1,
-    segLen::T2,
-    range::T1,
-    buffer::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
-
-    @inbounds for i in 1:size(lims, 2)
-        @simd for j in 1:size(lims, 1)
+function limits!(lims::T1, segLen::T2, range::T1, buffer::T2) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
+    for i in 1:size(lims, 2)
+        for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
         end
     end
@@ -52,14 +149,14 @@ translatePoints(
 ```
 Translates coordinates using the limits and displacements calculated by [`limits!`](@ref) and [`loopDistribution`](@ref).
 """
-@inline function translatePoints(
+function translatePoints(
     coord::T1,
     lims::T1,
     disp::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
 
-    @inbounds for i in 1:size(coord, 2)
-        @simd for j in 1:size(coord, 1)
+    for i in 1:size(coord, 2)
+        for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
     end
@@ -77,7 +174,7 @@ makeSegment(
 ```
 Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
-@inline function makeSegment(
+function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
@@ -85,14 +182,14 @@ Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
     edge = cross(slipPlane, bVec)
     return edge ./ norm(edge)
 end
-@inline function makeSegment(
+function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
 ) where {T1 <: segEdgeN, T2 <: AbstractVector{T} where {T}}
     return slipPlane ./ norm(slipPlane)
 end
-@inline function makeSegment(
+function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
@@ -112,7 +209,7 @@ Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the 
 
 The matrix `linksConnect` relates connections enabled by a link. Analogous to the connectivity of a link.
 """
-@inline function makeConnect(
+function makeConnect(
     links::T1,
     maxConnect::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
@@ -157,7 +254,7 @@ makeConnect!(network::DislocationNetwork)
 ```
 In-place version of [`makeConnect`](@ref).
 """
-@inline function makeConnect!(network::DislocationNetwork)
+function makeConnect!(network::DislocationNetwork)
 
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
     links = network.links
@@ -180,7 +277,8 @@ In-place version of [`makeConnect`](@ref).
         linksConnect[1, i] = connectivity[1, n1]
         linksConnect[2, i] = connectivity[1, n2]
     end
-    return network
+
+    return nothing
 end
 
 """
@@ -192,7 +290,7 @@ getSegmentIdx(
 ```
 Creates an indexing matrix for quick indexing of dislocation segments for quick access to slip planes, burgers vectors and line vectors. The return `3 × n` matrix is of the form `[i, node1, node2]`. Index `i` can be used to find the Burgers vector, slip plane and segment forces of a segment, eg `bVec[:, i]`. While `node1` and `node2` can be used to find the coordinate and velocity of the nodes, eg `t = coord[:, node2] - coord[:, node1]`.
 """
-@inline function getSegmentIdx(
+function getSegmentIdx(
     links::T1,
     label::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
@@ -226,28 +324,32 @@ getSegmentIdx!(network::DislocationNetwork)
 ```
 In-place version of [`getSegmentIdx`](@ref).
 """
-@inline function getSegmentIdx!(network::T1) where {T1 <: DislocationNetwork}
+function getSegmentIdx!(network::T1) where {T1 <: DislocationNetwork}
 
     links = network.links
     label = network.label
-
+    numSeg = network.numSeg
+    segIdx = network.segIdx
 
     lenLinks = size(links, 2)
-    lenSegIdx = size(network.segIdx, 1)
-    network.segIdx .= 0
+    lenSegIdx = size(segIdx, 1)
+    segIdx .= 0
 
     idx = findfirst(x -> x == 0, links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
-    numSeg::Int = 0
+    lNumSeg::Int = 0
+
     for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
-        numSeg += 1
-        network.segIdx[numSeg, :] = [i, n1, n2]
+        lNumSeg += 1
+        segIdx[lNumSeg, :] = [i, n1, n2]
     end
-    network.numNodeSegConnect[2] = numSeg
-    return network
+
+    numSeg[1] = lNumSeg
+    return nothing
+
 end
 
 ## Check integrity.
@@ -265,7 +367,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
 1. consistency betwen `connectivity` and `linksConnect`
 
 """
-@inline function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
+function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
 
     links = network.links
     label = network.label
@@ -282,7 +384,7 @@ Checks the validity of the dislocation network. It ensures the following conditi
     bVec = network.bVec
     elemT = eltype(network.bVec)
     bSum = zeros(3)
-    @inbounds for i in 1:idx
+    for i in 1:idx
         iLinkBuffer = zeros(Int, 0)
         col = connectivity[1, i]
 

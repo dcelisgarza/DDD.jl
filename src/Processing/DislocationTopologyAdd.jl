@@ -14,8 +14,8 @@ function splitNode(
     removeConnection!(network, splitNode, splitConnect)
 
     # New node created at the very end.
-    network.numNodeSegConnect[1] += 1
-    newNode = network.numNodeSegConnect[1]
+    network.numNode[1] += 1
+    newNode = network.numNode[1]
 
     # Allocate memory.
     if newNode > length(network.label)
@@ -29,7 +29,9 @@ function splitNode(
             label = vcat(network.label, zeros(nodeType, numNewEntries)),
             nodeVel = hcat(network.nodeVel, zeros(elemT, size(network.nodeVel, 1), numNewEntries)),
             nodeForce = hcat(network.nodeForce, zeros(elemT, size(network.nodeForce, 1), numNewEntries)),
-            numNodeSegConnect = network.numNodeSegConnect,
+            numNode = network.numNode,
+            numSeg = network.numSeg,
+            maxConnect = network.maxConnect,
             connectivity = hcat(
                 network.connectivity,
                 zeros(Int, size(network.connectivity, 1), numNewEntries),
@@ -63,8 +65,8 @@ function splitNode(
     b ⋅ b == 0 && return network
 
     # New link created at the end.
-    network.numNodeSegConnect[2] += 1
-    newSeg = network.numNodeSegConnect[2]
+    network.numSeg[1] += 1
+    newSeg = network.numSeg[1]
 
     # Allocate memory.
     if newSeg > size(network.links, 2)
@@ -79,7 +81,9 @@ function splitNode(
             label = network.label,
             nodeVel = network.nodeVel,
             nodeForce = network.nodeForce,
-            numNodeSegConnect = network.numNodeSegConnect,
+            numNode = network.numNode,
+            numSeg = network.numSeg,
+            maxConnect = network.maxConnect,
             connectivity = network.connectivity,
             linksConnect = hcat(
                 network.linksConnect,
@@ -156,7 +160,7 @@ function refineNetwork(
     network::T3,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     maxAreaSq = dlnParams.maxAreaSq
     maxSegLen = dlnParams.maxSegLen
@@ -165,13 +169,13 @@ function refineNetwork(
     links = network.links
     coord = network.coord
     label = network.label
-    numNode = network.numNodeSegConnect[1]
+    numNode = network.numNode[1]
     nodeVel = network.nodeVel
     connectivity = network.connectivity
 
     elemT = eltype(network.coord)
 
-    @inbounds for i in 1:numNode
+    for i in 1:numNode
         if connectivity[1, i] == 2 && label[i] == 1
             link1 = connectivity[2, i]  # First connection.
             link2 = connectivity[4, i]  # Second connection.
@@ -237,8 +241,8 @@ function refineNetwork(
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
 
-                newNode = network.numNodeSegConnect[1]
-                newLink = network.numNodeSegConnect[2]
+                newNode = network.numNode[1]
+                newLink = network.numSeg[1]
 
                 slipPlane[:, link2] == slipPlane[:, link1] ?
                 slipPlane[:, newLink] = slipPlane[:, link2] : nothing
@@ -287,8 +291,8 @@ function refineNetwork(
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
 
-                newNode = network.numNodeSegConnect[1]
-                newLink = network.numNodeSegConnect[2]
+                newNode = network.numNode[1]
+                newLink = network.numSeg[1]
 
                 slipPlane[:, link1] == slipPlane[:, link2] ?
                 slipPlane[:, newLink] = slipPlane[:, link1] : nothing
@@ -351,8 +355,8 @@ function refineNetwork(
                 nodeVel = network.nodeVel
                 connectivity = network.connectivity
 
-                newNode = network.numNodeSegConnect[1]
-                newLink = network.numNodeSegConnect[2]
+                newNode = network.numNode[1]
+                newLink = network.numSeg[1]
 
                 slipPlane[:, newLink] = slipPlane[:, link]
 
