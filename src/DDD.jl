@@ -8,7 +8,7 @@ export makeTypeDict, compStruct, intAngle, externalAngle, rot3D, makeInstanceDic
 export inclusiveComparison, ⊗
 
 include("./Type/TypeBase.jl")
-export BCC, FCC, HCP, loopDln, loopPrism, loopShear, AbstractShapeFunction, AbstractShapeFunction2D, AbstractShapeFunction3D, LinearQuadrangle2D, LinearQuadrangle3D
+export AbstractCrystalStruct, BCC, FCC, HCP, loopDln, loopPrism, loopShear, AbstractShapeFunction, AbstractShapeFunction2D, AbstractShapeFunction3D, LinearQuadrangle2D, LinearQuadrangle3D
 export MaterialParameters
 export nodeType, SlipSystem, DislocationParameters, DislocationLoop, DislocationNetwork, DislocationNetwork!, checkNetwork, getSegmentIdx, getSegmentIdx!, makeConnect, makeConnect!
 export IntegrationParameters, IntegrationTime
