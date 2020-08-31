@@ -4,10 +4,10 @@ makeInstanceDict(valType::DataType)
 ```
 Make a dictionary of enumerated variable instances. Helps in translating JSON files.
 """
-@inline function makeInstanceDict(valType::DataType)
+function makeInstanceDict(valType::DataType)
     insts = instances(valType)
     dict = Dict{String, valType}()
-    @inbounds @simd for inst in insts
+    for inst in insts
         push!(dict, string(inst) => inst)
     end
     return dict
@@ -17,7 +17,7 @@ end
 ```
 subTypeTree(t; dict = Dict(), level = 1, cutoff = 0)
 ```
-Create subtype dictionary. . Adapted from https://github.com/JuliaLang/julia/issues/24741
+Create subtype dictionary. Adapted from https://github.com/JuliaLang/julia/issues/24741
 """
 function subTypeTree(t; dict = Dict(), level = 1, cutoff = 0)
     level > cutoff ? push!(dict, t => supertype(t)) : nothing
@@ -47,10 +47,10 @@ Dict{String,Any} with 4 entries:
   "MyStruct2()"     => MyStruct2()
 ```
 """
-@inline function makeTypeDict(valType::DataType; cutoff = 1)
+function makeTypeDict(valType::DataType; cutoff = 1)
     primitive = subTypeTree(valType; cutoff = cutoff)
     dict = Dict{String, Any}()
-    @inbounds for (key, val) in primitive
+    for (key, val) in primitive
         strSubType = string(key) * "()"
         push!(dict, strSubType => key())
         if strSubType[1:4] == "DDD."
@@ -77,8 +77,8 @@ julia> inclusiveComparison(23.246, 1.5, 4, 5, "f")
 false
 ```
 """
-@inline function inclusiveComparison(data, args...)::Bool
-    @inbounds @simd for i in eachindex(args)
+function inclusiveComparison(data, args...)::Bool
+    for i in eachindex(args)
         if data == args[i]
             return true
         end
@@ -109,7 +109,7 @@ julia> compStruct(1, [1]; verbose = true)
 false
 ```
 """
-@inline function compStruct(arg1, arg2; verbose::Bool = false)
+function compStruct(arg1, arg2; verbose::Bool = false)
     if typeof(arg1) != typeof(arg2)
         !verbose ? nothing :
         @warn "compStruct: Variables have different types:\n\ttypeof(arg1) = $(typeof(arg1))\n\ttypeof(arg2) = $(typeof(arg2))"
@@ -117,7 +117,7 @@ false
     end
     names = fieldnames(typeof(arg1))
     flag::Bool = true
-    @inbounds @simd for name in names
+    for name in names
         result = getproperty(arg1, name) == getproperty(arg2, name)
         if result == false
             flag = false
@@ -137,11 +137,11 @@ intAngle(n::Int) = (n - 2) * π / n
 
 """
 ```
-extAngle(n::Int)
+externalAngle(n::Int)
 ```
 Calculates the exterior angle of a regular polygon with `n` sides.
 """
-extAngle(n::Int) = π - intAngle(n)
+externalAngle(n::Int) = π - intAngle(n)
 
 """
 ```
@@ -174,7 +174,7 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
  -0.9999999999999999
 ```
 """
-@inline function rot3D(
+function rot3D(
     xyz::T1,
     uvw::T1,
     abc::T1,
@@ -207,34 +207,6 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
         xyz[3] * cosθ +
         sinθ * (-abc[2] * uvw[1] + abc[1] * uvw[2] - uvw[2] * xyz[1] + uvw[1] * xyz[2]),
     )
-end
-
-"""
-```
-dimDot(
-    x::AbstractArray{T1, N},
-    y::AbstractArray{T2, N};
-    dim::Int = 2,
-) where {T1, T2, N}
-```
-Perform dot product along dimension `dim` of an array, returns a vector of dot products.
-"""
-@inline function dimDot(
-    x::AbstractArray{T1, N},
-    y::AbstractArray{T2, N};
-    dim::Int = 2,
-) where {T1, T2, N}
-    return vec(sum(x .* y, dims = dim))
-end
-
-"""
-```
-dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
-```
-Calculate norms along dimension `dim` of an array, returns a vector of norms.
-"""
-@inline function dimNorm(x::AbstractArray{T, N}; dim::Int = 2) where {T, N}
-    return vec(sqrt.(dimDot(x, x; dim = dim)))
 end
 
 ⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1, T2} = x * y'

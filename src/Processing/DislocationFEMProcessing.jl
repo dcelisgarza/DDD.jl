@@ -12,13 +12,13 @@ Calculate the Peach-Koehler force on segments.
 f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{l}
 ``
 """
-@inline function calcPKForce(
+function calcPKForce(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
     network::DislocationNetwork,
 )
     # Unroll constants.
-    numSeg = network.numSeg
+    numSeg = network.numNodeSegConnect[2]
     segIdx = network.segIdx
     bVec = network.bVec
     coord = network.coord
@@ -35,7 +35,7 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
     PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
 
     # Loop over segments.
-    @inbounds @simd for i in 1:numSeg
+    for i in 1:numSeg
         x0 = SVector{3, elemT}(midNode[i, 1], midNode[i, 2], midNode[i, 3])
         b = SVector{3, elemT}(bVec[i, 1], bVec[i, 2], bVec[i, 3])
         t = SVector{3, elemT}(tVec[i, 1], tVec[i, 2], tVec[i, 3])
@@ -59,7 +59,7 @@ calc_σ_hat(
 ```
 Calculate the reaction from a dislocation.
 """
-@inline function calc_σ_hat(
+function calc_σ_hat(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
     x0::AbstractArray{T, N} where {T, N},
@@ -134,7 +134,7 @@ Calculate the reaction from a dislocation.
     dNdS[2, :] *= ds2dy
     dNdS[3, :] *= ds3dz
 
-    @inbounds for i in 1:size(dNdS, 1)
+    for i in 1:size(dNdS, 1)
         # Indices calculated once for performance.
         idx1 = 3 * i
         idx2 = 3 * (i - 1)

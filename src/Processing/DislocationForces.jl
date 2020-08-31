@@ -1,8 +1,8 @@
 """
 ```
 calcSegForce(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
     network::DislocationNetwork;
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
@@ -10,7 +10,7 @@ calcSegForce(
 )
 ```
 """
-@inline function calcSegForce(
+function calcSegForce(
     dlnParams::T1,
     matParams::T2,
     network::T3,
@@ -18,39 +18,39 @@ calcSegForce(
     # mesh::T5,
     idx = nothing,
 ) where {
-    T1 <: DislocationP,
-    T2 <: MaterialP,
+    T1 <: DislocationParameters,
+    T2 <: MaterialParameters,
     T3 <: DislocationNetwork,
     # T4 <: DislocationFEMCorrective,
     # T5 <: AbstractMesh,
 }
 
-    isnothing(idx) ? numSeg = network.numSeg : numSeg = length(idx)
+    isnothing(idx) ? numSeg = network.numSeg[1] : numSeg = length(idx)
 
     # pkForce = pkForce(mesh, dlnFEM, network)
     selfForce = calcSelfForce(dlnParams, matParams, network, idx)
     segForce = calcSegSegForce(dlnParams, matParams, network, idx)
 
-    @inbounds for i in 1:numSeg
-        @simd for j in 1:2
+    for i in 1:numSeg
+        for j in 1:2
             segForce[:, j, i] = selfForce[j][:, i] + segForce[:, j, i]
         end
     end
 
     return segForce
 end
-@inline function calcSegForce!(
+function calcSegForce!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
     idx = nothing,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg
+        numSeg = network.numSeg[1]
         range = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -62,25 +62,25 @@ end
     calcSelfForce!(dlnParams, matParams, network, idx)
     calcSegSegForce!(dlnParams, matParams, network, idx)
 
-    return network
+    return nothing
 end
 
 """
 ```
 calcSelfForce(
-    dlnParams::DislocationP,
-    matParams::MaterialP,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
     network::DislocationNetwork,
 )
 ```
 Calculates the self-interaction force felt by two nodes in a segment. Naturally the forces are equal and opposite to each other.
 """
-@inline function calcSelfForce(
+function calcSelfForce(
     dlnParams::T1,
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -98,7 +98,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
     # Indices for self force.
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg
+        numSeg = network.numSeg[1]
         idx = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -114,7 +114,7 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
 
     selfForceNode2 = zeros(3, numSeg)
 
-    @fastmath @simd for i in eachindex(idx)
+    for i in eachindex(idx)
         # Finding the norm of each line vector.
         tVecSq = tVec[1, i]^2 + tVec[2, i]^2 + tVec[3, i]^2
         L = sqrt(tVecSq)
@@ -158,12 +158,12 @@ Calculates the self-interaction force felt by two nodes in a segment. Naturally 
 
     return selfForceNode1, selfForceNode2
 end
-@inline function calcSelfForce!(
+function calcSelfForce!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -182,7 +182,7 @@ end
     # Indices for self force.
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg
+        numSeg = network.numSeg[1]
         idx = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -196,7 +196,7 @@ end
     bVec = @view bVec[:, idxBvec]
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
-    @fastmath @inbounds @simd for i in eachindex(idx)
+    for i in eachindex(idx)
         # Finding the norm of each line vector.
         tVecSq = tVec[1, i]^2 + tVec[2, i]^2 + tVec[3, i]^2
         L = sqrt(tVecSq)
@@ -244,7 +244,7 @@ end
         segForce[3, 2, idx[i]] += selfForce[3]
     end
 
-    return network
+    return nothing
 end
 
 """
@@ -271,12 +271,12 @@ At a high level this works by creating a local coordinate frame using the line d
 	abstract = {Numerical algorithms for discrete dislocation dynamics simulations are investigated for the purpose of enabling strain hardening simulations of single crystals on massively parallel computers. The algorithms investigated include the calculation of forces, the equations of motion, time integration, adaptive mesh refinement, the treatment of dislocation core reactions and the dynamic distribution of data and work on parallel computers. A simulation integrating all these algorithmic elements using the Parallel Dislocation Simulator (ParaDiS) code is performed to understand their behaviour in concert and to evaluate the overall numerical performance of dislocation dynamics simulations and their ability to accumulate percent of plastic strain.}
 }
 """
-@inline function calcSegSegForce(
+function calcSegSegForce(
     dlnParams::T1,
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     # Constants.
     μ = matParams.μ
@@ -293,7 +293,7 @@ At a high level this works by creating a local coordinate frame using the line d
     elemT = eltype(network.bVec)
 
     # Un normalised segment vectors. Views for speed.
-    numSeg = network.numSeg
+    numSeg = network.numSeg[1]
     idxBvec = @view segIdx[1:numSeg, 1]
     idxNode1 = @view segIdx[1:numSeg, 2]
     idxNode2 = @view segIdx[1:numSeg, 3]
@@ -307,7 +307,7 @@ At a high level this works by creating a local coordinate frame using the line d
             nthreads = Threads.nthreads()
             parSegSegForce =
                 [Threads.Atomic{elemT}(0) for i in 1:3, j in 1:2, k in 1:numSeg]
-            @fastmath @inbounds @sync for tid in 1:nthreads
+            @sync for tid in 1:nthreads
                 Threads.@spawn begin
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
@@ -315,7 +315,7 @@ At a high level this works by creating a local coordinate frame using the line d
                         b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
                         n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
                         n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
-                        @simd for j in (i + 1):numSeg
+                        for j in (i + 1):numSeg
                             b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
                             n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
                             n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
@@ -358,11 +358,11 @@ At a high level this works by creating a local coordinate frame using the line d
         else
             segSegForce = zeros(3, 2, numSeg)
             # Serial execution.
-            @fastmath @inbounds for i in 1:numSeg
+            for i in 1:numSeg
                 b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
                 n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
                 n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
-                @simd for j in (i + 1):numSeg
+                for j in (i + 1):numSeg
                     b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                     n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
                     n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
@@ -404,7 +404,7 @@ At a high level this works by creating a local coordinate frame using the line d
     else # Calculate segseg forces only on segments provided
         lenIdx = length(idx)
         segSegForce = zeros(3, 2, lenIdx)
-        @fastmath @inbounds for (k, i) in enumerate(idx)
+        for (k, i) in enumerate(idx)
             b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
             n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
@@ -442,12 +442,12 @@ At a high level this works by creating a local coordinate frame using the line d
     end
 end
 
-@inline function calcSegSegForce!(
+function calcSegSegForce!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationP, T2 <: MaterialP, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
 
     # Constants.
     μ = matParams.μ
@@ -464,7 +464,7 @@ end
     elemT = eltype(network.bVec)
 
     # Un normalised segment vectors. Views for speed.
-    numSeg = network.numSeg
+    numSeg = network.numSeg[1]
     idxBvec = @view segIdx[1:numSeg, 1]
     idxNode1 = @view segIdx[1:numSeg, 2]
     idxNode2 = @view segIdx[1:numSeg, 3]
@@ -480,7 +480,7 @@ end
             nthreads = Threads.nthreads()
             parSegSegForce =
                 [Threads.Atomic{elemT}(0) for i in 1:3, j in 1:2, k in 1:numSeg]
-            @fastmath @inbounds @sync for tid in 1:nthreads
+            @sync for tid in 1:nthreads
                 Threads.@spawn begin
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
@@ -488,7 +488,7 @@ end
                         b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
                         n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
                         n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
-                        @simd for j in (i + 1):numSeg
+                        for j in (i + 1):numSeg
                             b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
                             n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
                             n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
@@ -531,11 +531,11 @@ end
             segForce[:, :, 1:numSeg] += getproperty.(parSegSegForce, :value)
         else
             # Serial execution.
-            @fastmath @inbounds for i in 1:numSeg
+            for i in 1:numSeg
                 b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
                 n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
                 n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
-                @simd for j in (i + 1):numSeg
+                for j in (i + 1):numSeg
                     b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                     n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
                     n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
@@ -573,7 +573,7 @@ end
             end
         end
     else # Calculate segseg forces only on segments provided
-        @fastmath @inbounds for i in idx
+        for i in idx
             b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
             n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
@@ -610,7 +610,7 @@ end
     end
     return nothing
 end
-@inline function calcSegSegForce(
+function calcSegSegForce(
     aSq::T1,
     μ4π::T1,
     μ8π::T1,
@@ -913,7 +913,7 @@ end
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-@inline function calcParSegSegForce(
+function calcParSegSegForce(
     aSq::T1,
     μ4π::T1,
     μ8π::T1,
@@ -1191,7 +1191,7 @@ end
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-@inline function ParSegSegInteg(aSq_dSq::T, aSq_dSqI::T, x::T, y::T) where {T}
+function ParSegSegInteg(aSq_dSq::T, aSq_dSqI::T, x::T, y::T) where {T}
 
     xpy = x + y
     xmy = x - y
@@ -1228,7 +1228,7 @@ end
     integ12
 end
 
-@inline function SegSegInteg(
+function SegSegInteg(
     aSq::T,
     d::T,
     c::T,

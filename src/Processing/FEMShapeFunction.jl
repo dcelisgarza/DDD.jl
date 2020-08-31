@@ -7,7 +7,7 @@ Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If
     All coordinate vectors must be of equal length.
 [`shapeFunctionDeriv`](@ref) are the 1st order derivatives of the shape functions.
 """
-@inline function shapeFunction(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
+function shapeFunction(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
 
     # N[n](x,y,z) := shape function n.
     omx = 1 - x
@@ -31,7 +31,7 @@ Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If
 
     return N
 end
-@inline function shapeFunction(
+function shapeFunction(
     shape::T1,
     x::T2,
     y::T2,
@@ -44,7 +44,7 @@ end
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
     N = Array{SVector{8, xType}}(undef, numPoints)
 
-    @inbounds @simd for i in eachindex(x)
+    for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
         omz = 1 - z[i]
@@ -76,7 +76,7 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
 !!! note
     All coordinate vectors must be of equal length.
 """
-@inline function shapeFunctionDeriv(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
+function shapeFunctionDeriv(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
 
     # dNdS[n, x](x,y,z) := x'th derivative of shape function n.
     # dNdS[n, x](x,y,z) = dN[a, b] / dx
@@ -117,7 +117,7 @@ Returns the first order derivative of the shape functions, [`shapeFunction`](@re
 
     return dNdS
 end
-@inline function shapeFunctionDeriv(
+function shapeFunctionDeriv(
     shape::T1,
     x::T2,
     y::T2,
@@ -131,7 +131,7 @@ end
     # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
     dNdS = Array{SMatrix{3, 8, xType}}(undef, numPoints)#zeros(8, 3, length(x))
 
-    @inbounds @simd for i in eachindex(x)
+    for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
         omz = 1 - z[i]

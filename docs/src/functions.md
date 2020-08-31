@@ -21,7 +21,7 @@ removeLink!
 
 removeUpdate
 
-mergeNode!
+mergeNode
 ```
 
 ## FEM
@@ -54,11 +54,7 @@ compStruct
 
 intAngle
 
-extAngle
+externalAngle
 
 rot3D
-
-dimDot
-
-dimNorm
 ```

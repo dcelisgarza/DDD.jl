@@ -5,7 +5,7 @@ idxLabel(network::DislocationNetwork, label::Int; condition::Function = ==)
 ```
 Find indices for dislocations whose `label` meets `condition(x, label)`.
 """
-@inline function idxLabel(network::DislocationNetwork, label::Int; condition::Function = ==)
+function idxLabel(network::DislocationNetwork, label::Int; condition::Function = ==)
     return findall(x -> condition(x, label), network.label)
 end
 """
@@ -15,7 +15,7 @@ coordLbl(network::DislocationNetwork, label::Int)
 ```
 Get coordinates for the nodes with a given label (node type).
 """
-@inline function coordLbl(network::DislocationNetwork, label::Int)
+function coordLbl(network::DislocationNetwork, label::Int)
     return network.coord[:, idxLabel(network, label)]
 end
 """
@@ -26,7 +26,7 @@ coordIdx(network::DislocationNetwork,
 Get coordinates for the node(s) that with the `index` or vector of indices
 provided.
 """
-@inline function coordIdx(
+function coordIdx(
     network::DislocationNetwork,
     index::Union{Int, AbstractArray{<:Int, N}},
 ) where {N}
@@ -58,7 +58,7 @@ idxCond(network::DislocationNetwork, fieldname::Symbol, idxComp::Int,
 ```
 Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxComp], val)`. It errors if the fieldname provided does not have a column `idxComp`.
 """
-@inline function idxCond(
+function idxCond(
     network::DislocationNetwork,
     fieldname::Symbol,
     condition::Function,
@@ -66,14 +66,14 @@ Find index/indices of node whose `fieldname` meets `condition(fieldname[:, idxCo
 )
     return findall(x -> condition(x, args...), getproperty(network, fieldname))
 end
-@inline function idxCond(
+function idxCond(
     data::Union{AbstractArray{<:Real, N1}, AbstractArray{<:nodeType, N2}},
     val::Real;
     condition::Function = ==,
 ) where {N1, N2}
     return findall(x -> condition(x, val), data)
 end
-@inline function idxCond(
+function idxCond(
     network::DislocationNetwork,
     fieldname::Symbol,
     val::Real;
@@ -81,7 +81,7 @@ end
 )
     return findall(x -> condition(x, val), getproperty(network, fieldname))
 end
-@inline function idxCond(
+function idxCond(
     network::DislocationNetwork,
     fieldname::Symbol,
     idxComp::Int,
@@ -113,7 +113,7 @@ dataCond(network::DislocationNetwork, dataField::Symbol, condField::Symbol,
 ```
 Get the data from `dataField` that corresponds to the `condField` that meets the `condition(condField[:, idxComp], val)`. `dataField` and `condField` must have the same number of rows.
 """
-@inline function dataCond(
+function dataCond(
     network::DislocationNetwork,
     dataField::Symbol,
     val::Real;
@@ -123,7 +123,7 @@ Get the data from `dataField` that corresponds to the `condField` that meets the
     idx = idxCond(data, val; condition = condition)
     return data[idx]
 end
-@inline function dataCond(
+function dataCond(
     network::DislocationNetwork,
     dataField::Symbol,
     idxComp::Int,
@@ -134,7 +134,7 @@ end
     idx = idxCond(data[idxComp, :], val; condition = condition)
     return data[:, idx]
 end
-@inline function dataCond(
+function dataCond(
     network::DislocationNetwork,
     dataField::Symbol,
     condField::Symbol,
@@ -153,7 +153,7 @@ end
         return data[:, idx]
     end
 end
-@inline function dataCond(
+function dataCond(
     network::DislocationNetwork,
     dataField::Symbol,
     condField::Symbol,

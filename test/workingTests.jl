@@ -7,20 +7,20 @@ using DDD
 cd(@__DIR__)
 plotlyjs()
 
-fileDislocationP = "../inputs/simParams/sampleDislocationP.JSON"
-fileMaterialP = "../inputs/simParams/sampleMaterialP.JSON"
-fileIntegrationP = "../inputs/simParams/sampleIntegrationP.JSON"
+fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
+fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
+fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
 fileSlipSystem = "../data/slipSystems/BCC.JSON"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
 fileIntVar = "../inputs/simParams/sampleIntegrationTime.JSON"
 dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
-    fileDislocationP,
-    fileMaterialP,
-    fileIntegrationP,
+    fileDislocationParameters,
+    fileMaterialParameters,
+    fileIntegrationParameters,
     fileSlipSystem,
     fileDislocationLoop,
 )
-intVars = loadIntegrationVar(fileIntVar)
+intVars = loadIntegrationTime(fileIntVar)
 # network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 # DislocationNetwork!(network, dislocationLoop)
 
@@ -42,15 +42,15 @@ shearDecagon = DislocationLoop(
 network = DislocationNetwork(shearDecagon)
 network.coord[:, 11] = vec(mean(network.coord, dims = 2))
 network.label[11] = 1
-network.numNode = 11
+network.numNodeSegConnect[1] = 11
 network.links[:, 11] = [11; 2]
 network.links[:, 12] = [11; 4]
 network.links[:, 13] = [11; 5]
 network.links[:, 14] = [11; 10]
 network.bVec[:, 11:14] .= network.bVec[:, 1]
 network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
-makeConnect!(network)
-getSegmentIdx!(network)
+network = makeConnect!(network)
+network = getSegmentIdx!(network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
@@ -84,7 +84,7 @@ compStruct(networkOUT2, network)
 ## Remeshing and integration
 network2 = deepcopy(network)
 intVars2 = deepcopy(intVars)
-numSeg = network.numSeg
+numSeg = network.numNodeSegConnect[2]
 intVars2
 intParams
 network2.coord[:, 1:numSeg] - network.coord[:, 1:numSeg]
@@ -98,31 +98,25 @@ fig2 = plotNodes(
 )
 
 function foo(dlnParams, matParams, network)
-    # network2 = deepcopy(network)
-    # refineNetwork!(dlnParams, matParams, network2)
-    refineNetwork!(dlnParams, matParams, deepcopy(network))
+    network = refineNetwork(dlnParams, matParams, network)
 end
-
 function bar(dlnParams, matParams, network)
-    # network2 = deepcopy(network)
-    # coarsenNetwork!(dlnParams, matParams, network2)
-    coarsenNetwork!(dlnParams, matParams, deepcopy(network))
+    network = coarsenNetwork(dlnParams, matParams, network)
 end
-
 foo(dlnParams, matParams, network)
 bar(dlnParams, matParams, network)
 
-network.numSeg
-# network2.numSeg
+
 
 @btime foo(dlnParams, matParams, network)
 @btime bar(dlnParams, matParams, network)
 
-network2.numSeg
+numSeg
+network.numNodeSegConnect[2]
 
 function foo(intParams, intVars, dlnParams, matParams, network)
-    coarsenNetwork!(dlnParams, matParams, network)
-    refineNetwork!(dlnParams, matParams, network)
+    coarsenNetwork(dlnParams, matParams, network)
+    refineNetwork(dlnParams, matParams, network)
     integrate!(intParams, intVars, dlnParams, matParams, network)
 end
 network2 = deepcopy(network)
@@ -181,10 +175,8 @@ baar(intParams, intVars, dlnParams, matParams, network)
 #         legend = false,
 #     )
 # end
-
 network2 = deepcopy(network)
-@btime coarsenNetwork!(dlnParams, matParams, network2)
-network2.numSeg
+@btime network3 = coarsenNetwork(dlnParams, matParams, network2)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 refineNetwork(dlnParams, matParams, network)
@@ -240,16 +232,18 @@ network = DislocationNetwork(
 )
 
 @time for _ in 1:50
-    DislocationNetwork!(
+    global network = DislocationNetwork!(
         network,
         [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
         memBuffer = 1, # Buffer for memory allocation.
     )
 end
 
-network.numNode
+network.numNodeSegConnect
+size(network.connectivity)
+size(network.links)
 
-network.coord[:,network.numSeg-1:network.numSeg+1]
+network.coord[:,network.numNodeSegConnect[2]-1:network.numNodeSegConnect[2]+1]
 fig = plotNodes(
     network,
     m = 1,
@@ -261,7 +255,7 @@ fig = plotNodes(
     # size=(400,400)
 )
 
-dlnParamsPar = DislocationP(;
+dlnParamsPar = DislocationParameters(;
     coreRad = dlnParams.coreRad,
     coreRadMag = dlnParams.coreRadMag,
     minSegLen = dlnParams.minSegLen,
@@ -286,13 +280,12 @@ remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
 remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
 isapprox(remoteForceSer, remoteForcePar)
 calcSegSegForce!(dlnParams, matParams, network)
-isapprox(remoteForceSer, network.segForce[:, :, 1:(network.numSeg)])
+isapprox(remoteForceSer, network.segForce[:, :, 1:(network.numNodeSegConnect[2])])
 network.segForce .= 0
 calcSegSegForce!(dlnParamsPar, matParams, network)
-isapprox(remoteForcePar, network.segForce[:, :, 1:(network.numSeg)])
+isapprox(remoteForcePar, network.segForce[:, :, 1:(network.numNodeSegConnect[2])])
 network.segForce .= 0
 
-using BenchmarkTools
 @btime calcSegSegForce(dlnParams, matParams, network)
 @btime calcSegSegForce!(dlnParams, matParams, network)
 network.segForce .= 0
@@ -301,7 +294,7 @@ network.segForce .= 0
 network.segForce .= 0
 
 @code_warntype calcSegForce(dlnParamsPar, matParams, network)
-
+using StaticArrays
 @code_warntype calcSegSegForce(
     0.5,
     0.2,
@@ -354,3 +347,180 @@ var.c
 
 resize!(var.c, 2)
 var.c
+
+
+
+    mutable struct mutate_me
+        a :: Array{Int, 2}
+        b :: Vector{Int}
+    end
+
+    struct immutate_me
+        a :: Array{Int, 2}
+        b :: Vector{Int}
+    end
+
+    function foo!(variable, condition)
+        if condition
+            # variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
+        end
+        variable.a .= LinearIndices(variable.a)
+        return nothing
+    end
+
+    function foo(variable, condition)
+        if condition
+            # variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
+        end
+        variable.a .= LinearIndices(variable.a)
+        return variable
+    end
+
+    mutating_var = mutate_me([0 0 0; 0 0 0], [0,0,0])
+    immutating_var = immutate_me([0 0 0; 0 0 0], [0,0,0])
+
+    # Always works
+    foo!(mutating_var, rand(Bool))
+    mutating_var
+
+    # Works when no resizing is needed, obviously
+    foo!(immutating_var, rand(Bool)) 
+    immutating_var
+
+    # immutating_var changes when no resizing is needed, does't work otherwise
+    foo(immutating_var, rand(Bool))
+
+    # immutating_var always changes
+    immutating_var = foo(immutating_var, rand(Bool))
+
+    function watanabe(var)
+        append!(var.b, zeros(Int, 2*length(var.b)))
+        var.b .= LinearIndices(var.b)
+        return nothing
+    end
+
+
+    mutating_var = mutate_me([0 0 0; 0 0 0], [0,0,0])
+    immutating_var = immutate_me([0 0 0; 0 0 0], [0,0,0])
+    watanabe(mutating_var)
+    watanabe(immutating_var)
+    mutating_var
+    immutating_var
+
+    prod(size(mutating_var.a))
+
+
+    # Methods to implement for linear arrays
+    # https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array-1
+    struct LinearArray{T,N} <: AbstractArray{T,N} end
+    struct VectorisedArray{T, N} <: AbstractArray{T, N} 
+        size::NTuple{N, Int}
+        data::Vector{T}
+    end
+
+    Base.size(V::VectorisedArray) = V.size
+    Base.IndexStyle(::Type{<:VectorisedArray}) = IndexLinear()
+    Base.getindex(V::VectorisedArray, i::Int) = V.data[i]
+    function Base.getindex(V::VectorisedArray, I::Vararg{Int, N}) where N 
+        idx = I[1]
+
+        for i in 2:N
+            idx += prod(V.size[1:i-1]) * (I[i] - 1)
+        end
+
+        return V.data[idx]
+    end
+    function Base.setindex!(V::VectorisedArray, v, i::Int)
+        return V.data[i] = v
+    end
+    function Base.setindex!(V::VectorisedArray, v, I::Vararg{Int, N}) where N 
+        return V.data[I] = v
+    end
+    function Base.hcat(V::VectorisedArray, i::Int)
+        size = zeros(Int, length(V.size))
+        size .= V.size
+        size[end] += i
+        append!(V.data, zeros(eltype(V.data), prod(V.size)*i))
+        V = VectorisedArray(Tuple(size), V.data)
+        return V
+    end
+
+a = [5,6]
+
+b = (7,8)
+c = zeros(Int, length(b))
+
+c .= b
+vec(b)
+Tuple(a)
+dim = (3, 2)
+I = (2, 2)
+data = [1,2,3,4,5,6]
+
+data[I[1] + dim[2]*(I[2]-1)]
+
+
+I[1] + dim[2]*(I[2]-1) + dim[2]*dim[3]*(I[3]-1)
+
+
+
+println(wak...)
+
+sum(wak[end:-1:1].*(test[1:end].-1))
+sum(I[end:-1:1]*(V.dim[1:end]-1))
+
+VectorisedArray((4,2), [1,2,3,4,5,6,7,8])
+size([1 2])
+test = VectorisedArray((4,2), [1,2,3,4,5,6,7,8])
+
+test = push!(test, 5)
+
+
+
+test[2,1]
+
+test = (3,2)
+test[1]
+
+
+VectorisedArray{T, N}(init, I...) where {T, N} = 1
+
+test = (5, 6)
+println(test...)
+
+
+var = LinearArray{Int, 2}(undef, 2, 5)
+size(var)
+
+
+struct foo{T1, T2}
+    a::T1
+    b::T2
+end
+
+function bar(foo)
+
+    a = foo.a
+    b = foo.b
+
+    a .= -1
+    a[1,1:2] = [50, -50]
+    b .-= 30
+    return nothing
+end
+
+
+test = foo([4 -5; 5 2; 6 57],[5])
+test
+
+bar(test)
+
+test
+
+test.a
+
+test.a .= 0
+
+test

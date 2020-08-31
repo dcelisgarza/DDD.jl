@@ -6,15 +6,20 @@ cd(@__DIR__)
 
 @testset "Plot nodes" begin
     # Load and create.
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/sampleDislocation.JSON"
+    fileSlipSystem = "./testData/BCC.JSON"
+    fileDislocationLoop = "./testData/sampleDislocation.JSON"
     dictSlipSystem = load(fileSlipSystem)
     slipSystems = loadSlipSystem(dictSlipSystem)
     # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = load(fileDislocationLoop)
     loops = zeros(DislocationLoop, length(dictDislocationLoop))
-    for i in eachindex(loops)
-        loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+     if typeof(dictDislocationLoop) <: AbstractArray
+        loops = zeros(DislocationLoop, length(dictDislocationLoop))
+        for i in eachindex(loops)
+            loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+        end
+    else
+        loops = loadDislocationLoop(dictDislocationLoop, slipSystems)
     end
     network = DislocationNetwork(loops)
 

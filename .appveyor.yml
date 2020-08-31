@@ -11,10 +11,10 @@ platform:
 matrix:
   allow_failures:
     - julia_version: nightly
-branches:
-  only:
-    - master
-    - /release-.*/
+# branches:
+  # only:
+  #   - master
+  #   - /release-.*/
 notifications:
   - provider: Email
     on_build_success: false

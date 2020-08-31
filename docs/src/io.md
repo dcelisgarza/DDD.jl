@@ -8,18 +8,18 @@ loadDislocationLoop(
     slipSystem::SlipSystem,
 )
 
-loadMaterialP(dict::Dict{T1, T2}) where {T1, T2}
+loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 
-loadIntegrationP(dict::Dict{T1, T2}) where {T1, T2}
+loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
 loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
 
-loadDislocationP(dict::Dict{T1, T2}) where {T1, T2}
+loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
 
 loadParams(
-    fileDislocationP::AbstractString,
-    fileMaterialP::AbstractString,
-    fileIntegrationP::AbstractString,
+    fileDislocationParameters::AbstractString,
+    fileMaterialParameters::AbstractString,
+    fileIntegrationParameters::AbstractString,
     fileSlipSystem::AbstractString,
     fileDislocationLoop::AbstractString,
 )
