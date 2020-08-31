@@ -7,11 +7,8 @@ Keyword constructor for [`SlipSystem`](@ref). Throws error if ``\\bm{b} \\not\\p
 function SlipSystem(;
     crystalStruct::T1,
     slipPlane::T2,
-    bVec::T2
-) where {
-    T1 <: AbstractCrystalStruct,
-    T2 <: AbstractArray{T, N} where {T, N}
-}
+    bVec::T2,
+) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
     return SlipSystem(crystalStruct, slipPlane, bVec)
 end
 
@@ -22,7 +19,7 @@ function DislocationParameters(coreRad::T1, coreRadMag::T1, minSegLen::T1, maxSe
 Keyword constructor for [`DislocationParameters`](@ref). Validates values and calculates derived quantities.
 """
 function DislocationParameters(
-    coreRad::T1, 
+    coreRad::T1,
     coreRadMag::T1,
     minSegLen::T1,
     maxSegLen::T1,
@@ -39,13 +36,8 @@ function DislocationParameters(
     separation::T4 = true,
     virtualRemesh::T4 = true,
     parCPU::T4 = false,
-    parGPU::T4 = false
-) where {
-    T1,
-    T2 <: Int,
-    T3 <: AbstractMobility,
-    T4 <: Bool
-}
+    parGPU::T4 = false,
+) where {T1, T2 <: Int, T3 <: AbstractMobility, T4 <: Bool}
 
     coreRad == minSegLen == maxSegLen == 0 ? nothing :
     @assert coreRad < minSegLen < maxSegLen
@@ -57,7 +49,7 @@ function DislocationParameters(
         coreRadMag,
         minSegLen,
         maxSegLen,
-        minSegLen*2,
+        minSegLen * 2,
         minArea,
         maxArea,
         minArea^2,
@@ -73,11 +65,11 @@ function DislocationParameters(
         separation,
         virtualRemesh,
         parCPU,
-        parGPU
+        parGPU,
     )
 end
 function DislocationParameters(;
-    coreRad::T1, 
+    coreRad::T1,
     coreRadMag::T1,
     minSegLen::T1,
     maxSegLen::T1,
@@ -94,15 +86,10 @@ function DislocationParameters(;
     separation::T4 = true,
     virtualRemesh::T4 = true,
     parCPU::T4 = false,
-    parGPU::T4 = false
-) where {
-    T1,
-    T2 <: Int,
-    T3 <: AbstractMobility,
-    T4 <: Bool
-}
+    parGPU::T4 = false,
+) where {T1, T2 <: Int, T3 <: AbstractMobility, T4 <: Bool}
     return DislocationParameters(
-        coreRad, 
+        coreRad,
         coreRadMag,
         minSegLen,
         maxSegLen,
@@ -119,7 +106,7 @@ function DislocationParameters(;
         separation,
         virtualRemesh,
         parCPU,
-        parGPU
+        parGPU,
     )
 end
 
@@ -163,7 +150,7 @@ function DislocationLoop(
     label::T5,
     buffer::T6,
     range::T7,
-    dist::T8
+    dist::T8,
 ) where {
     T1 <: loopDln,
     T2 <: Int,
@@ -172,7 +159,7 @@ function DislocationLoop(
     T5 <: AbstractVector{nodeType},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution
+    T8 <: AbstractDistribution,
 }
 
     nodeTotal::Int = 0
@@ -195,7 +182,7 @@ function DislocationLoop(
         label,
         buffer,
         range,
-        dist
+        dist,
     )
 end
 
@@ -239,7 +226,7 @@ function DislocationLoop(
     label::T5,
     buffer::T6,
     range::T7,
-    dist::T8
+    dist::T8,
 ) where {
     T1 <: AbstractDlnStr,
     T2 <: Int,
@@ -248,7 +235,7 @@ function DislocationLoop(
     T5 <: AbstractVector{nodeType},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution
+    T8 <: AbstractDistribution,
 }
 
     nodeTotal = numSides * nodeSide # Calculate total number of nodes for memory allocation.
@@ -378,7 +365,7 @@ function DislocationLoop(;
     label::T5,
     buffer::T6,
     range::T7,
-    dist::T8
+    dist::T8,
 ) where {
     T1 <: AbstractDlnStr,
     T2 <: Int,
@@ -387,7 +374,7 @@ function DislocationLoop(;
     T5 <: AbstractVector{nodeType},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution
+    T8 <: AbstractDistribution,
 }
     return DislocationLoop(
         loopType,
@@ -401,7 +388,7 @@ function DislocationLoop(;
         label,
         buffer,
         range,
-        dist
+        dist,
     )
 end
 
@@ -432,28 +419,28 @@ DislocationNetwork(;
 Keyword constructor for [`DislocationNetwork`](@ref), performs validations but creates dislocation network as provided.
 """
 function DislocationNetwork(;
-        links::T1,
-        slipPlane::T2,
-        bVec::T2,
-        coord::T2,
-        label::T3,
-        nodeVel::T2,
-        nodeForce::T2,
-        numNode::T4 = zeros(Int, 1),
-        numSeg::T4 = zeros(Int, 1),
-        maxConnect::T5 = 0,
-        connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
-        linksConnect::T1 = zeros(Int, 2, size(links, 2)),
-        segIdx::T1 = zeros(Int, size(links, 2), 3),
-        segForce::T6 = zeros(3, size(links, 2), 0),
-    ) where {
-        T1 <: AbstractArray{T, N} where {T, N},
-        T2 <: AbstractArray{T, N} where {T, N},
-        T3 <: AbstractVector{nodeType},
-        T4 <: AbstractVector{Int},
-        T5 <: Int,
-        T6 <: AbstractArray{T, N} where {T, N},
-    }
+    links::T1,
+    slipPlane::T2,
+    bVec::T2,
+    coord::T2,
+    label::T3,
+    nodeVel::T2,
+    nodeForce::T2,
+    numNode::T4 = zeros(Int, 1),
+    numSeg::T4 = zeros(Int, 1),
+    maxConnect::T5 = 0,
+    connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
+    linksConnect::T1 = zeros(Int, 2, size(links, 2)),
+    segIdx::T1 = zeros(Int, size(links, 2), 3),
+    segForce::T6 = zeros(3, size(links, 2), 0),
+) where {
+    T1 <: AbstractArray{T, N} where {T, N},
+    T2 <: AbstractArray{T, N} where {T, N},
+    T3 <: AbstractVector{nodeType},
+    T4 <: AbstractVector{Int},
+    T5 <: Int,
+    T6 <: AbstractArray{T, N} where {T, N},
+}
 
     return DislocationNetwork(
         links,
@@ -533,7 +520,18 @@ function DislocationNetwork(
     segForce = zeros(Float64, 3, 2, nodeBuffer)
 
     initIdx = 1
-    makeNetwork!(links, slipPlane, bVec, coord, label, sources, lims, initIdx, args...; kw...)
+    makeNetwork!(
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        sources,
+        lims,
+        initIdx,
+        args...;
+        kw...,
+    )
 
     # Calculate number of segments and indexing matrix.
     numSeg, segIdx = getSegmentIdx(links, label)
@@ -549,8 +547,8 @@ function DislocationNetwork(
         label,
         nodeVel,
         nodeForce,
-        [numNode], 
-        [numSeg], 
+        [numNode],
+        [numSeg],
         maxConnect,
         connectivity,
         linksConnect,
@@ -593,7 +591,12 @@ function DislocationNetwork!(
 }
     # For comments see DislocationNetwork. It is a 1-to-1 translation except that this one modifies the network in-place.
 
-    iszero(network) && return DislocationNetwork(sources, args...; checkConsistency = checkConsistency, kw...)
+    iszero(network) && return DislocationNetwork(
+        sources,
+        args...;
+        checkConsistency = checkConsistency,
+        kw...,
+    )
 
     nodeTotal::Int = 0
     lims = zeros(3, 2)
@@ -618,7 +621,18 @@ function DislocationNetwork!(
     initIdx::Int = 1
     first = findfirst(x -> x == 0, label)
     isnothing(first) ? initIdx = 1 : initIdx = first
-    makeNetwork!(links, slipPlane, bVec, coord, label, sources, lims, initIdx, args...; kw...)
+    makeNetwork!(
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        sources,
+        lims,
+        initIdx,
+        args...;
+        kw...,
+    )
     network.numNode[1] += numNode
 
     getSegmentIdx!(network)
@@ -628,7 +642,18 @@ function DislocationNetwork!(
     return network
 end
 
-function makeNetwork!(links, slipPlane, bVec, coord, label, sources, lims, initIdx, args...; kw...)
+function makeNetwork!(
+    links,
+    slipPlane,
+    bVec,
+    coord,
+    label,
+    sources,
+    lims,
+    initIdx,
+    args...;
+    kw...,
+)
     nodeTotal::Int = 0
     for i in eachindex(sources)
         idx = initIdx + nodeTotal

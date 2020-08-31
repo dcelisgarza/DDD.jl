@@ -5,12 +5,7 @@ import LinearAlgebra: dot, cross, norm
 import Statistics: mean
 import Random: seed!
 
-import DDD:
-    segEdge,
-    segEdgeN,
-    segScrew,
-    makeSegment,
-    inclusiveComparison
+import DDD: segEdge, segEdgeN, segScrew, makeSegment, inclusiveComparison
 cd(@__DIR__)
 
 @testset "Generate single segments" begin
@@ -28,9 +23,9 @@ cd(@__DIR__)
         slipPlane = testSlip,
         bVec = testBVec,
     )
-    fileSlipSystem = "./testData/BCC.JSON"
-    dictSlipSystem = load(fileSlipSystem)
-    slipSystems = loadSlipSystem(dictSlipSystem)
+    fileSlipSystem = "./testData/BCC.json"
+    dictSlipSystem = loadJSON(fileSlipSystem)
+    slipSystems = loadSlipSystemJSON(dictSlipSystem)
     slipSysInt = 1
     slipPlane = slipSystems.slipPlane[:, 1]
     bVec = slipSystems.bVec[:, 1]
@@ -58,7 +53,7 @@ end
         nodeForce = rand(3, 10),
         numNode = [10],
         numSeg = [10],
-        maxConnect = 10
+        maxConnect = 10,
     )
     getSegmentIdx!(network)
     makeConnect!(network)
@@ -95,21 +90,21 @@ end
 end
 
 @testset "Loop generation" begin
-    slipfile = "./testData/BCC.JSON"
-    loopfile = "./testData/samplePrismShear.JSON"
+    slipfile = "./testData/BCC.json"
+    loopfile = "./testData/samplePrismShear.json"
 
-    dictSlipSystem = load(slipfile)
-    slipSystems = loadSlipSystem(dictSlipSystem)
+    dictSlipSystem = loadJSON(slipfile)
+    slipSystems = loadSlipSystemJSON(dictSlipSystem)
 
-    dictDislocationLoop = load(loopfile)
-    
+    dictDislocationLoop = loadJSON(loopfile)
+
     if typeof(dictDislocationLoop) <: AbstractArray
         loops = zeros(DislocationLoop, length(dictDislocationLoop))
         for i in eachindex(loops)
-            loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+            loops[i] = loadDislocationLoopJSON(dictDislocationLoop[i], slipSystems)
         end
     else
-        loops = loadDislocationLoop(dictDislocationLoop, slipSystems)
+        loops = loadDislocationLoopJSON(dictDislocationLoop, slipSystems)
     end
 
     # Check that the midpoint of the loops is at (0,0,0)
@@ -150,11 +145,16 @@ end
     @test network.label[1:size(loops[1].links, 2)] == loops[1].label
     # Check that the last loop was transfered correctly.
     nodeLoop2 = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
-    @test network.links[:, totalNodes - size(loops[end].links, 2) + 1:totalNodes] ==  loops[end].links .+ nodeLoop1 .+ nodeLoop2 .- size(loops[end].links, 2)
-    @test network.slipPlane[:, totalNodes - size(loops[end].links, 2) + 1:totalNodes] ==  loops[end].slipPlane
-    @test network.bVec[:, totalNodes - size(loops[end].links, 2) + 1:totalNodes] == loops[end].bVec
-    @test network.coord[:, totalNodes - size(loops[end].links, 2) + 1:totalNodes] == loops[end].coord
-    @test network.label[totalNodes - size(loops[end].links, 2) + 1:totalNodes] == loops[end].label
+    @test network.links[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+          loops[end].links .+ nodeLoop1 .+ nodeLoop2 .- size(loops[end].links, 2)
+    @test network.slipPlane[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+          loops[end].slipPlane
+    @test network.bVec[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+          loops[end].bVec
+    @test network.coord[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+          loops[end].coord
+    @test network.label[(totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+          loops[end].label
     network2 = DislocationNetwork(;
         links = zeros(Int, 2, 1),
         slipPlane = zeros(3, 1),

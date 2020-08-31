@@ -56,7 +56,8 @@ end
 function Base.push!(network::DislocationNetwork, n::Int)
 
     if size(network.connectivity, 1) > 1
-        connectivity = hcat(network.connectivity, zeros(Int, size(network.connectivity, 1), n))
+        connectivity =
+            hcat(network.connectivity, zeros(Int, size(network.connectivity, 1), n))
     else
         connectivity = zeros(Int, 1 + 2 * network.maxConnect, length(network.label) + n)
     end
@@ -99,8 +100,6 @@ function Base.iszero(network::DislocationNetwork)
     return false
 end
 
-
-
 ## Distributions
 """
 ```
@@ -116,7 +115,7 @@ loopDistribution(dist::Zeros, n::Int, args...; kw...) = zeros(3, n)
 loopDistribution(dist::Rand, n::Int, args...; kw...) = rand(3, n)
 loopDistribution(dist::Randn, n::Int, args...; kw...) = randn(3, n)
 function loopDistribution(dist::Regular, n::Int, args...; kw...)
-    error("loopDistribution: regular distribution yet not implemented")
+    return error("loopDistribution: regular distribution yet not implemented")
 end
 
 """
@@ -130,7 +129,12 @@ limits!(
 ```
 In-place addition of `buffer × segLen` to `range` in order to calculate the limits in which dislocations will exist.
 """
-function limits!(lims::T1, segLen::T2, range::T1, buffer::T2) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
+function limits!(
+    lims::T1,
+    segLen::T2,
+    range::T1,
+    buffer::T2,
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
     for i in 1:size(lims, 2)
         for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen

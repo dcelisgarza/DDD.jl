@@ -3,12 +3,12 @@ using Test, Statistics
 cd(@__DIR__)
 
 @testset "Merge nodes" begin
-    fileDislocationParameters = "./testData/sampleDislocationParameters.JSON"
-    fileMaterialParameters = "./testData/sampleMaterialParameters.JSON"
-    fileIntegrationParameters = "./testData/sampleIntegrationParameters.JSON"
-    fileSlipSystem = "./testData/BCC.JSON"
-    fileDislocationLoop = "./testData/samplePrismShear.JSON"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
+    fileDislocationParameters = "./testData/sampleDislocationParameters.json"
+    fileMaterialParameters = "./testData/sampleMaterialParameters.json"
+    fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
+    fileSlipSystem = "./testData/BCC.json"
+    fileDislocationLoop = "./testData/samplePrismShear.json"
+    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
         fileIntegrationParameters,
@@ -1411,12 +1411,12 @@ cd(@__DIR__)
 end
 
 @testset "Split node" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
+    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+    fileSlipSystem = "../data/slipSystems/BCC.json"
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
         fileIntegrationParameters,
@@ -1740,12 +1740,12 @@ end
 end
 
 @testset "Coarsen network" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
+    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+    fileSlipSystem = "../data/slipSystems/BCC.json"
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
         fileIntegrationParameters,
@@ -1934,12 +1934,12 @@ end
 end
 
 @testset "Refine network" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
-    dlnParams, matParams, intParams, slipSystems, missing = loadParams(
+    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+    fileSlipSystem = "../data/slipSystems/BCC.json"
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+    dlnParams, matParams, intParams, slipSystems, missing = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
         fileIntegrationParameters,
@@ -1983,12 +1983,12 @@ end
 end
 
 @testset "Coarsen and Refine network" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
-    dlnParams, matParams, intParams, slipSystems, missing = loadParams(
+    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+    fileSlipSystem = "../data/slipSystems/BCC.json"
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+    dlnParams, matParams, intParams, slipSystems, missing = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
         fileIntegrationParameters,

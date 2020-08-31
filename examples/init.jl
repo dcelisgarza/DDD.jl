@@ -1,9 +1,10 @@
-using Revise, Profile
-using Plots, BenchmarkTools, LinearAlgebra, Interact
+using Revise
+using Plots, BenchmarkTools, LinearAlgebra
 using DDD
 
 # Define material parameters.
-MaterialParameters = MaterialParameters(; μ = 1.0, μMag = 1.45e5, ν = 0.28, E = 1.0, crystalStruct = BCC())
+MaterialParameters =
+    MaterialParameters(; μ = 1.0, μMag = 1.45e5, ν = 0.28, E = 1.0, crystalStruct = BCC())
 # Define dislocation parameters.
 DislocationParameters = DislocationParameters(;
     coreRad = 90.78,
@@ -32,7 +33,8 @@ IntegrationParameters = IntegrationParameters(;
     abstol = 1e-6,
     reltol = 1e-6,
     time = 0.0,
-    step = 0)
+    step = 0,
+)
 # Define the slip system.
 slipSystems =
     SlipSystem(crystalStruct = BCC(), slipPlane = [1.0; 1.0; 1.0], bVec = [1.0; -1.0; 0.0])

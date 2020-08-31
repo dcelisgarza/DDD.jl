@@ -1,24 +1,24 @@
 """
 ```
-load(filename::AbstractString)
+loadJSON(filename::AbstractString)
 ```
 Wrapper for `JSON.parsefile(filename)`.
 """
-function load(filename::AbstractString)
+function loadJSON(filename::AbstractString)
     dict = JSON.parsefile(filename)
     return dict
 end
 
 """
 ```
-function loadDislocationLoop(
+function loadDislocationLoopJSON(
     dict::Dict{T1, T2} where {T1, T2},
     slipSystem::SlipSystem,
 )
 ```
 Loads initial dislocation structure out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationLoop`](@ref).
 """
-function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::SlipSystem)
+function loadDislocationLoopJSON(dict::Dict{T1, T2} where {T1, T2}, slipSystem::SlipSystem)
 
     dlnTypes = makeTypeDict(AbstractDlnStr)
     distributions = makeTypeDict(AbstractDistribution)
@@ -51,11 +51,11 @@ end
 
 """
 ```
-loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
+loadMaterialParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialParameters`](@ref).
 """
-function loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
+function loadMaterialParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
@@ -73,11 +73,11 @@ end
 
 """
 ```
-loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
+loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationParameters`](@ref).
 """
-function loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
@@ -99,11 +99,11 @@ end
 
 """
 ```
-loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
+loadSlipSystemJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads slip systems out of a dictionary loaded from a JSON file. Returns a variable of type [`SlipSystem`](@ref).
 """
-function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
+function loadSlipSystemJSON(dict::Dict{T1, T2}) where {T1, T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
@@ -127,11 +127,11 @@ end
 
 """
 ```
-loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
+loadDislocationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationParameters`](@ref).
 """
-function loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
+function loadDislocationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
@@ -161,7 +161,7 @@ end
 
 """
 ```
-loadParams(
+loadParametersJSON(
     fileDislocationParameters::AbstractString,
     fileMaterialParameters::AbstractString,
     fileIntegrationParameters::AbstractString,
@@ -171,7 +171,7 @@ loadParams(
 ```
 Loads simulation parameters out of a dictionary loaded from a JSON file. Returns a tuple of variable types ([`DislocationParameters`](@ref), [`MaterialParameters`](@ref), [`IntegrationParameters`](@ref), [`SlipSystem`](@ref), [`DislocationLoop`](@ref)) or vectors of those types.
 """
-function loadParams(
+function loadParametersJSON(
     fileDislocationParameters::AbstractString,
     fileMaterialParameters::AbstractString,
     fileIntegrationParameters::AbstractString,
@@ -179,40 +179,45 @@ function loadParams(
     fileDislocationLoop::AbstractString,
 )
     # We use JSON arrays because it lets us dump a variable number of args into a single JSON file. To keep things gonsistent we use them always. Hence the indices here.
-    dictDislocationParameters = load(fileDislocationParameters)
-    DislocationParams = loadDislocationParameters(dictDislocationParameters)
+    dictDislocationParameters = loadJSON(fileDislocationParameters)
+    DislocationParams = loadDislocationParametersJSON(dictDislocationParameters)
 
-    dictMaterialParameters = load(fileMaterialParameters)
-    MaterialParams = loadMaterialParameters(dictMaterialParameters)
+    dictMaterialParameters = loadJSON(fileMaterialParameters)
+    MaterialParams = loadMaterialParametersJSON(dictMaterialParameters)
 
-    dictIntegrationParameters = load(fileIntegrationParameters)
-    IntegrationParams = loadIntegrationParameters(dictIntegrationParameters)
+    dictIntegrationParameters = loadJSON(fileIntegrationParameters)
+    IntegrationParams = loadIntegrationParametersJSON(dictIntegrationParameters)
 
-    dictSlipSystem = load(fileSlipSystem)
-    slipSystems = loadSlipSystem(dictSlipSystem)
+    dictSlipSystem = loadJSON(fileSlipSystem)
+    slipSystems = loadSlipSystemJSON(dictSlipSystem)
 
     # There can be multiple dislocations per simulation parameters.
-    dictDislocationLoop = load(fileDislocationLoop)
+    dictDislocationLoop = loadJSON(fileDislocationLoop)
     if typeof(dictDislocationLoop) <: AbstractArray
         dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
         for i in eachindex(dislocationLoop)
-            dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+            dislocationLoop[i] =
+                loadDislocationLoopJSON(dictDislocationLoop[i], slipSystems)
         end
     else
-        dislocationLoop = loadDislocationLoop(dictDislocationLoop, slipSystems)
+        dislocationLoop = loadDislocationLoopJSON(dictDislocationLoop, slipSystems)
     end
 
-    return DislocationParams, MaterialParams, IntegrationParams, slipSystems, dislocationLoop
+    return DislocationParams,
+    MaterialParams,
+    IntegrationParams,
+    slipSystems,
+    dislocationLoop
 end
 
 """
 ```
-loadNetwork(fileDislocationNetwork::AbstractString)
+loadNetworkJSON(fileDislocationNetwork::AbstractString)
 ```
 Loads a dislocation network from a JSON file. Returns a [`DislocationNetwork`](@ref).
 """
-function loadNetwork(fileDislocationNetwork::AbstractString)
-    dict = load(fileDislocationNetwork)
+function loadNetworkJSON(fileDislocationNetwork::AbstractString)
+    dict = loadJSON(fileDislocationNetwork)
 
     lenLinks = length(dict["links"])
     lenCoord = length(dict["coord"])
@@ -269,8 +274,8 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     return dislocationNetwork
 end
 
-function loadIntegrationTime(fileIntegrationTime::AbstractString)
-    dict = load(fileIntegrationTime)
+function loadIntegrationTimeJSON(fileIntegrationTime::AbstractString)
+    dict = loadJSON(fileIntegrationTime)
     integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
@@ -279,7 +284,7 @@ function loadIntegrationTime(fileIntegrationTime::AbstractString)
     return integrationTime
 end
 
-function loadIntegrationTime(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationTimeJSON(dict::Dict{T1, T2}) where {T1, T2}
     integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),

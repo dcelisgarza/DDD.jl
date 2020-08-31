@@ -25,10 +25,19 @@ function splitNode(
             links = network.links,
             slipPlane = network.slipPlane,
             bVec = network.bVec,
-            coord = hcat(network.coord, zeros(elemT, size(network.coord, 1), numNewEntries)),
+            coord = hcat(
+                network.coord,
+                zeros(elemT, size(network.coord, 1), numNewEntries),
+            ),
             label = vcat(network.label, zeros(nodeType, numNewEntries)),
-            nodeVel = hcat(network.nodeVel, zeros(elemT, size(network.nodeVel, 1), numNewEntries)),
-            nodeForce = hcat(network.nodeForce, zeros(elemT, size(network.nodeForce, 1), numNewEntries)),
+            nodeVel = hcat(
+                network.nodeVel,
+                zeros(elemT, size(network.nodeVel, 1), numNewEntries),
+            ),
+            nodeForce = hcat(
+                network.nodeForce,
+                zeros(elemT, size(network.nodeForce, 1), numNewEntries),
+            ),
             numNode = network.numNode,
             numSeg = network.numSeg,
             maxConnect = network.maxConnect,
@@ -39,7 +48,7 @@ function splitNode(
             linksConnect = network.linksConnect,
             segIdx = network.segIdx,
             segForce = network.segForce,
-    )
+        )
     end
 
     links = network.links
@@ -75,7 +84,10 @@ function splitNode(
 
         network = DislocationNetwork(;
             links = hcat(network.links, zeros(Int, size(network.links, 1), numNewEntries)),
-            slipPlane = hcat(network.slipPlane, zeros(elemT, size(network.slipPlane, 1), numNewEntries)),
+            slipPlane = hcat(
+                network.slipPlane,
+                zeros(elemT, size(network.slipPlane, 1), numNewEntries),
+            ),
             bVec = hcat(network.bVec, zeros(elemT, size(network.bVec, 1), numNewEntries)),
             coord = network.coord,
             label = network.label,

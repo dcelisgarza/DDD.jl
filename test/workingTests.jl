@@ -7,20 +7,20 @@ using DDD
 cd(@__DIR__)
 plotlyjs()
 
-fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-fileSlipSystem = "../data/slipSystems/BCC.JSON"
-fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
-fileIntVar = "../inputs/simParams/sampleIntegrationTime.JSON"
-dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
+fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+fileSlipSystem = "../data/slipSystems/BCC.json"
+fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
+dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
     fileDislocationParameters,
     fileMaterialParameters,
     fileIntegrationParameters,
     fileSlipSystem,
     fileDislocationLoop,
 )
-intVars = loadIntegrationTime(fileIntVar)
+intVars = loadIntegrationTimeJSON(fileIntVar)
 # network = DislocationNetwork(dislocationLoop, memBuffer = 1)
 # DislocationNetwork!(network, dislocationLoop)
 
@@ -54,13 +54,16 @@ getSegmentIdx!(network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
-using JSON3, StructTypes
+using JSON3, StructTypes, FileIO
 StructTypes.StructType(::Type{<:DislocationNetwork}) = StructTypes.Struct()
 StructTypes.StructType(::Type{nodeType}) = StructTypes.NumberType()
 StructTypes.numbertype(::Type{nodeType}) = Int
-string = JSON3.write(network)
-newvar = JSON3.read(string)
-
+open("test.json3", "w") do io
+    return JSON3.write(io, network)
+end
+newvar = open("test.json3", "r") do io
+    return JSON3.read(io)
+end
 
 links = reshape(newvar["links"], 2, :)
 slipPlane = reshape(newvar["slipPlane"], 3, :)
@@ -72,7 +75,7 @@ nodeForce = reshape(newvar["nodeForce"], 3, :)
 numNode = newvar["numNode"]
 numSeg = newvar["numSeg"]
 maxConnect = newvar["maxConnect"]
-connectivity = reshape(newvar["connectivity"], 1+2*newvar["maxConnect"], :)
+connectivity = reshape(newvar["connectivity"], 1 + 2 * newvar["maxConnect"], :)
 linksConnect = reshape(newvar["linksConnect"], 2, :)
 segIdx = reshape(newvar["segIdx"], :, 3)
 segForce = reshape(newvar["segForce"], 3, 2, :)
@@ -88,16 +91,21 @@ network2 = DislocationNetwork(;
     numNode = copy(newvar["numNode"]),
     numSeg = copy(newvar["numSeg"]),
     maxConnect = copy(newvar["maxConnect"]),
-    connectivity = copy(reshape(newvar["connectivity"], 1+2*newvar["maxConnect"], :)),
+    connectivity = copy(reshape(newvar["connectivity"], 1 + 2 * newvar["maxConnect"], :)),
     linksConnect = copy(reshape(newvar["linksConnect"], 2, :)),
     segIdx = copy(reshape(newvar["segIdx"], :, 3)),
     segForce = copy(Float64.(reshape(newvar["segForce"], 3, 2, :))),
 )
 
 compStruct(network, network2)
+FileIO.save("test.jld2", "network", network, "shearDecagon", [shearDecagon, shearDecagon])
+a, b = FileIO.load("test.jld2", "network", "shearDecagon")
+b
+network3, shearDecagon2 = FileIO.loadJSON("test.jld2", "network", "shearDecagon")
+compStruct(network, network3)
+compStruct(shearDecagon, shearDecagon2)
 
 network.segForce
-
 
 abstract type Vehicle end
 
@@ -120,35 +128,19 @@ StructTypes.StructType(::Type{Vehicle}) = StructTypes.AbstractType()
 StructTypes.StructType(::Type{Car}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Truck}) = StructTypes.Struct()
 StructTypes.subtypekey(::Type{Vehicle}) = :type
-StructTypes.subtypes(::Type{Vehicle}) = (car=Car, truck=Truck)
+StructTypes.subtypes(::Type{Vehicle}) = (car = Car, truck = Truck)
 
-car = JSON3.read("""
+car = JSON3.read(
+    """
 {
     "type": "car",
     "make": "Mercedes-Benz",
     "model": "S500",
     "seatingCapacity": 5,
     "topSpeed": 250.1
-}""", Vehicle)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}""",
+    Vehicle,
+)
 
 using Serialization, BSON
 
@@ -156,7 +148,7 @@ using Serialization, BSON
     "test2.jls",
     (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop),
 )
-@time save(
+@time saveJSON(
     "test3.json",
     (network, dlnParams, matParams, intParams, slipSystems, dislocationLoop),
 )
@@ -166,7 +158,7 @@ using Serialization, BSON
 )
 
 networkOUT1, dlnParamsOUT1, matParamsOUT1 = open("test.txt", "r") do io
-    deserialize(io)
+    return deserialize(io)
 end
 
 networkOUT1
@@ -194,15 +186,13 @@ fig2 = plotNodes(
 )
 
 function foo(dlnParams, matParams, network)
-    network = refineNetwork(dlnParams, matParams, network)
+    return network = refineNetwork(dlnParams, matParams, network)
 end
 function bar(dlnParams, matParams, network)
-    network = coarsenNetwork(dlnParams, matParams, network)
+    return network = coarsenNetwork(dlnParams, matParams, network)
 end
 foo(dlnParams, matParams, network)
 bar(dlnParams, matParams, network)
-
-
 
 @btime foo(dlnParams, matParams, network)
 @btime bar(dlnParams, matParams, network)
@@ -213,7 +203,7 @@ network.numNodeSegConnect[2]
 function foo(intParams, intVars, dlnParams, matParams, network)
     coarsenNetwork(dlnParams, matParams, network)
     refineNetwork(dlnParams, matParams, network)
-    integrate!(intParams, intVars, dlnParams, matParams, network)
+    return integrate!(intParams, intVars, dlnParams, matParams, network)
 end
 network2 = deepcopy(network)
 @allocated foo(intParams, intVars, dlnParams, matParams, network2)
@@ -254,7 +244,7 @@ function baar(intParams, intVars, dlnParams, matParams, network)
         # println(network2.numNode)
     end every 10
 
-    gif(anim, "uau4.gif")
+    return gif(anim, "uau4.gif")
 end
 
 baar(intParams, intVars, dlnParams, matParams, network)
@@ -339,7 +329,7 @@ network.numNodeSegConnect
 size(network.connectivity)
 size(network.links)
 
-network.coord[:,network.numNodeSegConnect[2]-1:network.numNodeSegConnect[2]+1]
+network.coord[:, (network.numNodeSegConnect[2] - 1):(network.numNodeSegConnect[2] + 1)]
 fig = plotNodes(
     network,
     m = 1,
@@ -406,24 +396,23 @@ using StaticArrays
     SVector(1, 2, -3),
 )
 
-network.segForce[:,1,1] = [1,2,3]
+network.segForce[:, 1, 1] = [1, 2, 3]
 
 network.segForce
 remoteForcePar
 remoteForceSer
 baar(intParams, intVars, dlnParams, matParams, network)
 
-
-struct test{T1,T2,T3}
+struct test{T1, T2, T3}
     a::T1
     b::T2
     c::T3
 end
 
-var = test(1,2.5,Float64[1 2 3; 4 5 6])
+var = test(1, 2.5, Float64[1 2 3; 4 5 6])
 
 var
-var.c[:] = Float64[5,6,7,9]
+var.c[:] = Float64[5, 6, 7, 9]
 
 var.a .= 2
 var.c[1] = -5
@@ -436,116 +425,111 @@ var.c .= resize!(reshape(var.c, :), 9)
 var.c
 
 var.c
-var.c .= [-1,-1,-1,-1]
+var.c .= [-1, -1, -1, -1]
 
 var.c
-
 
 resize!(var.c, 2)
 var.c
 
+mutable struct mutate_me
+    a::Array{Int, 2}
+    b::Vector{Int}
+end
 
+struct immutate_me
+    a::Array{Int, 2}
+    b::Vector{Int}
+end
 
-    mutable struct mutate_me
-        a :: Array{Int, 2}
-        b :: Vector{Int}
+function foo!(variable, condition)
+    if condition
+        # variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
+        push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
+    end
+    variable.a .= LinearIndices(variable.a)
+    return nothing
+end
+
+function foo(variable, condition)
+    if condition
+        # variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
+        push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
+    end
+    variable.a .= LinearIndices(variable.a)
+    return variable
+end
+
+mutating_var = mutate_me([0 0 0; 0 0 0], [0, 0, 0])
+immutating_var = immutate_me([0 0 0; 0 0 0], [0, 0, 0])
+
+# Always works
+foo!(mutating_var, rand(Bool))
+mutating_var
+
+# Works when no resizing is needed, obviously
+foo!(immutating_var, rand(Bool))
+immutating_var
+
+# immutating_var changes when no resizing is needed, does't work otherwise
+foo(immutating_var, rand(Bool))
+
+# immutating_var always changes
+immutating_var = foo(immutating_var, rand(Bool))
+
+function watanabe(var)
+    append!(var.b, zeros(Int, 2 * length(var.b)))
+    var.b .= LinearIndices(var.b)
+    return nothing
+end
+
+mutating_var = mutate_me([0 0 0; 0 0 0], [0, 0, 0])
+immutating_var = immutate_me([0 0 0; 0 0 0], [0, 0, 0])
+watanabe(mutating_var)
+watanabe(immutating_var)
+mutating_var
+immutating_var
+
+prod(size(mutating_var.a))
+
+# Methods to implement for linear arrays
+# https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array-1
+struct LinearArray{T, N} <: AbstractArray{T, N} end
+struct VectorisedArray{T, N} <: AbstractArray{T, N}
+    size::NTuple{N, Int}
+    data::Vector{T}
+end
+
+Base.size(V::VectorisedArray) = V.size
+Base.IndexStyle(::Type{<:VectorisedArray}) = IndexLinear()
+Base.getindex(V::VectorisedArray, i::Int) = V.data[i]
+function Base.getindex(V::VectorisedArray, I::Vararg{Int, N}) where {N}
+    idx = I[1]
+
+    for i in 2:N
+        idx += prod(V.size[1:(i - 1)]) * (I[i] - 1)
     end
 
-    struct immutate_me
-        a :: Array{Int, 2}
-        b :: Vector{Int}
-    end
+    return V.data[idx]
+end
+function Base.setindex!(V::VectorisedArray, v, i::Int)
+    return V.data[i] = v
+end
+function Base.setindex!(V::VectorisedArray, v, I::Vararg{Int, N}) where {N}
+    return V.data[I] = v
+end
+function Base.hcat(V::VectorisedArray, i::Int)
+    size = zeros(Int, length(V.size))
+    size .= V.size
+    size[end] += i
+    append!(V.data, zeros(eltype(V.data), prod(V.size) * i))
+    V = VectorisedArray(Tuple(size), V.data)
+    return V
+end
 
-    function foo!(variable, condition)
-        if condition
-            # variable.a = vcat(variable.a, zeros(Int, size(variable.a)))
-            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
-        end
-        variable.a .= LinearIndices(variable.a)
-        return nothing
-    end
+a = [5, 6]
 
-    function foo(variable, condition)
-        if condition
-            # variable = immutate_me(vcat(variable.a, zeros(Int, size(variable.a))))
-            push!(vec(variable.a), vec(zeros(Int, size(variable.a))))
-        end
-        variable.a .= LinearIndices(variable.a)
-        return variable
-    end
-
-    mutating_var = mutate_me([0 0 0; 0 0 0], [0,0,0])
-    immutating_var = immutate_me([0 0 0; 0 0 0], [0,0,0])
-
-    # Always works
-    foo!(mutating_var, rand(Bool))
-    mutating_var
-
-    # Works when no resizing is needed, obviously
-    foo!(immutating_var, rand(Bool)) 
-    immutating_var
-
-    # immutating_var changes when no resizing is needed, does't work otherwise
-    foo(immutating_var, rand(Bool))
-
-    # immutating_var always changes
-    immutating_var = foo(immutating_var, rand(Bool))
-
-    function watanabe(var)
-        append!(var.b, zeros(Int, 2*length(var.b)))
-        var.b .= LinearIndices(var.b)
-        return nothing
-    end
-
-
-    mutating_var = mutate_me([0 0 0; 0 0 0], [0,0,0])
-    immutating_var = immutate_me([0 0 0; 0 0 0], [0,0,0])
-    watanabe(mutating_var)
-    watanabe(immutating_var)
-    mutating_var
-    immutating_var
-
-    prod(size(mutating_var.a))
-
-
-    # Methods to implement for linear arrays
-    # https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array-1
-    struct LinearArray{T,N} <: AbstractArray{T,N} end
-    struct VectorisedArray{T, N} <: AbstractArray{T, N} 
-        size::NTuple{N, Int}
-        data::Vector{T}
-    end
-
-    Base.size(V::VectorisedArray) = V.size
-    Base.IndexStyle(::Type{<:VectorisedArray}) = IndexLinear()
-    Base.getindex(V::VectorisedArray, i::Int) = V.data[i]
-    function Base.getindex(V::VectorisedArray, I::Vararg{Int, N}) where N 
-        idx = I[1]
-
-        for i in 2:N
-            idx += prod(V.size[1:i-1]) * (I[i] - 1)
-        end
-
-        return V.data[idx]
-    end
-    function Base.setindex!(V::VectorisedArray, v, i::Int)
-        return V.data[i] = v
-    end
-    function Base.setindex!(V::VectorisedArray, v, I::Vararg{Int, N}) where N 
-        return V.data[I] = v
-    end
-    function Base.hcat(V::VectorisedArray, i::Int)
-        size = zeros(Int, length(V.size))
-        size .= V.size
-        size[end] += i
-        append!(V.data, zeros(eltype(V.data), prod(V.size)*i))
-        V = VectorisedArray(Tuple(size), V.data)
-        return V
-    end
-
-a = [5,6]
-
-b = (7,8)
+b = (7, 8)
 c = zeros(Int, length(b))
 
 c .= b
@@ -553,43 +537,35 @@ vec(b)
 Tuple(a)
 dim = (3, 2)
 I = (2, 2)
-data = [1,2,3,4,5,6]
+data = [1, 2, 3, 4, 5, 6]
 
-data[I[1] + dim[2]*(I[2]-1)]
+data[I[1] + dim[2] * (I[2] - 1)]
 
-
-I[1] + dim[2]*(I[2]-1) + dim[2]*dim[3]*(I[3]-1)
-
-
+I[1] + dim[2] * (I[2] - 1) + dim[2] * dim[3] * (I[3] - 1)
 
 println(wak...)
 
-sum(wak[end:-1:1].*(test[1:end].-1))
-sum(I[end:-1:1]*(V.dim[1:end]-1))
+sum(wak[end:-1:1] .* (test[1:end] .- 1))
+sum(I[end:-1:1] * (V.dim[1:end] - 1))
 
-VectorisedArray((4,2), [1,2,3,4,5,6,7,8])
+VectorisedArray((4, 2), [1, 2, 3, 4, 5, 6, 7, 8])
 size([1 2])
-test = VectorisedArray((4,2), [1,2,3,4,5,6,7,8])
+test = VectorisedArray((4, 2), [1, 2, 3, 4, 5, 6, 7, 8])
 
 test = push!(test, 5)
 
+test[2, 1]
 
-
-test[2,1]
-
-test = (3,2)
+test = (3, 2)
 test[1]
-
 
 VectorisedArray{T, N}(init, I...) where {T, N} = 1
 
 test = (5, 6)
 println(test...)
 
-
 var = LinearArray{Int, 2}(undef, 2, 5)
 size(var)
-
 
 struct foo{T1, T2}
     a::T1
@@ -602,13 +578,12 @@ function bar(foo)
     b = foo.b
 
     a .= -1
-    a[1,1:2] = [50, -50]
+    a[1, 1:2] = [50, -50]
     b .-= 30
     return nothing
 end
 
-
-test = foo([4 -5; 5 2; 6 57],[5])
+test = foo([4 -5; 5 2; 6 57], [5])
 test
 
 bar(test)

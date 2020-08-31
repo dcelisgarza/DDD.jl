@@ -1,22 +1,22 @@
 # IO
 ## Input
 ```@docs
-load(filename::AbstractString)
+loadJSON(filename::AbstractString)
 
-loadDislocationLoop(
+loadDislocationLoopJSON(
     dict::Dict{T1, T2} where {T1, T2},
     slipSystem::SlipSystem,
 )
 
-loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
+loadMaterialParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 
-loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
+loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 
-loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
+loadSlipSystemJSON(dict::Dict{T1, T2}) where {T1, T2}
 
-loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
+loadDislocationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 
-loadParams(
+loadParametersJSON(
     fileDislocationParameters::AbstractString,
     fileMaterialParameters::AbstractString,
     fileIntegrationParameters::AbstractString,
@@ -24,11 +24,11 @@ loadParams(
     fileDislocationLoop::AbstractString,
 )
 
-loadNetwork(fileDislocationNetwork::AbstractString)
+loadNetworkJSON(fileDislocationNetwork::AbstractString)
 ```
 
 ## Output
 
 ```@docs
-save(filename::AbstractString, args...; mode::AbstractString = "w")
+saveJSON(filename::AbstractString, args...; mode::AbstractString = "w")
 ```

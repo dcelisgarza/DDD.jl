@@ -188,8 +188,7 @@ function mergeNode(
     nodeGone::T2,
 ) where {T1 <: DislocationNetwork, T2 <: Int}
 
-    @assert nodeKept <= network.numNode[1] &&
-            nodeGone <= network.numNode[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
+    @assert nodeKept <= network.numNode[1] && nodeGone <= network.numNode[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
 
     # Return if both nodes to be merged are the same.
     nodeKept == nodeGone && return 0, network
@@ -199,8 +198,6 @@ function mergeNode(
     nodeKeptConnect = network.connectivity[1, nodeKept]
     nodeGoneConnect = network.connectivity[1, nodeGone]
     totalConnect = nodeKeptConnect + nodeGoneConnect
-
-
 
     # Pass connections from nodeGone to nodeKept.
     if size(network.connectivity, 1) < 2 * totalConnect + 1

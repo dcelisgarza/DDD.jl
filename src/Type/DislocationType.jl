@@ -107,10 +107,11 @@ struct SlipSystem{T1, T2}
     slipPlane::T2
     bVec::T2
 
-    function SlipSystem(crystalStruct::T1, slipPlane::T2, bVec::T2) where {
-        T1 <: AbstractCrystalStruct,
-        T2 <: AbstractArray{T, N} where {T, N}
-    }
+    function SlipSystem(
+        crystalStruct::T1,
+        slipPlane::T2,
+        bVec::T2,
+    ) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
         if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
             if ndims(slipPlane) == 1
                 @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n == $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
@@ -120,9 +121,9 @@ struct SlipSystem{T1, T2}
             end
         end
 
-        new{T1, T2}(crystalStruct, slipPlane, bVec)
+        return new{T1, T2}(crystalStruct, slipPlane, bVec)
     end
-    
+
 end
 
 """
@@ -281,6 +282,21 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
         @assert size(coord, 2) == length(label)
 
-        new{T1, T2, T3, T4, T5, T6}(links, slipPlane, bVec, coord, label, nodeVel, nodeForce, numNode, numSeg, maxConnect, connectivity, linksConnect, segIdx, segForce)
+        return new{T1, T2, T3, T4, T5, T6}(
+            links,
+            slipPlane,
+            bVec,
+            coord,
+            label,
+            nodeVel,
+            nodeForce,
+            numNode,
+            numSeg,
+            maxConnect,
+            connectivity,
+            linksConnect,
+            segIdx,
+            segForce,
+        )
     end
 end

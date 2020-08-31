@@ -35,13 +35,13 @@ JSON.lower(t::nodeType) = Int(t)
 
 """
 ```
-save(filename::AbstractString, args...; mode::AbstractString = "w")
+saveJSON(filename::AbstractString, args...; mode::AbstractString = "w")
 ```
 Wrapper for `JSON.print` to a file, `args` are the variables or structures you want to save.
 """
-function save(filename::AbstractString, args...; mode::AbstractString = "w")
+function saveJSON(filename::AbstractString, args...; mode::AbstractString = "w")
     open(filename, mode) do io
-        length(args) == 1 ? JSON.print(io, args...) : JSON.print(io, args)
+        return length(args) == 1 ? JSON.print(io, args...) : JSON.print(io, args)
     end
     return nothing
 end

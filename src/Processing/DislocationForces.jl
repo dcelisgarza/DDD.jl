@@ -135,7 +135,7 @@ function calcSelfForce(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-
+                
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -217,7 +217,7 @@ function calcSelfForce!(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-
+                
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -301,7 +301,7 @@ function calcSegSegForce(
     node1 = @view coord[:, idxNode1]
     node2 = @view coord[:, idxNode2]
     # Calculate segseg forces on every segment.
-    if isnothing(idx)
+    return if isnothing(idx)
         if dlnParams.parCPU
             # Threadid parallelisation + parallelised reduction.
             nthreads = Threads.nthreads()
@@ -1228,16 +1228,7 @@ function ParSegSegInteg(aSq_dSq::T, aSq_dSqI::T, x::T, y::T) where {T}
     integ12
 end
 
-function SegSegInteg(
-    aSq::T,
-    d::T,
-    c::T,
-    cSq::T,
-    omcSq::T,
-    omcSqI::T,
-    x::T,
-    y::T,
-) where {T}
+function SegSegInteg(aSq::T, d::T, c::T, cSq::T, omcSq::T, omcSqI::T, x::T, y::T) where {T}
 
     aSq_dSq = aSq + d^2 * omcSq
     xSq = x^2

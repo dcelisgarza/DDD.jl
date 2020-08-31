@@ -248,68 +248,68 @@ Since `JSON` files represent dictionaries, they automatically accommodate change
 
 One can load all their parameters at once like so.
 ```julia
-fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-fileSlipSystem = "../data/slipSystems/SlipSystems.JSON"
-fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
-fileIntVar = "../inputs/simParams/sampleIntegrationTime.JSON"
-dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
+fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+fileSlipSystem = "../data/slipSystems/SlipSystems.json"
+fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
+dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
     fileDislocationParameters,
     fileMaterialParameters,
     fileIntegrationParameters,
     fileSlipSystem,
     fileDislocationLoop,
 )
-intVars = loadIntegrationTime(fileIntVar)
+intVars = loadIntegrationTimeJSON(fileIntVar)
 ```
 which not only loads the data but returns the aforementioned structures. If there is a single file holding all the parameters, then all the filenames would be the same, but nothing else would change as the file would be loaded into a large dictionary and only the relevant `(key, value)` pairs are used in each case.
 
 Users may also load individual structures as follows.
 ```julia
-dictDislocationParameters = load(fileDislocationParameters)
-DislocationParameters = loadDislocationParameters(dictDislocationParameters)
+dictDislocationParameters = loadJSON(fileDislocationParameters)
+DislocationParameters = loadDislocationParametersJSON(dictDislocationParameters)
 
-dictMaterialParameters = load(fileMaterialParameters)
-MaterialParameters = loadMaterialParameters(dictMaterialParameters)
+dictMaterialParameters = loadJSON(fileMaterialParameters)
+MaterialParameters = loadMaterialParametersJSON(dictMaterialParameters)
 
-dictIntegrationParameters = load(fileIntegrationParameters)
-IntegrationParameters = loadIntegrationParameters(dictIntegrationParameters)
+dictIntegrationParameters = loadJSON(fileIntegrationParameters)
+IntegrationParameters = loadIntegrationParametersJSON(dictIntegrationParameters)
 
-dictSlipSystem = load(fileSlipSystem)
-slipSystems = loadSlipSystem(dictSlipSystem)
+dictSlipSystem = loadJSON(fileSlipSystem)
+slipSystems = loadSlipSystemJSON(dictSlipSystem)
 
 # There can be multiple dislocation types per simulation.
-dictDislocationLoop = load(fileDislocationLoop)
+dictDislocationLoop = loadJSON(fileDislocationLoop)
 dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
 for i in eachindex(dislocationLoop)
-    dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+    dislocationLoop[i] = loadDislocationLoopJSON(dictDislocationLoop[i], slipSystems)
 end
 ```
 Individually loading files like this is useful when recovering previous save states where the data was dumped into a single file, as shown here.
 ```julia
 # Dump simulation parameters into a single file. Creates an array where each entry is one of the structs.
-paramDump = "../outputs/simParams/sampleDump.JSON"
-save(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
+paramDump = "../outputs/simParams/sampleDump.json"
+saveJSON(paramDump, dlnParams, matParams, intParams, slipSystems, dislocationLoop)
 
 # Dump network data into a separate file.
-networkDump = "../outputs/dln/sampleNetwork.JSON"
-save(networkDump, network, intVars)
+networkDump = "../outputs/dln/sampleNetwork.json"
+saveJSON(networkDump, network, intVars)
 
 # Reload parameters.
-simulation = load(paramDump)
-dlnParams2 = loadDislocationParameters(simulation[1])
-matParams2 = loadMaterialParameters(simulation[2])
-intParams2 = loadIntegrationParameters(simulation[3])
-slipSystems2 = loadSlipSystem(simulation[4])
+simulation = loadJSON(paramDump)
+dlnParams2 = loadDislocationParametersJSON(simulation[1])
+matParams2 = loadMaterialParametersJSON(simulation[2])
+intParams2 = loadIntegrationParametersJSON(simulation[3])
+slipSystems2 = loadSlipSystemJSON(simulation[4])
 dislocationLoop2 = zeros(DislocationLoop, length(simulation[5]))
 for i in eachindex(dislocationLoop2)
-    dislocationLoop2[i] = loadDislocationLoop(simulation[5][i], slipSystems2)
+    dislocationLoop2[i] = loadDislocationLoopJSON(simulation[5][i], slipSystems2)
 end
 
 # Reload network.
-network2 = loadNetwork(networkDump[1])
-intVars2 = loadIntegrationTime(networkDump[2])
+network2 = loadNetworkJSON(networkDump[1])
+intVars2 = loadIntegrationTimeJSON(networkDump[2])
 ```
 The reason why `network` and `intVars` are saved separately is because they change as the simulation advances, while the parameters stay the same. Saving the parameters multiple times per simulation is redundant.
 
