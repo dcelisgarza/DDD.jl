@@ -432,28 +432,28 @@ DislocationNetwork(;
 Keyword constructor for [`DislocationNetwork`](@ref), performs validations but creates dislocation network as provided.
 """
 function DislocationNetwork(;
-    links::T1,
-    slipPlane::T2,
-    bVec::T2,
-    coord::T2,
-    label::T3,
-    nodeVel::T2,
-    nodeForce::T2,
-    numNode::T4 = zeros(Int, 1),
-    numSeg::T4 = zeros(Int, 1),
-    maxConnect::T4 = zeros(Int, 1),
-    connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[1], numNode[1]),
-    linksConnect::T5 = zeros(Int, 2, numSeg[1]),
-    segIdx::T5 = zeros(Int, size(links, 2), 3),
-    segForce::T6 = zeros(3, size(links, 2), 0),
-) where {
-    T1 <: AbstractArray{T, N} where {T, N},
-    T2 <: AbstractArray{T, N} where {T, N},
-    T3 <: AbstractVector{nodeType},
-    T4 <: AbstractVector{Int},
-    T5 <: AbstractArray{Int, N} where {N},
-    T6 <: AbstractArray{T, N} where {T, N},
-}
+        links::T1,
+        slipPlane::T2,
+        bVec::T2,
+        coord::T2,
+        label::T3,
+        nodeVel::T2,
+        nodeForce::T2,
+        numNode::T4 = zeros(Int, 1),
+        numSeg::T4 = zeros(Int, 1),
+        maxConnect::T5 = 0,
+        connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
+        linksConnect::T1 = zeros(Int, 2, size(links, 2)),
+        segIdx::T1 = zeros(Int, size(links, 2), 3),
+        segForce::T6 = zeros(3, size(links, 2), 0),
+    ) where {
+        T1 <: AbstractArray{T, N} where {T, N},
+        T2 <: AbstractArray{T, N} where {T, N},
+        T3 <: AbstractVector{nodeType},
+        T4 <: AbstractVector{Int},
+        T5 <: Int,
+        T6 <: AbstractArray{T, N} where {T, N},
+    }
 
     return DislocationNetwork(
         links,
@@ -552,7 +552,7 @@ function DislocationNetwork(
         nodeForce,
         [numNode], 
         [numSeg], 
-        [maxConnect],
+        maxConnect,
         connectivity,
         linksConnect,
         segIdx,
@@ -570,7 +570,6 @@ end
 DislocationNetwork(
     network::T1,
     sources::T2,
-    maxConnect::T3 = 4,
     args...;
     checkConsistency::T4 = true,
     kw...,
@@ -586,21 +585,20 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
 function DislocationNetwork!(
     network::T1,
     sources::T2,
-    maxConnect::T3 = 4,
     args...;
-    checkConsistency::T4 = true,
+    checkConsistency::T3 = true,
     kw...,
 ) where {
     T1 <: DislocationNetwork,
     T2 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
-    T3 <: Int,
-    T4 <: Bool,
+    T3 <: Bool,
 }
     # For comments see DislocationNetwork. It is a 1-to-1 translation except that this one modifies the network in-place.
 
+    iszero(network) && return DislocationNetwork(sources, args...; checkConsistency, kw...)
+
     nodeTotal::Int = 0
     lims = zeros(3, 2)
-    network.maxConnect[1] = maxConnect
     for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end

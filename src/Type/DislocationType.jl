@@ -246,10 +246,10 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
     nodeForce::T2
     numNode::T4
     numSeg::T4
-    maxConnect::T4
-    connectivity::T5
-    linksConnect::T5
-    segIdx::T5
+    maxConnect::T5
+    connectivity::T1
+    linksConnect::T1
+    segIdx::T1
     segForce::T6
 
     function DislocationNetwork(
@@ -262,17 +262,17 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         nodeForce::T2,
         numNode::T4 = zeros(Int, 1),
         numSeg::T4 = zeros(Int, 1),
-        maxConnect::T4 = zeros(Int, 1),
-        connectivity::T5 = zeros(Int, 1 + 2 * maxConnect[1], numNode[1]),
-        linksConnect::T5 = zeros(Int, 2, numSeg[1]),
-        segIdx::T5 = zeros(Int, size(links, 2), 3),
+        maxConnect::T5 = 0,
+        connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
+        linksConnect::T1 = zeros(Int, 2, size(links, 2)),
+        segIdx::T1 = zeros(Int, size(links, 2), 3),
         segForce::T6 = zeros(3, size(links, 2), 0),
     ) where {
         T1 <: AbstractArray{T, N} where {T, N},
         T2 <: AbstractArray{T, N} where {T, N},
         T3 <: AbstractVector{nodeType},
         T4 <: AbstractVector{Int},
-        T5 <: AbstractArray{Int, N} where {N},
+        T5 <: Int,
         T6 <: AbstractArray{T, N} where {T, N},
     }
 

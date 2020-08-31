@@ -3,11 +3,11 @@ using Test, Statistics
 cd(@__DIR__)
 
 @testset "Merge nodes" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.JSON"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.JSON"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.JSON"
-    fileSlipSystem = "../data/slipSystems/BCC.JSON"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.JSON"
+    fileDislocationParameters = "./testData/sampleDislocationParameters.JSON"
+    fileMaterialParameters = "./testData/sampleMaterialParameters.JSON"
+    fileIntegrationParameters = "./testData/sampleIntegrationParameters.JSON"
+    fileSlipSystem = "./testData/BCC.JSON"
+    fileDislocationLoop = "./testData/samplePrismShear.JSON"
     dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParams(
         fileDislocationParameters,
         fileMaterialParameters,
@@ -16,8 +16,8 @@ cd(@__DIR__)
         fileDislocationLoop,
     )
 
-    square = DislocationLoop(
-        loopShear();
+    square = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 4,
         nodeSide = 1,
         numLoops = 1,
@@ -38,9 +38,9 @@ cd(@__DIR__)
     @test network.coord == zeros(3, 4)
     @test network.label == zeros(nodeType, 4)
     @test network.nodeVel == zeros(3, 4)
-    @test network.numNodeSegConnect[1] == 0
-    @test network.numNodeSegConnect[2] == 0
-    @test network.numNodeSegConnect[3] == 4
+    @test network.numNode[1] == 0
+    @test network.numSeg[1] == 0
+    @test network.maxConnect == 4
     @test network.connectivity == zeros(9, 4)
     @test network.linksConnect == zeros(2, 4)
     @test network.segIdx == [
@@ -59,16 +59,16 @@ cd(@__DIR__)
     @test network.coord == zeros(3, 4)
     @test network.label == zeros(nodeType, 4)
     @test network.nodeVel == zeros(3, 4)
-    @test network.numNodeSegConnect[1] == 0
-    @test network.numNodeSegConnect[2] == 0
-    @test network.numNodeSegConnect[3] == 4
+    @test network.numNode[1] == 0
+    @test network.numSeg[1] == 0
+    @test network.maxConnect == 4
     @test network.connectivity == zeros(9, 4)
     @test network.linksConnect == zeros(2, 4)
     @test network.segIdx == zeros(Int, 4, 3)
     @test network.segForce == zeros(3, 2, 4)
 
-    square = DislocationLoop(
-        loopShear();
+    square = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 4,
         nodeSide = 1,
         numLoops = 1,
@@ -86,8 +86,8 @@ cd(@__DIR__)
     coarsenNetwork(dlnParams, matParams, network2)
     @test compStruct(network, network2)
 
-    pentagon = DislocationLoop(
-        loopPrism();
+    pentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 2,
@@ -237,8 +237,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 9
-    @test networkTest.numNodeSegConnect[2] == 9
+    @test networkTest.numNode[1] == 9
+    @test networkTest.numSeg[1] == 9
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -363,8 +363,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 8
-    @test networkTest.numNodeSegConnect[2] == 8
+    @test networkTest.numNode[1] == 8
+    @test networkTest.numSeg[1] == 8
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -488,8 +488,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 8
-    @test networkTest.numNodeSegConnect[2] == 8
+    @test networkTest.numNode[1] == 8
+    @test networkTest.numSeg[1] == 8
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -613,8 +613,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 8
-    @test networkTest.numNodeSegConnect[2] == 8
+    @test networkTest.numNode[1] == 8
+    @test networkTest.numSeg[1] == 8
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -738,8 +738,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 9
-    @test networkTest.numNodeSegConnect[2] == 10
+    @test networkTest.numNode[1] == 9
+    @test networkTest.numSeg[1] == 10
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -863,8 +863,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 9
-    @test networkTest.numNodeSegConnect[2] == 10
+    @test networkTest.numNode[1] == 9
+    @test networkTest.numSeg[1] == 10
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -989,8 +989,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 7
-    @test networkTest.numNodeSegConnect[2] == 8
+    @test networkTest.numNode[1] == 7
+    @test networkTest.numSeg[1] == 8
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -1116,8 +1116,8 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 5
-    @test networkTest.numNodeSegConnect[2] == 6
+    @test networkTest.numNode[1] == 5
+    @test networkTest.numSeg[1] == 6
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
@@ -1244,13 +1244,13 @@ cd(@__DIR__)
     @test isapprox(networkTest.segForce[:, 1, :], segForce')
     @test isapprox(networkTest.segForce[:, 2, :], factor * segForce')
     @test isapprox(networkTest.nodeVel, nodeVel')
-    @test networkTest.numNodeSegConnect[1] == 4
-    @test networkTest.numNodeSegConnect[2] == 4
+    @test networkTest.numNode[1] == 4
+    @test networkTest.numSeg[1] == 4
     @test isapprox(networkTest.connectivity, connectivity')
     @test isapprox(networkTest.linksConnect, linksConnect')
 
-    shearDecagon = DislocationLoop(
-        loopShear();
+    shearDecagon = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
@@ -1269,15 +1269,15 @@ cd(@__DIR__)
     network2 = deepcopy(network)
     network2.coord[:, 11] = vec(mean(network2.coord, dims = 2))
     network2.label[11] = 1
-    network2.numNodeSegConnect[1] = 11
+    network2.numNode[1] = 11
     network2.links[:, 11] = [11; 2]
     network2.links[:, 12] = [11; 4]
     network2.links[:, 13] = [11; 5]
     network2.links[:, 14] = [11; 10]
     network2.bVec[:, 11:14] .= network2.bVec[:, 1]
     network2.slipPlane[:, 11:14] .= network2.slipPlane[:, 1]
-    network2 = makeConnect!(network2)
-    network2 = getSegmentIdx!(network2)
+    makeConnect!(network2)
+    getSegmentIdx!(network2)
     calcSegForce!(dlnParams, matParams, network2)
     network3 = deepcopy(network2)
     retVal, network3 = mergeNode(network3, 11, 3)
@@ -1424,8 +1424,8 @@ end
         fileDislocationLoop,
     )
 
-    pentagon = DislocationLoop(
-        loopPrism();
+    pentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 2,
@@ -1452,8 +1452,8 @@ end
     networkTest = deepcopy(network)
     midCoord = vec(mean(networkTest.coord, dims = 2))
     midVel = vec(mean(networkTest.nodeVel, dims = 2))
-    numNode = networkTest.numNodeSegConnect[1]
-    numSeg = networkTest.numNodeSegConnect[2]
+    numNode = networkTest.numNode[1]
+    numSeg = networkTest.numSeg[1]
     newEntries = Int(round(11 * log2(11)))
     networkTest = splitNode(networkTest, 1, 1, midCoord, midVel)
     links = [
@@ -1586,13 +1586,13 @@ end
           size(networkTest.connectivity, 2) ==
           size(networkTest.linksConnect, 2) ==
           numNode + newEntries
-    @test networkTest.numNodeSegConnect[1] == numNode + 1
-    @test networkTest.numNodeSegConnect[2] == numSeg + 1
+    @test networkTest.numNode[1] == numNode + 1
+    @test networkTest.numSeg[1] == numSeg + 1
 
     midCoord += [-5, 11, -7]
     midVel += [-6, 1, 9]
-    numNode = networkTest.numNodeSegConnect[1]
-    numSeg = networkTest.numNodeSegConnect[2]
+    numNode = networkTest.numNode[1]
+    numSeg = networkTest.numSeg[1]
     networkTest = splitNode(networkTest, 8, 1, midCoord, midVel)
 
     links = [
@@ -1726,8 +1726,8 @@ end
           size(networkTest.connectivity, 2) ==
           size(networkTest.linksConnect, 2) ==
           48
-    @test networkTest.numNodeSegConnect[1] == numNode + 1
-    @test networkTest.numNodeSegConnect[2] == numSeg + 1
+    @test networkTest.numNode[1] == numNode + 1
+    @test networkTest.numSeg[1] == numSeg + 1
     @test networkTest.links[:, 1:12] == links'
     @test isapprox(networkTest.slipPlane[:, 1:12], slipPlane')
     @test isapprox(networkTest.bVec[:, 1:12], bVec')
@@ -1753,8 +1753,8 @@ end
         fileDislocationLoop,
     )
 
-    prismPentagon = DislocationLoop(
-        loopPrism();
+    prismPentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 1,
@@ -1768,8 +1768,8 @@ end
         dist = Zeros(),
     )
 
-    shearHexagon = DislocationLoop(
-        loopShear();
+    shearHexagon = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 6,
         nodeSide = 1,
         numLoops = 1,
@@ -1925,8 +1925,8 @@ end
     @test isapprox(network2.coord', coord)
     @test network2.label == label
     @test isapprox(network2.nodeVel', nodeVel, rtol = 1e-6)
-    @test network2.numNodeSegConnect[1] == 8
-    @test network2.numNodeSegConnect[2] == 8
+    @test network2.numNode[1] == 8
+    @test network2.numSeg[1] == 8
     @test isapprox(network2.segForce[:, 1, :]', segForce1)
     @test isapprox(network2.segForce[:, 2, :]', segForce2)
     @test isapprox(network2.connectivity', connectivity)
@@ -1947,8 +1947,8 @@ end
         fileDislocationLoop,
     )
 
-    prismPentagon = DislocationLoop(
-        loopPrism();
+    prismPentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 1,
@@ -1962,8 +1962,8 @@ end
         dist = Zeros(),
     )
 
-    shearHexagon = DislocationLoop(
-        loopShear();
+    shearHexagon = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 6,
         nodeSide = 1,
         numLoops = 1,
@@ -1995,8 +1995,8 @@ end
         fileSlipSystem,
         fileDislocationLoop,
     )
-    shearDecagon = DislocationLoop(
-        loopShear();
+    shearDecagon = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
@@ -2178,8 +2178,8 @@ end
     ]
     numNode = 14
     numSeg = 14
-    @test network.numNodeSegConnect[1] == numNode
-    @test network.numNodeSegConnect[2] == numSeg
+    @test network.numNode[1] == numNode
+    @test network.numSeg[1] == numSeg
     @test network.links[:, 1:numSeg]' == links
     @test isapprox(network.slipPlane[:, 1:numSeg]', slipPlane)
     @test isapprox(network.bVec[:, 1:numSeg]', bVec)
@@ -2192,8 +2192,8 @@ end
     @test isapprox(network.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network.segForce[:, 2, 1:numSeg]', segForce2)
 
-    shearDecagon = DislocationLoop(
-        loopShear();
+    shearDecagon = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
@@ -2212,7 +2212,7 @@ end
     network = deepcopy(network)
     network.coord[:, 11] = vec(mean(network.coord, dims = 2))
     network.label[11] = 1
-    network.numNodeSegConnect[1] = 11
+    network.numNode[1] = 11
     network.links[:, 11] = [11; 2]
     network.links[:, 12] = [11; 4]
     network.links[:, 13] = [11; 5]
@@ -2448,8 +2448,8 @@ end
         0.242140767605516 0.242140767605516 1.315924736102546
     ]
 
-    @test network.numNodeSegConnect[1] == numNode
-    @test network.numNodeSegConnect[2] == numSeg
+    @test network.numNode[1] == numNode
+    @test network.numSeg[1] == numSeg
     @test network.links[:, 1:numSeg]' == links
     @test isapprox(network.slipPlane[:, 1:numSeg]', slipPlane)
     @test isapprox(network.bVec[:, 1:numSeg]', bVec)

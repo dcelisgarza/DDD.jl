@@ -10,11 +10,6 @@ import DDD:
     segEdgeN,
     segScrew,
     makeSegment,
-    idxLabel,
-    idxCond,
-    dataCond,
-    coordIdx,
-    coordLbl,
     inclusiveComparison
 cd(@__DIR__)
 
@@ -50,72 +45,8 @@ cd(@__DIR__)
     @test isapprox(norm(edge), norm(screw))
     @test isapprox(norm(edge), 1.0)
 end
-#=
-@testset "Dislocation indexing functions" begin
-    cnd = [==, >=, <=, <, >, !=]
-    numNode = 10
-    numSeg = 20
-    links = zeros(Int, 2, numSeg)
-    bVec = zeros(3, numSeg)
-    slipPlane = zeros(3, numSeg)
-    coord = zeros(3, numNode)
-    label = zeros(nodeType, numNode)
-    lenLinks = size(links, 2)
-    [links[:, i] = [i, i + lenLinks] for i in 1:lenLinks]
-    [bVec[:, i] = [i, i + lenLinks, i + 2 * lenLinks] for i in 1:lenLinks]
-    [slipPlane[:, i] = -[i, i + lenLinks, i + 2 * lenLinks] for i in 1:lenLinks]
-    lenLabel = length(label)
-    [label[i + 1] = mod(i, 6) for i in 0:(lenLabel - 1)]
-    [
-        coord[:, i] = convert.(Float64, [i, i + lenLabel, i + 2 * lenLabel])
-        for i in 1:length(label)
-    ]
-    network = DislocationNetwork(;
-        links = links,
-        slipPlane = slipPlane,
-        bVec = bVec,
-        coord = coord,
-        label = label,
-        segForce = zeros(3, 2, numSeg),
-        nodeVel = zeros(size(coord)),
-        nodeForce = zeros(size(coord)),
-        numNodeSegConnect = [convert(Int, numNode), convert(Int, numSeg), convert(Int, 0)]
-    )
-    @test isequal(network.label[1], 0)
-    @test isequal(0, network.label[1])
-    @test 0 == network.label[1]
-    @test network.label[1] == 0
-    @test -2.0 < network.label[1]
-    rnd = rand(-1:numNode)
-    @test idxLabel(network, rnd) == findall(x -> x == rnd, label)
-    @test coordLbl(network, rnd) == coord[:, findall(x -> x == rnd, label)]
-    @test idxCond(network, :label, inclusiveComparison, 0, 1) == [1; 2; 7; 8]
-    @test idxCond(network, :label, rnd; condition = <=) == findall(x -> x <= rnd, label)
-    rnd = rand(1:numSeg)
-    @test idxCond(network, :bVec, rnd; condition = cnd[1]) ==
-          findall(x -> cnd[1](x, rnd), bVec)
-    @test dataCond(network, :slipPlane, rnd; condition = cnd[2]) ==
-          slipPlane[findall(x -> cnd[2](x, rnd), slipPlane)]
-    rnd = rand(-1:1)
-    @test dataCond(network, :slipPlane, :bVec, rnd; condition = cnd[3]) ==
-          slipPlane[findall(x -> cnd[3](x, rnd), bVec)]
-    rnd = rand(1:numNode)
-    @test dataCond(network, :coord, :label, rnd; condition = cnd[4]) ==
-          coord[:, findall(x -> cnd[4](x, rnd), label)]
-    coord
-    col = rand(1:3)
-    @test idxCond(network, :bVec, col, rnd; condition = cnd[5]) ==
-          findall(x -> cnd[5](x, rnd), bVec[col, :])
-    @test dataCond(network, :bVec, col, rnd; condition = cnd[6]) ==
-          bVec[:, findall(x -> cnd[6](x, rnd), bVec[col, :])]
-    rnd = rand(-1:1)
-    @test dataCond(network, :slipPlane, :bVec, col, rnd; condition = cnd[1]) ==
-          slipPlane[:, findall(x -> cnd[1](x, rnd), bVec[col, :])]
-    rnd = rand(1:numNode)
-    @test coordIdx(network, rnd) == coord[:, rnd]
-    rnd = rand(1:numNode, numNode)
-    @test coordIdx(network, rnd) == coord[:, rnd]
 
+@testset "Dislocation indexing functions" begin
     network = DislocationNetwork(;
         links = rand(1:10, 2, 10),
         slipPlane = rand(3, 10),
@@ -125,10 +56,12 @@ end
         segForce = rand(3, 2, 10),
         nodeVel = rand(3, 10),
         nodeForce = rand(3, 10),
-        numNodeSegConnect = [convert(Int, 10), convert(Int, 10), convert(Int, 10)],
+        numNode = [10],
+        numSeg = [10],
+        maxConnect = 10
     )
-    network = getSegmentIdx!(network)
-    network = makeConnect!(network)
+    getSegmentIdx!(network)
+    makeConnect!(network)
 
     idx = rand(1:10)
     @test network[idx] == (
@@ -160,7 +93,7 @@ end
         network.segForce[:, :, idx],
     )
 end
-=#
+
 @testset "Loop generation" begin
     slipfile = "./testData/BCC.JSON"
     loopfile = "./testData/samplePrismShear.JSON"
@@ -233,10 +166,10 @@ end
         nodeForce = zeros(3, 1),
         numNode = [0],
         numSeg = [0],
-        maxConnect = [convert(Int, 0)],
+        maxConnect = 0,
     )
     network2 = DislocationNetwork!(network2, loops)
-    @test !compStruct(network, network2)
+    @test compStruct(network, network2, verbose = true)
     network3 = DislocationNetwork(loops)
     @test network.links[:, 1:totalNodes] == network3.links[:, 1:totalNodes]
     @test network.slipPlane[:, 1:totalNodes] == network3.slipPlane[:, 1:totalNodes]

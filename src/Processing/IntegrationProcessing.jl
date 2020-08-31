@@ -1,74 +1,3 @@
-"""
-```
-abstract type AbstractIntegrator end
-struct CustomTrapezoid <:AbstractIntegrator end
-```
-Integrator types.
-"""
-abstract type AbstractIntegrator end
-struct CustomTrapezoid <: AbstractIntegrator end
-
-"""
-```
-struct IntegrationParameters{T1, T2, T3}
-    dt::T1
-    tmin::T1
-    tmax::T1
-    method::T2
-    abstol::T1
-    reltol::T1
-    time::T1
-    step::T3
-end
-```
-This structure contains the integration parameters for the simulation.
-"""
-struct IntegrationParameters{T1, T2, T3}
-    method::T1
-    tmin::T2
-    tmax::T2
-    dtmin::T2
-    dtmax::T2
-    abstol::T2
-    reltol::T2
-    maxchange::T2
-    exponent::T2
-    maxiter::T3
-end
-function IntegrationParameters(;
-    method,
-    tmin,
-    tmax,
-    dtmin = 1e-3,
-    dtmax = Inf,
-    abstol = 1e-6,
-    reltol = 1e-6,
-    maxchange = 1.2,
-    exponent = 20,
-    maxiter = 10,
-)
-    return IntegrationParameters(
-        method,
-        tmin,
-        tmax,
-        dtmin,
-        dtmax,
-        abstol,
-        reltol,
-        maxchange,
-        exponent,
-        maxiter,
-    )
-end
-mutable struct IntegrationTime{T1, T2}
-    dt::T1
-    time::T1
-    step::T2
-end
-function IntegrationTime(; dt = 0.0, time = 0.0, step = 0)
-    return IntegrationTime(dt, time, step)
-end
-
 function deriv!(
     dlnParams::T1,
     matParams::T2,
@@ -111,14 +40,14 @@ function deriv!(
             # If there is more than one external connection, calculate the mean normal.
             if numExt > 1
                 conNodes = mean(conNodes, dims = 2)
-                normalise!(conNodes)
+                normalize!(conNodes)
             end
             # Vector rejection to remove velocity in the direction of the surface normal.
             nodeVel[:, node] -= (nodeVel[:, node] ⋅ conNodes) * conNodes
         end
     end
 
-    return network
+    return nothing
 end
 
 function integrate!(
@@ -205,9 +134,7 @@ function integrate!(
         dt <= dtmin && break
     end
 
-    intVars.dt = dt
-    intVars.time += dt
-    intVars.step += 1
+    intVars = IntegrationTime(dt, time + dt, step + 1)
 
-    return intVars, network
+    return intVars
 end

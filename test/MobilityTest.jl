@@ -16,8 +16,8 @@ cd(@__DIR__)
         fileDislocationLoop,
     )
 
-    prismPentagon = DislocationLoop(
-        loopPrism();
+    prismPentagon = DislocationLoop(;
+        loopType = loopPrism(),
         numSides = 5,
         nodeSide = 1,
         numLoops = 1,
@@ -31,8 +31,8 @@ cd(@__DIR__)
         dist = Zeros(),
     )
 
-    shearHexagon = DislocationLoop(
-        loopShear();
+    shearHexagon = DislocationLoop(;
+        loopType = loopShear(),
         numSides = 6,
         nodeSide = 1,
         numLoops = 1,
@@ -85,7 +85,7 @@ cd(@__DIR__)
     @test isapprox(vel, network2.nodeVel)
     @test isapprox(force, network2.nodeForce)
 
-    idx = rand(1:(network.numNodeSegConnect[1]))
+    idx = rand(1:(network.numNode[1]))
     forceIdx, velIdx = dlnMobility(dlnParams, matParams, network, idx)
     @test isapprox(force[:, idx], forceIdx)
     @test isapprox(vel[:, idx], velIdx)
@@ -94,7 +94,7 @@ cd(@__DIR__)
     @test isapprox(force[:, idx], network3.nodeForce[:, idx])
     @test isapprox(vel[:, idx], network3.nodeVel[:, idx])
 
-    idx = rand(1:(network.numNodeSegConnect[1]), 5)
+    idx = rand(1:(network.numNode[1]), 5)
     forceIdx, velIdx = dlnMobility(dlnParams, matParams, network, idx)
     @test isapprox(force[:, idx], forceIdx)
     @test isapprox(vel[:, idx], velIdx)

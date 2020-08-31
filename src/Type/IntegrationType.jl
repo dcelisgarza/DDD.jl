@@ -51,7 +51,7 @@ mutable struct IntegrationTime{T1, T2}
 end
 ```
 """
-mutable struct IntegrationTime{T1, T2}
+struct IntegrationTime{T1, T2}
     dt::T1
     time::T1
     step::T2

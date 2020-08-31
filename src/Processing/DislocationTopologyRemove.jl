@@ -10,7 +10,7 @@ network.links
 network.coord
 network.label
 network.nodeVel
-network.numNodeSegConnect[1]
+network.numNode[1]
 network.connectivity
 ```
 """
@@ -27,7 +27,7 @@ function removeNode!(
     nodeForce = network.nodeForce
     connectivity = network.connectivity
 
-    isnothing(lastNode) ? lastNode = maximum((network.numNodeSegConnect[1], 1)) : nothing
+    isnothing(lastNode) ? lastNode = maximum((network.numNode[1], 1)) : nothing
 
     # The if nodeGone is not the last node in the relevant arrays, replace it by lastNode.
     if nodeGone < lastNode
@@ -48,7 +48,7 @@ function removeNode!(
     label[lastNode] = 0
     nodeVel[:, lastNode] .= 0
     nodeForce[:, lastNode] .= 0
-    network.numNodeSegConnect[1] -= 1
+    network.numNode[1] -= 1
     connectivity[:, lastNode] .= 0
 
     return network
@@ -116,7 +116,7 @@ network.coord
 network.label
 network.segForce
 network.nodeVel
-network.numNodeSegConnect[2]
+network.numSeg[1]
 network.connectivity
 network.linksConnect
 ```
@@ -148,7 +148,7 @@ function removeLink!(
     # Remove link that no longer appears in connectivity and doesn't connect any nodes.
     @assert linksConnect[:, linkGone]' * linksConnect[:, linkGone] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
-    isnothing(lastLink) ? lastLink = maximum((network.numNodeSegConnect[2], 1)) : nothing
+    isnothing(lastLink) ? lastLink = maximum((network.numSeg[1], 1)) : nothing
 
     # If the linkGone is not the last link, replace it with lastLink.
     if linkGone < lastLink
@@ -170,7 +170,7 @@ function removeLink!(
     slipPlane[:, lastLink] .= 0
     bVec[:, lastLink] .= 0
     segForce[:, :, lastLink] .= 0
-    network.numNodeSegConnect[2] -= 1
+    network.numSeg[1] -= 1
     linksConnect[:, lastLink] .= 0
 
     return network
@@ -188,8 +188,8 @@ function mergeNode(
     nodeGone::T2,
 ) where {T1 <: DislocationNetwork, T2 <: Int}
 
-    @assert nodeKept <= network.numNodeSegConnect[1] &&
-            nodeGone <= network.numNodeSegConnect[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
+    @assert nodeKept <= network.numNode[1] &&
+            nodeGone <= network.numNode[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
 
     # Return if both nodes to be merged are the same.
     nodeKept == nodeGone && return 0, network
@@ -214,7 +214,9 @@ function mergeNode(
             segForce = network.segForce,
             nodeVel = network.nodeVel,
             nodeForce = network.nodeForce,
-            numNodeSegConnect = network.numNodeSegConnect,
+            numNode = network.numNode,
+            numSeg = network.numSeg,
+            maxConnect = network.maxConnect,
             linksConnect = network.linksConnect,
             connectivity = vcat(
                 network.connectivity,
@@ -248,7 +250,7 @@ function mergeNode(
     end
 
     # Remove node from network and update index of nodeKept in case it changed.
-    lastNode = maximum((network.numNodeSegConnect[1], 1))
+    lastNode = maximum((network.numNode[1], 1))
     removeNode!(network, nodeGone, lastNode)
     coord = network.coord
     nodeVel = network.nodeVel
@@ -322,7 +324,7 @@ function mergeNode(
             end
 
             # Remove link2 from network and update the index of link1 in case it changed.
-            lastLink = maximum((network.numNodeSegConnect[2], 1))
+            lastLink = maximum((network.numSeg[1], 1))
             removeLink!(network, link2, lastLink)
             links = network.links
             connectivity = network.connectivity
@@ -336,7 +338,7 @@ function mergeNode(
                 connectivity = network.connectivity
                 # If the node that was connected to nodeKept has no connections, remove it from the network and update the index of nodeKept in case it changed.
                 if connectivity[1, nodeNotLink1] == 0
-                    lastNode = maximum((network.numNodeSegConnect[1], 1))
+                    lastNode = maximum((network.numNode[1], 1))
                     removeNode!(network, nodeNotLink1, lastNode)
                     coord = network.coord
                     nodeVel = network.nodeVel
@@ -381,7 +383,7 @@ function coarsenNetwork(
     elemT = eltype(network.coord)
 
     i = 1
-    while i <= network.numNodeSegConnect[1]
+    while i <= network.numNode[1]
         # We only want to coarsen real internal nodes. Else we skip to the next node.
         if !(connectivity[1, i] == 2 && label[i] == 1)
             i += 1

@@ -218,7 +218,7 @@ function loadNetwork(fileDislocationNetwork::AbstractString)
     lenCoord = length(dict["coord"])
     numNode = [convert(Int, dict["numNode"][1])]
     numSeg = [convert(Int, dict["numSeg"][1])]
-    maxConnect = [convert(Int, dict["maxConnect"][1])]
+    maxConnect = convert(Int, dict["maxConnect"])
     links = zeros(Int, 2, lenLinks)
     slipPlane = zeros(3, lenLinks)
     bVec = zeros(3, lenLinks)

@@ -25,7 +25,7 @@ function calcSegForce(
     # T5 <: AbstractMesh,
 }
 
-    isnothing(idx) ? numSeg = network.numNodeSegConnect[2] : numSeg = length(idx)
+    isnothing(idx) ? numSeg = network.numSeg[1] : numSeg = length(idx)
 
     # pkForce = pkForce(mesh, dlnFEM, network)
     selfForce = calcSelfForce(dlnParams, matParams, network, idx)
@@ -50,7 +50,7 @@ function calcSegForce!(
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numNodeSegConnect[2]
+        numSeg = network.numSeg[1]
         range = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -62,7 +62,7 @@ function calcSegForce!(
     calcSelfForce!(dlnParams, matParams, network, idx)
     calcSegSegForce!(dlnParams, matParams, network, idx)
 
-    return network
+    return nothing
 end
 
 """
@@ -98,7 +98,7 @@ function calcSelfForce(
     # Indices for self force.
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numNodeSegConnect[2]
+        numSeg = network.numSeg[1]
         idx = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -182,7 +182,7 @@ function calcSelfForce!(
     # Indices for self force.
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
-        numSeg = network.numNodeSegConnect[2]
+        numSeg = network.numSeg[1]
         idx = 1:numSeg
     else
         # Else, calculate forces only on idx.
@@ -244,7 +244,7 @@ function calcSelfForce!(
         segForce[3, 2, idx[i]] += selfForce[3]
     end
 
-    return network
+    return nothing
 end
 
 """
@@ -293,7 +293,7 @@ function calcSegSegForce(
     elemT = eltype(network.bVec)
 
     # Un normalised segment vectors. Views for speed.
-    numSeg = network.numNodeSegConnect[2]
+    numSeg = network.numSeg[1]
     idxBvec = @view segIdx[1:numSeg, 1]
     idxNode1 = @view segIdx[1:numSeg, 2]
     idxNode2 = @view segIdx[1:numSeg, 3]
@@ -464,7 +464,7 @@ function calcSegSegForce!(
     elemT = eltype(network.bVec)
 
     # Un normalised segment vectors. Views for speed.
-    numSeg = network.numNodeSegConnect[2]
+    numSeg = network.numSeg[1]
     idxBvec = @view segIdx[1:numSeg, 1]
     idxNode1 = @view segIdx[1:numSeg, 2]
     idxNode2 = @view segIdx[1:numSeg, 3]

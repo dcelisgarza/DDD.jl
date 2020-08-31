@@ -37,14 +37,14 @@ function dlnMobility(
     links = network.links
     bVec = network.bVec
     coord = network.coord
-    maxConnect = network.numNodeSegConnect[3]
+    maxConnect = network.maxConnect
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
-        numNode = network.numNodeSegConnect[1]
+        numNode = network.numNode[1]
         idx = 1:numNode
     else
         numNode = length(idx)
@@ -197,14 +197,14 @@ function dlnMobility!(
     coord = network.coord
     nodeVel = network.nodeVel
     nodeForce = network.nodeForce
-    maxConnect = network.numNodeSegConnect[3]
+    maxConnect = network.maxConnect
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
-        numNode = network.numNodeSegConnect[1]
+        numNode = network.numNode[1]
         idx = 1:numNode
     else
         numNode = length(idx)
