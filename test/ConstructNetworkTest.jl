@@ -214,6 +214,21 @@ end
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
     )
+
+    @test !iszero(network)
+    networkZero = zero(DislocationNetwork)
+    @test iszero(networkZero)
+    networkZero = DislocationNetwork!(networkZero, loops[1]; maxConnect = 0)
+    @test !iszero(networkZero)
+    @test_throws AssertionError DislocationNetwork!(network, loops[1], 10)
+
+    network = DislocationNetwork(loops[1], memBuffer = 1)
+    numNode = network.numNode[1]
+    numSeg = network.numSeg[1]
+    network = DislocationNetwork!(network, loops[1])
+    network = DislocationNetwork!(network, loops[1])
+    @test network.numNode[1] == 3 * numNode
+    @test network.numSeg[1] == 3 * numSeg
 end
 
 @testset "Overloaded type functions" begin

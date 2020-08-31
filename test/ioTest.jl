@@ -16,6 +16,17 @@ cd(@__DIR__)
         fileSlipSystem,
         fileDislocationLoop,
     )
+
+    missing, missing, missing, missing, dislocationLoop2 = loadParametersJSON(
+        fileDislocationParameters,
+        fileMaterialParameters,
+        fileIntegrationParameters,
+        fileSlipSystem,
+        "./testData/sampleDislocation.json",
+    )
+
+    @test typeof(dislocationLoop2) <: DislocationLoop
+
     fileDislocationLoop = "./testData/samplePrismShear.json"
     fileIntegTime = "./testData/sampleIntegrationTime.json"
     integTime = loadIntegrationTimeJSON(fileIntegTime)

@@ -567,13 +567,15 @@ end
 function DislocationNetwork!(
     network::T1,
     sources::T2,
+    maxConnect::T3 = 4,
     args...;
     checkConsistency::T3 = true,
     kw...,
 ) where {
     T1 <: DislocationNetwork,
     T2 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
-    T3 <: Bool,
+    T3 <: Int,
+    T4 <: Bool,
 }
 ```
 In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocation network from already generated sources. If the matrices already in `network` are not large enough to accommodate the additions from `sources`, it will automatically allocate ``\\textrm{round}(N \\log_{2}(N))`` new entries where `N` is the total number of nodes in `sources`.
@@ -581,22 +583,27 @@ In-place constructor for [`DislocationNetwork`](@ref). Generates a new dislocati
 function DislocationNetwork!(
     network::T1,
     sources::T2,
+    maxConnect::T3 = 4,
     args...;
-    checkConsistency::T3 = true,
+    checkConsistency::T4 = true,
     kw...,
 ) where {
     T1 <: DislocationNetwork,
     T2 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
-    T3 <: Bool,
+    T3 <: Int,
+    T4 <: Bool,
 }
     # For comments see DislocationNetwork. It is a 1-to-1 translation except that this one modifies the network in-place.
 
     iszero(network) && return DislocationNetwork(
         sources,
+        maxConnect = maxConnect,
         args...;
         checkConsistency = checkConsistency,
         kw...,
     )
+
+    @assert network.maxConnect == maxConnect "Maximum connectivity of added network must be equal to that of the existing network."
 
     nodeTotal::Int = 0
     lims = zeros(3, 2)
