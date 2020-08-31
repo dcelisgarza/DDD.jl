@@ -90,9 +90,4 @@ cd(@__DIR__)
     @test compStruct(dislocationLoop, dislocationLoop3; verbose = true)
     @test compStruct(network, network3; verbose = true)
     @test compStruct(integTime, integTime3; verbose = true)
-
-    rm(paramDumpJSON; force = true)
-    rm(paramDumpJLD2; force = true)
-    rm(networkDumpJSON; force = true)
-    rm(networkDumpJLD2; force = true)
 end
