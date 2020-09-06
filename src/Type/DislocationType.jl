@@ -267,7 +267,7 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
         linksConnect::T1 = zeros(Int, 2, size(links, 2)),
         segIdx::T1 = zeros(Int, size(links, 2), 3),
-        segForce::T6 = zeros(3, size(links, 2), 0),
+        segForce::T6 = zeros(3, size(links)...),
     ) where {
         T1 <: AbstractArray{T, N} where {T, N},
         T2 <: AbstractArray{T, N} where {T, N},
