@@ -338,7 +338,6 @@ network = DislocationNetwork!(network, [prismHeptagon, prismPentagon])
 )
 5.567 / 4.043
 
-
 @btime DislocationLoop(;
     loopType = loopPrism(),    # Shear loop
     numSides = 7,
@@ -359,6 +358,8 @@ network = DislocationNetwork!(network, [prismHeptagon, prismPentagon])
 )
 
 @btime DislocationNetwork([prismHeptagon, prismPentagon])
+@btime DislocationNetwork!(network, [prismHeptagon, prismPentagon])
+
 
 network.numSeg[1]
 network.label
@@ -445,7 +446,7 @@ remoteForcePar
 remoteForceSer
 baar(intParams, intVars, dlnParams, matParams, network)
 
-struct test{T1,T2,T3}
+struct test{T1, T2, T3}
     a::T1
     b::T2
     c::T3
@@ -475,12 +476,12 @@ resize!(var.c, 2)
 var.c
 
 mutable struct mutate_me
-    a::Array{Int,2}
+    a::Array{Int, 2}
     b::Vector{Int}
 end
 
 struct immutate_me
-    a::Array{Int,2}
+    a::Array{Int, 2}
     b::Vector{Int}
 end
 
@@ -536,16 +537,16 @@ prod(size(mutating_var.a))
 
 # Methods to implement for linear arrays
 # https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array-1
-struct LinearArray{T,N} <: AbstractArray{T,N} end
-struct VectorisedArray{T,N} <: AbstractArray{T,N}
-    size::NTuple{N,Int}
+struct LinearArray{T, N} <: AbstractArray{T, N} end
+struct VectorisedArray{T, N} <: AbstractArray{T, N}
+    size::NTuple{N, Int}
     data::Vector{T}
 end
 
 Base.size(V::VectorisedArray) = V.size
 Base.IndexStyle(::Type{<:VectorisedArray}) = IndexLinear()
 Base.getindex(V::VectorisedArray, i::Int) = V.data[i]
-function Base.getindex(V::VectorisedArray, I::Vararg{Int,N}) where {N}
+function Base.getindex(V::VectorisedArray, I::Vararg{Int, N}) where {N}
     idx = I[1]
 
     for i in 2:N
@@ -557,7 +558,7 @@ end
 function Base.setindex!(V::VectorisedArray, v, i::Int)
     return V.data[i] = v
 end
-function Base.setindex!(V::VectorisedArray, v, I::Vararg{Int,N}) where {N}
+function Base.setindex!(V::VectorisedArray, v, I::Vararg{Int, N}) where {N}
     return V.data[I] = v
 end
 function Base.hcat(V::VectorisedArray, i::Int)
@@ -601,24 +602,23 @@ test[2, 1]
 test = (3, 2)
 test[1]
 
-VectorisedArray{T,N}(init, I...) where {T,N} = 1
+VectorisedArray{T, N}(init, I...) where {T, N} = 1
 
 test = (5, 6)
 println(test...)
 
-var = LinearArray{Int,2}(undef, 2, 5)
+var = LinearArray{Int, 2}(undef, 2, 5)
 size(var)
 
-struct foo{T1,T2}
+struct foo{T1, T2}
     a::T1
     b::T2
 end
 
-mutable struct mfoo{T1,T2}
+mutable struct mfoo{T1, T2}
     a::T1
     b::T2
 end
-
 
 function bar(foo)
 
@@ -645,8 +645,7 @@ test2 = mfoo([4 -5; 5 2; 6 57], [5])
     ext = 5
 end
 
-
-struct immutStruct{T1,T2,T3,T4,T5,T6}
+struct immutStruct{T1, T2, T3, T4, T5, T6}
     links::T1
     slipPlane::T2
     bVec::T2
@@ -677,14 +676,21 @@ struct immutStruct{T1,T2,T3,T4,T5,T6}
         linksConnect::T1 = zeros(Int, 2, size(links, 2)),
         segIdx::T1 = zeros(Int, size(links, 2), 3),
         segForce::T6 = zeros(3, size(links)...),
-    ) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: AbstractVector{Int},T5 <: Int,T6 <: AbstractArray{T,N} where {T,N},}
+    ) where {
+        T1 <: AbstractArray{T, N} where {T, N},
+        T2 <: AbstractArray{T, N} where {T, N},
+        T3 <: AbstractVector{nodeType},
+        T4 <: AbstractVector{Int},
+        T5 <: Int,
+        T6 <: AbstractArray{T, N} where {T, N},
+    }
 
         @assert size(links, 1) == size(segForce, 2) == 2
         @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
         @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
         @assert size(coord, 2) == length(label)
 
-        return new{T1,T2,T3,T4,T5,T6}(
+        return new{T1, T2, T3, T4, T5, T6}(
             links,
             slipPlane,
             bVec,
@@ -703,9 +709,7 @@ struct immutStruct{T1,T2,T3,T4,T5,T6}
     end
 end
 
-
-
-mutable struct mutStruct{T1,T2,T3,T4,T5,T6}
+mutable struct mutStruct{T1, T2, T3, T4, T5, T6}
     links::T1
     slipPlane::T2
     bVec::T2
@@ -736,14 +740,21 @@ mutable struct mutStruct{T1,T2,T3,T4,T5,T6}
         linksConnect::T1 = zeros(Int, 2, size(links, 2)),
         segIdx::T1 = zeros(Int, size(links, 2), 3),
         segForce::T6 = zeros(3, size(links)...),
-    ) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: AbstractVector{Int},T5 <: Int,T6 <: AbstractArray{T,N} where {T,N},}
+    ) where {
+        T1 <: AbstractArray{T, N} where {T, N},
+        T2 <: AbstractArray{T, N} where {T, N},
+        T3 <: AbstractVector{nodeType},
+        T4 <: AbstractVector{Int},
+        T5 <: Int,
+        T6 <: AbstractArray{T, N} where {T, N},
+    }
 
         @assert size(links, 1) == size(segForce, 2) == 2
         @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
         @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
         @assert size(coord, 2) == length(label)
 
-        return new{T1,T2,T3,T4,T5,T6}(
+        return new{T1, T2, T3, T4, T5, T6}(
             links,
             slipPlane,
             bVec,
@@ -762,55 +773,101 @@ mutable struct mutStruct{T1,T2,T3,T4,T5,T6}
     end
 end
 
-
 wakanda = immutStruct(
-        zeros(Int, 2, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        [nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0)],
-        zeros(3, 10),
-        zeros(3, 10),
-        [10],
-        [10],
-        4)
+    zeros(Int, 2, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    [
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+    ],
+    zeros(3, 10),
+    zeros(3, 10),
+    [10],
+    [10],
+    4,
+)
 
 wakanda2 = mutStruct(
-        zeros(Int, 2, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        [nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0)],
-        zeros(3, 10),
-        zeros(3, 10),
-        [10],
-        [10],
-        4)
+    zeros(Int, 2, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    [
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+    ],
+    zeros(3, 10),
+    zeros(3, 10),
+    [10],
+    [10],
+    4,
+)
 using BenchmarkTools
 @btime mutStruct(
-        zeros(Int, 2, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        [nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0)],
-        zeros(3, 10),
-        zeros(3, 10),
-        [10],
-        [10],
-        4)
+    zeros(Int, 2, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    [
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+    ],
+    zeros(3, 10),
+    zeros(3, 10),
+    [10],
+    [10],
+    4,
+)
 
 @btime immutStruct(
-        zeros(Int, 2, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        zeros(3, 10),
-        [nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0), nodeType(0)],
-        zeros(3, 10),
-        zeros(3, 10),
-        [10],
-        [10],
-        4)
-
+    zeros(Int, 2, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    zeros(3, 10),
+    [
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+        nodeType(0),
+    ],
+    zeros(3, 10),
+    zeros(3, 10),
+    [10],
+    [10],
+    4,
+)
 
 bar(test)
 

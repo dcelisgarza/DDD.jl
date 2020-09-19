@@ -246,21 +246,21 @@ function DislocationLoop(
     @assert numSegLen == nodeTotal "DislocationLoop: All $nodeTotal segments must have their lengths defined. There are $numSegLen lengths currently defined."
 
     # Normalise vectors.
-    elemType = eltype(_slipPlane)
+    elemT = eltype(_slipPlane)
     _slipPlane = _slipPlane / norm(_slipPlane)
     _bVec = _bVec / norm(_bVec)
 
     # Pick rotation axis for segments.
     # Shear loops rotate around slip plane vector. They have screw, mixed and edge segments.
     if typeof(loopType) == loopShear
-        rotAxis = SVector{3, elemType}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
+        rotAxis = SVector{3, elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
         # Prismatic loops rotate around Burgers vector. All segments are edge.
     elseif typeof(loopType) == loopPrism
-        rotAxis = SVector{3, elemType}(_bVec[1], _bVec[2], _bVec[3])
+        rotAxis = SVector{3, elemT}(_bVec[1], _bVec[2], _bVec[3])
         # Catch all.
     else
         @warn "DislocationLoop: rotation axis for $(typeof(loopType)) not defined, defaulting to prismatic loop."
-        rotAxis = SVector{3, elemType}(_bVec[1], _bVec[2], _bVec[3])
+        rotAxis = SVector{3, elemT}(_bVec[1], _bVec[2], _bVec[3])
     end
 
     # Allocate arrays.
@@ -271,8 +271,8 @@ function DislocationLoop(
     seg = zeros(3, numSegLen)
 
     # Create initial segments.
-    staticSlipPlane = SVector{3, elemType}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
-    staticBVec = SVector{3, elemType}(_bVec[1], _bVec[2], _bVec[3])
+    staticSlipPlane = SVector{3, elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
+    staticBVec = SVector{3, elemT}(_bVec[1], _bVec[2], _bVec[3])
     @inbounds @simd for i in eachindex(segLen)
         seg[:, i] = makeSegment(segEdge(), staticSlipPlane, staticBVec) * segLen[i]
     end
@@ -280,13 +280,13 @@ function DislocationLoop(
     θ = externalAngle(numSides)  # External angle of a regular polygon with numSides.
 
     # Loop over polygon's sides.
-    origin = SVector{3, elemType}(0, 0, 0)
+    origin = SVector{3, elemT}(0, 0, 0)
     @inbounds for i in 1:numSides
         # Index for side i.
         idx = (i - 1) * nodeSide
         # Rotate segments by external angle of polygon to make polygonal loop.
         modIdx = mod(i - 1, numSegLen) + 1
-        staticSeg = SVector{3, elemType}(seg[1, modIdx], seg[2, modIdx], seg[3, modIdx])
+        staticSeg = SVector{3, elemT}(seg[1, modIdx], seg[2, modIdx], seg[3, modIdx])
         rseg = rot3D(staticSeg, rotAxis, origin, θ * (i - 1))
         # DO NOT add @simd, this loop works by adding rseg to the previous coordinate to make the loop. Loop over the nodes per side.
         for j in 1:nodeSide
@@ -667,7 +667,8 @@ function makeNetwork!(
     kw...,
 )
     nodeTotal::Int = 0
-    for i in eachindex(sources)
+    elemT = eltype(coord)
+    @inbounds for i in eachindex(sources)
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
         numLoops = sources[i].numLoops
@@ -682,15 +683,16 @@ function makeNetwork!(
             idxi = idx + (j - 1) * nodesLoop
             idxf = idxi + nodesLoop - 1
             # Links are numbered sequentially in network so we have to account for previously assigned links.
-            links[:, idxi:idxf] =
+            links[:, idxi:idxf] .=
                 sources[i].links[:, 1:nodesLoop] .+ (nodeTotal + initIdx - 1)
             slipPlane[:, idxi:idxf] .= sources[i].slipPlane[:, 1:nodesLoop]
             bVec[:, idxi:idxf] .= sources[i].bVec[:, 1:nodesLoop]
-            coord[:, idxi:idxf] .= sources[i].coord[:, 1:nodesLoop]
+            sourceCoord = sources[i].coord[:, 1:nodesLoop]
+            coord[:, idxi:idxf] .= sourceCoord
             label[idxi:idxf] .= sources[i].label[1:nodesLoop]
             # Map the normalised displacements to real space using the real limits and translate the nodes' coordinates accordingly.
-            coord[:, idxi:idxf] .=
-                translatePoints(sources[i].coord[:, 1:nodesLoop], lims, disp[:, j])
+            staticDisp = SVector{3, elemT}(disp[1, j], disp[2, j], disp[3, j])
+            coord[:, idxi:idxf] = translatePoints(sourceCoord, lims, staticDisp)
             nodeTotal += nodesLoop
         end
     end

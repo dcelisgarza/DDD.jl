@@ -139,9 +139,13 @@ Translates coordinates using the limits and displacements calculated by [`limits
 """
 function translatePoints(
     coord::T1,
-    lims::T1,
-    disp::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{T} where {T}}
+    lims::T2,
+    disp::T3,
+) where {
+    T1 <: AbstractArray{T, N} where {T, N},
+    T2 <: AbstractArray{T, N} where {T, N},
+    T3 <: AbstractVector{T} where {T},
+}
 
     for i in 1:size(coord, 2)
         for j in 1:size(coord, 1)
@@ -205,14 +209,14 @@ function makeConnect(
     lenLinks = size(links, 2)
 
     # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
-    idx = findfirst(x -> x == 0, links[1, :])
+    idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
 
     connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
     linksConnect = zeros(Int, 2, lenLinks)
 
     # Loop through indices.
-    for i in 1:idx
+    @inbounds @simd for i in 1:idx
         # Node 1, it is the row of the coord matrix.
         n1 = links[1, i]
         n2 = links[2, i]
@@ -226,8 +230,8 @@ function makeConnect(
         tmp2 = 2 * connectivity[1, n2]
 
         # i = linkID. 1, 2 are the first and second nodes in link with linkID
-        connectivity[tmp1:(tmp1 + 1), n1] = [i, 1]
-        connectivity[tmp2:(tmp2 + 1), n2] = [i, 2]
+        connectivity[tmp1:(tmp1 + 1), n1] .= (i, 1)
+        connectivity[tmp2:(tmp2 + 1), n2] .= (i, 2)
 
         # Connectivity of the nodes in link i.
         linksConnect[1, i] = connectivity[1, n1]
@@ -251,17 +255,17 @@ function makeConnect!(network::DislocationNetwork)
     connectivity .= 0
     linksConnect .= 0
     lenLinks = size(links, 2)
-    idx = findfirst(x -> x == 0, links[1, :])
+    idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
-    for i in 1:idx
+    @inbounds @simd for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
         connectivity[1, n1] += 1
         connectivity[1, n2] += 1
         tmp1 = 2 * connectivity[1, n1]
         tmp2 = 2 * connectivity[1, n2]
-        connectivity[tmp1:(tmp1 + 1), n1] = [i, 1]
-        connectivity[tmp2:(tmp2 + 1), n2] = [i, 2]
+        connectivity[tmp1:(tmp1 + 1), n1] .= (i, 1)
+        connectivity[tmp2:(tmp2 + 1), n2] .= (i, 2)
         linksConnect[1, i] = connectivity[1, n1]
         linksConnect[2, i] = connectivity[1, n2]
     end
@@ -287,13 +291,13 @@ function getSegmentIdx(
     segIdx = zeros(Int, lenLinks, 3)  # Indexing matrix.
 
     # Find all defined nodes.
-    idx = findfirst(x -> x == 0, links[1, :])
+    idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
 
     numSeg::Int = 0 # Number of segments.
 
     # Loop through indices.
-    for i in 1:idx
+    @inbounds for i in 1:idx
         # Nodes.
         n1 = links[1, i]
         n2 = links[2, i]
@@ -301,7 +305,7 @@ function getSegmentIdx(
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         numSeg += 1 # Increment index.
         # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
-        segIdx[numSeg, :] = [i, n1, n2]
+        segIdx[numSeg, :] .= (i, n1, n2)
     end
 
     return numSeg, segIdx
@@ -323,16 +327,16 @@ function getSegmentIdx!(network::T1) where {T1 <: DislocationNetwork}
     lenSegIdx = size(segIdx, 1)
     segIdx .= 0
 
-    idx = findfirst(x -> x == 0, links[1, :])
+    idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
     lNumSeg::Int = 0
 
-    for i in 1:idx
+    @inbounds for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
         (label[n1] == 4 || label[n2] == 4) ? continue : nothing
         lNumSeg += 1
-        segIdx[lNumSeg, :] = [i, n1, n2]
+        segIdx[lNumSeg, :] .= (i, n1, n2)
     end
 
     numSeg[1] = lNumSeg
@@ -362,7 +366,7 @@ function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
-    idx = findfirst(x -> x == 0, links[1, :])
+    idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = size(links, 2) : idx -= 1
 
     # Max value of connectivity should be the last link.
@@ -372,12 +376,13 @@ function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
     bVec = network.bVec
     elemT = eltype(network.bVec)
     bSum = zeros(3)
-    for i in 1:idx
+    @inbounds for i in 1:idx
         iLinkBuffer = zeros(Int, 0)
         col = connectivity[1, i]
 
         # Check for zero Burgers vectors.
-        norm(bVec[:, i]) < eps(elemT) ? error("Burgers vector must be non-zero.
+        staticBVec = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        norm(staticBVec) < eps(elemT) ? error("Burgers vector must be non-zero.
                                        norm(bVec) = $(norm(bVec[i,:]))") : nothing
 
         # Trailing columns must be zero.
@@ -395,13 +400,14 @@ function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
             iLink = connectivity[j2, i]     # Link ID.
             colLink = connectivity[j2 + 1, i] # Link position in links.
             colOppLink = 3 - connectivity[2 * j + 1, i] # Opposite column in links
-            bSum += (3 - 2 * colLink) * bVec[:, iLink] # Running total of burgers vectors.
+            staticBVec = SVector{3, elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
+            bSum .+= (3 - 2 * colLink) * staticBVec # Running total of burgers vectors.
 
             neighbours[j] = links[colOppLink, iLink] # Find neighbouring nodes.
             push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
 
             # Check that node does not appear twice in connectivity.
-            for k in (j + 1):col
+            @simd for k in (j + 1):col
                 connectivity[j2, i] == connectivity[2 * k, i] ?
                 error("Node $(i) cannot appear twice in connectivity, $(connectivity[i, j2])") :
                 nothing
@@ -430,10 +436,10 @@ neighbours = $(neighbours)") :
         nothing
 
         # Check connectivity and linksConnect are consistent.
-        check = [
-            connectivity[2 * linksConnect[1, i], links[1, i]]
-            connectivity[2 * linksConnect[2, i], links[2, i]]
-        ]
+        check = (
+            connectivity[2 * linksConnect[1, i], links[1, i]],
+            connectivity[2 * linksConnect[2, i], links[2, i]],
+        )
         i != check[1] | i != check[2] ? error("Inconsistent link.
         links[:, $(i)] = $(links[:, i])
         linksConnect[:, $(i)] = $(linksConnect[:, i])
