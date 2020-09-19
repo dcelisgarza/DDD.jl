@@ -246,21 +246,21 @@ function DislocationLoop(
     @assert numSegLen == nodeTotal "DislocationLoop: All $nodeTotal segments must have their lengths defined. There are $numSegLen lengths currently defined."
 
     # Normalise vectors.
-    _slipPlane = _slipPlane ./ norm(_slipPlane)
-    _bVec = _bVec ./ norm(_bVec)
+    elemType = eltype(_slipPlane)
+    _slipPlane = _slipPlane / norm(_slipPlane)
+    _bVec = _bVec / norm(_bVec)
 
     # Pick rotation axis for segments.
-    rotAxis = zeros(eltype(_slipPlane), 3)
     # Shear loops rotate around slip plane vector. They have screw, mixed and edge segments.
     if typeof(loopType) == loopShear
-        rotAxis = _slipPlane
+        rotAxis = SVector{3, elemType}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
         # Prismatic loops rotate around Burgers vector. All segments are edge.
     elseif typeof(loopType) == loopPrism
-        rotAxis = _bVec
+        rotAxis = SVector{3, elemType}(_bVec[1], _bVec[2], _bVec[3])
         # Catch all.
     else
         @warn "DislocationLoop: rotation axis for $(typeof(loopType)) not defined, defaulting to prismatic loop."
-        rotAxis = _bVec
+        rotAxis = SVector{3, elemType}(_bVec[1], _bVec[2], _bVec[3])
     end
 
     # Allocate arrays.
@@ -271,28 +271,33 @@ function DislocationLoop(
     seg = zeros(3, numSegLen)
 
     # Create initial segments.
-    for i in eachindex(segLen)
-        seg[:, i] = makeSegment(segEdge(), _slipPlane, _bVec) .* segLen[i]
+    staticSlipPlane = SVector{3, elemType}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
+    staticBVec = SVector{3, elemType}(_bVec[1], _bVec[2], _bVec[3])
+    @inbounds @simd for i in eachindex(segLen)
+        seg[:, i] = makeSegment(segEdge(), staticSlipPlane, staticBVec) * segLen[i]
     end
 
     θ = externalAngle(numSides)  # External angle of a regular polygon with numSides.
 
     # Loop over polygon's sides.
-    for i in 1:numSides
+    origin = SVector{3, elemType}(0, 0, 0)
+    @inbounds for i in 1:numSides
         # Index for side i.
         idx = (i - 1) * nodeSide
         # Rotate segments by external angle of polygon to make polygonal loop.
-        rseg = rot3D(seg[:, mod(i - 1, numSegLen) + 1], rotAxis, zeros(3), θ * (i - 1))
+        modIdx = mod(i - 1, numSegLen) + 1
+        staticSeg = SVector{3, elemType}(seg[1, modIdx], seg[2, modIdx], seg[3, modIdx])
+        rseg = rot3D(staticSeg, rotAxis, origin, θ * (i - 1))
         # DO NOT add @simd, this loop works by adding rseg to the previous coordinate to make the loop. Loop over the nodes per side.
         for j in 1:nodeSide
             # Count first node once.
             if i == j == 1
-                coord[:, 1] = zeros(3)  # Initial coordinate is on the origin.
+                coord[:, 1] .= 0 # Initial coordinate is on the origin.
                 continue
             end
             if idx + j <= nodeTotal
                 # Add segment vector to previous coordinate.
-                coord[:, idx + j] += coord[:, idx + j - 1] + rseg
+                coord[:, idx + j] += @views coord[:, idx + j - 1] + rseg
             end
         end
     end
@@ -302,10 +307,10 @@ function DislocationLoop(
     coord .-= meanCoord
 
     # Create links matrix.
-    for j in 1:(nodeTotal - 1)
-        links[:, j] = [j; j + 1]
+    @inbounds @simd for j in 1:(nodeTotal - 1)
+        links[:, j] .= (j, j + 1)
     end
-    links[:, nodeTotal] = [nodeTotal; 1]
+    links[:, nodeTotal] .= (nodeTotal, 1)
 
     return DislocationLoop(
         loopType,

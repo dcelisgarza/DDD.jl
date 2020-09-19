@@ -168,21 +168,21 @@ function makeSegment(
     bVec::T2,
 ) where {T1 <: segEdge, T2 <: AbstractVector{T} where {T}}
     edge = cross(slipPlane, bVec)
-    return edge ./ norm(edge)
+    return edge / norm(edge)
 end
 function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
 ) where {T1 <: segEdgeN, T2 <: AbstractVector{T} where {T}}
-    return slipPlane ./ norm(slipPlane)
+    return slipPlane / norm(slipPlane)
 end
 function makeSegment(
     type::T1,
     slipPlane::T2,
     bVec::T2,
 ) where {T1 <: segScrew, T2 <: AbstractVector{T} where {T}}
-    return bVec ./ norm(bVec)
+    return bVec / norm(bVec)
 end
 
 ## Auxiliary matrices.
@@ -383,7 +383,7 @@ function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
         # Trailing columns must be zero.
         sum(connectivity[(2 * (col + 1)):end, i]) != 0 ?
         error("Trailing columns of connectivity must be zero.
-        connectivity[$(i), $(2*(col + 1)):end] = $(connectivity[i, (2 * (col + 1)):end]))") :
+        connectivity[$(i), $(2 * (col + 1)):end] = $(connectivity[i, (2 * (col + 1)):end]))") :
         nothing
 
         # Burgers vector conservation.
@@ -424,7 +424,7 @@ links[:, $(connectivity[j2, i])] = [$(links[1, connectivity[j2, i]]), $(links[2,
         uniqueNeighbours = unique(neighbours)
         length(uniqueNeighbours) != length(neighbours) ?
         error("There must be no duplicate links. Each entry in links must correspond to a unique pair of adjacent entries in neighbours.
-links = $(iLinkBuffer[1:end-1])
+links = $(iLinkBuffer[1:end - 1])
 uniqueNeighbours = $(uniqueNeighbours)
 neighbours = $(neighbours)") :
         nothing

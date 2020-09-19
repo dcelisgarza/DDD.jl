@@ -277,8 +277,8 @@ refineNetwork(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
-prisPentagon = DislocationLoop(
-    loopPrism();    # Prismatic loop, all segments are edge segments.
+prismPentagon = DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
     numSides = 5,   # 5-sided loop.
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 20,  # Number of loops of this type to generate when making a network.
@@ -296,8 +296,8 @@ prisPentagon = DislocationLoop(
     dist = Rand(),  # Loop distribution.
 )
 
-prismHeptagon = DislocationLoop(
-    loopPrism();    # Shear loop
+prismHeptagon = DislocationLoop(;
+    loopType = loopPrism(),    # Shear loop
     numSides = 7,
     nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
     numLoops = 20,
@@ -315,26 +315,63 @@ prismHeptagon = DislocationLoop(
     dist = Rand(),
 )
 
-using Random
-Random.seed!(1337)
-network = DislocationNetwork(
-    [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
-    memBuffer = 1, # Buffer for memory allocation.
+network = DislocationNetwork([prismHeptagon, prismPentagon])
+network = DislocationNetwork!(network, [prismHeptagon, prismPentagon])
+
+@btime DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 5,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 20,  # Number of loops of this type to generate when making a network.
+    segLen = 500 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
+    label = nodeType[1; 1; 1; 1; 1],    # Node labels, has to be equal to the number of nodes.
+    buffer = 0.0,   # Buffer to increase the dislocation spread.
+    range = Float64[          # Distribution range
+        -5000 5000 # xmin, xmax
+        -5000 5000 # ymin, ymax
+        -5000 5000  # zmin, zmax
+    ],
+    dist = Rand(),  # Loop distribution.
+)
+5.567 / 4.043
+
+
+@btime DislocationLoop(;
+    loopType = loopPrism(),    # Shear loop
+    numSides = 7,
+    nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
+    numLoops = 20,
+    segLen = 700 * ones(7),  # The hexagon's side length is 10, each segment is 10/3.
+    slipSystem = 1,
+    _slipPlane = slipSystems.slipPlane[:, 1],
+    _bVec = slipSystems.bVec[:, 1],
+    label = nodeType[1; 1; 1; 1; 1; 2; 1],
+    buffer = 0.0,
+    range = Float64[
+        -5000 5000
+        -5000 5000
+        -5000 5000
+    ],
+    dist = Rand(),
 )
 
-@time for _ in 1:50
-    global network = DislocationNetwork!(
-        network,
-        [prismHeptagon, prisPentagon]; # Dispatch type, bespoke functions dispatch on this.
-        memBuffer = 1, # Buffer for memory allocation.
-    )
-end
+@btime DislocationNetwork([prismHeptagon, prismPentagon])
 
-network.numNodeSegConnect
+network.numSeg[1]
+network.label
+
+network = DislocationNetwork!(network, [prismHeptagon, prismPentagon])
+prismHeptagon
+
+network.label
+network.numSeg[1]
 size(network.connectivity)
 size(network.links)
-
-network.coord[:, (network.numNodeSegConnect[2] - 1):(network.numNodeSegConnect[2] + 1)]
+findall(x -> x != 0, prismHeptagon.links[1, :])
+gr()
 fig = plotNodes(
     network,
     m = 1,
