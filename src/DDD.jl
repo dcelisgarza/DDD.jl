@@ -39,7 +39,7 @@ include("./Processing/ProcessingBase.jl")
 export calcSegForce,
     calcSegForce!, calcSelfForce, calcSelfForce!, calcSegSegForce, calcSegSegForce!
 export dlnMobility, dlnMobility!
-export mergeNode, splitNode, coarsenNetwork, refineNetwork
+export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
 export shapeFunction, shapeFunctionDeriv
 
 include("./PostProcessing/Plotting.jl")

@@ -1,5 +1,5 @@
 ## Addition
-function splitNode(
+function splitNode!(
     network::T1,
     splitNode::T2,
     splitConnect::T2,
@@ -125,12 +125,12 @@ function splitNode(
     # Update connectivity of splitNode.
     newConnect1 = connectivity[1, splitNode] + 1
     connectivity[1, splitNode] = newConnect1
-    connectivity[(2 * newConnect1):(2 * newConnect1 + 1), splitNode] = [newSeg, colLink]
+    connectivity[(2 * newConnect1):(2 * newConnect1 + 1), splitNode] .= (newSeg, colLink)
 
     # Update connectivity of newNode.
     newConnect2 = connectivity[1, newNode] + 1
     connectivity[1, newNode] = newConnect2
-    connectivity[(2 * newConnect2):(2 * newConnect2 + 1), newNode] = [newSeg, colOppLink]
+    connectivity[(2 * newConnect2):(2 * newConnect2 + 1), newNode] .= (newSeg, colOppLink)
 
     # Update linksConnect.
     linksConnect[colLink, newSeg] = newConnect1
@@ -166,7 +166,7 @@ function splitNode(
     return network
 end
 
-function refineNetwork(
+function refineNetwork!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
@@ -244,7 +244,7 @@ function refineNetwork(
                         nodeVel[3, i] + nodeVel[3, link2_nodeOppI],
                     ) / 2
 
-                splitNode(network, i, 2, midCoord, midVel)
+                network = splitNode!(network, i, 2, midCoord, midVel)
                 getSegmentIdx!(network)
                 links = network.links
                 slipPlane = network.slipPlane
@@ -294,7 +294,7 @@ function refineNetwork(
                         nodeVel[3, i] + nodeVel[3, link1_nodeOppI],
                     ) / 2
 
-                network = splitNode(network, i, 1, midCoord, midVel)
+                network = splitNode!(network, i, 1, midCoord, midVel)
                 getSegmentIdx!(network)
                 links = network.links
                 slipPlane = network.slipPlane
@@ -358,7 +358,7 @@ function refineNetwork(
                         nodeVel[3, i] + nodeVel[3, link_nodeOpp],
                     ) / 2
 
-                network = splitNode(network, i, j, midCoord, midVel)
+                network = splitNode!(network, i, j, midCoord, midVel)
                 getSegmentIdx!(network)
                 links = network.links
                 slipPlane = network.slipPlane

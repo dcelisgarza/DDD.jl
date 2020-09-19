@@ -21,8 +21,89 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJS
     fileDislocationLoop,
 )
 intVars = loadIntegrationTimeJSON(fileIntVar)
-# network = DislocationNetwork(dislocationLoop, memBuffer = 1)
-# DislocationNetwork!(network, dislocationLoop)
+
+prismPentagon = DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 5,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 20,  # Number of loops of this type to generate when making a network.
+    segLen = 500 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
+    label = nodeType[1; 1; 1; 1; 1],    # Node labels, has to be equal to the number of nodes.
+    buffer = 0.0,   # Buffer to increase the dislocation spread.
+    range = Float64[          # Distribution range
+        -5000 5000 # xmin, xmax
+        -5000 5000 # ymin, ymax
+        -5000 5000  # zmin, zmax
+    ],
+    dist = Rand(),  # Loop distribution.
+)
+
+prismHeptagon = DislocationLoop(;
+    loopType = loopPrism(),    # Shear loop
+    numSides = 7,
+    nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
+    numLoops = 20,
+    segLen = 700 * ones(7),  # The hexagon's side length is 10, each segment is 10/3.
+    slipSystem = 1,
+    _slipPlane = slipSystems.slipPlane[:, 1],
+    _bVec = slipSystems.bVec[:, 1],
+    label = nodeType[1; 1; 1; 1; 1; 2; 1],
+    buffer = 0.0,
+    range = Float64[
+        -5000 5000
+        -5000 5000
+        -5000 5000
+    ],
+    dist = Rand(),
+)
+
+network = DislocationNetwork([prismHeptagon, prismPentagon])
+@time network = DislocationNetwork!(network, [prismHeptagon, prismPentagon])
+network.numSeg[1]
+@btime DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 5,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 20,  # Number of loops of this type to generate when making a network.
+    segLen = 500 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
+    label = nodeType[1; 1; 1; 1; 1],    # Node labels, has to be equal to the number of nodes.
+    buffer = 0.0,   # Buffer to increase the dislocation spread.
+    range = Float64[          # Distribution range
+        -5000 5000 # xmin, xmax
+        -5000 5000 # ymin, ymax
+        -5000 5000  # zmin, zmax
+    ],
+    dist = Rand(),  # Loop distribution.
+)
+@btime DislocationLoop(;
+    loopType = loopPrism(),    # Shear loop
+    numSides = 7,
+    nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
+    numLoops = 20,
+    segLen = 700 * ones(7),  # The hexagon's side length is 10, each segment is 10/3.
+    slipSystem = 1,
+    _slipPlane = slipSystems.slipPlane[:, 1],
+    _bVec = slipSystems.bVec[:, 1],
+    label = nodeType[1; 1; 1; 1; 1; 2; 1],
+    buffer = 0.0,
+    range = Float64[
+        -5000 5000
+        -5000 5000
+        -5000 5000
+    ],
+    dist = Rand(),
+)
+@btime DislocationNetwork([prismHeptagon, prismPentagon])
+@btime DislocationNetwork!(network, [prismHeptagon, prismPentagon])
+@btime calcSegForce(dlnParams, matParams, network)
+@btime calcSegForce!(dlnParams, matParams, network)
+
 
 shearDecagon = DislocationLoop(;
     loopType = loopShear(),
@@ -41,9 +122,6 @@ shearDecagon = DislocationLoop(;
 
 network = DislocationNetwork(shearDecagon, memBuffer = 1)
 
-@time network = DislocationNetwork!(network, shearDecagon)
-length(network.label)
-
 network = DislocationNetwork(shearDecagon)
 network.coord[:, 11] = vec(mean(network.coord, dims = 2))
 network.label[11] = 1
@@ -56,8 +134,25 @@ network.bVec[:, 11:14] .= network.bVec[:, 1]
 network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
 makeConnect!(network)
 getSegmentIdx!(network)
+
+network.label
+network.numNode[1]
+network.numSeg[1]
+
+@btime refineNetwork!(dlnParams, matParams, network)
+@btime coarsenNetwork!(dlnParams, matParams, network)
+
+
+@code_warntype refineNetwork!(dlnParams, matParams, network)
+
+network.label
+network.numNode[1]
+network.numSeg[1]
+
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
+
+
 
 using JSON3, StructTypes, FileIO
 StructTypes.StructType(::Type{<:DislocationNetwork}) = StructTypes.Struct()
@@ -191,10 +286,10 @@ fig2 = plotNodes(
 )
 
 function foo(dlnParams, matParams, network)
-    return network = refineNetwork(dlnParams, matParams, network)
+    return network = refineNetwork!(dlnParams, matParams, network)
 end
 function bar(dlnParams, matParams, network)
-    return network = coarsenNetwork(dlnParams, matParams, network)
+    return network = coarsenNetwork!(dlnParams, matParams, network)
 end
 foo(dlnParams, matParams, network)
 bar(dlnParams, matParams, network)
@@ -206,8 +301,8 @@ numSeg
 network.numNodeSegConnect[2]
 
 function foo(intParams, intVars, dlnParams, matParams, network)
-    coarsenNetwork(dlnParams, matParams, network)
-    refineNetwork(dlnParams, matParams, network)
+    network = coarsenNetwork!(dlnParams, matParams, network)
+    network = refineNetwork!(dlnParams, matParams, network)
     return integrate!(intParams, intVars, dlnParams, matParams, network)
 end
 network2 = deepcopy(network)
@@ -267,102 +362,18 @@ baar(intParams, intVars, dlnParams, matParams, network)
 #     )
 # end
 network2 = deepcopy(network)
-@btime network3 = coarsenNetwork(dlnParams, matParams, network2)
+@btime network3 = coarsenNetwork!(dlnParams, matParams, network2)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
-refineNetwork(dlnParams, matParams, network)
+network = refineNetwork!(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
-refineNetwork(dlnParams, matParams, network)
+network = refineNetwork!(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
-prismPentagon = DislocationLoop(;
-    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
-    numSides = 5,   # 5-sided loop.
-    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-    numLoops = 20,  # Number of loops of this type to generate when making a network.
-    segLen = 500 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
-    _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = nodeType[1; 1; 1; 1; 1],    # Node labels, has to be equal to the number of nodes.
-    buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = Float64[          # Distribution range
-        -5000 5000 # xmin, xmax
-        -5000 5000 # ymin, ymax
-        -5000 5000  # zmin, zmax
-    ],
-    dist = Rand(),  # Loop distribution.
-)
 
-prismHeptagon = DislocationLoop(;
-    loopType = loopPrism(),    # Shear loop
-    numSides = 7,
-    nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
-    numLoops = 20,
-    segLen = 700 * ones(7),  # The hexagon's side length is 10, each segment is 10/3.
-    slipSystem = 1,
-    _slipPlane = slipSystems.slipPlane[:, 1],
-    _bVec = slipSystems.bVec[:, 1],
-    label = nodeType[1; 1; 1; 1; 1; 2; 1],
-    buffer = 0.0,
-    range = Float64[
-        -5000 5000
-        -5000 5000
-        -5000 5000
-    ],
-    dist = Rand(),
-)
-
-network = DislocationNetwork([prismHeptagon, prismPentagon])
-network = DislocationNetwork!(network, [prismHeptagon, prismPentagon])
-
-@btime DislocationLoop(;
-    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
-    numSides = 5,   # 5-sided loop.
-    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-    numLoops = 20,  # Number of loops of this type to generate when making a network.
-    segLen = 500 * ones(5),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
-    _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = nodeType[1; 1; 1; 1; 1],    # Node labels, has to be equal to the number of nodes.
-    buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = Float64[          # Distribution range
-        -5000 5000 # xmin, xmax
-        -5000 5000 # ymin, ymax
-        -5000 5000  # zmin, zmax
-    ],
-    dist = Rand(),  # Loop distribution.
-)
-5.567 / 4.043
-
-@btime DislocationLoop(;
-    loopType = loopPrism(),    # Shear loop
-    numSides = 7,
-    nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
-    numLoops = 20,
-    segLen = 700 * ones(7),  # The hexagon's side length is 10, each segment is 10/3.
-    slipSystem = 1,
-    _slipPlane = slipSystems.slipPlane[:, 1],
-    _bVec = slipSystems.bVec[:, 1],
-    label = nodeType[1; 1; 1; 1; 1; 2; 1],
-    buffer = 0.0,
-    range = Float64[
-        -5000 5000
-        -5000 5000
-        -5000 5000
-    ],
-    dist = Rand(),
-)
-
-@btime DislocationNetwork([prismHeptagon, prismPentagon])
-@btime DislocationNetwork!(network, [prismHeptagon, prismPentagon])
-@btime calcSegForce(dlnParams, matParams, network, 5)
-@btime calcSegForce!(dlnParams, matParams, network, 5)
 calcSegSegForce(dlnParams, matParams, network)
-
 
 network.numSeg[1]
 network.label

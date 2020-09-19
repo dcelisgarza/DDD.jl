@@ -178,11 +178,11 @@ end
 
 """
 ```
-mergeNode(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
+mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
 ```
 Merges `nodeGone` into `nodeKept`. After calling this function there are no repeated entries, self-links or double links.
 """
-function mergeNode(
+function mergeNode!(
     network::T1,
     nodeKept::T2,
     nodeGone::T2,
@@ -360,7 +360,7 @@ function mergeNode(
     return nodeKept, network
 end
 
-function coarsenNetwork(
+function coarsenNetwork!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
@@ -471,7 +471,7 @@ function coarsenNetwork(
         end
 
         # Merge node i into node link2_nodeOppI.
-        nodeMerged, network = mergeNode(network, link2_nodeOppI, i)
+        nodeMerged, network = mergeNode!(network, link2_nodeOppI, i)
         getSegmentIdx!(network)
         links = network.links
         coord = network.coord
