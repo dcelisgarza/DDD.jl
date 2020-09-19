@@ -8,7 +8,7 @@ import DDD:
     loopDln,
     loopDistribution,
     limits!,
-    translatePoints,
+    translatePoints!,
     makeConnect
 makedocs(;
     modules = [DDD],

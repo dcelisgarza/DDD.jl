@@ -119,8 +119,8 @@ function limits!(
     range::T1,
     buffer::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
-    for i in 1:size(lims, 2)
-        for j in 1:size(lims, 1)
+    @inbounds for i in 1:size(lims, 2)
+        @simd for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
         end
     end
@@ -129,7 +129,7 @@ end
 
 """
 ```
-translatePoints(
+translatePoints!(
     coord::T1,
     lims::T1,
     disp::T2,
@@ -137,7 +137,7 @@ translatePoints(
 ```
 Translates coordinates using the limits and displacements calculated by [`limits!`](@ref) and [`loopDistribution`](@ref).
 """
-function translatePoints(
+function translatePoints!(
     coord::T1,
     lims::T2,
     disp::T3,
@@ -147,8 +147,8 @@ function translatePoints(
     T3 <: AbstractVector{T} where {T},
 }
 
-    for i in 1:size(coord, 2)
-        for j in 1:size(coord, 1)
+    @inbounds for i in 1:size(coord, 2)
+        @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
     end

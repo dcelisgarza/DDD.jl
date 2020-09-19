@@ -5,7 +5,7 @@ plotNodes(obj::Union{DislocationLoop, DislocationNetwork}, args...; kw...)
 Plots dislocation network as nodes connected by segments. Returns a new figure. See [`plotNodes!`](@ref) for mutating version.
 """
 function plotNodes(network::DislocationNetwork, args...; kw...)
-    idx = findall(x -> x != 0, network.links[1, :])
+    idx = findall(x -> x != 0, @view network.links[1, :])
     coord = network.coord
     fig = plot()
     for i in idx
@@ -28,7 +28,7 @@ plotNodes!(fig, obj::Union{DislocationLoop, DislocationNetwork}, args...; kw...)
 Updates figure to plot dislocation network as nodes connected by segments. See [`plotNodes`](@ref) for non-mutating version.
 """
 function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
-    idx = findall(x -> x != 0, network.links[1, :])
+    idx = findall(x -> x != 0, @view network.links[1, :])
     coord = network.coord
     for i in idx
         n1 = network.links[1, i]
@@ -43,7 +43,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     return fig
 end
 function plotNodes(loop::DislocationLoop, args...; kw...)
-    idx = findall(x -> x != 0, loop.links[1, :])
+    idx = findall(x -> x != 0, @view loop.links[1, :])
     coord = loop.coord
     fig = plot()
     for i in idx
@@ -59,7 +59,7 @@ function plotNodes(loop::DislocationLoop, args...; kw...)
     return fig
 end
 function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
-    idx = findall(x -> x != 0, loop.links[1, :])
+    idx = findall(x -> x != 0, @view loop.links[1, :])
     coord = loop.coord
     for i in idx
         n1 = loop.links[1, i]
@@ -76,7 +76,7 @@ end
 
 #=
 function plotNodesMakie(network::DislocationNetwork, args...; kw...)
-    idx = findall(x -> x != 0, loop.label)
+    idx = findall(x -> x != 0, @view loop.label)
     coord = network.coord
     fig = Scene()
     meshscatter!(coord, args...; kw...)
@@ -95,7 +95,7 @@ function plotNodesMakie(network::DislocationNetwork, args...; kw...)
 end
 
 function plotNodesMakie!(fig, network::DislocationNetwork, args...; kw...)
-    idx = findall(x -> x != 0, loop.label)
+    idx = findall(x -> x != 0, @view loop.label)
     coord = network.coord
     meshscatter!(coord, args...; kw...)
     for i in idx

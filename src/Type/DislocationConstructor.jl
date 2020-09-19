@@ -685,14 +685,14 @@ function makeNetwork!(
             # Links are numbered sequentially in network so we have to account for previously assigned links.
             links[:, idxi:idxf] .=
                 sources[i].links[:, 1:nodesLoop] .+ (nodeTotal + initIdx - 1)
-            slipPlane[:, idxi:idxf] .= sources[i].slipPlane[:, 1:nodesLoop]
-            bVec[:, idxi:idxf] .= sources[i].bVec[:, 1:nodesLoop]
-            sourceCoord = sources[i].coord[:, 1:nodesLoop]
-            coord[:, idxi:idxf] .= sourceCoord
-            label[idxi:idxf] .= sources[i].label[1:nodesLoop]
+            slipPlane[:, idxi:idxf] = sources[i].slipPlane[:, 1:nodesLoop]
+            bVec[:, idxi:idxf] = sources[i].bVec[:, 1:nodesLoop]
+            coord[:, idxi:idxf] = sources[i].coord[:, 1:nodesLoop]
+            label[idxi:idxf] = sources[i].label[1:nodesLoop]
             # Map the normalised displacements to real space using the real limits and translate the nodes' coordinates accordingly.
             staticDisp = SVector{3, elemT}(disp[1, j], disp[2, j], disp[3, j])
-            coord[:, idxi:idxf] = translatePoints(sourceCoord, lims, staticDisp)
+            viewCoord = @view coord[:, idxi:idxf]
+            translatePoints!(viewCoord, lims, staticDisp)
             nodeTotal += nodesLoop
         end
     end

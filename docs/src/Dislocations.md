@@ -226,9 +226,9 @@ limits!(
     buffer::T2,
 ) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
 ```
-The limits, together with the aforementioned distributions are used to translate coordinates with the `translatePoints` function.
+The limits, together with the aforementioned distributions are used to translate coordinates with the `translatePoints!` function.
 ```@docs
-translatePoints(
+translatePoints!(
     coord::T1,
     lims::T1,
     disp::T2,
