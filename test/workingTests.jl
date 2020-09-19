@@ -136,12 +136,10 @@ makeConnect!(network)
 getSegmentIdx!(network)
 
 
-refineNetwork!(dlnParams, matParams, network)
 network.label
 network.numNode[1]
 network.numSeg[1]
 
-@btime calcSegForce!(dlnParams, matParams, network, 1:4)
 @btime refineNetwork!(dlnParams, matParams, network)
 @btime coarsenNetwork!(dlnParams, matParams, network)
 
