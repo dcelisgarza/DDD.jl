@@ -31,9 +31,9 @@ function calcSegForce(
     selfForce = calcSelfForce(dlnParams, matParams, network, idx)
     segForce = calcSegSegForce(dlnParams, matParams, network, idx)
 
-    for i in 1:numSeg
-        for j in 1:2
-            segForce[:, j, i] = selfForce[j][:, i] + segForce[:, j, i]
+    @inbounds for i in 1:numSeg
+        @simd for j in 1:2
+            segForce[:, j, i] += @view selfForce[j][:, i]
         end
     end
 
@@ -114,14 +114,15 @@ function calcSelfForce(
 
     selfForceNode2 = zeros(3, numSeg)
 
-    for i in eachindex(idx)
+    @inbounds @simd for i in eachindex(idx)
         # Finding the norm of each line vector.
-        tVecSq = tVec[1, i]^2 + tVec[2, i]^2 + tVec[3, i]^2
+        tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+        tVecSq = dot(tVecI, tVecI)
         L = sqrt(tVecSq)
         Linv = inv(L)
+        tVecI *= Linv
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
-        tVecI = SVector{3, elemT}(tVec[1, i] * Linv, tVec[2, i] * Linv, tVec[3, i] * Linv)
         bVecI = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
         # Screw component, scalar projection of bVec onto t.
@@ -135,7 +136,7 @@ function calcSelfForce(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                
+                                                                                                                                                                        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -198,12 +199,13 @@ function calcSelfForce!(
 
     for i in eachindex(idx)
         # Finding the norm of each line vector.
-        tVecSq = tVec[1, i]^2 + tVec[2, i]^2 + tVec[3, i]^2
+        tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+        tVecSq = dot(tVecI, tVecI)
         L = sqrt(tVecSq)
         Linv = inv(L)
+        tVecI *= Linv
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
-        tVecI = SVector{3, elemT}(tVec[1, i] * Linv, tVec[2, i] * Linv, tVec[3, i] * Linv)
         bVecI = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
         # Screw component, scalar projection of bVec onto t.
@@ -217,7 +219,7 @@ function calcSelfForce!(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                
+                                                                                                                                                                        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -236,9 +238,9 @@ function calcSelfForce!(
 
         selfForce = torTot * bEdgeVec - lonCore * tVecI
 
-        segForce[1, 1, idx[i]] += -selfForce[1]
-        segForce[2, 1, idx[i]] += -selfForce[2]
-        segForce[3, 1, idx[i]] += -selfForce[3]
+        segForce[1, 1, idx[i]] -= selfForce[1]
+        segForce[2, 1, idx[i]] -= selfForce[2]
+        segForce[3, 1, idx[i]] -= selfForce[3]
         segForce[1, 2, idx[i]] += selfForce[1]
         segForce[2, 2, idx[i]] += selfForce[2]
         segForce[3, 2, idx[i]] += selfForce[3]
@@ -301,7 +303,7 @@ function calcSegSegForce(
     node1 = @view coord[:, idxNode1]
     node2 = @view coord[:, idxNode2]
     # Calculate segseg forces on every segment.
-    return if isnothing(idx)
+    if isnothing(idx)
         if dlnParams.parCPU
             # Threadid parallelisation + parallelised reduction.
             nthreads = Threads.nthreads()
@@ -311,7 +313,7 @@ function calcSegSegForce(
                 Threads.@spawn begin
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
-                    for i in start:stop
+                    @inbounds for i in start:stop
                         b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
                         n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
                         n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
@@ -335,21 +337,12 @@ function calcSegSegForce(
                                 n22,
                             )
 
-                            Threads.atomic_add!(parSegSegForce[1, 1, i], Fnode1[1])
-                            Threads.atomic_add!(parSegSegForce[2, 1, i], Fnode1[2])
-                            Threads.atomic_add!(parSegSegForce[3, 1, i], Fnode1[3])
-
-                            Threads.atomic_add!(parSegSegForce[1, 2, i], Fnode2[1])
-                            Threads.atomic_add!(parSegSegForce[2, 2, i], Fnode2[2])
-                            Threads.atomic_add!(parSegSegForce[3, 2, i], Fnode2[3])
-
-                            Threads.atomic_add!(parSegSegForce[1, 1, j], Fnode3[1])
-                            Threads.atomic_add!(parSegSegForce[2, 1, j], Fnode3[2])
-                            Threads.atomic_add!(parSegSegForce[3, 1, j], Fnode3[3])
-
-                            Threads.atomic_add!(parSegSegForce[1, 2, j], Fnode4[1])
-                            Threads.atomic_add!(parSegSegForce[2, 2, j], Fnode4[2])
-                            Threads.atomic_add!(parSegSegForce[3, 2, j], Fnode4[3])
+                            @simd for k in 1:3
+                                Threads.atomic_add!(parSegSegForce[k, 1, i], Fnode1[k])
+                                Threads.atomic_add!(parSegSegForce[k, 2, i], Fnode2[k])
+                                Threads.atomic_add!(parSegSegForce[k, 1, j], Fnode3[k])
+                                Threads.atomic_add!(parSegSegForce[k, 2, j], Fnode4[k])
+                            end
                         end
                     end
                 end
@@ -358,7 +351,7 @@ function calcSegSegForce(
         else
             segSegForce = zeros(3, 2, numSeg)
             # Serial execution.
-            for i in 1:numSeg
+            @inbounds for i in 1:numSeg
                 b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
                 n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
                 n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
@@ -382,21 +375,12 @@ function calcSegSegForce(
                         n22,
                     )
 
-                    segSegForce[1, 1, i] += Fnode1[1]
-                    segSegForce[2, 1, i] += Fnode1[2]
-                    segSegForce[3, 1, i] += Fnode1[3]
-
-                    segSegForce[1, 2, i] += Fnode2[1]
-                    segSegForce[2, 2, i] += Fnode2[2]
-                    segSegForce[3, 2, i] += Fnode2[3]
-
-                    segSegForce[1, 1, j] += Fnode3[1]
-                    segSegForce[2, 1, j] += Fnode3[2]
-                    segSegForce[3, 1, j] += Fnode3[3]
-
-                    segSegForce[1, 2, j] += Fnode4[1]
-                    segSegForce[2, 2, j] += Fnode4[2]
-                    segSegForce[3, 2, j] += Fnode4[3]
+                    @simd for k in 1:3
+                        segSegForce[k, 1, i] += Fnode1[k]
+                        segSegForce[k, 2, i] += Fnode2[k]
+                        segSegForce[k, 1, j] += Fnode3[k]
+                        segSegForce[k, 2, j] += Fnode4[k]
+                    end
                 end
             end
         end
@@ -428,14 +412,10 @@ function calcSegSegForce(
                     n21,
                     n22,
                 )
-
-                segSegForce[1, 1, k] += Fnode1[1]
-                segSegForce[2, 1, k] += Fnode1[2]
-                segSegForce[3, 1, k] += Fnode1[3]
-
-                segSegForce[1, 2, k] += Fnode2[1]
-                segSegForce[2, 2, k] += Fnode2[2]
-                segSegForce[3, 2, k] += Fnode2[3]
+                @simd for m in 1:3
+                    segSegForce[m, 1, k] += Fnode1[m]
+                    segSegForce[m, 2, k] += Fnode2[m]
+                end
             end
         end
         return segSegForce
@@ -484,7 +464,7 @@ function calcSegSegForce!(
                 Threads.@spawn begin
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
-                    for i in start:stop
+                    @inbounds for i in start:stop
                         b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
                         n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
                         n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
@@ -508,21 +488,12 @@ function calcSegSegForce!(
                                 n22,
                             )
 
-                            Threads.atomic_add!(parSegSegForce[1, 1, i], Fnode1[1])
-                            Threads.atomic_add!(parSegSegForce[2, 1, i], Fnode1[2])
-                            Threads.atomic_add!(parSegSegForce[3, 1, i], Fnode1[3])
-
-                            Threads.atomic_add!(parSegSegForce[1, 2, i], Fnode2[1])
-                            Threads.atomic_add!(parSegSegForce[2, 2, i], Fnode2[2])
-                            Threads.atomic_add!(parSegSegForce[3, 2, i], Fnode2[3])
-
-                            Threads.atomic_add!(parSegSegForce[1, 1, j], Fnode3[1])
-                            Threads.atomic_add!(parSegSegForce[2, 1, j], Fnode3[2])
-                            Threads.atomic_add!(parSegSegForce[3, 1, j], Fnode3[3])
-
-                            Threads.atomic_add!(parSegSegForce[1, 2, j], Fnode4[1])
-                            Threads.atomic_add!(parSegSegForce[2, 2, j], Fnode4[2])
-                            Threads.atomic_add!(parSegSegForce[3, 2, j], Fnode4[3])
+                            @simd for k in 1:3
+                                Threads.atomic_add!(parSegSegForce[k, 1, i], Fnode1[k])
+                                Threads.atomic_add!(parSegSegForce[k, 2, i], Fnode2[k])
+                                Threads.atomic_add!(parSegSegForce[k, 1, j], Fnode3[k])
+                                Threads.atomic_add!(parSegSegForce[k, 2, j], Fnode4[k])
+                            end
                         end
                     end
                 end
@@ -531,7 +502,7 @@ function calcSegSegForce!(
             segForce[:, :, 1:numSeg] += getproperty.(parSegSegForce, :value)
         else
             # Serial execution.
-            for i in 1:numSeg
+            @inbounds for i in 1:numSeg
                 b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
                 n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
                 n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
@@ -554,26 +525,18 @@ function calcSegSegForce!(
                         n21,
                         n22,
                     )
-                    segForce[1, 1, i] += Fnode1[1]
-                    segForce[2, 1, i] += Fnode1[2]
-                    segForce[3, 1, i] += Fnode1[3]
 
-                    segForce[1, 2, i] += Fnode2[1]
-                    segForce[2, 2, i] += Fnode2[2]
-                    segForce[3, 2, i] += Fnode2[3]
-
-                    segForce[1, 1, j] += Fnode3[1]
-                    segForce[2, 1, j] += Fnode3[2]
-                    segForce[3, 1, j] += Fnode3[3]
-
-                    segForce[1, 2, j] += Fnode4[1]
-                    segForce[2, 2, j] += Fnode4[2]
-                    segForce[3, 2, j] += Fnode4[3]
+                    @simd for k in 1:3
+                        segForce[k, 1, i] += Fnode1[k]
+                        segForce[k, 2, i] += Fnode2[k]
+                        segForce[k, 1, j] += Fnode3[k]
+                        segForce[k, 2, j] += Fnode4[k]
+                    end
                 end
             end
         end
     else # Calculate segseg forces only on segments provided
-        for i in idx
+        @inbounds for i in idx
             b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
             n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
@@ -598,13 +561,10 @@ function calcSegSegForce!(
                     n22,
                 )
 
-                segForce[1, 1, i] += Fnode1[1]
-                segForce[2, 1, i] += Fnode1[2]
-                segForce[3, 1, i] += Fnode1[3]
-
-                segForce[1, 2, i] += Fnode2[1]
-                segForce[2, 2, i] += Fnode2[2]
-                segForce[3, 2, i] += Fnode2[3]
+                @simd for m in 1:3
+                    segForce[m, 1, i] += Fnode1[m]
+                    segForce[m, 2, i] += Fnode2[m]
+                end
             end
         end
     end

@@ -359,6 +359,9 @@ network = DislocationNetwork!(network, [prismHeptagon, prismPentagon])
 
 @btime DislocationNetwork([prismHeptagon, prismPentagon])
 @btime DislocationNetwork!(network, [prismHeptagon, prismPentagon])
+@btime calcSegForce(dlnParams, matParams, network, 5)
+@btime calcSegForce!(dlnParams, matParams, network, 5)
+calcSegSegForce(dlnParams, matParams, network)
 
 
 network.numSeg[1]
