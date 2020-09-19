@@ -197,7 +197,7 @@ function calcSelfForce!(
     bVec = @view bVec[:, idxBvec]
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
-    for i in eachindex(idx)
+    @inbounds @simd for i in eachindex(idx)
         # Finding the norm of each line vector.
         tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
         tVecSq = dot(tVecI, tVecI)
@@ -388,7 +388,7 @@ function calcSegSegForce(
     else # Calculate segseg forces only on segments provided
         lenIdx = length(idx)
         segSegForce = zeros(3, 2, lenIdx)
-        for (k, i) in enumerate(idx)
+        @inbounds for (k, i) in enumerate(idx)
             b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
             n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])

@@ -146,7 +146,7 @@ function removeLink!(
     removeConnection!(network, node2, connectGone2)
 
     # Remove link that no longer appears in connectivity and doesn't connect any nodes.
-    @assert linksConnect[:, linkGone]' * linksConnect[:, linkGone] == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
+    @assert dot(linksConnect[:, linkGone], linksConnect[:, linkGone]) == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     isnothing(lastLink) ? lastLink = maximum((network.numSeg[1], 1)) : nothing
 
@@ -201,7 +201,6 @@ function mergeNode!(
 
     # Pass connections from nodeGone to nodeKept.
     if size(network.connectivity, 1) < 2 * totalConnect + 1
-
         network = DislocationNetwork(;
             links = network.links,
             slipPlane = network.slipPlane,
@@ -225,7 +224,6 @@ function mergeNode!(
             ),
             segIdx = network.segIdx,
         )
-
     end
 
     links = network.links
@@ -239,7 +237,7 @@ function mergeNode!(
     connectivity[1, nodeKept] = totalConnect
 
     # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.
-    for i in 1:nodeGoneConnect
+    @inbounds @simd for i in 1:nodeGoneConnect
         link = connectivity[2 * i, nodeGone]      # Link id for nodeGone
         colLink = connectivity[2 * i + 1, nodeGone] # Position of links where link appears.
         links[colLink, link] = nodeKept         # Replace nodeGone with nodeKept.
@@ -257,7 +255,7 @@ function mergeNode!(
     # Warning: connectivity can be updated by removeLink!().
     # Delete self links of nodeKept.
     i = 1
-    while i < connectivity[1, nodeKept]
+    @inbounds while i < connectivity[1, nodeKept]
         link = connectivity[2 * i, nodeKept]      # Link id for nodeKept
         colLink = connectivity[2 * i + 1, nodeKept] # Position of links where link appears.
         colNotLink = 3 - colLink # The column of the other node in the position of link in links.
@@ -271,7 +269,7 @@ function mergeNode!(
     # Warning: connectivity can be updated in the while loop.
     # Delete duplicate links.
     i = 1
-    while i < connectivity[1, nodeKept]
+    @inbounds while i < connectivity[1, nodeKept]
         link1 = connectivity[2 * i, nodeKept]         # Link id for nodeKept
         colLink1 = connectivity[2 * i + 1, nodeKept]    # Position of links where link appears.
         colNotLink1 = 3 - colLink1 # The column of the other node in the position of link in links.
@@ -375,12 +373,13 @@ function coarsenNetwork!(
     label = network.label
     links = network.links
     coord = network.coord
+    numNode = network.numNode[1]
     nodeVel = network.nodeVel
     connectivity = network.connectivity
     elemT = eltype(network.coord)
 
     i = 1
-    while i <= network.numNode[1]
+    @inbounds while i <= numNode
         # We only want to coarsen real internal nodes. Else we skip to the next node.
         if !(connectivity[1, i] == 2 && label[i] == 1)
             i += 1
@@ -477,6 +476,7 @@ function coarsenNetwork!(
         coord = network.coord
         label = network.label
         nodeVel = network.nodeVel
+        numNode = network.numNode[1]
         connectivity = network.connectivity
 
         # If link2_nodeOppI no longer exists there is nothing to calculate and we proceed to the next iteration.
@@ -485,7 +485,7 @@ function coarsenNetwork!(
             continue
         end
 
-        for j in 1:connectivity[1, nodeMerged]
+        @simd for j in 1:connectivity[1, nodeMerged]
             # Find the new link that has been created between nodeMerged and nodeNotMerged.
             linkMerged = connectivity[2 * j, nodeMerged]
             colLinkMerged = connectivity[2 * j + 1, nodeMerged]
