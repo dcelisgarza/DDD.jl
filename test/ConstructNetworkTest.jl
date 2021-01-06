@@ -199,7 +199,7 @@ end
     loopType = loopKink
     @test_logs (
         :warn,
-        "DislocationLoop: rotation axis for $loopType not defined, defaulting to prismatic loop.",
+        "DislocationLoop: Constructor for $loopType not defined, defaulting to prismatic loop."
     ) DislocationLoop(;
         loopType = loopKink(),
         numSides = 4,

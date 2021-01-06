@@ -95,10 +95,10 @@ loopDistribution(dist::Regular, n::Int, args...; kw...) = error("loopDistributio
 ```
 Returns a `3 × n` matrix whose points follow the distribution defined by the method dispatching on the concrete subtype of `dist`. When creating custom [`AbstractDistribution`](@ref) subtypes, a corresponding `loopDistribution` method must be created for the custom distribution to be used in the [`DislocationLoop`](@ref) constructors.
 """
-loopDistribution(::Rand, n::Int, args...; kw...) = rand(3, n)
-loopDistribution(::Zeros, n::Int, args...; kw...) = zeros(3, n)
-loopDistribution(::Randn, n::Int, args...; kw...) = randn(3, n)
-function loopDistribution(::Regular, n::Int, args...; kw...)
+loopDistribution(::Rand, n, args...; kw...) = rand(3, n)
+loopDistribution(::Zeros, n, args...; kw...) = zeros(3, n)
+loopDistribution(::Randn, n, args...; kw...) = randn(3, n)
+function loopDistribution(::Regular, n, args...; kw...)
     return error("loopDistribution: regular distribution yet not implemented")
 end
 
@@ -113,12 +113,7 @@ limits!(
 ```
 In-place addition of `buffer × segLen` to `range` in order to calculate the limits in which dislocations will exist.
 """
-function limits!(
-    lims::T1,
-    segLen::T2,
-    range::T1,
-    buffer::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2}
+function limits!(lims, segLen, range, buffer) 
     @inbounds for i in 1:size(lims, 2)
         @simd for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
@@ -137,16 +132,7 @@ translatePoints!(
 ```
 Translates coordinates using the limits and displacements calculated by [`limits!`](@ref) and [`loopDistribution`](@ref).
 """
-function translatePoints!(
-    coord::T1,
-    lims::T2,
-    disp::T3,
-) where {
-    T1 <: AbstractArray{T, N} where {T, N},
-    T2 <: AbstractArray{T, N} where {T, N},
-    T3 <: AbstractVector{T} where {T},
-}
-
+function translatePoints!(coord, lims, disp)
     @inbounds for i in 1:size(coord, 2)
         @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
@@ -168,24 +154,24 @@ Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
 function makeSegment(
     type::T1,
-    slipPlane::T2,
-    bVec::T2,
-) where {T1 <: segEdge, T2 <: AbstractVector{T} where {T}}
+    slipPlane,
+    bVec,
+) where {T1 <: segEdge}
     edge = cross(slipPlane, bVec)
     return edge / norm(edge)
 end
 function makeSegment(
     type::T1,
-    slipPlane::T2,
-    bVec::T2,
-) where {T1 <: segEdgeN, T2 <: AbstractVector{T} where {T}}
+    slipPlane,
+    bVec,
+) where {T1 <: segEdgeN}
     return slipPlane / norm(slipPlane)
 end
 function makeSegment(
     type::T1,
-    slipPlane::T2,
-    bVec::T2,
-) where {T1 <: segScrew, T2 <: AbstractVector{T} where {T}}
+    slipPlane,
+    bVec,
+) where {T1 <: segScrew}
     return bVec / norm(bVec)
 end
 
@@ -201,11 +187,7 @@ Creates `connectivity` and `linksConnect` matrices. `connectivity` contains the 
 
 The matrix `linksConnect` relates connections enabled by a link. Analogous to the connectivity of a link.
 """
-function makeConnect(
-    links::T1,
-    maxConnect::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: Int}
-
+function makeConnect(links, maxConnect)
     lenLinks = size(links, 2)
 
     # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
@@ -282,10 +264,7 @@ getSegmentIdx(
 ```
 Creates an indexing matrix for quick indexing of dislocation segments for quick access to slip planes, burgers vectors and line vectors. The return `3 × n` matrix is of the form `[i, node1, node2]`. Index `i` can be used to find the Burgers vector, slip plane and segment forces of a segment, eg `bVec[:, i]`. While `node1` and `node2` can be used to find the coordinate and velocity of the nodes, eg `t = coord[:, node2] - coord[:, node1]`.
 """
-function getSegmentIdx(
-    links::T1,
-    label::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
+function getSegmentIdx(links, label)
 
     lenLinks = size(links, 2)
     segIdx = zeros(Int, lenLinks, 3)  # Indexing matrix.

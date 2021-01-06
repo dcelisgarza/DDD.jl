@@ -26,21 +26,23 @@ function loadDislocationLoopJSON(dict::Dict{T1, T2} where {T1, T2}, slipSystem::
     slipPlane = slipSystem.slipPlane
     bVec = slipSystem.bVec
 
-    range = zeros(3, 2)
-    for i in 1:2
-        range[:, i] = convert.(Int, dict["range"][i])
-    end
+    range = SMatrix{3, 2}(convert.(Float64, vcat(dict["range"]...)))
+
+    numSides = convert(Int, dict["numSides"])
+    nodeSide = convert(Int, dict["nodeSide"])
+    numLoops = convert(Int, dict["numLoops"])
+    nodeLoop = numSides*nodeSide
 
     dislocationLoop = DislocationLoop(;
         loopType = dlnTypes[dict["loopType"]],
-        numSides = convert(Int, dict["numSides"]),
-        nodeSide = convert(Int, dict["nodeSide"]),
-        numLoops = convert(Int, dict["numLoops"]),
-        segLen = convert.(Float64, dict["segLen"]),
+        numSides = numSides,
+        nodeSide = nodeSide,
+        numLoops = numLoops,
+        segLen = SVector{length(dict["segLen"]), Float64}(dict["segLen"]),
         slipSystem = convert.(Int, dict["slipSystem"]),
         _slipPlane = convert.(Float64, slipPlane[:, dict["slipSystem"]]),
         _bVec = convert.(Float64, bVec[:, dict["slipSystem"]]),
-        label = nodeType.(dict["label"]),
+        label = SVector{nodeLoop, nodeType}(vcat(dict["label"]...)),
         buffer = convert(Float64, dict["buffer"]),
         range = range,
         dist = distributions[dict["dist"]],

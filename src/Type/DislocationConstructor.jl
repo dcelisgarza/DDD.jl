@@ -143,30 +143,26 @@ function DislocationLoop(
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
-    segLen::T3,
+    segLen,
     slipSystem::T2,
-    _slipPlane::T4,
-    _bVec::T4,
-    label::T5,
-    buffer::T6,
-    range::T7,
-    dist::T8,
+    _slipPlane,
+    _bVec,
+    label::T3,
+    buffer,
+    range,
+    dist::T4,
 ) where {
-    T1 <: loopDln,
+    T1 <: AbstractDlnStr,
     T2 <: Int,
-    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
-    T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{nodeType},
-    T6,
-    T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution,
+    T3 <: AbstractVector{nodeType},
+    T4 <: AbstractDistribution,
 }
 
     nodeTotal::Int = 0
-    links = zeros(Int, 2, nodeTotal)
-    coord = zeros(3, nodeTotal)
-    slipPlane = zeros(3, 0)
-    bVec = zeros(3, 0)
+    links = zeros(MMatrix{2, nodeTotal, Int})
+    coord = zeros(MMatrix{3, nodeTotal})
+    slipPlane = zeros(MMatrix{3, 0})
+    bVec = zeros(MMatrix{3, 0})
 
     return DislocationLoop(
         loopType,
@@ -219,23 +215,20 @@ function DislocationLoop(
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
-    segLen::T3,
+    segLen,
     slipSystem::T2,
-    _slipPlane::T4,
-    _bVec::T4,
-    label::T5,
-    buffer::T6,
-    range::T7,
-    dist::T8,
+    _slipPlane::T3,
+    _bVec::T3,
+    label::T4,
+    buffer,
+    range,
+    dist::T5,
 ) where {
-    T1 <: AbstractDlnStr,
+    T1 <: loopPure,
     T2 <: Int,
-    T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
-    T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{nodeType},
-    T6,
-    T7 <: AbstractArray{T, N} where {T, N},
-    T8 <: AbstractDistribution,
+    T3 <: AbstractArray{T, N} where {T, N},
+    T4 <: AbstractVector{nodeType},
+    T5 <: AbstractDistribution,
 }
 
     nodeTotal = numSides * nodeSide # Calculate total number of nodes for memory allocation.
@@ -255,20 +248,17 @@ function DislocationLoop(
     if typeof(loopType) == loopShear
         rotAxis = SVector{3, elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
         # Prismatic loops rotate around Burgers vector. All segments are edge.
-    elseif typeof(loopType) == loopPrism
+    else
         rotAxis = SVector{3, elemT}(_bVec[1], _bVec[2], _bVec[3])
         # Catch all.
-    else
-        @warn "DislocationLoop: rotation axis for $(typeof(loopType)) not defined, defaulting to prismatic loop."
-        rotAxis = SVector{3, elemT}(_bVec[1], _bVec[2], _bVec[3])
     end
 
     # Allocate arrays.
-    links = zeros(Int, 2, nodeTotal)
-    coord = zeros(3, nodeTotal)
-    slipPlane = repeat(_slipPlane, inner = (1, numSegLen))
-    bVec = repeat(_bVec, inner = (1, numSegLen))
-    seg = zeros(3, numSegLen)
+    links = zeros(MMatrix{2, nodeTotal, Int})
+    coord = zeros(MMatrix{3, nodeTotal})
+    slipPlane = MMatrix{3, nodeTotal}(repeat(_slipPlane, inner = (1, numSegLen)))
+    bVec = MMatrix{3, nodeTotal}(repeat(_bVec, inner = (1, numSegLen)))
+    seg = zeros(MMatrix{3, numSegLen})
 
     # Create initial segments.
     staticSlipPlane = SVector{3, elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
@@ -311,7 +301,7 @@ function DislocationLoop(
         links[:, j] .= (j, j + 1)
     end
     links[:, nodeTotal] .= (nodeTotal, 1)
-
+    
     return DislocationLoop(
         loopType,
         numSides,
@@ -323,6 +313,42 @@ function DislocationLoop(
         slipPlane,
         bVec,
         coord,
+        label,
+        buffer,
+        range,
+        dist,
+    )
+end
+function DislocationLoop(
+    loopType::T1,
+    numSides::T2,
+    nodeSide::T2,
+    numLoops::T2,
+    segLen,
+    slipSystem::T2,
+    _slipPlane::T3,
+    _bVec::T3,
+    label::T4,
+    buffer,
+    range,
+    dist::T5,
+) where {
+    T1 <: loopImpure,
+    T2 <: Int,
+    T3 <: AbstractArray{T, N} where {T, N},
+    T4 <: AbstractVector{nodeType},
+    T5 <: AbstractDistribution,
+}
+    @warn "DislocationLoop: Constructor for $(typeof(loopType)) not defined, defaulting to prismatic loop."
+    return DislocationLoop(
+        loopPrism(),
+        numSides,
+        nodeSide,
+        numLoops,
+        segLen,
+        slipSystem,
+        _slipPlane,
+        _bVec,
         label,
         buffer,
         range,
@@ -496,14 +522,14 @@ function DislocationNetwork(
     checkConsistency::T3 = true,
     kw...,
 ) where {
-    T1 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
+    T1 <: Union{T, AbstractVector{T}, NTuple{N, T} where N} where {T <: DislocationLoop},
     T2 <: Int,
     T3 <: Bool,
 }
 
     # Initialisation.
     nodeTotal::Int = 0
-    lims = zeros(3, 2)
+    lims = zeros(MMatrix{3, 2})
     # Calculate node total.
     for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
@@ -611,7 +637,7 @@ function DislocationNetwork!(
     @assert network.maxConnect == maxConnect "Maximum connectivity of added network must be equal to that of the existing network."
 
     nodeTotal::Int = 0
-    lims = zeros(3, 2)
+    lims = zeros(MMatrix{3, 2})
     for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end

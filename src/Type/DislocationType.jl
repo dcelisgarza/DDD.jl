@@ -58,6 +58,9 @@ struct loopMixed <: AbstractDlnStr end
 struct loopDln <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
+const loopDefined = Union{loopPrism, loopShear, loopMixed, loopJog, loopKink}
+const loopPure = Union{loopPrism, loopShear}
+const loopImpure = Union{loopMixed, loopJog, loopKink}
 
 """
 Initial statistical distributions of dislocations in the domain.
@@ -201,7 +204,7 @@ struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
 end
 ```
 """
-struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
+struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}
     loopType::T1
     numSides::T2
     nodeSide::T2
@@ -214,8 +217,8 @@ struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     coord::T6
     label::T7
     buffer::T8
-    range::T6
-    dist::T9
+    range::T9
+    dist::T10
 end
 
 """
