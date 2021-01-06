@@ -108,13 +108,9 @@ function loadSlipSystemJSON(dict::Dict{T1, T2}) where {T1, T2}
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     lenSlipSys = length(dict["slipPlane"])
-    slipPlane = zeros(3, lenSlipSys)
-    bVec = zeros(3, lenSlipSys)
 
-    for i in 1:lenSlipSys
-        slipPlane[:, i] = convert.(Float64, dict["slipPlane"][i])
-        bVec[:, i] = convert.(Float64, dict["bVec"][i])
-    end
+    slipPlane = SMatrix{3, lenSlipSys}(convert.(Float64, vcat(dict["slipPlane"]...)))
+    bVec = SMatrix{3, lenSlipSys}(convert.(Float64, vcat(dict["bVec"]...)))
 
     slipSystem = SlipSystem(;
         crystalStruct = crystalStruct[dict["crystalStruct"]],

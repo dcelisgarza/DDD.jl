@@ -1,3 +1,4 @@
+##
 using BenchmarkTools, Plots, LinearAlgebra
 # using plotlyjs
 # https://github.com/sglyon/ORCA.jl/issues/8#issuecomment-629049679
@@ -5,8 +6,8 @@ using BenchmarkTools, Plots, LinearAlgebra
 
 using DDD
 cd(@__DIR__)
-plotlyjs()
 
+##
 fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
 fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
 fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
@@ -22,6 +23,20 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJS
 )
 intVars = loadIntegrationTimeJSON(fileIntVar)
 
+println(isbits(dislocationLoop[1]))
+using StaticArrays
+test = SMatrix{3, size(slipSystems.bVec, 2)}(slipSystems.bVec)
+testFile = loadJSON(fileSlipSystem)
+
+wak = SMatrix{3, length(testFile["slipPlane"])}(convert.(Float64, vcat(testFile["slipPlane"]...)))
+
+test = zeros(MMatrix{3,5})
+
+isbits(test)
+isbits(wak)
+testFile["slipPlane"]
+##
+##
 # prismPentagon = DislocationLoop(;
 #     loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
 #     numSides = 5,   # 5-sided loop.
@@ -104,7 +119,7 @@ intVars = loadIntegrationTimeJSON(fileIntVar)
 # @btime calcSegForce(dlnParams, matParams, network)
 # @btime calcSegForce!(dlnParams, matParams, network)
 
-
+##
 shearDecagon = DislocationLoop(;
     loopType = loopShear(),
     numSides = 10,
@@ -155,6 +170,8 @@ network.label
 network.numNode[1]
 network.numSeg[1]
 
+##
+plotlyjs()
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
 
