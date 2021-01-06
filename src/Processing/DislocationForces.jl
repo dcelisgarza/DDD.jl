@@ -136,7 +136,7 @@ function calcSelfForce(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                
+                                                                                                                                                                                        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -219,7 +219,7 @@ function calcSelfForce!(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                
+                                                                                                                                                                                        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec

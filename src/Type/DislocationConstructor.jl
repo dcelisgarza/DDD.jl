@@ -301,7 +301,7 @@ function DislocationLoop(
         links[:, j] .= (j, j + 1)
     end
     links[:, nodeTotal] .= (nodeTotal, 1)
-    
+
     return DislocationLoop(
         loopType,
         numSides,

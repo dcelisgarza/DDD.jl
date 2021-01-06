@@ -21,7 +21,6 @@ intVars = loadIntegrationTimeJSON(fileIntVar)
 
 @allocated SMatrix{size(dislocationLoop[1].links)..., eltype(dislocationLoop[1].links)}(dislocationLoop[1].links)
 
-
 size(dislocationLoop[1].links)
 ##
 prismPentagon = DislocationLoop(;
@@ -35,7 +34,7 @@ prismPentagon = DislocationLoop(;
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
     label = SVector{5, nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3, 2, Float64}(-5000,-5000,-5000,5000,5000,5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -50,18 +49,32 @@ prismHeptagon = DislocationLoop(;
     _bVec = slipSystems.bVec[:, 1],
     label = SVector{7, nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3, 2, Float64}(-5000,-5000,-5000,5000,5000,5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
 network = DislocationNetwork((prismHeptagon, prismPentagon))
 
 plotlyjs()
-fig1 =
-    plotNodes(network; m = 1, l = 3, linecolor = :blue, marker = :circle, markercolor = :blue, legend = false)
+fig1 = plotNodes(
+    network;
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
 
-fig2 =
-    plotNodes(prismHeptagon; m = 1, l = 3, linecolor = :blue, marker = :circle, markercolor = :blue, legend = false)
+fig2 = plotNodes(
+    prismHeptagon;
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
 
 ##
 prismPentagonSlow = DislocationLoop(;
@@ -82,7 +95,7 @@ prismPentagonSlow = DislocationLoop(;
     ],
     dist = Rand(),  # Loop distribution.
 )
-prismHeptagonSlow =  DislocationLoop(;
+prismHeptagonSlow = DislocationLoop(;
     loopType = loopPrism(),    # Shear loop
     numSides = 7,
     nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
@@ -112,10 +125,10 @@ prismPentagonFast = DislocationLoop(;
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
     label = SVector{5, nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3, 2, Float64}(-5000,-5000,-5000,5000,5000,5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
-prismHeptagonFast =  DislocationLoop(;
+prismHeptagonFast = DislocationLoop(;
     loopType = loopPrism(),    # Shear loop
     numSides = 7,
     nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
@@ -126,7 +139,7 @@ prismHeptagonFast =  DislocationLoop(;
     _bVec = slipSystems.bVec[:, 1],
     label = SVector{7, nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3, 2, Float64}(-5000,-5000,-5000,5000,5000,5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
@@ -170,10 +183,9 @@ sourcesSlow = (prismHeptagonSlow, prismPentagonSlow)
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
     label = SVector{5, nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3, 2, Float64}(-5000,-5000,-5000,5000,5000,5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
-
 
 @btime DislocationLoop(;
     loopType = loopPrism(),    # Shear loop
@@ -204,7 +216,7 @@ sourcesSlow = (prismHeptagonSlow, prismPentagonSlow)
     _bVec = slipSystems.bVec[:, 1],
     label = SVector{7, nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3, 2, Float64}(-5000,-5000,-5000,5000,5000,5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
@@ -245,7 +257,6 @@ network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
 makeConnect!(network)
 getSegmentIdx!(network)
 
-
 network.label
 network.numNode[1]
 network.numSeg[1]
@@ -257,8 +268,6 @@ refineNetwork!(dlnParams, matParams, network)
 
 @allocated refineNetwork!(dlnParams, matParams, network)
 
-
-
 @code_warntype refineNetwork!(dlnParams, matParams, network)
 
 network.label
@@ -269,8 +278,6 @@ network.numSeg[1]
 plotlyjs()
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
-
-
 
 using JSON3, StructTypes, FileIO
 StructTypes.StructType(::Type{<:DislocationNetwork}) = StructTypes.Struct()
@@ -489,7 +496,6 @@ fig1 =
 network = refineNetwork!(dlnParams, matParams, network)
 fig1 =
     plotNodes(network, m = 1, l = 3, linecolor = :blue, markercolor = :blue, legend = false)
-
 
 calcSegSegForce(dlnParams, matParams, network)
 

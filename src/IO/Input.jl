@@ -31,7 +31,7 @@ function loadDislocationLoopJSON(dict::Dict{T1, T2} where {T1, T2}, slipSystem::
     numSides = convert(Int, dict["numSides"])
     nodeSide = convert(Int, dict["nodeSide"])
     numLoops = convert(Int, dict["numLoops"])
-    nodeLoop = numSides*nodeSide
+    nodeLoop = numSides * nodeSide
 
     dislocationLoop = DislocationLoop(;
         loopType = dlnTypes[dict["loopType"]],

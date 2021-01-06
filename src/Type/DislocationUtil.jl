@@ -113,7 +113,7 @@ limits!(
 ```
 In-place addition of `buffer × segLen` to `range` in order to calculate the limits in which dislocations will exist.
 """
-function limits!(lims, segLen, range, buffer) 
+function limits!(lims, segLen, range, buffer)
     @inbounds for i in 1:size(lims, 2)
         @simd for j in 1:size(lims, 1)
             lims[j, i] = range[j, i] + buffer * segLen
@@ -152,26 +152,14 @@ makeSegment(
 ```
 Make signle segment depending on the segment type, see [`AbstractDlnSeg`](@ref).
 """
-function makeSegment(
-    type::T1,
-    slipPlane,
-    bVec,
-) where {T1 <: segEdge}
+function makeSegment(type::T1, slipPlane, bVec) where {T1 <: segEdge}
     edge = cross(slipPlane, bVec)
     return edge / norm(edge)
 end
-function makeSegment(
-    type::T1,
-    slipPlane,
-    bVec,
-) where {T1 <: segEdgeN}
+function makeSegment(type::T1, slipPlane, bVec) where {T1 <: segEdgeN}
     return slipPlane / norm(slipPlane)
 end
-function makeSegment(
-    type::T1,
-    slipPlane,
-    bVec,
-) where {T1 <: segScrew}
+function makeSegment(type::T1, slipPlane, bVec) where {T1 <: segScrew}
     return bVec / norm(bVec)
 end
 
