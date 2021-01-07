@@ -7,11 +7,12 @@ Plots dislocation network as nodes connected by segments. Returns a new figure. 
 function plotNodes(network::DislocationNetwork, args...; kw...)
     idx = findall(x -> x != 0, @view network.links[1, :])
     coord = network.coord
+    links = network.links
+    elemT = eltype(links)
     fig = plot()
     for i in idx
-        n1 = network.links[1, i]
-        n2 = network.links[2, i]
-        plot!(coord[1, [n1, n2]], coord[2, [n1, n2]], coord[3, [n1, n2]], args...; kw...)
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
         #=
         lVec = coord[n2, :] - coord[n1, :]
@@ -30,10 +31,11 @@ Updates figure to plot dislocation network as nodes connected by segments. See [
 function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     idx = findall(x -> x != 0, @view network.links[1, :])
     coord = network.coord
+    links = network.links
+    elemT = eltype(links)
     for i in idx
-        n1 = network.links[1, i]
-        n2 = network.links[2, i]
-        plot!(coord[1, [n1, n2]], coord[2, [n1, n2]], coord[3, [n1, n2]], args...; kw...)
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #=
         # quiver needs to be implemented in Plots.jl but we can use python.
         lVec = coord[n2, :] - coord[n1, :]
@@ -45,11 +47,12 @@ end
 function plotNodes(loop::DislocationLoop, args...; kw...)
     idx = findall(x -> x != 0, @view loop.links[1, :])
     coord = loop.coord
+    links = loop.links
+    elemT = eltype(links)
     fig = plot()
     for i in idx
-        n1 = loop.links[1, i]
-        n2 = loop.links[2, i]
-        plot!(coord[1, [n1, n2]], coord[2, [n1, n2]], coord[3, [n1, n2]], args...; kw...)
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #=
         # quiver needs to be implemented in Plots.jl but we can use python.
         lVec = coord[n2, :] - coord[n1, :]
@@ -61,10 +64,11 @@ end
 function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     idx = findall(x -> x != 0, @view loop.links[1, :])
     coord = loop.coord
+    links = loop.links
+    elemT = eltype(links)
     for i in idx
-        n1 = loop.links[1, i]
-        n2 = loop.links[2, i]
-        plot!(coord[1, [n1, n2]], coord[2, [n1, n2]], coord[3, [n1, n2]], args...; kw...)
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #=
         # quiver needs to be implemented in Plots.jl but we can use python.
         lVec = coord[n2, :] - coord[n1, :]

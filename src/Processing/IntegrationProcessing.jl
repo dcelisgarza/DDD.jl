@@ -1,4 +1,3 @@
-#=
 function deriv!(
     dlnParams::T1,
     matParams::T2,
@@ -139,4 +138,3 @@ function integrate!(
 
     return intVars
 end
-=#

@@ -1,4 +1,3 @@
-#=
 """
 ```
 calcPKForce(
@@ -77,23 +76,13 @@ function calc_σ_hat(
     C = mesh.stiffTensor
     label = mesh.label
     coord = mesh.coord
+    elemT = eltype(coord)
 
     uHat = dlnFEM.uHat
 
     x = x0[1]
     y = x0[2]
     z = x0[3]
-
-    # Stress tensor.
-    # σ[1,:] = σ_xx
-    # σ[2,:] = σ_yy
-    # σ[3,:] = σ_zz
-    # σ[4,:] = σ_xy = σ_yx
-    # σ[5,:] = σ_xz = σ_xz
-    # σ[6,:] = σ_yz = σ_zy
-    σ = zeros(6)
-    B = zeros(6, 24)
-    U = zeros(24)
 
     # Find element index closest to the coordinate.
     i = maximum(ceil(x * w), 1)
@@ -135,28 +124,50 @@ function calc_σ_hat(
     dNdS[2, :] *= ds2dy
     dNdS[3, :] *= ds3dz
 
-    for i in 1:size(dNdS, 1)
+    numNodeElem = size(dNdS, 2)
+    len = 3 * numNodeElem
+    B = MMatrix{6, len, elemT}(zeros(6, len))
+    U = MVector{len, elemT}(zeros(len))
+
+    for i in 1:numNodeElem
         # Indices calculated once for performance.
         idx1 = 3 * i
         idx2 = 3 * (i - 1)
         # label[a, b] is the index of the node b, in FE element a.
-        idx3 = 3 * label[i]
+        idx3 = label[i]
         # Constructing the Jacobian for node i.
         B[1, idx2 + 1] = dNdS[1, i]
         B[2, idx2 + 2] = dNdS[2, i]
         B[3, idx2 + 3] = dNdS[3, i]
+
         B[4, idx2 + 1] = B[2, idx2 + 2]
         B[4, idx2 + 2] = B[1, idx2 + 1]
+
         B[5, idx2 + 1] = B[3, idx1 + 0]
         B[5, idx1 + 0] = B[1, idx2 + 1]
+
         B[6, idx2 + 2] = B[3, idx1 + 0]
         B[6, idx1 + 0] = B[2, idx2 + 2]
         # Building uhat for the nodes of the finite element closest to the point of interest. From idx3, the finite element is the i2'th element and the the node we're looking at is the j'th node. The node index is idx3 = label[i2,j].
-        U[1, idx] = uHat[1, idx3]
-        U[2, idx] = uHat[2, idx3]
-        U[3, idx] = uHat[3, idx3]
+        U[1, i] = uHat[1, idx3]
+        U[2, i] = uHat[2, idx3]
+        U[3, i] = uHat[3, idx3]
     end
+
+    # Stress tensor.
+    # σ[1,:] = σ_xx
+    # σ[2,:] = σ_yy
+    # σ[3,:] = σ_zz
+    # σ[4,:] = σ_xy = σ_yx
+    # σ[5,:] = σ_xz = σ_xz
+    # σ[6,:] = σ_yz = σ_zy
+
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
-    return σ = C * B * U
+    
+    σ_vec = C * B * U
+    σ = SMatrix{3, 3, elemT}(σ_vec[1], σ_vec[4], σ_vec[5], 
+                             σ_vec[4], σ_vec[2], σ_vec[6],
+                             σ_vec[5], σ_vec[6], σ_vec[3])
+    
+    return σ
 end
-=#
