@@ -266,7 +266,7 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         nodeForce::T2,
         numNode::T4 = zeros(Int, 1),
         numSeg::T4 = zeros(Int, 1),
-        maxConnect::T5 = 0,
+        maxConnect::T5 = 4,
         connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
         linksConnect::T1 = zeros(Int, 2, size(links, 2)),
         segIdx::T1 = zeros(Int, size(links, 2), 3),
@@ -275,7 +275,7 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         T1 <: AbstractArray{T, N} where {T, N},
         T2 <: AbstractArray{T, N} where {T, N},
         T3 <: AbstractVector{nodeType},
-        T4 <: AbstractVector{Int},
+        T4 <: Union{Int, AbstractVector{Int}},
         T5 <: Int,
         T6 <: AbstractArray{T, N} where {T, N},
     }
@@ -284,8 +284,12 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
         @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
         @assert size(coord, 2) == length(label)
+        @assert length(numNode) == length(numSeg) == 1
 
-        return new{T1, T2, T3, T4, T5, T6}(
+        typeof(numNode) <: AbstractVector ? numNodeArr = numNode : numNodeArr = [numNode]
+        typeof(numSeg) <: AbstractVector ? numSegArr = numSeg : numSegArr = [numSeg]
+
+        return new{T1, T2, T3, typeof(numNodeArr), T5, T6}(
             links,
             slipPlane,
             bVec,
@@ -293,8 +297,8 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
             label,
             nodeVel,
             nodeForce,
-            numNode,
-            numSeg,
+            numNodeArr,
+            numSegArr,
             maxConnect,
             connectivity,
             linksConnect,

@@ -227,6 +227,81 @@ sourcesSlow = (prismHeptagonSlow, prismPentagonSlow)
 @btime calcSegForce!(dlnParams, matParams, network)
 
 ##
+dx = 2000
+dy = 2000
+dz = 2000
+numNode = 100
+numSeg = numNode - 1
+links = zeros(Int, 2, numSeg)
+slipPlane = zeros(3, numSeg)
+bVec = zeros(3, numNode - 1)
+coord = zeros(3, numNode)
+label = zeros(nodeType, numNode)
+
+coord[1, :] .= dx/8
+coord[2, :] .= dy/2
+coord[3, :] = range(0, dz, length = numNode)
+b = Float64[1;1;1]
+n = Float64[-1;1;0]
+
+for i = 1:numSeg-1
+    links[:, i] .= (i, i + 1);
+    bVec[:, i] = b
+    slipPlane[:, i] = n
+end
+links = hcat(links, [numNode + 1, 1], [numNode + 2, numNode])
+bVec = hcat(bVec, b, b)
+slipPlane = hcat(slipPlane, n, n)
+coord = hcat(coord, [0;0;-1e3*dz], [0;0;1e3*dz])
+append!(label, nodeType[3, 3])
+
+ test = DislocationNetwork(
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        zeros(size(coord)),
+        zeros(size(coord)),
+        numNode+2,
+        numSeg+2,
+ )
+ makeConnect!(test)
+ getSegmentIdx!(test)
+
+
+ test2 =  DislocationNetwork(
+        links,
+        slipPlane,
+        bVec,
+        coord,
+        label,
+        zeros(size(coord)),
+        zeros(size(coord)),
+        [numNode+2],
+        [numSeg+2],
+ )
+ makeConnect!(test2)
+ getSegmentIdx!(test2)
+
+ compStruct(test, test2, verbose=true)
+
+ test.nodeVel
+ plotlyjs()
+ fig1 = plotNodes(
+    test;
+    m = 3,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+    xlims = (0, dx),
+    ylims = (0, dy),
+    zlims = (0, dz),
+)
+
+##
 shearDecagon = DislocationLoop(;
     loopType = loopShear(),
     numSides = 10,
