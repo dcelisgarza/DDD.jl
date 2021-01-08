@@ -67,7 +67,7 @@ function Base.push!(network::DislocationNetwork, n::Int)
     return network
 end
 function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector{Int}})
-    return network.links[:, i],
+    return @views network.links[:, i],
     network.slipPlane[:, i],
     network.bVec[:, i],
     network.coord[:, i],

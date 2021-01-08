@@ -62,7 +62,9 @@ function splitNode!(
     # Create connectivity for the new node and update links and linksConnect.
     # This only does the first connection. The rest are made after in case they are needed.
     connectivity[1, newNode] = 1
-    connectivity[2:3, newNode] = tmpConnect[(2 * splitConnect):(2 * splitConnect + 1)]
+    connectivity[2, newNode] = tmpConnect[(2 * splitConnect)]
+    connectivity[3, newNode] = tmpConnect[(2 * splitConnect + 1)]
+
     link = connectivity[2, newNode]
     colLink = connectivity[3, newNode]
     links[colLink, link] = newNode
@@ -256,8 +258,18 @@ function refineNetwork!(
                 newNode = network.numNode[1]
                 newLink = network.numSeg[1]
 
-                slipPlane[:, link2] == slipPlane[:, link1] ?
-                slipPlane[:, newLink] = slipPlane[:, link2] : nothing
+                equalSlipPlane = let 
+                    flag = true
+                    @inbounds @simd for j in 1:3
+                        flag = flag && isapprox(slipPlane[j, link2], slipPlane[j, link1])
+                    end
+                    flag
+                end
+                if equalSlipPlane
+                    @inbounds @simd for j in 1:3
+                        slipPlane[j, newLink] = slipPlane[j, link2]
+                    end
+                end
 
                 # Calculate force and mobility for the new node's connectivity.
                 j = 1:connectivity[1, newNode]
@@ -306,8 +318,18 @@ function refineNetwork!(
                 newNode = network.numNode[1]
                 newLink = network.numSeg[1]
 
-                slipPlane[:, link1] == slipPlane[:, link2] ?
-                slipPlane[:, newLink] = slipPlane[:, link1] : nothing
+                equalSlipPlane = let 
+                    flag = true
+                    @inbounds @simd for j in 1:3
+                        flag = flag && isapprox(slipPlane[j, link1], slipPlane[j, link2])
+                    end
+                    flag
+                end
+                if equalSlipPlane
+                    @inbounds @simd for j in 1:3
+                        slipPlane[j, newLink] = slipPlane[j, link1]
+                    end
+                end
 
                 # Calculate force and mobility for the new node's connectivity.
                 j = 1:connectivity[1, newNode]
@@ -370,7 +392,9 @@ function refineNetwork!(
                 newNode = network.numNode[1]
                 newLink = network.numSeg[1]
 
-                slipPlane[:, newLink] = slipPlane[:, link]
+                @inbounds @simd for k in 1:3
+                    slipPlane[k, newLink] = slipPlane[k, link]
+                end
 
                 # Calculate force and mobility for the new node's connectivity.
                 k = 1:connectivity[1, newNode]

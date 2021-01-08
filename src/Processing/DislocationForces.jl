@@ -117,9 +117,9 @@ function calcSelfForce(
     @inbounds @simd for i in eachindex(idx)
         # Finding the norm of each line vector.
         tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
-        tVecSq = dot(tVecI, tVecI)
+        tVecSq = tVecI ⋅ tVecI
         L = sqrt(tVecSq)
-        Linv = inv(L)
+        Linv = 1 / L
         tVecI *= Linv
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
@@ -198,11 +198,12 @@ function calcSelfForce!(
     tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
     @inbounds @simd for i in eachindex(idx)
+        idxi = idx[i]
         # Finding the norm of each line vector.
         tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
-        tVecSq = dot(tVecI, tVecI)
+        tVecSq = tVecI ⋅ tVecI
         L = sqrt(tVecSq)
-        Linv = inv(L)
+        Linv = 1 / L
         tVecI *= Linv
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
@@ -238,12 +239,10 @@ function calcSelfForce!(
 
         selfForce = torTot * bEdgeVec - lonCore * tVecI
 
-        segForce[1, 1, idx[i]] -= selfForce[1]
-        segForce[2, 1, idx[i]] -= selfForce[2]
-        segForce[3, 1, idx[i]] -= selfForce[3]
-        segForce[1, 2, idx[i]] += selfForce[1]
-        segForce[2, 2, idx[i]] += selfForce[2]
-        segForce[3, 2, idx[i]] += selfForce[3]
+        for j in 1:3
+            segForce[j, 1, idxi] -= selfForce[j]
+            segForce[j, 2, idxi] += selfForce[j]
+        end
     end
 
     return nothing

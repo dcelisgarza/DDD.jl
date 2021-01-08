@@ -31,14 +31,18 @@ function removeNode!(
 
     # The if nodeGone is not the last node in the relevant arrays, replace it by lastNode.
     if nodeGone < lastNode
-        coord[:, nodeGone] = coord[:, lastNode]
         label[nodeGone] = label[lastNode]
-        nodeVel[:, nodeGone] = nodeVel[:, lastNode]
-        nodeForce[:, nodeGone] = nodeForce[:, lastNode]
-        connectivity[:, nodeGone] = connectivity[:, lastNode]
+        @inbounds @simd for i in 1:3
+            coord[i, nodeGone] = coord[i, lastNode]
+            nodeVel[i, nodeGone] = nodeVel[i, lastNode]
+            nodeForce[i, nodeGone] = nodeForce[i, lastNode]
+        end
+        @inbounds @simd for i in 1:size(connectivity, 1)
+            connectivity[i, nodeGone] = connectivity[i, lastNode]
+        end
         # Change the link
-        for j in 1:connectivity[1, nodeGone]
-            idx = 2 * j
+        @inbounds @simd for i in 1:connectivity[1, nodeGone]
+            idx = 2 * i
             links[connectivity[idx + 1, nodeGone], connectivity[idx, nodeGone]] = nodeGone
         end
     end
@@ -88,9 +92,9 @@ function removeConnection!(
 
     # If the connectGone is not the last connection that was made, replace it by the last connection.
     if connectGone < lastConnect
-        connectivity[idx:(idx + 1), nodeKept] = connectivity[lst:(lst + 1), nodeKept]
-        linksConnect[connectivity[idx + 1, nodeKept], connectivity[idx, nodeKept]] =
-            connectGone
+        connectivity[idx, nodeKept] = connectivity[lst, nodeKept]
+        connectivity[idx + 1, nodeKept] = connectivity[lst + 1, nodeKept]
+        linksConnect[connectivity[idx + 1, nodeKept], connectivity[idx, nodeKept]] = connectGone
     end
 
     # Change connectivity to reflect that nodeKept has one less connection.
@@ -146,17 +150,26 @@ function removeLink!(
     removeConnection!(network, node2, connectGone2)
 
     # Remove link that no longer appears in connectivity and doesn't connect any nodes.
-    @assert dot(linksConnect[:, linkGone], linksConnect[:, linkGone]) == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
+    checkLink = SVector{2, Int}(linksConnect[1, linkGone], linksConnect[2, linkGone])
+    @assert checkLink ⋅ checkLink == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     isnothing(lastLink) ? lastLink = maximum((network.numSeg[1], 1)) : nothing
 
     # If the linkGone is not the last link, replace it with lastLink.
     if linkGone < lastLink
-        links[:, linkGone] = links[:, lastLink]
-        slipPlane[:, linkGone] = slipPlane[:, lastLink]
-        bVec[:, linkGone] = bVec[:, lastLink]
-        segForce[:, :, linkGone] = segForce[:, :, lastLink]
-        linksConnect[:, linkGone] = linksConnect[:, lastLink]
+        @inbounds @simd for i in 1:2
+            links[i, linkGone] = links[i, lastLink]
+            linksConnect[i, linkGone] = linksConnect[i, lastLink]
+        end
+        @inbounds @simd for i in 1:3
+            slipPlane[i, linkGone] = slipPlane[i, lastLink]
+            bVec[i, linkGone] = bVec[i, lastLink]
+        end
+        @inbounds for j in 1:2
+            @simd for i in 1:3
+                segForce[i, j, linkGone] = segForce[i, j, lastLink]
+            end
+        end
         node1 = links[1, linkGone]
         node2 = links[2, linkGone]
         connect1 = 2 * linksConnect[1, linkGone]
@@ -232,8 +245,13 @@ function mergeNode!(
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
-    connectivity[(2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1), nodeKept] =
-        connectivity[2:(2 * nodeGoneConnect + 1), nodeGone]
+    # This next loop is equivalent to, but doesn't allocate memory.
+    # connectivity[(2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1), nodeKept] = connectivity[2:(2 * nodeGoneConnect + 1), nodeGone]
+    idx = (2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1)
+    lhs = idx[1]
+    @inbounds @simd for i in 0:length(idx) - 1
+        connectivity[lhs + i, nodeKept] = connectivity[2 + i, nodeGone]
+    end
     connectivity[1, nodeKept] = totalConnect
 
     # Replace nodeGone with nodeKept in links and update linksConnect with the new positions of the links in connectivity.

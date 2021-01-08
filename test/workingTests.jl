@@ -18,58 +18,108 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJS
 )
 intVars = loadIntegrationTimeJSON(fileIntVar)
 
-using StaticArrays, BenchmarkTools
-function foo()
-    elemT = Float64
-    for _ in 1:10000
-        B = rand(elemT, 6, 24)
-        U = rand(elemT, 24)
-        C = rand(elemT, 6, 6)
-        σ_vec = C * B * U
-        σ = SMatrix{3, 3, elemT}(σ_vec[1], σ_vec[4], σ_vec[5], 
-                                σ_vec[4], σ_vec[2], σ_vec[6],
-                                σ_vec[5], σ_vec[6], σ_vec[3])
-    end
-    return
+network = DislocationNetwork(dislocationLoop)
+remoteForce = calcSegSegForce(dlnParams, matParams, network)
+selfForce = calcSegForce(dlnParams, matParams, network)
+calcSegForce!(dlnParams, matParams, network)
+isapprox(network.segForce[:,:,1:network.numSeg[1]], selfForce)
+
+@btime calcSegForce!(dlnParams, matParams, network)
+
+using BenchmarkTools
+
+a = rand(6,6)
+b = rand(6)
+
+function foo(a, b)
+    a[2:3, 3] = @view b[3:4]
+    return a
 end
-function fooS()
-    elemT = Float64
-    for _ in 1:10000
-        B = SMatrix{6, 24, elemT}(rand(6, 24))
-        U = SVector{24, elemT}(rand(24))
-        C = SMatrix{6, 6, elemT}(rand(6, 6))
-        σ_vec = C * B * U
-        σ = SMatrix{3, 3, elemT}(σ_vec[1], σ_vec[4], σ_vec[5], 
-                                σ_vec[4], σ_vec[2], σ_vec[6],
-                                σ_vec[5], σ_vec[6], σ_vec[3])
-    end
-    return
+foo(a,b)
+function bar(a,b)
+    a[2,3] = b[3]
+    a[4,3] = b[4]
+    return a
 end
-function fooMS()
-    elemT = Float64
-    for _ in 1:10000
-        B = MMatrix{6, 24, elemT}(rand(6, 24))
-        U = MVector{24, elemT}(rand(24))
-        C = SMatrix{6, 6, elemT}(rand(6, 6))
-        σ_vec = C * B * U
-        σ = SMatrix{3, 3, elemT}(σ_vec[1], σ_vec[4], σ_vec[5], 
-                                σ_vec[4], σ_vec[2], σ_vec[6],
-                                σ_vec[5], σ_vec[6], σ_vec[3])
+bar(a,b)
+
+a = rand(10,10)
+b = rand(10,10)
+i = rand(1:10)
+i2 = rand(1:10)
+j = rand(1:10)
+j2 = rand(1:10)
+
+function comparing(a,b,i,j,i2,j2)
+    a[:, i] == b[:, j] ? a[:, i2] = b[:, j2] : nothing
+end
+comparing(a,b,i,j,i2,j2)
+function comparing2(a,b,i,j,i2,j2)
+    isapprox(a[:, i], b[:, j]) ? a[:, i2] = b[:, j2] : nothing
+end
+comparing2(a,b,i,j,i2,j2)
+function comparing2(a,b,i,j,i2,j2)
+    isapprox(a[:, i], b[:, j]) ? a[:, i2] = b[:, j2] : nothing
+end
+comparing2(a,b,i,j,i2,j2)
+function comparing3(a,b,i,j,i2,j2)
+
+    equalSlipPlane = let 
+                    flag = true
+                    for k in 1:3
+                        flag = flag && isapprox(a[k, i], b[k, j])
+                    end
+                    flag
+                end
+    equalSlipPlane ? for i in 1:3 a[i, i2] = b[i, j2] end : nothing
+end
+comparing3(a,b,i,j,i2,j2)
+
+
+
+[i for i in 1:3]
+
+@btime foo(a,b)
+@btime bar(a,b)
+@btime comparing(a, b, i, j, i2, j2)
+@btime comparing2(a, b, i, j, i2, j2)
+@btime comparing3(a, b, i, j, i2, j2)
+
+
+@btime comparing(a, a, i, i, i2, j2)
+@btime comparing2(a, a, i, i, i2, j2)
+@btime comparing3(a, a, i, i, i2, j2)
+a[1:3, i2]
+b[1:3, j2]
+
+c = rand(10000,10000)
+d = rand(10000,10000)
+e = rand(10000,10000)
+
+function sendit(c, d, e)
+    c[500:5000,10000] .= 0
+    d[500:5000,10000] .= 0
+    e[500:5000,10000] .= 0
+    return c, d, e
+end
+sendit(c, d, e)
+function sendit2(c, d, e)
+    @inbounds @simd for i in 500:5000
+        c[i,10000] = 0
+        d[i,10000] = 0
+        e[i,10000] = 0
     end
-    return
+    return c, d, e
+end
+sendit2(c, d, e)
+
+@btime sendit(c,d,e)
+@btime sendit2(c,d,e)
+
+for j in 1:2, i in 1:3
+    println(i, j)
 end
 
-foo()
-fooMS()
-fooS()
-@btime foo()
-@btime fooMS()
-@btime fooS()
-
-test = MMatrix{6, 24, Float64}(rand(6, 24))
-test2 = rand(6, 24)
-sizeof(test2)
-6*24*64/8
 ##
 prismPentagon = DislocationLoop(;
     loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
