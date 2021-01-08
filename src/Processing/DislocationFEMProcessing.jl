@@ -62,7 +62,7 @@ Calculate the reaction from a dislocation.
 function calc_σ_hat(
     mesh::RegularCuboidMesh,
     dlnFEM::DislocationFEMCorrective,
-    x0::AbstractArray{T, N} where {T, N},
+    x0::AbstractVector{T} where {T},
 )
 
     # Unroll structure.
@@ -80,9 +80,7 @@ function calc_σ_hat(
 
     uHat = dlnFEM.uHat
 
-    x = x0[1]
-    y = x0[2]
-    z = x0[3]
+    x, y, z = x0
 
     # Find element index closest to the coordinate.
     i = maximum(ceil(x * w), 1)
@@ -95,27 +93,17 @@ function calc_σ_hat(
     # Diametrically opposed points in a cubic element.
     n1 = label[idx, 1]
     n7 = label[idx, 7]
+
     # Find element midpoints.
     xc = 0.5 * (coord[1, n1] + coord[1, n7])
     yc = 0.5 * (coord[2, n1] + coord[2, n7])
     zc = 0.5 * (coord[3, n1] + coord[3, n7])
+
     # Setting up Jacobian.
-    #=
-        # The code is this but simplified for performance.
-        a = 0.5*w
-        b = 0.5*h
-        c = 0.5*d
-        s1 = (x0[:,1]-xc[:,1])/a
-        s2 = (x0[:,2]-xc[:,2])/h
-        s3 = (x0[:,3]-xc[:,3])/d
-        ds1dx = 1/a
-        ds2dy = 1/h
-        ds3dz = 1/d
-    =#
-    ds1dx = 2 * w
+    ds1dx = 2 * w   # 1/(0.5 * width)
     ds2dy = 2 * h
     ds3dz = 2 * d
-    s1 = ds1dx * (x - xc)
+    s1 = ds1dx * (x - xc) # (x - xc)/(0.5 * width)
     s2 = ds2dy * (y - yc)
     s3 = ds3dz * (z - zc)
 
@@ -154,13 +142,13 @@ function calc_σ_hat(
         U[3, i] = uHat[3, idx3]
     end
 
-    # Stress tensor.
-    # σ[1,:] = σ_xx
-    # σ[2,:] = σ_yy
-    # σ[3,:] = σ_zz
-    # σ[4,:] = σ_xy = σ_yx
-    # σ[5,:] = σ_xz = σ_xz
-    # σ[6,:] = σ_yz = σ_zy
+    # Isotropic stress tensor in vector form.
+    # σ_vec[1] = σ_xx
+    # σ_vec[2] = σ_yy
+    # σ_vec[3] = σ_zz
+    # σ_vec[4] = σ_xy = σ_yx
+    # σ_vec[5] = σ_xz = σ_xz
+    # σ_vec[6] = σ_yz = σ_zy
 
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
 
