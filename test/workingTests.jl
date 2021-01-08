@@ -22,69 +22,68 @@ network = DislocationNetwork(dislocationLoop)
 remoteForce = calcSegSegForce(dlnParams, matParams, network)
 selfForce = calcSegForce(dlnParams, matParams, network)
 calcSegForce!(dlnParams, matParams, network)
-isapprox(network.segForce[:,:,1:network.numSeg[1]], selfForce)
+isapprox(network.segForce[:, :, 1:network.numSeg[1]], selfForce)
 
 @btime calcSegForce!(dlnParams, matParams, network)
 
 using BenchmarkTools
 
-a = rand(6,6)
+a = rand(6, 6)
 b = rand(6)
 
 function foo(a, b)
     a[2:3, 3] = @view b[3:4]
     return a
 end
-foo(a,b)
-function bar(a,b)
-    a[2,3] = b[3]
-    a[4,3] = b[4]
+foo(a, b)
+function bar(a, b)
+    a[2, 3] = b[3]
+    a[4, 3] = b[4]
     return a
 end
-bar(a,b)
+bar(a, b)
 
-a = rand(10,10)
-b = rand(10,10)
+a = rand(10, 10)
+b = rand(10, 10)
 i = rand(1:10)
 i2 = rand(1:10)
 j = rand(1:10)
 j2 = rand(1:10)
 
-function comparing(a,b,i,j,i2,j2)
+function comparing(a, b, i, j, i2, j2)
     a[:, i] == b[:, j] ? a[:, i2] = b[:, j2] : nothing
 end
-comparing(a,b,i,j,i2,j2)
-function comparing2(a,b,i,j,i2,j2)
+comparing(a, b, i, j, i2, j2)
+function comparing2(a, b, i, j, i2, j2)
     isapprox(a[:, i], b[:, j]) ? a[:, i2] = b[:, j2] : nothing
 end
-comparing2(a,b,i,j,i2,j2)
-function comparing2(a,b,i,j,i2,j2)
+comparing2(a, b, i, j, i2, j2)
+function comparing2(a, b, i, j, i2, j2)
     isapprox(a[:, i], b[:, j]) ? a[:, i2] = b[:, j2] : nothing
 end
-comparing2(a,b,i,j,i2,j2)
-function comparing3(a,b,i,j,i2,j2)
+comparing2(a, b, i, j, i2, j2)
+function comparing3(a, b, i, j, i2, j2)
 
-    equalSlipPlane = let 
-                    flag = true
-                    for k in 1:3
-                        flag = flag && isapprox(a[k, i], b[k, j])
-                    end
-                    flag
-                end
-    equalSlipPlane ? for i in 1:3 a[i, i2] = b[i, j2] end : nothing
+    equalSlipPlane = let
+        flag = true
+        for k in 1:3
+            flag = flag && isapprox(a[k, i], b[k, j])
+        end
+        flag
+    end
+    equalSlipPlane ? for i in 1:3
+        a[i, i2] = b[i, j2]
+    end : nothing
 end
-comparing3(a,b,i,j,i2,j2)
-
-
+comparing3(a, b, i, j, i2, j2)
 
 [i for i in 1:3]
 
-@btime foo(a,b)
-@btime bar(a,b)
+@btime foo(a, b)
+@btime bar(a, b)
 @btime comparing(a, b, i, j, i2, j2)
 @btime comparing2(a, b, i, j, i2, j2)
 @btime comparing3(a, b, i, j, i2, j2)
-
 
 @btime comparing(a, a, i, i, i2, j2)
 @btime comparing2(a, a, i, i, i2, j2)
@@ -92,33 +91,44 @@ comparing3(a,b,i,j,i2,j2)
 a[1:3, i2]
 b[1:3, j2]
 
-c = rand(10000,10000)
-d = rand(10000,10000)
-e = rand(10000,10000)
+c = rand(10000, 10000)
+d = rand(10000, 10000)
+e = rand(10000, 10000)
 
 function sendit(c, d, e)
-    c[500:5000,10000] .= 0
-    d[500:5000,10000] .= 0
-    e[500:5000,10000] .= 0
+    c[500:5000, 10000] .= 0
+    d[500:5000, 10000] .= 0
+    e[500:5000, 10000] .= 0
     return c, d, e
 end
 sendit(c, d, e)
 function sendit2(c, d, e)
     @inbounds @simd for i in 500:5000
-        c[i,10000] = 0
-        d[i,10000] = 0
-        e[i,10000] = 0
+        c[i, 10000] = 0
+        d[i, 10000] = 0
+        e[i, 10000] = 0
     end
     return c, d, e
 end
 sendit2(c, d, e)
 
-@btime sendit(c,d,e)
-@btime sendit2(c,d,e)
+@btime sendit(c, d, e)
+@btime sendit2(c, d, e)
 
 for j in 1:2, i in 1:3
     println(i, j)
 end
+
+test = rand(10, 5)
+using StaticArrays, LinearAlgebra
+wat = SVector{3, Float64}(3, 3, 3)
+
+function watanabe(a, b)
+    a[3:5, 4] = b / norm(b)
+    return a
+end
+
+@btime watanabe(test, wat)
 
 ##
 prismPentagon = DislocationLoop(;
@@ -175,7 +185,6 @@ fig1 = plotNodes(
     legend = false,
 )
 
-
 @btime plotNodes(
     network;
     m = 1,
@@ -208,57 +217,56 @@ bVec = zeros(3, numNode - 1)
 coord = zeros(3, numNode)
 label = zeros(nodeType, numNode)
 
-coord[1, :] .= dx/8
-coord[2, :] .= dy/2
+coord[1, :] .= dx / 8
+coord[2, :] .= dy / 2
 coord[3, :] = range(0, dz, length = numNode)
-b = Float64[1;1;1]
-n = Float64[-1;1;0]
+b = Float64[1; 1; 1]
+n = Float64[-1; 1; 0]
 
-for i = 1:numSeg-1
-    links[:, i] .= (i, i + 1);
+for i in 1:(numSeg - 1)
+    links[:, i] .= (i, i + 1)
     bVec[:, i] = b
     slipPlane[:, i] = n
 end
 links = hcat(links, [numNode + 1, 1], [numNode + 2, numNode])
 bVec = hcat(bVec, b, b)
 slipPlane = hcat(slipPlane, n, n)
-coord = hcat(coord, [0;0;-1e3*dz], [0;0;1e3*dz])
+coord = hcat(coord, [0; 0; -1e3 * dz], [0; 0; 1e3 * dz])
 append!(label, nodeType[3, 3])
 
- test = DislocationNetwork(
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        zeros(size(coord)),
-        zeros(size(coord)),
-        numNode+2,
-        numSeg+2,
- )
- makeConnect!(test)
- getSegmentIdx!(test)
+test = DislocationNetwork(
+    links,
+    slipPlane,
+    bVec,
+    coord,
+    label,
+    zeros(size(coord)),
+    zeros(size(coord)),
+    numNode + 2,
+    numSeg + 2,
+)
+makeConnect!(test)
+getSegmentIdx!(test)
 
+test2 = DislocationNetwork(
+    links,
+    slipPlane,
+    bVec,
+    coord,
+    label,
+    zeros(size(coord)),
+    zeros(size(coord)),
+    [numNode + 2],
+    [numSeg + 2],
+)
+makeConnect!(test2)
+getSegmentIdx!(test2)
 
- test2 =  DislocationNetwork(
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        zeros(size(coord)),
-        zeros(size(coord)),
-        [numNode+2],
-        [numSeg+2],
- )
- makeConnect!(test2)
- getSegmentIdx!(test2)
+compStruct(test, test2, verbose = true)
 
- compStruct(test, test2, verbose=true)
-
- test.nodeVel
- plotlyjs()
- fig1 = plotNodes(
+test.nodeVel
+plotlyjs()
+fig1 = plotNodes(
     test;
     m = 3,
     l = 3,

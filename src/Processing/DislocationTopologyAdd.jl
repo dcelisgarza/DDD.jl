@@ -258,7 +258,7 @@ function refineNetwork!(
                 newNode = network.numNode[1]
                 newLink = network.numSeg[1]
 
-                equalSlipPlane = let 
+                equalSlipPlane = let
                     flag = true
                     @inbounds @simd for j in 1:3
                         flag = flag && isapprox(slipPlane[j, link2], slipPlane[j, link1])
@@ -318,7 +318,7 @@ function refineNetwork!(
                 newNode = network.numNode[1]
                 newLink = network.numSeg[1]
 
-                equalSlipPlane = let 
+                equalSlipPlane = let
                     flag = true
                     @inbounds @simd for j in 1:3
                         flag = flag && isapprox(slipPlane[j, link1], slipPlane[j, link2])

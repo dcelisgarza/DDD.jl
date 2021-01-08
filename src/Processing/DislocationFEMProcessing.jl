@@ -163,11 +163,19 @@ function calc_σ_hat(
     # σ[6,:] = σ_yz = σ_zy
 
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
-    
+
     σ_vec = C * B * U
-    σ = SMatrix{3, 3, elemT}(σ_vec[1], σ_vec[4], σ_vec[5], 
-                             σ_vec[4], σ_vec[2], σ_vec[6],
-                             σ_vec[5], σ_vec[6], σ_vec[3])
-    
+    σ = SMatrix{3, 3, elemT}(
+        σ_vec[1],
+        σ_vec[4],
+        σ_vec[5],
+        σ_vec[4],
+        σ_vec[2],
+        σ_vec[6],
+        σ_vec[5],
+        σ_vec[6],
+        σ_vec[3],
+    )
+
     return σ
 end

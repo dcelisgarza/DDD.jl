@@ -32,8 +32,10 @@ function calcSegForce(
     segForce = calcSegSegForce(dlnParams, matParams, network, idx)
 
     @inbounds for i in 1:numSeg
-        @simd for j in 1:2
-            segForce[:, j, i] += @view selfForce[j][:, i]
+        for j in 1:2
+            @simd for k in 1:3
+                segForce[k, j, i] += selfForce[j][k, i]
+            end
         end
     end
 
@@ -136,7 +138,7 @@ function calcSelfForce(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                        
+                                                                                                                                                                                                                                                        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec
@@ -220,7 +222,7 @@ function calcSelfForce!(
         553?595: gives this expression in appendix A p590
         f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                        
+                                                                                                                                                                                                                                                        
         tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
         = tVec * bScrew - bVec
         = - bEdgeVec

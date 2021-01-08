@@ -94,7 +94,8 @@ function removeConnection!(
     if connectGone < lastConnect
         connectivity[idx, nodeKept] = connectivity[lst, nodeKept]
         connectivity[idx + 1, nodeKept] = connectivity[lst + 1, nodeKept]
-        linksConnect[connectivity[idx + 1, nodeKept], connectivity[idx, nodeKept]] = connectGone
+        linksConnect[connectivity[idx + 1, nodeKept], connectivity[idx, nodeKept]] =
+            connectGone
     end
 
     # Change connectivity to reflect that nodeKept has one less connection.
@@ -245,11 +246,11 @@ function mergeNode!(
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
-    # This next loop is equivalent to, but doesn't allocate memory.
+    # This next loop is equivalent to the following expression but doesn't allocate memory.
     # connectivity[(2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1), nodeKept] = connectivity[2:(2 * nodeGoneConnect + 1), nodeGone]
     idx = (2 * (nodeKeptConnect + 1)):(2 * totalConnect + 1)
     lhs = idx[1]
-    @inbounds @simd for i in 0:length(idx) - 1
+    @inbounds @simd for i in 0:(length(idx) - 1)
         connectivity[lhs + i, nodeKept] = connectivity[2 + i, nodeGone]
     end
     connectivity[1, nodeKept] = totalConnect
@@ -308,8 +309,15 @@ function mergeNode!(
 
             # Fix Burgers vector.
             # If the nodes are on different ends of a link, conservation of Burgers vector in a loop requires we subtract contributions from the two links involved. Else we add them.
-            colNotLink1 + colNotLink2 == 3 ? bVec[:, link1] -= bVec[:, link2] :
-            bVec[:, link1] += bVec[:, link2]
+            if colNotLink1 + colNotLink2 == 3
+                @inbounds @simd for i in 1:3
+                    bVec[i, link1] -= bVec[i, link2]
+                end
+            else
+                @inbounds @simd for i in 1:3
+                    bVec[i, link1] += bVec[i, link2]
+                end
+            end
 
             # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
             # Fix slip plane.
@@ -514,7 +522,7 @@ function coarsenNetwork!(
                 # Calculate segment force for segment linkMerged.
                 calcSegForce!(dlnParams, matParams, network, linkMerged)
                 # Calculate node velocity.
-                nodes = links[:, linkMerged]
+                nodes = SVector{2, Int}(links[1, linkMerged], links[2, linkMerged])
                 dlnMobility!(dlnParams, matParams, network, nodes)
                 nodeVel = network.nodeVel
             end

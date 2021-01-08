@@ -1,29 +1,41 @@
 using SafeTestsets
 
-timeStart = time_ns()
-@safetestset "Miscelaneous" begin
+##
+@time @safetestset "Miscelaneous" begin
     include("./MiscTest.jl")
 end
-@safetestset "IO" begin
+
+##
+@time @safetestset "IO" begin
     include("./ioTest.jl")
 end
-@safetestset "Construct Dln" begin
+
+##
+@time @safetestset "Construct Dln" begin
     include("./ConstructNetworkTest.jl")
 end
-@safetestset "Segment Force" begin
+
+##
+@time @safetestset "Segment Force" begin
     include("./SegmentForcesTest.jl")
 end
-@safetestset "Mobility" begin
+
+##
+@time @safetestset "Mobility" begin
     include("./MobilityTest.jl")
 end
-@safetestset "Topology" begin
+
+##
+@time @safetestset "Topology" begin
     include("./TopologyTest.jl")
 end
-@safetestset "FEM" begin
+
+##
+@time @safetestset "FEM" begin
     include("./FEMTest.jl")
 end
-@safetestset "Post-process" begin
+
+##
+@time @safetestset "Post-process" begin
     include("./PlotTest.jl")
 end
-timeEnd = time_ns()
-println("\nTesting Time (ns): ", timeEnd - timeStart)
