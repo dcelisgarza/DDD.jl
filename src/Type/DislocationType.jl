@@ -18,7 +18,7 @@ end
     intFix = 2
     srfMob = 3
     srfFix = 4
-    ext = 5
+    virtual = 5
 end
 
 """
@@ -181,6 +181,8 @@ struct DislocationParameters{T1, T2, T3, T4}
     virtualRemesh::T4
     parCPU::T4
     parGPU::T4
+    slipStepCritLen::T1
+    slipStepCritArea::T1
 end
 
 """

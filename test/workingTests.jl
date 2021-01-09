@@ -19,6 +19,12 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJS
 intVars = loadIntegrationTimeJSON(fileIntVar)
 
 network = DislocationNetwork(dislocationLoop)
+##
+test = normalize(SVector{3}(rand(3)))
+normalize!(test)
+println("ASDF")
+
+##
 remoteForce = calcSegSegForce(dlnParams, matParams, network)
 selfForce = calcSegForce(dlnParams, matParams, network)
 calcSegForce!(dlnParams, matParams, network)

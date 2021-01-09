@@ -37,6 +37,8 @@ function DislocationParameters(
     virtualRemesh::T4 = true,
     parCPU::T4 = false,
     parGPU::T4 = false,
+    slipStepCritLen::T1 = maxSegLen / 2,
+    slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
 ) where {T1, T2 <: Int, T3 <: AbstractMobility, T4 <: Bool}
 
     coreRad == minSegLen == maxSegLen == 0 ? nothing :
@@ -66,6 +68,8 @@ function DislocationParameters(
         virtualRemesh,
         parCPU,
         parGPU,
+        slipStepCritLen,
+        slipStepCritArea,
     )
 end
 function DislocationParameters(;
@@ -87,6 +91,8 @@ function DislocationParameters(;
     virtualRemesh::T4 = true,
     parCPU::T4 = false,
     parGPU::T4 = false,
+    slipStepCritLen::T1 = maxSegLen / 2,
+    slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
 ) where {T1, T2 <: Int, T3 <: AbstractMobility, T4 <: Bool}
     return DislocationParameters(
         coreRad,
@@ -107,6 +113,8 @@ function DislocationParameters(;
         virtualRemesh,
         parCPU,
         parGPU,
+        slipStepCritLen,
+        slipStepCritArea,
     )
 end
 

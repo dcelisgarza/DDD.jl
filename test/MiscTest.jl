@@ -40,7 +40,7 @@ end
         "none" => nodeType(0),
         "intMob" => nodeType(1),
         "srfFix" => nodeType(4),
-        "ext" => nodeType(5),
+        "virtual" => nodeType(5),
         "srfMob" => nodeType(3),
     )
 
