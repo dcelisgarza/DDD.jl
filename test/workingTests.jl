@@ -23,7 +23,75 @@ network = DislocationNetwork(dislocationLoop)
 test = normalize(SVector{3}(rand(3)))
 normalize!(test)
 println("ASDF")
+##
+ENV["PYTHON"]="D:\\anaconda3\\python.exe"
 
+using Polyhedra
+import GLPK
+lib = DefaultLibrary{Float64}(GLPK.Optimizer)
+DefaultLibrary
+
+P1 = polyhedron(vrep([
+    -1.9 -1.7
+    -1.8  0.5
+     1.7  0.7
+     1.9 -0.3
+     0.9 -1.1
+]))
+
+vrep([
+    -1.9 -1.7
+    -1.8  0.5
+     1.7  0.7
+     1.9 -0.3
+     0.9 -1.1
+])
+
+
+using PyCall
+using Conda
+using QHull
+dx = 2000
+dy = 2000
+dz = 2000
+
+vertices = [0 0 0
+            dx 0 0
+            0 dy 0
+            dx dy 0
+            0 0 dz
+            dx 0 dz
+            0 dy dz
+            dx dy dz]
+vertices = [0, 0, 0; dx, 0, 0; 0, dy, 0; dx, dy, 0; 0, 0, dz; dx, 0, dz; 0, dy, dz; dx, dy, dz];
+
+
+test = points(vrep(vertices))
+P2 = polyhedron(vrep(vertices))
+removevredundancy!(P2)
+
+@show hrep(P2)
+@show vrep(P2)
+
+in(P2, polyhedron(vrep([-10. -5 -6])))
+
+
+ininterior(vrep(vertices), vrep([1 2 3]))
+using Plots
+plot(P2, color="red", alpha=0.2)
+convexhull(P2)
+
+using QHull
+P2
+
+hrep(P2)
+
+p = rand(10,2)
+ch = chull(p)
+ch.points         # original points
+ch.vertices       # indices to line segments forming the convex hull
+ch.simplices      # the simplexes forming the convex hull
+show(ch)
 ##
 remoteForce = calcSegSegForce(dlnParams, matParams, network)
 selfForce = calcSegForce(dlnParams, matParams, network)
@@ -127,7 +195,7 @@ end
 
 test = rand(10, 5)
 using StaticArrays, LinearAlgebra
-wat = SVector{3, Float64}(3, 3, 3)
+wat = SVector{3,Float64}(3, 3, 3)
 
 function watanabe(a, b)
     a[3:5, 4] = b / norm(b)
@@ -146,9 +214,9 @@ prismPentagon = DislocationLoop(;
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5, nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5,nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -161,9 +229,9 @@ prismHeptagon = DislocationLoop(;
     slipSystem = 1,
     _slipPlane = slipSystems.slipPlane[:, 1],
     _bVec = slipSystems.bVec[:, 1],
-    label = SVector{7, nodeType}(1, 1, 1, 1, 1, 2, 1),
+    label = SVector{7,nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
@@ -690,9 +758,9 @@ prismPentagonFast = DislocationLoop(;
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5, nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5,nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 prismHeptagonFast = DislocationLoop(;
@@ -704,9 +772,9 @@ prismHeptagonFast = DislocationLoop(;
     slipSystem = 1,
     _slipPlane = slipSystems.slipPlane[:, 1],
     _bVec = slipSystems.bVec[:, 1],
-    label = SVector{7, nodeType}(1, 1, 1, 1, 1, 2, 1),
+    label = SVector{7,nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
@@ -719,9 +787,9 @@ prismHeptagonFast = DislocationLoop(;
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5, nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5,nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -782,9 +850,9 @@ sourcesSlow = (prismHeptagonSlow, prismPentagonSlow)
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5, nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5,nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -815,9 +883,9 @@ sourcesSlow = (prismHeptagonSlow, prismPentagonSlow)
     slipSystem = 1,
     _slipPlane = slipSystems.slipPlane[:, 1],
     _bVec = slipSystems.bVec[:, 1],
-    label = SVector{7, nodeType}(1, 1, 1, 1, 1, 2, 1),
+    label = SVector{7,nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
