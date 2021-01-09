@@ -31,7 +31,9 @@ struct MaterialParameters{T1, T2}
     ν::T1
     E::T1
     omνInv::T1
+    opνInv::T1
     νomνInv::T1
+    νopνInv::T1
     μ4π::T1
     μ8π::T1
     μ4πν::T1

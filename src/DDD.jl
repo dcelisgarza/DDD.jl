@@ -1,6 +1,6 @@
 module DDD
 
-using LinearAlgebra, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO
+using LinearAlgebra, SparseArrays, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO
 
 # Miscelaneous.
 include("./Misc/Misc.jl")
@@ -19,7 +19,9 @@ export AbstractCrystalStruct,
     AbstractShapeFunction2D,
     AbstractShapeFunction3D,
     LinearQuadrangle2D,
-    LinearQuadrangle3D
+    LinearQuadrangle3D,
+    LinearElement,
+    RegularCuboidMesh
 export MaterialParameters
 export nodeType,
     SlipSystem,

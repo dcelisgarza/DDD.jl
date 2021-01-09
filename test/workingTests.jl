@@ -1,5 +1,5 @@
 ##
-using BenchmarkTools, Plots, LinearAlgebra, StaticArrays
+using BenchmarkTools, Plots, LinearAlgebra, StaticArrays, SparseArrays
 using DDD
 
 cd(@__DIR__)
@@ -19,6 +19,59 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJS
 intVars = loadIntegrationTimeJSON(fileIntVar)
 
 network = DislocationNetwork(dislocationLoop)
+
+dx, dy, dz = (2000., 2000., 2000.)
+mx, my, mz = (20, 20, 20)
+
+@time regularCuboidMesh = RegularCuboidMesh(LinearElement(), matParams, dx, dy, dz, mx, my, mz)
+
+
+
+nodeEl = 1:8 # Local node numbers.
+dofLocal = Tuple(Iterators.flatten((3*(nodeEl.-1) .+ 1, 3*(nodeEl.-1) .+ 2, 3*(nodeEl.-1) .+ 3)))
+
+test = [-0.006220084679281   0.006220084679281  -0.006220084679281
+   0.006220084679281   0.001666666666667  -0.001666666666667
+   0.001666666666667   0.000446581987385   0.001666666666667
+  -0.001666666666667   0.001666666666667   0.006220084679281
+  -0.001666666666667  -0.006220084679281  -0.001666666666667
+   0.001666666666667  -0.001666666666667  -0.000446581987385
+   0.000446581987385  -0.000446581987385   0.000446581987385
+  -0.000446581987385  -0.001666666666667   0.001666666666667]
+isapprox(nx', test)
+##
+
+@time constructMesh(matParams, dx, dy, dz, mx, my, mz)
+
+
+
+x = coord[1, connect[1, :]]
+y = coord[2, connect[1, :]]
+z = coord[3, connect[1, :]]
+
+plotlyjs()
+figure = scatter(x,y,z)
+
+figure = scatter(mesh[1, :], mesh[2, :], mesh[3, :])
+
+realCoord = Array{SMatrix{3, 8}}(undef, 8)
+size(N[1])
+size(dNdS[1])
+dNdS[1]
+
+
+p = 1 / sqrt(3)
+gaussNodes = SMatrix{3,8}(
+        -p, -p, -p,
+         p, -p, -p,
+         p,  p, -p,
+        -p,  p, -p,
+        -p, -p,  p,
+         p, -p,  p,
+         p,  p,  p,
+        -p,  p,  p,
+    )
+typeof(gaussNodes[1,:]) <: AbstractVector
 ##
 test = normalize(SVector{3}(rand(3)))
 normalize!(test)
