@@ -21,7 +21,7 @@
 # |
 # |------>x-----------------------------------------
 # """
-function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T2, mx::T3, my::T3, mz::T3) where {T1 <: MaterialParameters,T2<:AbstractFloat,T3<:Integer}
+function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T2, mx::T3, my::T3, mz::T3) where {T1 <: MaterialParameters,T2 <: AbstractFloat,T3 <: Integer}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -41,15 +41,15 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     coord = zeros(T2, 3, mno)          # Node coordinates.
     connectivity = zeros(T3, 8, mel)    # Element connectivity.
     localK = zeros(T2, 24, 24)          # K for an element.
-    nx = Array{SMatrix{3, 8, T2}}(undef, 8) # Gauss nodes real space.
+    nx = Array{SMatrix{3,8,T2}}(undef, 8) # Gauss nodes real space.
     B = zeros(T2, 6, 24, 8)
 
     nodeEl = 1:8 # Local node numbers.
-    dofLocal = Tuple(Iterators.flatten((3*(nodeEl.-1) .+ 1, 3*(nodeEl.-1) .+ 2, 3*(nodeEl.-1) .+ 3)))
+    dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
     
-    V1 = zeros(T2, mel*24^2)
-    V2 = zeros(T2, mel*24^2)
-    V3 = zeros(T2, mel*24^2)
+    V1 = zeros(T2, mel * 24^2)
+    V2 = zeros(T2, mel * 24^2)
+    V3 = zeros(T2, mel * 24^2)
 
     # For a regular cuboid mesh this is predefined.
     vertices = SMatrix{3,8,T2}(
@@ -197,7 +197,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
         end
     end
 
-    mno3 = 3*mno
+    mno3 = 3 * mno
     globalK = sparse(V1, V2, V3, mno3, mno3)
 
     return RegularCuboidMesh(
@@ -221,6 +221,6 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     
 end
 
-function RegularCuboidMesh(; order::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T2, mx::T3, my::T3, mz::T3) where {T1 <: MaterialParameters,T2<:AbstractFloat,T3<:Integer}
+function RegularCuboidMesh(; order::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T2, mx::T3, my::T3, mz::T3) where {T1 <: MaterialParameters,T2 <: AbstractFloat,T3 <: Integer}
     return RegularCuboidMesh(LinearElement(), matParams, dx, dy, dz, mx, my, mz)
 end

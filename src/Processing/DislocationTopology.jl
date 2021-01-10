@@ -2,7 +2,7 @@
 include("DislocationTopologyRemove.jl")
 include("DislocationTopologyAdd.jl")
 
-#=
+#= 
 end
 
 function remeshNetwork(
@@ -34,5 +34,4 @@ function remeshSurface(
     parallel::Bool = true,
 )
 
-end
-=#
+end =#

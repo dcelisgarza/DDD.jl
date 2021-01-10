@@ -58,9 +58,9 @@ struct loopMixed <: AbstractDlnStr end
 struct loopDln <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
-const loopDefined = Union{loopPrism, loopShear, loopMixed, loopJog, loopKink}
-const loopPure = Union{loopPrism, loopShear}
-const loopImpure = Union{loopMixed, loopJog, loopKink}
+const loopDefined = Union{loopPrism,loopShear,loopMixed,loopJog,loopKink}
+const loopPure = Union{loopPrism,loopShear}
+const loopImpure = Union{loopMixed,loopJog,loopKink}
 
 """
 Initial statistical distributions of dislocations in the domain.
@@ -105,7 +105,7 @@ end
 ```
 Structure to store slip systems.
 """
-struct SlipSystem{T1, T2}
+struct SlipSystem{T1,T2}
     crystalStruct::T1
     slipPlane::T2
     bVec::T2
@@ -114,7 +114,7 @@ struct SlipSystem{T1, T2}
         crystalStruct::T1,
         slipPlane::T2,
         bVec::T2,
-    ) where {T1 <: AbstractCrystalStruct, T2 <: AbstractArray{T, N} where {T, N}}
+    ) where {T1 <: AbstractCrystalStruct,T2 <: AbstractArray{T,N} where {T,N}}
         if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
             if ndims(slipPlane) == 1
                 @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n == $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
@@ -124,7 +124,7 @@ struct SlipSystem{T1, T2}
             end
         end
 
-        return new{T1, T2}(crystalStruct, slipPlane, bVec)
+        return new{T1,T2}(crystalStruct, slipPlane, bVec)
     end
 
 end
@@ -158,7 +158,7 @@ struct DislocationParameters{T1, T2, T3, T4}
 end
 ```
 """
-struct DislocationParameters{T1, T2, T3, T4}
+struct DislocationParameters{T1,T2,T3,T4}
     coreRad::T1
     coreRadSq::T1
     coreRadMag::T1
@@ -206,7 +206,7 @@ struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9}
 end
 ```
 """
-struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}
+struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10}
     loopType::T1
     numSides::T2
     nodeSide::T2
@@ -220,7 +220,7 @@ struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}
     label::T7
     buffer::T8
     range::T9
-    dist::T10
+dist::T10
 end
 
 """
@@ -242,7 +242,7 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
 end
 ```
 """
-struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
+struct DislocationNetwork{T1,T2,T3,T4,T5,T6}
     links::T1
     slipPlane::T2
     bVec::T2
@@ -273,14 +273,7 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         linksConnect::T1 = zeros(Int, 2, size(links, 2)),
         segIdx::T1 = zeros(Int, size(links, 2), 3),
         segForce::T6 = zeros(3, size(links)...),
-    ) where {
-        T1 <: AbstractArray{T, N} where {T, N},
-        T2 <: AbstractArray{T, N} where {T, N},
-        T3 <: AbstractVector{nodeType},
-        T4 <: Union{Int, AbstractVector{Int}},
-        T5 <: Int,
-        T6 <: AbstractArray{T, N} where {T, N},
-    }
+    ) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: Union{Int,AbstractVector{Int}},T5 <: Int,T6 <: AbstractArray{T,N} where {T,N},}
 
         @assert size(links, 1) == size(segForce, 2) == 2
         @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
@@ -291,7 +284,7 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6}
         typeof(numNode) <: AbstractVector ? numNodeArr = numNode : numNodeArr = [numNode]
         typeof(numSeg) <: AbstractVector ? numSegArr = numSeg : numSegArr = [numSeg]
 
-        return new{T1, T2, T3, typeof(numNodeArr), T5, T6}(
+        return new{T1,T2,T3,typeof(numNodeArr),T5,T6}(
             links,
             slipPlane,
             bVec,

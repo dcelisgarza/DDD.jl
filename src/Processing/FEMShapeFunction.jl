@@ -18,7 +18,7 @@ function shapeFunction(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
     opz = 1 + z
 
     N =
-        SVector{8, typeof(x)}(
+        SVector{8,typeof(x)}(
             omx * omy * omz,
             opx * omy * omz,
             opx * opy * omz,
@@ -36,13 +36,13 @@ function shapeFunction(
     x::T2,
     y::T2,
     z::T2,
-) where {T1 <: LinearQuadrangle3D, T2 <: AbstractVector{T} where {T}}
+) where {T1 <: LinearQuadrangle3D,T2 <: AbstractVector{T} where {T}}
 
     numPoints = length(x)
     xType = eltype(x)
     @assert numPoints == length(y) == length(z)
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
-    N = Array{SVector{8, xType}}(undef, numPoints)
+    N = Array{SVector{8,xType}}(undef, numPoints)
 
     for i in eachindex(x)
         omx = 1 - x[i]
@@ -53,7 +53,7 @@ function shapeFunction(
         opz = 1 + z[i]
 
         N[i] =
-            SVector{8, xType}(
+            SVector{8,xType}(
                 omx * omy * omz,
                 opx * omy * omz,
                 opx * opy * omz,
@@ -88,7 +88,7 @@ function shapeFunctionDeriv(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
     opz = 1 + z
 
     dNdS =
-        SMatrix{3, 8, typeof(x)}(
+        SMatrix{3,8,typeof(x)}(
             -omy * omz,
             -omx * omz,
             -omx * omy,
@@ -122,14 +122,14 @@ function shapeFunctionDeriv(
     x::T2,
     y::T2,
     z::T2,
-) where {T1 <: LinearQuadrangle3D, T2 <: AbstractVector{T} where {T}}
+) where {T1 <: LinearQuadrangle3D,T2 <: AbstractVector{T} where {T}}
 
     numPoints = length(x)
     xType = eltype(x)
     @assert numPoints == length(y) == length(z)
     # dNdS[n, x, p](x,y,z) := x'th derivative of shape function n for point p.
     # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
-    dNdS = Array{SMatrix{3, 8, xType}}(undef, numPoints)#zeros(8, 3, length(x))
+    dNdS = Array{SMatrix{3,8,xType}}(undef, numPoints)# zeros(8, 3, length(x))
 
     for i in eachindex(x)
         omx = 1 - x[i]
@@ -140,7 +140,7 @@ function shapeFunctionDeriv(
         opz = 1 + z[i]
 
         dNdS[i] =
-            SMatrix{3, 8, xType}(
+            SMatrix{3,8,xType}(
                 -omy * omz,
                 -omx * omz,
                 -omx * omy,

@@ -6,7 +6,7 @@ Make a dictionary of enumerated variable instances. Helps in translating JSON fi
 """
 function makeInstanceDict(valType::DataType)
     insts = instances(valType)
-    dict = Dict{String, valType}()
+    dict = Dict{String,valType}()
     for inst in insts
         push!(dict, string(inst) => inst)
     end
@@ -49,7 +49,7 @@ Dict{String,Any} with 4 entries:
 """
 function makeTypeDict(valType::DataType; cutoff = 1)
     primitive = subTypeTree(valType; cutoff = cutoff)
-    dict = Dict{String, Any}()
+    dict = Dict{String,Any}()
     for (key, val) in primitive
         strSubType = string(key) * "()"
         push!(dict, strSubType => key())
@@ -179,7 +179,7 @@ function rot3D(
     uvw::T1,
     abc::T1,
     θ::T2,
-) where {T1 <: AbstractVector{T} where {T}, T2}
+) where {T1 <: AbstractVector{T} where {T},T2}
     isapprox(norm(uvw), 1) ? nothing : uvw ./= norm(uvw)
 
     cosθ = cos(θ)
@@ -187,7 +187,7 @@ function rot3D(
     sinθ = sin(θ)
     xyzDOTuvw = dot(xyz, uvw)
 
-    return SVector{3, typeof(xyzDOTuvw)}(
+    return SVector{3,typeof(xyzDOTuvw)}(
         (
             abc[1] * (uvw[2] * uvw[2] + uvw[3] * uvw[3]) -
             uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)
@@ -209,4 +209,4 @@ function rot3D(
     )
 end
 
-⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1, T2} = x * y'
+⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1,T2} = x * y'

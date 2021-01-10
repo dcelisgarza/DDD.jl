@@ -25,7 +25,7 @@ struct MaterialParameters{T1, T2}
 end
 ```
 """
-struct MaterialParameters{T1, T2}
+struct MaterialParameters{T1,T2}
     μ::T1
     μMag::T1
     ν::T1

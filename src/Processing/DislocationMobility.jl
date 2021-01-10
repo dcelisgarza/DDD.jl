@@ -3,7 +3,7 @@ function dlnMobility(
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
@@ -12,7 +12,7 @@ function dlnMobility!(
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     return dlnMobility!(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
@@ -22,12 +22,7 @@ function dlnMobility(
     matParams::T3,
     network::T4,
     idx = nothing,
-) where {
-    T1 <: mobBCC,
-    T2 <: DislocationParameters,
-    T3 <: MaterialParameters,
-    T4 <: DislocationNetwork,
-}
+) where {T1 <: mobBCC,T2 <: DislocationParameters,T3 <: MaterialParameters,T4 <: DislocationNetwork,}
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -37,7 +32,7 @@ function dlnMobility(
     climbDrag = dlnParams.climbDrag
     lineDrag = dlnParams.lineDrag
     dType = typeof(dlnParams.lineDrag)
-    I3 = SMatrix{3, 3, dType}(I)
+    I3 = SMatrix{3,3,dType}(I)
 
     links = network.links
     bVec = network.bVec
@@ -60,9 +55,9 @@ function dlnMobility(
 
     # Loop through nodes.
     for (i, node1) in enumerate(idx)
-        totalDrag = zeros(SMatrix{3, 3, dType})
-        iNodeForce = zeros(SVector{3, elemT})
-        iNodeVel = zeros(SVector{3, elemT})
+        totalDrag = zeros(SMatrix{3,3,dType})
+        iNodeForce = zeros(SVector{3,elemT})
+        iNodeVel = zeros(SVector{3,elemT})
         numConnect = connectivity[1, node1]
 
         # Loop through number of connections.
@@ -73,7 +68,7 @@ function dlnMobility(
             node2 = links[colOppLink, link]
 
             # Line direction, continue to next iteration if norm is 0 and normalise line direction.
-            t = SVector{3, elemT}(
+            t = SVector{3,elemT}(
                 coord[1, node2] - coord[1, node1],
                 coord[2, node2] - coord[2, node1],
                 coord[3, node2] - coord[3, node1],
@@ -85,19 +80,19 @@ function dlnMobility(
             t *= tN # Normalise t.
 
             # Segment force relevant to node1.
-            iNodeConForce = SVector{3, elemT}(
+            iNodeConForce = SVector{3,elemT}(
                 segForce[1, colLink, link],
                 segForce[2, colLink, link],
                 segForce[3, colLink, link],
             )
             # If the sress is lower than the Peierls-Nabarro stress, the node behaves as if the force acting on it is zero.
-            norm(iNodeConForce) * tN < σPN ? iNodeConForce = zeros(SVector{3, elemT}) :
+            norm(iNodeConForce) * tN < σPN ? iNodeConForce = zeros(SVector{3,elemT}) :
             nothing
             # Add force from this connection to the total force on the node.
             iNodeForce += iNodeConForce
 
             # Burgers Vector
-            b = SVector{3, elemT}(bVec[1, link], bVec[2, link], bVec[3, link])
+            b = SVector{3,elemT}(bVec[1, link], bVec[2, link], bVec[3, link])
             nB = norm(b)
             # Burgers vector families of screw dislocations in BCC, in case there have been collisions and the Burgers vector norm is greater than 1.
             absB = abs.(b)
@@ -160,7 +155,7 @@ function dlnMobility(
         # Solve for velocity.
         # ξ v = f
         iNodeVel = totalDrag \ iNodeForce
-        #=
+        #= 
         try
             iNodeVel = totalDrag \ iNodeForce
         catch SingularSystem
@@ -173,8 +168,7 @@ function dlnMobility(
                 catch SingularSystem
                 end
             end
-        end
-        =#
+        end =#
 
         nodeForce[:, i] = iNodeForce
         nodeVel[:, i] = iNodeVel
@@ -188,12 +182,7 @@ function dlnMobility!(
     matParams::T3,
     network::T4,
     idx = nothing,
-) where {
-    T1 <: mobBCC,
-    T2 <: DislocationParameters,
-    T3 <: MaterialParameters,
-    T4 <: DislocationNetwork,
-}
+) where {T1 <: mobBCC,T2 <: DislocationParameters,T3 <: MaterialParameters,T4 <: DislocationNetwork,}
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -203,7 +192,7 @@ function dlnMobility!(
     climbDrag = dlnParams.climbDrag
     lineDrag = dlnParams.lineDrag
     dType = typeof(dlnParams.lineDrag)
-    I3 = SMatrix{3, 3, dType}(I)
+    I3 = SMatrix{3,3,dType}(I)
 
     links = network.links
     bVec = network.bVec
@@ -225,9 +214,9 @@ function dlnMobility!(
 
     # Loop through nodes.
     for node1 in idx
-        totalDrag = zeros(SMatrix{3, 3, dType})
-        iNodeForce = zeros(SVector{3, elemT})
-        iNodeVel = zeros(SVector{3, elemT})
+        totalDrag = zeros(SMatrix{3,3,dType})
+        iNodeForce = zeros(SVector{3,elemT})
+        iNodeVel = zeros(SVector{3,elemT})
         numConnect = connectivity[1, node1]
 
         # Loop through number of connections.
@@ -238,7 +227,7 @@ function dlnMobility!(
             node2 = links[colOppLink, link]
 
             # Line direction, continue to next iteration if norm is 0 and normalise line direction.
-            t = SVector{3, elemT}(
+            t = SVector{3,elemT}(
                 coord[1, node2] - coord[1, node1],
                 coord[2, node2] - coord[2, node1],
                 coord[3, node2] - coord[3, node1],
@@ -250,19 +239,19 @@ function dlnMobility!(
             t *= tN # Normalise t.
 
             # Segment force relevant to node1.
-            iNodeConForce = SVector{3, elemT}(
+            iNodeConForce = SVector{3,elemT}(
                 segForce[1, colLink, link],
                 segForce[2, colLink, link],
                 segForce[3, colLink, link],
             )
             # If the sress is lower than the Peierls-Nabarro stress, the node behaves as if the force acting on it is zero.
-            norm(iNodeConForce) * tN < σPN ? iNodeConForce = zeros(SVector{3, elemT}) :
+            norm(iNodeConForce) * tN < σPN ? iNodeConForce = zeros(SVector{3,elemT}) :
             nothing
             # Add force from this connection to the total force on the node.
             iNodeForce += iNodeConForce
 
             # Burgers Vector
-            b = SVector{3, elemT}(bVec[1, link], bVec[2, link], bVec[3, link])
+            b = SVector{3,elemT}(bVec[1, link], bVec[2, link], bVec[3, link])
             nB = norm(b)
             # Burgers vector families of screw dislocations in BCC, in case there have been collisions and the Burgers vector norm is greater than 1.
             absB = abs.(b)
@@ -326,7 +315,7 @@ function dlnMobility!(
         # ξ v = f
 
         iNodeVel = totalDrag \ iNodeForce
-        #=
+        #= 
         try
             iNodeVel = totalDrag \ iNodeForce
         catch SingularSystem
@@ -339,8 +328,7 @@ function dlnMobility!(
                 catch SingularSystem
                 end
             end
-        end
-        =#
+        end =#
 
         nodeForce[:, node1] = iNodeForce
         nodeVel[:, node1] = iNodeVel

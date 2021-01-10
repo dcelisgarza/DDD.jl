@@ -2,7 +2,7 @@ function deriv!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     calcSegForce!(dlnParams, matParams, network)
     dlnMobility!(dlnParams, matParams, network)
@@ -57,13 +57,7 @@ function integrate!(
     dlnParams::T3,
     matParams::T4,
     network::T5,
-) where {
-    T1 <: IntegrationParameters,
-    T2 <: IntegrationTime,
-    T3 <: DislocationParameters,
-    T4 <: MaterialParameters,
-    T5 <: DislocationNetwork,
-}
+) where {T1 <: IntegrationParameters,T2 <: IntegrationTime,T3 <: DislocationParameters,T4 <: MaterialParameters,T5 <: DislocationNetwork,}
 
     numNode = network.numNode[1]
     numNode == 0 && return network

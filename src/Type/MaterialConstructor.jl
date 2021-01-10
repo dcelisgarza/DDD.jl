@@ -5,7 +5,7 @@ function MaterialParameters(
     E::T1,
     crystalStruct::T2,
     σPN::T1 = 0.0,
-) where {T1, T2 <: AbstractCrystalStruct}
+) where {T1,T2 <: AbstractCrystalStruct}
     opνInv = 1 / (1 + ν)
     omνInv = 1 / (1 - ν)
     νomνInv = ν * omνInv
@@ -36,6 +36,6 @@ function MaterialParameters(;
     E::T1,
     crystalStruct::T2,
     σPN::T1 = 0.0,
-) where {T1, T2 <: AbstractCrystalStruct}
+) where {T1,T2 <: AbstractCrystalStruct}
     return MaterialParameters(μ, μMag, ν, E, crystalStruct, σPN)
 end

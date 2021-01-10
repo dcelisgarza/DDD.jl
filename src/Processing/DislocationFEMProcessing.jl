@@ -36,9 +36,9 @@ function calcPKForce(
 
     # Loop over segments.
     for i in 1:numSeg
-        x0 = SVector{3, elemT}(midNode[i, 1], midNode[i, 2], midNode[i, 3])
-        b = SVector{3, elemT}(bVec[i, 1], bVec[i, 2], bVec[i, 3])
-        t = SVector{3, elemT}(tVec[i, 1], tVec[i, 2], tVec[i, 3])
+        x0 = SVector{3,elemT}(midNode[i, 1], midNode[i, 2], midNode[i, 3])
+        b = SVector{3,elemT}(bVec[i, 1], bVec[i, 2], bVec[i, 3])
+        t = SVector{3,elemT}(tVec[i, 1], tVec[i, 2], tVec[i, 3])
         σ_hat = calc_σ_hat(mesh, dlnFEM, x0)
         pkforce = (σ_hat * b) × t
         PKForce[1, i] = pkforce[1]
@@ -114,8 +114,8 @@ function calc_σ_hat(
 
     numNodeElem = size(dNdS, 2)
     len = 3 * numNodeElem
-    B = MMatrix{6, len, elemT}(zeros(6, len))
-    U = MVector{len, elemT}(zeros(len))
+    B = MMatrix{6,len,elemT}(zeros(6, len))
+    U = MVector{len,elemT}(zeros(len))
 
     for i in 1:numNodeElem
         # Indices calculated once for performance.
@@ -153,7 +153,7 @@ function calc_σ_hat(
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
 
     σ_vec = C * B * U
-    σ = SMatrix{3, 3, elemT}(
+    σ = SMatrix{3,3,elemT}(
         σ_vec[1],
         σ_vec[4],
         σ_vec[5],

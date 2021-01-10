@@ -17,16 +17,47 @@ dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJS
     fileDislocationLoop,
 )
 intVars = loadIntegrationTimeJSON(fileIntVar)
-
 network = DislocationNetwork(dislocationLoop)
 
+##
+segLen = rand() * 100
 dx, dy, dz = (2000., 2000., 2000.)
-mx, my, mz = (20, 20, 20)
-
+mx, my, mz = (60, 60, 60)
 @time regularCuboidMesh = RegularCuboidMesh(LinearElement(), matParams, dx, dy, dz, mx, my, mz)
+prismPentagon = DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 5,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 20,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{5}(ones(5)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
+    label = SVector{5,nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(0+segLen, 0+segLen, 0+segLen, dx-segLen, dy-segLen, dz-segLen),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+prismHeptagon = DislocationLoop(;
+    loopType = loopPrism(),    # Shear loop
+    numSides = 7,
+    nodeSide = 1,   # 3 nodes per side, it devides the side into equal segments.
+    numLoops = 20,
+    segLen = segLen * SVector{7}(ones(7)),  # The hexagon's side length is 10, each segment is 10/3.
+    slipSystem = 1,
+    _slipPlane = slipSystems.slipPlane[:, 1],
+    _bVec = slipSystems.bVec[:, 1],
+    label = SVector{7,nodeType}(1, 1, 1, 1, 1, 2, 1),
+    buffer = 0,
+    range = SMatrix{3,2,Float64}(0+segLen, 0+segLen, 0+segLen, dx-segLen, dy-segLen, dz-segLen),  # Distribution range
+    dist = Rand(),
+)
 
+network = DislocationNetwork((prismHeptagon, prismPentagon))
+plotlyjs()
+plotNodes(regularCuboidMesh, network, m = 1, l = 3, linecolor = :blue, marker = :circle, markercolor = :blue, legend = false)
 
-
+##
 nodeEl = 1:8 # Local node numbers.
 dofLocal = Tuple(Iterators.flatten((3*(nodeEl.-1) .+ 1, 3*(nodeEl.-1) .+ 2, 3*(nodeEl.-1) .+ 3)))
 

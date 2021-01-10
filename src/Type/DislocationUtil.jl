@@ -66,7 +66,7 @@ function Base.push!(network::DislocationNetwork, n::Int)
 
     return network
 end
-function Base.getindex(network::DislocationNetwork, i::Union{Int, AbstractVector{Int}})
+function Base.getindex(network::DislocationNetwork, i::Union{Int,AbstractVector{Int}})
     return @views network.links[:, i],
     network.slipPlane[:, i],
     network.bVec[:, i],
@@ -348,7 +348,7 @@ function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
         col = connectivity[1, i]
 
         # Check for zero Burgers vectors.
-        staticBVec = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        staticBVec = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         norm(staticBVec) < eps(elemT) ? error("Burgers vector must be non-zero.
                                        norm(bVec) = $(norm(bVec[i,:]))") : nothing
 
@@ -367,7 +367,7 @@ function checkNetwork(network::T1) where {T1 <: DislocationNetwork}
             iLink = connectivity[j2, i]     # Link ID.
             colLink = connectivity[j2 + 1, i] # Link position in links.
             colOppLink = 3 - connectivity[2 * j + 1, i] # Opposite column in links
-            staticBVec = SVector{3, elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
+            staticBVec = SVector{3,elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
             bSum .+= (3 - 2 * colLink) * staticBVec # Running total of burgers vectors.
 
             neighbours[j] = links[colOppLink, iLink] # Find neighbouring nodes.
@@ -403,10 +403,8 @@ neighbours = $(neighbours)") :
         nothing
 
         # Check connectivity and linksConnect are consistent.
-        check = (
-            connectivity[2 * linksConnect[1, i], links[1, i]],
-            connectivity[2 * linksConnect[2, i], links[2, i]],
-        )
+        check = (connectivity[2 * linksConnect[1, i], links[1, i]],
+            connectivity[2 * linksConnect[2, i], links[2, i]],)
         i != check[1] | i != check[2] ? error("Inconsistent link.
         links[:, $(i)] = $(links[:, i])
         linksConnect[:, $(i)] = $(linksConnect[:, i])

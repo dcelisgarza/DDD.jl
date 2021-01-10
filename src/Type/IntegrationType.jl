@@ -24,7 +24,7 @@ struct IntegrationParameters{T1, T2, T3}
 end
 ```
 """
-struct IntegrationParameters{T1, T2, T3}
+struct IntegrationParameters{T1,T2,T3}
     method::T1
     tmin::T2
     tmax::T2
@@ -47,8 +47,8 @@ struct IntegrationParameters{T1, T2, T3}
         maxchange::T2 = 1.2,
         exponent::T2 = 20.0,
         maxiter::T3 = 10,
-    ) where {T1 <: AbstractIntegrator, T2 <: AbstractFloat, T3 <: Integer}
-        return new{T1, T2, T3}(
+    ) where {T1 <: AbstractIntegrator,T2 <: AbstractFloat,T3 <: Integer}
+        return new{T1,T2,T3}(
             method,
             tmin,
             tmax,
@@ -73,7 +73,7 @@ mutable struct IntegrationTime{T1, T2}
 end
 ```
 """
-struct IntegrationTime{T1, T2}
+struct IntegrationTime{T1,T2}
     dt::T1
     time::T1
     step::T2
@@ -81,7 +81,7 @@ struct IntegrationTime{T1, T2}
         dt::T1,
         time::T1,
         step::T2,
-    ) where {T1 <: AbstractFloat, T2 <: Integer}
-        return new{T1, T2}(dt, time, step)
+    ) where {T1 <: AbstractFloat,T2 <: Integer}
+        return new{T1,T2}(dt, time, step)
     end
 end

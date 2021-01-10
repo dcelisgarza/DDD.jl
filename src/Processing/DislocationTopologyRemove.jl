@@ -18,7 +18,7 @@ function removeNode!(
     network::T1,
     nodeGone::T2,
     lastNode = nothing,
-) where {T1 <: DislocationNetwork, T2 <: Int}
+) where {T1 <: DislocationNetwork,T2 <: Int}
 
     links = network.links
     coord = network.coord
@@ -74,7 +74,7 @@ function removeConnection!(
     network::T1,
     nodeKept::T2,
     connectGone::T2,
-) where {T1 <: DislocationNetwork, T2 <: Int}
+) where {T1 <: DislocationNetwork,T2 <: Int}
 
     connectivity = network.connectivity
     linksConnect = network.linksConnect
@@ -130,7 +130,7 @@ function removeLink!(
     network::T1,
     linkGone::T2,
     lastLink = nothing,
-) where {T1 <: DislocationNetwork, T2 <: Int}
+) where {T1 <: DislocationNetwork,T2 <: Int}
 
     links = network.links
     slipPlane = network.slipPlane
@@ -151,7 +151,7 @@ function removeLink!(
     removeConnection!(network, node2, connectGone2)
 
     # Remove link that no longer appears in connectivity and doesn't connect any nodes.
-    checkLink = SVector{2, Int}(linksConnect[1, linkGone], linksConnect[2, linkGone])
+    checkLink = SVector{2,Int}(linksConnect[1, linkGone], linksConnect[2, linkGone])
     @assert checkLink ⋅ checkLink == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     isnothing(lastLink) ? lastLink = maximum((network.numSeg[1], 1)) : nothing
@@ -200,7 +200,7 @@ function mergeNode!(
     network::T1,
     nodeKept::T2,
     nodeGone::T2,
-) where {T1 <: DislocationNetwork, T2 <: Int}
+) where {T1 <: DislocationNetwork,T2 <: Int}
 
     @assert nodeKept <= network.numNode[1] && nodeGone <= network.numNode[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
 
@@ -322,20 +322,20 @@ function mergeNode!(
             # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
             # Fix slip plane.
             # Line direction and velocity of the resultant dislocation.
-            t = SVector{3, elemT}(
+            t = SVector{3,elemT}(
                 coord[1, nodeKept] - coord[1, nodeNotLink1],
                 coord[2, nodeKept] - coord[2, nodeNotLink1],
                 coord[3, nodeKept] - coord[3, nodeNotLink1],
             )
 
-            v = SVector{3, elemT}(
+            v = SVector{3,elemT}(
                 nodeVel[1, nodeKept] + nodeVel[1, nodeNotLink1],
                 nodeVel[2, nodeKept] + nodeVel[2, nodeNotLink1],
                 nodeVel[3, nodeKept] + nodeVel[3, nodeNotLink1],
             )
 
             # Burgers vector and potential new slip plane.
-            b = SVector{3, elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
+            b = SVector{3,elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
             if n1 ⋅ n1 > eps(elemT) # non-screw
@@ -352,7 +352,7 @@ function mergeNode!(
             link1 == lastLink ? link1 = link2 : nothing
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
-            b = SVector{3, elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
+            b = SVector{3,elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             if isapprox(dot(b, b), 0)
                 removeLink!(network, link1)
                 links = network.links
@@ -388,7 +388,7 @@ function coarsenNetwork!(
     dlnParams::T1,
     matParams::T2,
     network::T3,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     minAreaSq = dlnParams.minAreaSq
     minSegLen = dlnParams.minSegLen
@@ -428,16 +428,16 @@ function coarsenNetwork!(
         end
 
         # Coordinate of node i
-        iCoord = SVector{3, elemT}(coord[1, i], coord[2, i], coord[3, i])
+        iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
         # Create a triangle formed by the three nodes involved in coarsening.
         coordVec1 =
-            SVector{3, elemT}(
+            SVector{3,elemT}(
                 coord[1, link1_nodeOppI],
                 coord[2, link1_nodeOppI],
                 coord[3, link1_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
         coordVec2 =
-            SVector{3, elemT}(
+            SVector{3,elemT}(
                 coord[1, link2_nodeOppI],
                 coord[2, link2_nodeOppI],
                 coord[3, link2_nodeOppI],
@@ -460,15 +460,15 @@ function coarsenNetwork!(
         areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
         # Node i velocities.
-        iVel = SVector{3, elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
+        iVel = SVector{3,elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
         velVec1 =
-            SVector{3, elemT}(
+            SVector{3,elemT}(
                 nodeVel[1, link1_nodeOppI],
                 nodeVel[2, link1_nodeOppI],
                 nodeVel[3, link1_nodeOppI],
             ) - iVel
         velVec2 =
-            SVector{3, elemT}(
+            SVector{3,elemT}(
                 nodeVel[1, link2_nodeOppI],
                 nodeVel[2, link2_nodeOppI],
                 nodeVel[3, link2_nodeOppI],
@@ -520,7 +520,7 @@ function coarsenNetwork!(
                 # Calculate segment force for segment linkMerged.
                 calcSegForce!(dlnParams, matParams, network, linkMerged)
                 # Calculate node velocity.
-                nodes = SVector{2, Int}(links[1, linkMerged], links[2, linkMerged])
+                nodes = SVector{2,Int}(links[1, linkMerged], links[2, linkMerged])
                 dlnMobility!(dlnParams, matParams, network, nodes)
                 nodeVel = network.nodeVel
             end
@@ -551,7 +551,7 @@ Adapted Jan 2021 Daniel Celis Garza, Github @dcelisgarza
 function coarsenVirtualNetwork!(
     dlnParams::T1,
     network::T2,
-) where {T1 <: DislocationParameters, T2 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: DislocationNetwork}
 
     critLen = dlnParams.slipStepCritLen
     critArea = dlnParams.slipStepCritArea
@@ -578,11 +578,11 @@ function coarsenVirtualNetwork!(
             # Only if both nodes are virtual.
             if label[linkNode1] == label[linkNode2] == 5
                 # Coordinate of node i.
-                iCoord = SVector{3, elemT}(coord[1, i], coord[2, i], coord[3, i])
+                iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
 
                 # Vector of link 1.
                 coordVec1 =
-                    SVector{3, elemT}(
+                    SVector{3,elemT}(
                         coord[1, linkNode1],
                         coord[2, linkNode1],
                         coord[3, linkNode1],
@@ -591,7 +591,7 @@ function coarsenVirtualNetwork!(
 
                 # Vector of link 2.
                 coordVec2 =
-                    SVector{3, elemT}(
+                    SVector{3,elemT}(
                         coord[1, linkNode2],
                         coord[2, linkNode2],
                         coord[3, linkNode2],

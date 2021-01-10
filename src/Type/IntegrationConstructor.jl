@@ -9,7 +9,7 @@ function IntegrationParameters(;
     maxchange::T2 = 1.2,
     exponent::T2 = 20.0,
     maxiter::T3 = 10,
-) where {T1 <: AbstractIntegrator, T2 <: AbstractFloat, T3 <: Integer}
+) where {T1 <: AbstractIntegrator,T2 <: AbstractFloat,T3 <: Integer}
     return IntegrationParameters(
         method,
         tmin,
@@ -27,6 +27,6 @@ function IntegrationTime(;
     dt::T1 = 0.0,
     time::T1 = 0.0,
     step::T2 = 0,
-) where {T1 <: AbstractFloat, T2 <: Integer}
+) where {T1 <: AbstractFloat,T2 <: Integer}
     return IntegrationTime(dt, time, step)
 end

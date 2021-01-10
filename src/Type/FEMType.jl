@@ -24,6 +24,15 @@ abstract type AbstractShapeFunction2D <: AbstractShapeFunction end
 struct LinearQuadrangle3D <: AbstractShapeFunction3D end
 struct LinearQuadrangle2D <: AbstractShapeFunction2D end
 
+struct FEMParams{T1, T2, T3}
+    order::T1
+    dx::T2
+    dy::T2
+    dz::T2
+    mx::T3
+    my::T3
+    mz::T3
+end
 """
 Cuboid mesh.
 ```
@@ -40,7 +49,7 @@ struct RegularCuboidMesh{
 end
 ```
 """
-struct RegularCuboidMesh{T1, T2, T3, T4, T5, T6, T7, T8, T9}
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9} <: AbstractMesh
     order::T1
     vertices::T2
     C::T3

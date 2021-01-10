@@ -7,7 +7,7 @@ struct DislocationFEMCorrective{T1 <: AbstractArray{T2, N} where {T2, N}}
 end
 ```
 """
-struct DislocationFEMCorrective{T1 <: AbstractArray{T, N} where {T, N}}
+struct DislocationFEMCorrective{T1 <: AbstractArray{T,N} where {T,N}}
     uHat::T1
     fHat::T1
 end

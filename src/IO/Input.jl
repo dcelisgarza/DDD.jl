@@ -18,7 +18,7 @@ function loadDislocationLoopJSON(
 ```
 Loads initial dislocation structure out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationLoop`](@ref).
 """
-function loadDislocationLoopJSON(dict::Dict{T1, T2} where {T1, T2}, slipSystem::SlipSystem)
+function loadDislocationLoopJSON(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSystem)
 
     dlnTypes = makeTypeDict(AbstractDlnStr)
     distributions = makeTypeDict(AbstractDistribution)
@@ -26,7 +26,7 @@ function loadDislocationLoopJSON(dict::Dict{T1, T2} where {T1, T2}, slipSystem::
     slipPlane = slipSystem.slipPlane
     bVec = slipSystem.bVec
 
-    range = SMatrix{3, 2}(convert.(Float64, vcat(dict["range"]...)))
+    range = SMatrix{3,2}(convert.(Float64, vcat(dict["range"]...)))
 
     numSides = convert(Int, dict["numSides"])
     nodeSide = convert(Int, dict["nodeSide"])
@@ -38,11 +38,11 @@ function loadDislocationLoopJSON(dict::Dict{T1, T2} where {T1, T2}, slipSystem::
         numSides = numSides,
         nodeSide = nodeSide,
         numLoops = numLoops,
-        segLen = SVector{length(dict["segLen"]), Float64}(dict["segLen"]),
+        segLen = SVector{length(dict["segLen"]),Float64}(dict["segLen"]),
         slipSystem = convert.(Int, dict["slipSystem"]),
         _slipPlane = convert.(Float64, slipPlane[:, dict["slipSystem"]]),
         _bVec = convert.(Float64, bVec[:, dict["slipSystem"]]),
-        label = SVector{nodeLoop, nodeType}(vcat(dict["label"]...)),
+        label = SVector{nodeLoop,nodeType}(vcat(dict["label"]...)),
         buffer = convert(Float64, dict["buffer"]),
         range = range,
         dist = distributions[dict["dist"]],
@@ -57,7 +57,7 @@ loadMaterialParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialParameters`](@ref).
 """
-function loadMaterialParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
+function loadMaterialParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
@@ -79,7 +79,7 @@ loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationParameters`](@ref).
 """
-function loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
 
     integDict = makeTypeDict(AbstractIntegrator)
 
@@ -105,14 +105,14 @@ loadSlipSystemJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads slip systems out of a dictionary loaded from a JSON file. Returns a variable of type [`SlipSystem`](@ref).
 """
-function loadSlipSystemJSON(dict::Dict{T1, T2}) where {T1, T2}
+function loadSlipSystemJSON(dict::Dict{T1,T2}) where {T1,T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     lenSlipSys = length(dict["slipPlane"])
 
-    slipPlane = SMatrix{3, lenSlipSys}(convert.(Float64, vcat(dict["slipPlane"]...)))
-    bVec = SMatrix{3, lenSlipSys}(convert.(Float64, vcat(dict["bVec"]...)))
+    slipPlane = SMatrix{3,lenSlipSys}(convert.(Float64, vcat(dict["slipPlane"]...)))
+    bVec = SMatrix{3,lenSlipSys}(convert.(Float64, vcat(dict["bVec"]...)))
 
     slipSystem = SlipSystem(;
         crystalStruct = crystalStruct[dict["crystalStruct"]],
@@ -129,7 +129,7 @@ loadDislocationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads dislocation parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationParameters`](@ref).
 """
-function loadDislocationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
+function loadDislocationParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
@@ -282,7 +282,7 @@ function loadIntegrationTimeJSON(fileIntegrationTime::AbstractString)
     return integrationTime
 end
 
-function loadIntegrationTimeJSON(dict::Dict{T1, T2}) where {T1, T2}
+function loadIntegrationTimeJSON(dict::Dict{T1,T2}) where {T1,T2}
     integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
