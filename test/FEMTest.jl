@@ -49,7 +49,7 @@ end
     matParams = loadMaterialParametersJSON(DictMaterialParameters)
     femParams = loadFEMParametersJSON(DictFEMParameters)
     regularCuboidMesh = buildMesh(matParams, femParams)
-    @test compStruct(sampleRegCubMesh, regularCuboidMesh)
+    @test compStruct(sampleRegCubMesh, regularCuboidMesh, verbose=true)
 end
 
 @testset "Checking arbitrary points of the mesh and connectivity" begin
