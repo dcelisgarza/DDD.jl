@@ -1,5 +1,5 @@
 using DDD
-using Test, StaticArrays, FileIO, SparseArrays
+using Test, StaticArrays, SparseArrays
 cd(@__DIR__)
 @testset "Shape functions" begin
     points = Float64[
@@ -40,16 +40,6 @@ cd(@__DIR__)
 
         @test isapprox(dNdSall[i], dNdS)
     end
-end
-
-@testset "Generated mesh vs sample mesh" begin
-    DictMaterialParameters = loadJSON("./testData/sampleMaterialParameters.json")
-    DictFEMParameters = loadJSON("./testData/sampleFEMParameters.json")
-    sampleRegCubMesh = load("./testData/sampleRegCubMesh.jld2", "mesh")
-    matParams = loadMaterialParametersJSON(DictMaterialParameters)
-    femParams = loadFEMParametersJSON(DictFEMParameters)
-    regularCuboidMesh = buildMesh(matParams, femParams)
-    @test compStruct(sampleRegCubMesh, regularCuboidMesh)
 end
 
 @testset "Checking arbitrary points of the mesh and connectivity" begin

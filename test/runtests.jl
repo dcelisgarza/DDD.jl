@@ -1,9 +1,9 @@
 using SafeTestsets
 
-##
-@time @safetestset "Miscelaneous" begin
-    include("./MiscTest.jl")
-end
+# ##
+# @time @safetestset "Miscelaneous" begin
+#     include("./MiscTest.jl")
+# end
 
 ##
 @time @safetestset "IO" begin
