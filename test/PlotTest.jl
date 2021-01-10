@@ -1,6 +1,6 @@
 using DDD
 using Test
-using Plots, FileIO
+using Plots
 gr()
 cd(@__DIR__)
 
@@ -57,7 +57,11 @@ cd(@__DIR__)
     plotLoops(fig, loops)
     plotLoops(loops)
 
-    regularCuboidMesh = load("./testData/sampleRegCubMesh.jld2", "mesh")
+    DictMaterialParameters = loadJSON("./testData/sampleMaterialParameters.json")
+    DictFEMParameters = loadJSON("./testData/sampleFEMParameters.json")
+    matParams = loadMaterialParametersJSON(DictMaterialParameters)
+    femParams = loadFEMParametersJSON(DictFEMParameters)
+    regularCuboidMesh = buildMesh(matParams, femParams)
 
     fig = plot()
     plotNodes!(fig, regularCuboidMesh, network, m = 1, l = 3, legend = false)

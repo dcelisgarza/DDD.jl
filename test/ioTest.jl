@@ -112,8 +112,15 @@ cd(@__DIR__)
     @test compStruct(network, network3; verbose = true)
     @test compStruct(integTime, integTime3; verbose = true)
 
+    sampleRegCubMeshDump = "./testData/sampleRegCubMesh.jld2"
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    save(sampleRegCubMeshDump, "mesh", regularCuboidMesh)
+    regularCuboidMesh2 = load(sampleRegCubMeshDump, "mesh")
+    @test compStruct(regularCuboidMesh, regularCuboidMesh2; verbose = true)
+
     rm(paramDumpJSON; force = true)
     rm(paramDumpJLD2; force = true)
     rm(networkDumpJSON; force = true)
     rm(networkDumpJLD2; force = true)
+    rm(sampleRegCubMeshDump; force = true)
 end
