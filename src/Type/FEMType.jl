@@ -5,6 +5,14 @@ abstract type AbstractMesh end
 ```
 """
 abstract type AbstractMesh end
+abstract type AbstractRegularCuboidMesh <: AbstractMesh end
+struct DispatchRegularCuboidMesh <: AbstractRegularCuboidMesh end
+
+"""
+Element orders.
+"""
+abstract type AbstractElementOrder end
+struct LinearElement <: AbstractElementOrder end
 
 """
 Shape function types.
@@ -16,22 +24,27 @@ struct LinearQuadrangle3D <:AbstractShapeFunction3D end
 struct LinearQuadrangle2D <:AbstractShapeFunction2D end
 ```
 """
-abstract type AbstractElementOrder end
-struct LinearElement <: AbstractElementOrder end
 abstract type AbstractShapeFunction end
 abstract type AbstractShapeFunction3D <: AbstractShapeFunction end
 abstract type AbstractShapeFunction2D <: AbstractShapeFunction end
 struct LinearQuadrangle3D <: AbstractShapeFunction3D end
 struct LinearQuadrangle2D <: AbstractShapeFunction2D end
 
-struct FEMParams{T1, T2, T3}
-    order::T1
-    dx::T2
-    dy::T2
-    dz::T2
-    mx::T3
-    my::T3
-    mz::T3
+struct FEMParameters{T1,T2,T3,T4}
+    type::T1
+    order::T2
+    dx::T3
+    dy::T3
+    dz::T3
+    mx::T4
+    my::T4
+    mz::T4
+    function FEMParameters(type::T1, order::T2, dx::T3, dy::T3, dz::T3, mx::T4, my::T4, mz::T4) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractFloat,T4 <: Integer}
+        new{T1,T2,T3,T4}(type, order, dx, dy, dz, mx, my, mz)
+    end
+end
+function FEMParameters(; type::T1, order::T2, dx::T3, dy::T3, dz::T3, mx::T4, my::T4, mz::T4) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractFloat,T4 <: Integer}
+    return FEMParameters(type, order, dx, dy, dz, mx, my, mz)
 end
 """
 Cuboid mesh.
@@ -49,7 +62,7 @@ struct RegularCuboidMesh{
 end
 ```
 """
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9} <: AbstractMesh
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9} <: AbstractRegularCuboidMesh
     order::T1
     vertices::T2
     C::T3

@@ -5,12 +5,14 @@ cd(@__DIR__)
 @testset "Forces" begin
     fileDislocationParameters = "./testData/sampleDislocationParameters.json"
     fileMaterialParameters = "./testData/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,

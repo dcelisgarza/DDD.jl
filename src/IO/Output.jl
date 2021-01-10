@@ -19,7 +19,7 @@ Extensions to `JSON.lower` for custom types. Allows these variables to be serial
 """
 function JSON.lower(
     t::T,
-) where {T <: Union{AbstractCrystalStruct,AbstractMobility,AbstractIntegrator,AbstractDlnSeg,AbstractDlnStr,AbstractDistribution,},}
+) where {T <: Union{AbstractCrystalStruct,AbstractMobility,AbstractIntegrator,AbstractDlnSeg,AbstractDlnStr,AbstractDistribution,DispatchRegularCuboidMesh,LinearElement},}
     return string(t)
 end
 JSON.lower(t::nodeType) = Int(t)

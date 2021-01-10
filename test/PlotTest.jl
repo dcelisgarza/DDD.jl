@@ -1,6 +1,6 @@
 using DDD
 using Test
-using Plots
+using Plots, FileIO
 gr()
 cd(@__DIR__)
 
@@ -56,4 +56,14 @@ cd(@__DIR__)
     fig = plot()
     plotLoops(fig, loops)
     plotLoops(loops)
+
+    regularCuboidMesh = load("./testData/sampleRegCubMesh.jld2", "mesh")
+
+    fig = plot()
+    plotNodes!(fig, regularCuboidMesh, network, m = 1, l = 3, legend = false)
+    @test fig.n == totalNodes + 6
+    # Creating new plot.
+    fig2 = plotNodes(regularCuboidMesh, network, m = 1, l = 3, legend = false)
+    @test fig2.n == totalNodes + 6
+
 end

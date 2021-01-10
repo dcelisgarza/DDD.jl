@@ -21,7 +21,12 @@ export AbstractCrystalStruct,
     LinearQuadrangle2D,
     LinearQuadrangle3D,
     LinearElement,
-    RegularCuboidMesh
+    AbstractMesh,
+    AbstractRegularCuboidMesh,
+    DispatchRegularCuboidMesh,
+    RegularCuboidMesh,
+    buildMesh,
+    FEMParameters
 export MaterialParameters
 export nodeType,
     SlipSystem,
@@ -52,6 +57,7 @@ export loadJSON,
     loadDislocationParametersJSON, loadMaterialParametersJSON, loadIntegrationParametersJSON
 export loadSlipSystemJSON, loadDislocationLoopJSON, loadParametersJSON
 export loadDislocationLoopJSON, loadNetworkJSON, loadIntegrationTimeJSON
+export loadFEMParametersJSON
 export saveJSON
 
 end # module

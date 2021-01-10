@@ -1,31 +1,48 @@
-# """
-# E Tarleton edmund.tarleton@materials.ox.ac.uk
-# 3D FEM code using linear 8 node element with 8 integration pts (2x2x2) per element.
 
-#   4. ----- .3
-#   |\       |\
-#   | \      | \
-#   1.-\---- .2 \
-#    \  \     \  \
-#     \ 8. ------ .7
-#      \ |      \ |
-#       \|       \|
-#       5. ----- .6
+function buildMesh(matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
+    return buildMesh(femParams.type, matParams, femParams)
+end
+function buildMesh(type::T1, matParams::T2, femParams::T3) where {T1 <: DispatchRegularCuboidMesh,T2 <: MaterialParameters,T3 <: FEMParameters}
+    return RegularCuboidMesh(femParams.order, matParams, femParams)
+end
 
-# rectangular domain.
-# (y going in to the screen) note this is rotated about x axis w.r.t. local (s1,s2,s3) system.
-# -------------------------------------------------
+"""
+E Tarleton edmund.tarleton@materials.ox.ac.uk
+3D FEM code using linear 8 node element with 8 integration pts (2x2x2) per element.
 
-# ^z                   (mx,my)
-# |
-# |
-# |------>x-----------------------------------------
-# """
-function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T2, mx::T3, my::T3, mz::T3) where {T1 <: MaterialParameters,T2 <: AbstractFloat,T3 <: Integer}
+   4. ----- .3
+   |\\       |\\
+   | \\      | \\
+   1.-\\---- .2 \\
+    \\  \\     \\  \\
+     \\ 8. ------ .7
+      \\ |      \\ |
+       \\|       \\|
+       5. ----- .6
+
+rectangular domain.
+(y going in to the screen) note this is rotated about x axis w.r.t. local (s1,s2,s3) system.
+ -------------------------------------------------
+
+^z                   (mx,my)
+|
+|
+|------>x-----------------------------------------
+"""
+function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
 
     μ = matParams.μ
     ν = matParams.ν
     νomνInv = matParams.νopνInv # ν/(1+ν)
+    dx = femParams.dx
+    dy = femParams.dy
+    dz = femParams.dz
+    mx = femParams.mx
+    my = femParams.my
+    mz = femParams.mz
+
+    dxType = typeof(dx)
+    mxType = typeof(mx)
 
     # Element width, height, depth
     w = dx / mx
@@ -38,21 +55,21 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     mz1 = mz + 1
     mno = mx1 * my1 * mz1
 
-    coord = zeros(T2, 3, mno)          # Node coordinates.
-    connectivity = zeros(T3, 8, mel)    # Element connectivity.
-    localK = zeros(T2, 24, 24)          # K for an element.
-    nx = Array{SMatrix{3,8,T2}}(undef, 8) # Gauss nodes real space.
-    B = zeros(T2, 6, 24, 8)
+    coord = zeros(dxType, 3, mno)           # Node coordinates.
+    connectivity = zeros(mxType, 8, mel)    # Element connectivity.
+    localK = zeros(dxType, 24, 24)          # K for an element.
+    nx = Array{SMatrix{3,8,dxType}}(undef, 8) # Gauss nodes real space.
+    B = zeros(dxType, 6, 24, 8)
 
     nodeEl = 1:8 # Local node numbers.
     dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
     
-    V1 = zeros(T2, mel * 24^2)
-    V2 = zeros(T2, mel * 24^2)
-    V3 = zeros(T2, mel * 24^2)
+    V1 = zeros(dxType, mel * 24^2)
+    V2 = zeros(dxType, mel * 24^2)
+    V3 = zeros(dxType, mel * 24^2)
 
     # For a regular cuboid mesh this is predefined.
-    vertices = SMatrix{3,8,T2}(
+    vertices = SMatrix{3,8,dxType}(
                                 0, 0, 0,
                                 dx, 0, 0,
                                 0, dy, 0,
@@ -67,7 +84,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     CDiag = Lame + 2 * μ
     
     # Stiffness tensor.
-    C = SMatrix{6,6,T2}(
+    C = SMatrix{6,6,dxType}(
         CDiag,  Lame,   Lame,   0,  0,  0,
         Lame,   CDiag,  Lame,   0,  0,  0,
         Lame,   Lame,   CDiag,  0,  0,  0,
@@ -78,7 +95,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     
     # Local nodes Gauss Quadrature. Using 8 nodes per element.
     p = 1 / sqrt(3)
-    gaussNodes = SMatrix{3,8,T2}(
+    gaussNodes = SMatrix{3,8,dxType}(
         -p, -p, -p,
          p, -p, -p,
          p,  p, -p,
@@ -122,7 +139,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
         end
     end
 
-    localCoord = SMatrix{3,8,T2}(
+    localCoord = SMatrix{3,8,dxType}(
         coord[1, connectivity[1, 1]], coord[2, connectivity[1, 1]], coord[3, connectivity[1, 1]], 
         coord[1, connectivity[2, 1]], coord[2, connectivity[2, 1]], coord[3, connectivity[2, 1]], 
         coord[1, connectivity[3, 1]], coord[2, connectivity[3, 1]], coord[3, connectivity[3, 1]], 
@@ -133,7 +150,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
         coord[1, connectivity[8, 1]], coord[2, connectivity[8, 1]], coord[3, connectivity[8, 1]]            
     )
 
-    localdNdS = SMatrix{8,3,T2}(
+    localdNdS = SMatrix{8,3,dxType}(
         dNdS[1][1, 1], dNdS[1][1, 2], dNdS[1][1, 3], dNdS[1][1, 4], dNdS[1][1, 5], dNdS[1][1, 6], dNdS[1][1, 7], dNdS[1][1, 8],
         dNdS[1][2, 1], dNdS[1][2, 2], dNdS[1][2, 3], dNdS[1][2, 4], dNdS[1][2, 5], dNdS[1][2, 6], dNdS[1][2, 7], dNdS[1][2, 8],
         dNdS[1][3, 1], dNdS[1][3, 2], dNdS[1][3, 3], dNdS[1][3, 4], dNdS[1][3, 5], dNdS[1][3, 6], dNdS[1][3, 7], dNdS[1][3, 8],
@@ -149,7 +166,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
 
     # Gauss quadrature nodes.
     @inbounds for q in nodeEl
-        # Nodes in element
+        # Nodes in element.
         @simd for a in nodeEl
             idx = (a - 1) * 3
             B[1, idx + 1, q] = nx[q][1, a]
@@ -179,7 +196,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     end
 
     @inbounds @simd for q in nodeEl
-        localK = localK + B[:, :, q]' * C * B[:, :, q]
+        localK += B[:, :, q]' * C * B[:, :, q]
     end
 
     localK = localK * detJ
@@ -201,7 +218,7 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     globalK = sparse(V1, V2, V3, mno3, mno3)
 
     return RegularCuboidMesh(
-        LinearElement(),
+        order,
         vertices,
         C,
         dx,
@@ -220,7 +237,6 @@ function RegularCuboidMesh(::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T
     )
     
 end
-
-function RegularCuboidMesh(; order::LinearElement, matParams::T1, dx::T2, dy::T2, dz::T2, mx::T3, my::T3, mz::T3) where {T1 <: MaterialParameters,T2 <: AbstractFloat,T3 <: Integer}
-    return RegularCuboidMesh(LinearElement(), matParams, dx, dy, dz, mx, my, mz)
+function RegularCuboidMesh(;order::LinearElement, matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
+    return RegularCuboidMesh(order, matParams, femParams)
 end

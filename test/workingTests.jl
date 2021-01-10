@@ -1,29 +1,31 @@
 ##
-using BenchmarkTools, Plots, LinearAlgebra, StaticArrays, SparseArrays
-using DDD
-
+using Plots
+plotlyjs()
+##
+using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD
 cd(@__DIR__)
 fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
 fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+fileFEMParameters = "../inputs/simParams/sampleFEMParameters.json"
 fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
 fileSlipSystem = "../data/slipSystems/BCC.json"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
 fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
-dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
+dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
     fileDislocationParameters,
     fileMaterialParameters,
+    fileFEMParameters,
     fileIntegrationParameters,
     fileSlipSystem,
     fileDislocationLoop,
 )
 intVars = loadIntegrationTimeJSON(fileIntVar)
-network = DislocationNetwork(dislocationLoop)
+# network = DislocationNetwork(dislocationLoop)
+dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
+segLen = rand() * (dx * dy * dz) / 1e8
 
-##
-segLen = rand() * 100
-dx, dy, dz = (2000., 2000., 2000.)
-mx, my, mz = (60, 60, 60)
-@time regularCuboidMesh = RegularCuboidMesh(LinearElement(), matParams, dx, dy, dz, mx, my, mz)
+regularCuboidMesh = buildMesh(matParams, femParams)
+
 prismPentagon = DislocationLoop(;
     loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
     numSides = 5,   # 5-sided loop.
@@ -35,7 +37,7 @@ prismPentagon = DislocationLoop(;
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
     label = SVector{5,nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(0+segLen, 0+segLen, 0+segLen, dx-segLen, dy-segLen, dz-segLen),  # Distribution range
+    range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 prismHeptagon = DislocationLoop(;
@@ -49,17 +51,38 @@ prismHeptagon = DislocationLoop(;
     _bVec = slipSystems.bVec[:, 1],
     label = SVector{7,nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0,
-    range = SMatrix{3,2,Float64}(0+segLen, 0+segLen, 0+segLen, dx-segLen, dy-segLen, dz-segLen),  # Distribution range
+    range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
     dist = Rand(),
 )
 
 network = DislocationNetwork((prismHeptagon, prismPentagon))
-plotlyjs()
-plotNodes(regularCuboidMesh, network, m = 1, l = 3, linecolor = :blue, marker = :circle, markercolor = :blue, legend = false)
+using Plots
+gr()
+plotNodes(
+        regularCuboidMesh, 
+        network,
+        m = 1,
+        l = 3,
+        linecolor = :blue, 
+        marker = :circle, 
+        markercolor = :blue, 
+        legend = false)
+plotNodes(
+        network,
+        m = 1,
+        l = 3,
+        linecolor = :blue, 
+        marker = :circle, 
+        markercolor = :blue, 
+        legend = false)
+##
+
+
+
 
 ##
 nodeEl = 1:8 # Local node numbers.
-dofLocal = Tuple(Iterators.flatten((3*(nodeEl.-1) .+ 1, 3*(nodeEl.-1) .+ 2, 3*(nodeEl.-1) .+ 3)))
+dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
 
 test = [-0.006220084679281   0.006220084679281  -0.006220084679281
    0.006220084679281   0.001666666666667  -0.001666666666667
@@ -81,11 +104,11 @@ y = coord[2, connect[1, :]]
 z = coord[3, connect[1, :]]
 
 plotlyjs()
-figure = scatter(x,y,z)
+figure = scatter(x, y, z)
 
 figure = scatter(mesh[1, :], mesh[2, :], mesh[3, :])
 
-realCoord = Array{SMatrix{3, 8}}(undef, 8)
+realCoord = Array{SMatrix{3,8}}(undef, 8)
 size(N[1])
 size(dNdS[1])
 dNdS[1]
@@ -108,7 +131,7 @@ test = normalize(SVector{3}(rand(3)))
 normalize!(test)
 println("ASDF")
 ##
-ENV["PYTHON"]="D:\\anaconda3\\python.exe"
+
 
 using Polyhedra
 import GLPK
@@ -162,7 +185,7 @@ in(P2, polyhedron(vrep([-10. -5 -6])))
 
 ininterior(vrep(vertices), vrep([1 2 3]))
 using Plots
-plot(P2, color="red", alpha=0.2)
+plot(P2, color = "red", alpha = 0.2)
 convexhull(P2)
 
 using QHull
@@ -170,7 +193,7 @@ P2
 
 hrep(P2)
 
-p = rand(10,2)
+p = rand(10, 2)
 ch = chull(p)
 ch.points         # original points
 ch.vertices       # indices to line segments forming the convex hull

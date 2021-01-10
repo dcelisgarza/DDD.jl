@@ -5,12 +5,14 @@ cd(@__DIR__)
 @testset "BCC mobility" begin
     fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
     fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
     fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
     fileSlipSystem = "../data/slipSystems/BCC.json"
     fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, missing = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,

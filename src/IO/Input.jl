@@ -74,6 +74,26 @@ function loadMaterialParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
 end
 
 """
+"""
+function loadFEMParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
+    meshDict = makeTypeDict(AbstractMesh)
+    orderDict = makeTypeDict(AbstractElementOrder)
+
+    FemParams = FEMParameters(;
+        type = meshDict[dict["type"]], 
+        order = orderDict[dict["order"]], 
+        dx = dict["dx"], 
+        dy = dict["dy"], 
+        dz = dict["dz"], 
+        mx = dict["mx"], 
+        my = dict["my"], 
+        mz = dict["mz"]
+    )
+
+    return FemParams
+end
+
+"""
 ```
 loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
@@ -172,6 +192,7 @@ Loads simulation parameters out of a dictionary loaded from a JSON file. Returns
 function loadParametersJSON(
     fileDislocationParameters::AbstractString,
     fileMaterialParameters::AbstractString,
+    fileFEMParameters::AbstractString,
     fileIntegrationParameters::AbstractString,
     fileSlipSystem::AbstractString,
     fileDislocationLoop::AbstractString,
@@ -182,6 +203,9 @@ function loadParametersJSON(
 
     dictMaterialParameters = loadJSON(fileMaterialParameters)
     MaterialParams = loadMaterialParametersJSON(dictMaterialParameters)
+
+    dictFEMParameters = loadJSON(fileFEMParameters)
+    FemParams = loadFEMParametersJSON(dictFEMParameters)
 
     dictIntegrationParameters = loadJSON(fileIntegrationParameters)
     IntegrationParams = loadIntegrationParametersJSON(dictIntegrationParameters)
@@ -203,6 +227,7 @@ function loadParametersJSON(
 
     return DislocationParams,
     MaterialParams,
+    FemParams,
     IntegrationParams,
     slipSystems,
     dislocationLoop

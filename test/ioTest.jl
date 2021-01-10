@@ -6,20 +6,23 @@ cd(@__DIR__)
     # Load and create.
     fileDislocationParameters = "./testData/sampleDislocationParameters.json"
     fileMaterialParameters = "./testData/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
     )
 
-    missing, missing, missing, missing, dislocationLoop2 = loadParametersJSON(
+    missing, missing, missing, missing, missing, dislocationLoop2 = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         "./testData/sampleDislocation.json",
@@ -38,6 +41,7 @@ cd(@__DIR__)
         paramDumpJSON,
         dlnParams,
         matParams,
+        femParams,
         intParams,
         slipSystems,
         dislocationLoop,
@@ -49,6 +53,8 @@ cd(@__DIR__)
         dlnParams,
         "matParams",
         matParams,
+        "femParams",
+        femParams,
         "intParams",
         intParams,
         "slipSystems",
@@ -66,19 +72,21 @@ cd(@__DIR__)
     simulationJSON = loadJSON(paramDumpJSON)
     dlnParams2 = loadDislocationParametersJSON(simulationJSON[1])
     matParams2 = loadMaterialParametersJSON(simulationJSON[2])
-    intParams2 = loadIntegrationParametersJSON(simulationJSON[3])
-    slipSystems2 = loadSlipSystemJSON(simulationJSON[4])
-    dislocationLoop2 = zeros(DislocationLoop, length(simulationJSON[5]))
+    femParams2 = loadFEMParametersJSON(simulationJSON[3])
+    intParams2 = loadIntegrationParametersJSON(simulationJSON[4])
+    slipSystems2 = loadSlipSystemJSON(simulationJSON[5])
+    dislocationLoop2 = zeros(DislocationLoop, length(simulationJSON[6]))
     for i in eachindex(dislocationLoop2)
-        dislocationLoop2[i] = loadDislocationLoopJSON(simulationJSON[5][i], slipSystems2)
+        dislocationLoop2[i] = loadDislocationLoopJSON(simulationJSON[6][i], slipSystems2)
     end
     network2 = loadNetworkJSON(networkDumpJSON)
-    integTime2 = loadIntegrationTimeJSON(simulationJSON[6])
+    integTime2 = loadIntegrationTimeJSON(simulationJSON[7])
     # Reload simulationJLD2.
-    dlnParams3, matParams3, intParams3, slipSystems3, dislocationLoop3, integTime3 = load(
+    dlnParams3, matParams3, femParams3, intParams3, slipSystems3, dislocationLoop3, integTime3 = load(
         paramDumpJLD2,
         "dlnParams",
         "matParams",
+        "femParams",
         "intParams",
         "slipSystems",
         "dislocationLoop",
@@ -88,6 +96,7 @@ cd(@__DIR__)
     # Ensure the data is all the same.
     @test compStruct(dlnParams, dlnParams2; verbose = true)
     @test compStruct(matParams, matParams2; verbose = true)
+    @test compStruct(femParams, femParams2; verbose = true)
     @test compStruct(intParams, intParams2; verbose = true)
     @test compStruct(slipSystems, slipSystems2; verbose = true)
     @test compStruct(dislocationLoop, dislocationLoop2; verbose = true)
@@ -96,6 +105,7 @@ cd(@__DIR__)
 
     @test compStruct(dlnParams, dlnParams3; verbose = true)
     @test compStruct(matParams, matParams3; verbose = true)
+    @test compStruct(femParams, femParams3; verbose = true)
     @test compStruct(intParams, intParams3; verbose = true)
     @test compStruct(slipSystems, slipSystems3; verbose = true)
     @test compStruct(dislocationLoop, dislocationLoop3; verbose = true)

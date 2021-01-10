@@ -5,12 +5,14 @@ cd(@__DIR__)
 @testset "Merge nodes" begin
     fileDislocationParameters = "./testData/sampleDislocationParameters.json"
     fileMaterialParameters = "./testData/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
@@ -21,7 +23,7 @@ cd(@__DIR__)
         numSides = 4,
         nodeSide = 1,
         numLoops = 1,
-        segLen = ones(4),#,300; 700; 1100; 1500; 1900
+        segLen = ones(4),# ,300; 700; 1100; 1500; 1900
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
@@ -72,7 +74,7 @@ cd(@__DIR__)
         numSides = 4,
         nodeSide = 1,
         numLoops = 1,
-        segLen = 1000 * ones(4),#,300; 700; 1100; 1500; 1900
+        segLen = 1000 * ones(4),# ,300; 700; 1100; 1500; 1900
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
@@ -1411,14 +1413,16 @@ cd(@__DIR__)
 end
 
 @testset "Split node" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
-    fileSlipSystem = "../data/slipSystems/BCC.json"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
+    fileDislocationParameters = "./testData/sampleDislocationParameters.json"
+    fileMaterialParameters = "./testData/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
+    fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
+    fileSlipSystem = "./testData/BCC.json"
+    fileDislocationLoop = "./testData/samplePrismShear.json"
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
@@ -1740,14 +1744,16 @@ end
 end
 
 @testset "Coarsen network" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
-    fileSlipSystem = "../data/slipSystems/BCC.json"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
+    fileDislocationParameters = "./testData/sampleDislocationParameters.json"
+    fileMaterialParameters = "./testData/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
+    fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
+    fileSlipSystem = "./testData/BCC.json"
+    fileDislocationLoop = "./testData/samplePrismShear.json"
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
@@ -1936,12 +1942,14 @@ end
 @testset "Refine network" begin
     fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
     fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
     fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
     fileSlipSystem = "../data/slipSystems/BCC.json"
     fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, missing = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
@@ -1985,12 +1993,14 @@ end
 @testset "Coarsen and Refine network" begin
     fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
     fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
     fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
     fileSlipSystem = "../data/slipSystems/BCC.json"
     fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, intParams, slipSystems, missing = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
+        fileFEMParameters,
         fileIntegrationParameters,
         fileSlipSystem,
         fileDislocationLoop,
@@ -2000,7 +2010,7 @@ end
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
-        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],#,300; 700; 1100; 1500; 1900
+        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],# ,300; 700; 1100; 1500; 1900
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
@@ -2197,7 +2207,7 @@ end
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
-        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],#,300; 700; 1100; 1500; 1900
+        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],# ,300; 700; 1100; 1500; 1900
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],

@@ -52,11 +52,14 @@ function makeTypeDict(valType::DataType; cutoff = 1)
     dict = Dict{String,Any}()
     for (key, val) in primitive
         strSubType = string(key) * "()"
-        push!(dict, strSubType => key())
-        if strSubType[1:4] == "DDD."
-            push!(dict, strSubType[5:end] => key())
-        else
-            push!(dict, "DDD." * strSubType => key())
+        try
+            push!(dict, strSubType => key())
+            if strSubType[1:4] == "DDD."
+                push!(dict, strSubType[5:end] => key())
+            else
+                push!(dict, "DDD." * strSubType => key())
+            end
+        catch
         end
     end
     return dict
