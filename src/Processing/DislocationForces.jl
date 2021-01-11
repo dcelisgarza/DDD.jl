@@ -142,9 +142,6 @@ function calcPKForce!(
         # If no index is provided, calculate forces for all segments.
         numSeg = network.numSeg[1]
         idx = 1:numSeg
-    else
-        # Else, calculate forces only on idx.
-        numSeg = length(idx)
     end
 
     idxBvec = @view segIdx[idx, 1]
@@ -291,9 +288,6 @@ function calcSelfForce!(
         # If no index is provided, calculate forces for all segments.
         numSeg = network.numSeg[1]
         idx = 1:numSeg
-    else
-        # Else, calculate forces only on idx.
-        numSeg = length(idx)
     end
 
     # Un normalised segment vectors. Use views for speed.
