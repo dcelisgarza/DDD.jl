@@ -1,6 +1,7 @@
 module DDD
 
-using LinearAlgebra, SparseArrays, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO
+using LinearAlgebra,
+    SparseArrays, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO
 
 # Miscelaneous.
 include("./Misc/Misc.jl")
@@ -45,12 +46,12 @@ export Rand, Randn, Zeros, Regular, loopDistribution
 
 include("./Processing/ProcessingBase.jl")
 export calcSegForce,
-       calcSegForce!, 
-       calcSelfForce, 
-       calcSelfForce!, 
-       calcSegSegForce, 
-       calcSegSegForce!,
-       calc_σHat
+    calcSegForce!,
+    calcSelfForce,
+    calcSelfForce!,
+    calcSegSegForce,
+    calcSegSegForce!,
+    calc_σHat
 export dlnMobility, dlnMobility!
 export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
 export shapeFunction, shapeFunctionDeriv
