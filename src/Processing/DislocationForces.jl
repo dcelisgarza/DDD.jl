@@ -157,14 +157,15 @@ function calcPKForce!(
 
     # Loop over segments.
     @inbounds @simd for i in eachindex(idx)
+        idxi = idx[i]
         x0 = SVector{3,elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
         b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         l = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
         σHat = calc_σHat(mesh, forceDisplacement, x0)
         pkForce = (σHat * b) × l
         for j in 1:3
-            segForce[j, 1, i] += pkForce[j] * 0.5
-            segForce[j, 2, i] += pkForce[j] * 0.5
+            segForce[j, 1, idxi] += pkForce[j] * 0.5
+            segForce[j, 2, idxi] += pkForce[j] * 0.5
         end
     end
 

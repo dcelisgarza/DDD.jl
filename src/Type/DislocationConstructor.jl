@@ -628,7 +628,7 @@ function DislocationNetwork!(
     kw...,
 ) where {
     T1 <: DislocationNetwork,
-    T2 <: Union{T, AbstractVector{T}} where {T <: DislocationLoop},
+    T2 <: Union{T, AbstractVector{T}, NTuple{N, T} where N} where {T <: DislocationLoop},
     T3 <: Int,
     T4 <: Bool,
 }
