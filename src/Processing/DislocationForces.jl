@@ -17,13 +17,7 @@ function calcSegForce(
     # dlnFEM::T4,
     # mesh::T5,
     idx = nothing,
-) where {
-    T1 <: DislocationParameters,
-    T2 <: MaterialParameters,
-    T3 <: DislocationNetwork,
-    # T4 <: DislocationFEMCorrective,
-    # T5 <: AbstractMesh,
-}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork,}
 
     isnothing(idx) ? numSeg = network.numSeg[1] : numSeg = length(idx)
 
@@ -48,7 +42,7 @@ function calcSegForce!(
     idx = nothing,
     # mesh::RegularCuboidMesh,
     # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
@@ -69,6 +63,116 @@ end
 
 """
 ```
+calcPKForce(
+    mesh::RegularCuboidMesh,
+    dlnFEM::DislocationFEMCorrective,
+    network::DislocationNetwork,
+)
+```
+Calculate the Peach-Koehler force on segments.
+
+``
+f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{l}
+``
+"""
+function calcPKForce(
+    mesh::RegularCuboidMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+) where {T1 <: RegularCuboidMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
+    
+# Unroll constants.
+    numSeg = network.numSeg[1]
+    segIdx = network.segIdx
+    bVec = network.bVec
+    coord = network.coord
+    elemT = eltype(network.coord)
+
+    # Indices for self force.
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg[1]
+        idx = 1:numSeg
+    else
+        # Else, calculate forces only on idx.
+        numSeg = length(idx)
+    end
+
+    idxBvec = @view segIdx[idx, 1]
+    idxNode1 = @view segIdx[idx, 2]
+    idxNode2 = @view segIdx[idx, 3]
+    # Un normalised segment vectors. Use views for speed.
+    bVec = @view bVec[:, idxBvec]
+    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    midNode = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
+
+    PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
+    # Loop over segments.
+    @inbounds @simd for i in eachindex(idx)
+        x0 = SVector{3,elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
+        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        l = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
+        σHat = calc_σHat(mesh, forceDisplacement, x0)
+        pkForce = (σHat * b) × l
+        for j in 1:3
+            PKForce[j, i] = pkForce[j]
+        end
+    end
+
+    return PKForce
+end
+function calcPKForce!(
+    mesh::RegularCuboidMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+) where {T1 <: RegularCuboidMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
+    
+# Unroll constants.
+    numSeg = network.numSeg[1]
+    segIdx = network.segIdx
+    bVec = network.bVec
+    coord = network.coord
+    segForce = network.segForce
+    elemT = eltype(network.coord)
+
+    # Indices for self force.
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg[1]
+        idx = 1:numSeg
+    else
+        # Else, calculate forces only on idx.
+        numSeg = length(idx)
+    end
+
+    idxBvec = @view segIdx[idx, 1]
+    idxNode1 = @view segIdx[idx, 2]
+    idxNode2 = @view segIdx[idx, 3]
+    # Un normalised segment vectors. Use views for speed.
+    bVec = @view bVec[:, idxBvec]
+    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    midNode = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
+
+    # Loop over segments.
+    @inbounds @simd for i in eachindex(idx)
+        x0 = SVector{3,elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
+        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        l = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
+        σHat = calc_σHat(mesh, forceDisplacement, x0)
+        pkForce = (σHat * b) × l
+        for j in 1:3
+            segForce[j, 1, i] += pkForce[j] * 0.5
+            segForce[j, 2, i] += pkForce[j] * 0.5
+        end
+    end
+
+    return nothing
+end
+
+"""
+```
 calcSelfForce(
     dlnParams::DislocationParameters,
     matParams::MaterialParameters,
@@ -82,7 +186,7 @@ function calcSelfForce(
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -112,37 +216,36 @@ function calcSelfForce(
     idxNode2 = @view segIdx[idx, 3]
     # Un normalised segment vectors. Use views for speed.
     bVec = @view bVec[:, idxBvec]
-    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
     selfForceNode2 = zeros(3, numSeg)
 
     @inbounds @simd for i in eachindex(idx)
         # Finding the norm of each line vector.
-        tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+        tVecI = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
         tVecSq = tVecI ⋅ tVecI
         L = sqrt(tVecSq)
         Linv = 1 / L
         tVecI *= Linv
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
-        bVecI = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-        # Screw component, scalar projection of bVec onto t.
+        # Screw component, scalar projection of bVec onto l.
         bScrew = tVecI ⋅ bVecI
-        # Edge component, vector rejection of bVec onto t.
+        # Edge component, vector rejection of bVec onto l.
         bEdgeVec = bVecI - bScrew * tVecI
         # Finding the norm squared of each edge component.
         bEdgeSq = bEdgeVec ⋅ bEdgeVec
-        #=
+        #= 
         A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
         553?595: gives this expression in appendix A p590
-        f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
+        f^{s}_{43} = -(μ/(4π)) [ l × (l × b)](l ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
                                                                                                                                                                                                                                                                                                                 
-        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
-        = tVec * bScrew - bVec
-        = - bEdgeVec
-        =#
+        lVec × (lVec × bVec)    = lVec (lVec ⋅ bVec) - bVec (lVec ⋅ lVec)
+        = lVec * bScrew - bVec
+        = - bEdgeVec =#
         # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
         LaMa = La - a
         # Torsional component of core self interaction.
@@ -166,7 +269,7 @@ function calcSelfForce!(
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -197,36 +300,35 @@ function calcSelfForce!(
     idxNode1 = @view segIdx[idx, 2]
     idxNode2 = @view segIdx[idx, 3]
     bVec = @view bVec[:, idxBvec]
-    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
     @inbounds @simd for i in eachindex(idx)
         idxi = idx[i]
         # Finding the norm of each line vector.
-        tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+        tVecI = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
         tVecSq = tVecI ⋅ tVecI
         L = sqrt(tVecSq)
         Linv = 1 / L
         tVecI *= Linv
         # Finding the non-singular norm.
         La = sqrt(tVecSq + aSq)
-        bVecI = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-        # Screw component, scalar projection of bVec onto t.
+        # Screw component, scalar projection of bVec onto l.
         bScrew = tVecI ⋅ bVecI
-        # Edge component, vector rejection of bVec onto t.
+        # Edge component, vector rejection of bVec onto l.
         bEdgeVec = bVecI - bScrew * tVecI
         # Finding the norm squared of each edge component.
         bEdgeSq = bEdgeVec ⋅ bEdgeVec
-        #=
+        #= 
         A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
         553?595: gives this expression in appendix A p590
-        f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
+        f^{s}_{43} = -(μ/(4π)) [ l × (l × b)](l ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
                                                                                                                                                                                                                                                                                                                 
-        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
-        = tVec * bScrew - bVec
-        = - bEdgeVec
-        =#
+        lVec × (lVec × bVec)    = lVec (lVec ⋅ bVec) - bVec (lVec ⋅ lVec)
+        = lVec * bScrew - bVec
+        = - bEdgeVec =#
         # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
         LaMa = La - a
         # Torsional component of core self interaction.
@@ -279,7 +381,7 @@ function calcSegSegForce(
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     # Constants.
     μ = matParams.μ
@@ -353,13 +455,13 @@ function calcSegSegForce(
             segSegForce = zeros(3, 2, numSeg)
             # Serial execution.
             @inbounds for i in 1:numSeg
-                b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-                n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-                n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+                b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+                n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+                n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
                 for j in (i + 1):numSeg
-                    b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                    n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                    n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                    b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                    n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                    n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
@@ -390,14 +492,14 @@ function calcSegSegForce(
         lenIdx = length(idx)
         segSegForce = zeros(3, 2, lenIdx)
         @inbounds for (k, i) in enumerate(idx)
-            b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-            n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-            n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+            b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+            n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+            n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
                 i == j ? continue : nothing
-                b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                 Fnode1, Fnode2, missing, missing = calcSegSegForce(
                     aSq,
@@ -428,7 +530,7 @@ function calcSegSegForce!(
     matParams::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: DislocationParameters, T2 <: MaterialParameters, T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 
     # Constants.
     μ = matParams.μ
@@ -504,13 +606,13 @@ function calcSegSegForce!(
         else
             # Serial execution.
             @inbounds for i in 1:numSeg
-                b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-                n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-                n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+                b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+                n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+                n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
                 for j in (i + 1):numSeg
-                    b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                    n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                    n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                    b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                    n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                    n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
@@ -538,14 +640,14 @@ function calcSegSegForce!(
         end
     else # Calculate segseg forces only on segments provided
         @inbounds for i in idx
-            b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-            n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-            n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+            b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+            n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+            n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
                 i == j ? continue : nothing
-                b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                 Fnode1, Fnode2, missing, missing = calcSegSegForce(
                     aSq,
@@ -584,7 +686,7 @@ function calcSegSegForce(
     b2::T2,
     n21::T2,
     n22::T2,
-) where {T1, T2 <: AbstractVector{T} where {T}}
+) where {T1,T2 <: AbstractVector{T} where {T}}
 
     t2 = n22 - n21
     t2N = 1 / norm(t2)
@@ -868,7 +970,7 @@ function calcSegSegForce(
             b2,
             n21,
             n22,
-        )
+    )
     end
 
     return Fnode1, Fnode2, Fnode3, Fnode4
@@ -887,7 +989,7 @@ function calcParSegSegForce(
     b2::T2,
     n21::T2,
     n22::T2,
-) where {T1, T2 <: AbstractVector{T} where {T}}
+) where {T1,T2 <: AbstractVector{T} where {T}}
 
     flip::Bool = false
 

@@ -51,7 +51,9 @@ export calcSegForce,
     calcSelfForce!,
     calcSegSegForce,
     calcSegSegForce!,
-    calc_σHat
+    calc_σHat,
+    calcPKForce,
+    calcPKForce!
 export dlnMobility, dlnMobility!
 export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
 export shapeFunction, shapeFunctionDeriv

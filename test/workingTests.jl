@@ -26,7 +26,7 @@ dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
 
 segLen = rand() * (dx * dy * dz) / 1e8
 
-@btime regularCuboidMesh = buildMesh(matParams, femParams)
+regularCuboidMesh = buildMesh(matParams, femParams)
 numFEMNode = regularCuboidMesh.numNode
 
 f = sparsevec(
@@ -111,6 +111,99 @@ isapprox(σHat, σHatTest)
     -0.972551012187583 -0.265466730367529 -1.562246246433098
 ]
 isapprox(σHat, σHatTest)
+
+segLen = dx / 10
+prismSquare = DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 4,   # 5-sided loop.
+    nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 2,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeType}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+
+shearSquare = DislocationLoop(;
+    loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
+    numSides = 4,   # 5-sided loop.
+    nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 2,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeType}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+network = DislocationNetwork((prismSquare, shearSquare))
+plotNodes(regularCuboidMesh, network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,)
+fPK = calcPKForce(regularCuboidMesh, forceDisplacement, network)
+
+numSeg = network.numSeg[1]
+println([network.links[:, 1:numSeg]' network.bVec[:,1:numSeg]' network.slipPlane[:, 1:numSeg]'])
+println([network.coord[:, 1:numSeg]' zeros(numSeg)])
+
+println(network.links[:, 1:numSeg])
+println(network.bVec[:, 1:numSeg])
+println(network.slipPlane[:, 1:numSeg])
+
+println(network.coord[:, 1:numSeg])
+
+
+
+fPKTest = 1.0e+02 *
+[
+    0.983568207059471   0.550732784894686  -0.216417711082393
+  -0.074266349477605   0.074266349477605  -0.636911320120312
+   0.155045597251722  -0.155045597251722  -0.044881839670221
+   0.101431295661336  -0.067753859578523  -0.084592577619930
+   0.273213406343103   0.068697355372783  -0.102258025485160
+  -0.071275154999800   0.071275154999800  -0.338908217279899
+   0.022167783169158  -0.022167783169158  -1.136846650257031
+   1.436820246111006   0.473392983022663  -0.481713631544171
+  -0.168015348058644  -0.409635686533833  -0.120810169237595
+                   0                   0                   0
+  -0.127152152429410   0.127152152429410  -0.532135533886545
+  -0.607064449348708  -0.376897289465542   0.115083579941583
+  -1.327884941063532  -0.715166073499301   0.306359433782116
+   0.441147725403124  -0.441147725403124   1.360442463840005
+   0.255278751159306  -0.255278751159306   0.748442624130778
+                   0                   0                   0
+  -0.367714422335496  -0.154013286390333   0.106850567972581
+   0.045819274971325  -0.035698104354998   0.081517379326323
+  -0.066266665225592  -0.050212580764005  -0.016054084461586
+  -0.090887767612372  -0.032124956563013   0.029381405524679
+                   0                   0                   0
+                   0                   0                   0
+                   0                   0                   0
+  -0.095974787977392  -0.060606642986924   0.017684072495234
+  -0.911537345550952  -0.433723676128685   0.238906834711134
+   0.166970234231067  -0.039020251746418   0.205990485977485
+  -0.040569130620300  -0.070322668905174   0.029753538284874
+  -0.080046044506237  -0.059386350692248   0.010329846906995
+   0.000155309763062   0.000275031985160   0.000059861111049
+   0.000064985978620   0.000160977029895  -0.000095991051275
+                   0                   0                   0
+                   0                   0                   0
+]
+
+isapprox(fPK', fPKTest)
+
+
+
 
 @btime σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
 
