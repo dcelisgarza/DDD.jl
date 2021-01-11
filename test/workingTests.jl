@@ -26,7 +26,7 @@ dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
 
 segLen = rand() * (dx * dy * dz) / 1e8
 
-regularCuboidMesh = buildMesh(matParams, femParams)
+@btime regularCuboidMesh = buildMesh(matParams, femParams)
 numFEMNode = regularCuboidMesh.numNode
 
 f = sparsevec(

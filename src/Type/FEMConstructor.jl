@@ -57,8 +57,7 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
-    localK = zeros(dxType, 24, 24)          # K for an element.
-    nx = Array{SMatrix{3,8,dxType}}(undef, 8) # Gauss nodes real space.
+    localK = zeros(dxType, 24, 24)              # K for an element.
     B = zeros(dxType, 6, 24, 8)
 
     nodeEl = 1:8 # Local node numbers.
@@ -158,40 +157,37 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
 
     J = localCoord * localdNdS
     detJ = det(J)
-    invJ = inv(J)
-
-    @inbounds @simd for q in nodeEl
-        nx[q] = invJ' * dNdS[q]
-    end
+    invJ = inv(J)'
 
     # Gauss quadrature nodes.
     @inbounds for q in nodeEl
+        nx = invJ * dNdS[q]
         # Nodes in element.
         @simd for a in nodeEl
             idx = (a - 1) * 3
-            B[1, idx + 1, q] = nx[q][1, a]
+            B[1, idx + 1, q] = nx[1, a]
             B[1, idx + 2, q] = 0
             B[1, idx + 3, q] = 0
 
             B[2, idx + 1, q] = 0
-            B[2, idx + 2, q] = nx[q][2, a]
+            B[2, idx + 2, q] = nx[2, a]
             B[2, idx + 3, q] = 0
 
             B[3, idx + 1, q] = 0
             B[3, idx + 2, q] = 0
-            B[3, idx + 3, q] = nx[q][3, a]
+            B[3, idx + 3, q] = nx[3, a]
 
-            B[4, idx + 1, q] = nx[q][2, a]
-            B[4, idx + 2, q] = nx[q][1, a]
+            B[4, idx + 1, q] = nx[2, a]
+            B[4, idx + 2, q] = nx[1, a]
             B[4, idx + 3, q] = 0
 
-            B[5, idx + 1, q] = nx[q][3, a]
+            B[5, idx + 1, q] = nx[3, a]
             B[5, idx + 2, q] = 0
-            B[5, idx + 3, q] = nx[q][1, a]
+            B[5, idx + 3, q] = nx[1, a]
 
             B[6, idx + 1, q] = 0
-            B[6, idx + 2, q] = nx[q][3, a]
-            B[6, idx + 3, q] = nx[q][2, a]
+            B[6, idx + 2, q] = nx[3, a]
+            B[6, idx + 3, q] = nx[2, a]
         end
     end
 
