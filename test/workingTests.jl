@@ -95,13 +95,26 @@ uHat = sparsevec(
 )
 forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
 
-@time σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
+
+σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
 σHatTest = [
-    -0.012540380057364 -0.084737139530472 0
-    -0.084737139530472 -0.032246691576078 0.015024315519587
-    0 0.015024315519587 -0.012540380057364
+    -0.023035166204661 -0.155651908782923 0
+    -0.155651908782923 -0.059233284526271 -0.015024315519587
+    0 -0.015024315519587 -0.023035166204661
 ]
 isapprox(σHat, σHatTest)
+
+σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1893.0, 408.0, 1782.0])
+σHatTest = [
+    -0.607540206946205 0 -0.972551012187583
+    0 -0.607540206946205 -0.265466730367529
+    -0.972551012187583 -0.265466730367529 -1.562246246433098
+]
+isapprox(σHat, σHatTest)
+
+@btime σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
+
+
 
 Bold = copy(B)
 isapprox(Bold, B)
@@ -178,11 +191,9 @@ plotNodes(
 
 ##
 nodeEl = 1:8 # Local node numbers.
-dofLocal = Tuple(Iterators.flatten((
-    3 * (nodeEl .- 1) .+ 1,
+dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1,
     3 * (nodeEl .- 1) .+ 2,
-    3 * (nodeEl .- 1) .+ 3,
-)))
+    3 * (nodeEl .- 1) .+ 3,)))
 
 test = [
     -0.006220084679281 0.006220084679281 -0.006220084679281
@@ -416,7 +427,7 @@ sendit2(c, d, e)
 @btime sendit(c, d, e)
 @btime sendit2(c, d, e)
 
-for j = 1:2, i = 1:3
+for j in 1:2, i in 1:3
     println(i, j)
 end
 
@@ -524,7 +535,7 @@ coord[3, :] = range(0, dz, length = numNode)
 b = Float64[1; 1; 1]
 n = Float64[-1; 1; 0]
 
-for i = 1:(numSeg-1)
+for i = 1:(numSeg - 1)
     links[:, i] .= (i, i + 1)
     bVec[:, i] = b
     slipPlane[:, i] = n

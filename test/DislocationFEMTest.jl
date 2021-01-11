@@ -82,11 +82,19 @@ cd(@__DIR__)
 
     forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
 
-    @time σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
+    σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
     σHatTest = [
-        -0.012540380057364 -0.084737139530472 0
-        -0.084737139530472 -0.032246691576078 0.015024315519587
-        0 0.015024315519587 -0.012540380057364
+        -0.023035166204661 -0.155651908782923 0
+        -0.155651908782923 -0.059233284526271 -0.015024315519587
+        0 -0.015024315519587 -0.023035166204661
+    ]
+    @test isapprox(σHat, σHatTest)
+
+    σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1893.0, 408.0, 1782.0])
+    σHatTest = [
+        -0.607540206946205 0 -0.972551012187583
+        0 -0.607540206946205 -0.265466730367529
+        -0.972551012187583 -0.265466730367529 -1.562246246433098
     ]
     @test isapprox(σHat, σHatTest)
 end

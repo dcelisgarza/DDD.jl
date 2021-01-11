@@ -108,14 +108,20 @@ function calc_σHat(
     s2 = (y - yc) * ds2dy
     s3 = (z - zc) * ds3dz
 
-    dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), s1, s2, s3)
-    dNdS1 = dNdS[1, :] * ds1dx
-    dNdS2 = dNdS[2, :] * ds2dy
-    dNdS3 = dNdS[3, :] * ds3dz
+    pm1 = (-1, 1, 1, -1, - 1, 1, 1, -1)
+    pm2 = (1, 1, 1, 1, -1, -1, -1, -1)
+    pm3 = (-1, -1, 1, 1, -1, -1, 1, 1)
+
+    ds1dx *= 0.125
+    ds2dy *= 0.125
+    ds3dz *= 0.125
 
     B = zeros(elemT, 6, 24)
     U = MVector{24,elemT}(zeros(24))
-    for i in 1:8
+    @inbounds @simd for i in 1:8
+        dNdS1 = pm1[i] * (1 + pm2[i] * s2) * (1 + pm3[i] * s3) * ds1dx
+        dNdS2 = (1 + pm1[i] * s1) * pm2[i] * (1 + pm3[i] * s3) * ds2dy
+        dNdS3 = (1 + pm1[i] * s1) * (1 + pm2[i] * s2) * pm3[i] * ds3dz
         # Indices calculated once for performance.
         idx1 = 3 * i
         idx2 = 3 * (i - 1)
@@ -123,9 +129,9 @@ function calc_σHat(
         idx3 = 3 * connectivity[i, idx]
 
         # Constructing the Jacobian for node i.
-        B[1, idx2 + 1] = dNdS1[i]
-        B[2, idx2 + 2] = dNdS2[i]
-        B[3, idx2 + 3] = dNdS3[i]
+        B[1, idx2 + 1] = dNdS1
+        B[2, idx2 + 2] = dNdS2
+        B[3, idx2 + 3] = dNdS3
 
         B[4, idx2 + 1] = B[2, idx2 + 2]
         B[4, idx2 + 2] = B[1, idx2 + 1]
