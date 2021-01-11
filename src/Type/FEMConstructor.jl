@@ -2,7 +2,7 @@
 function buildMesh(matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
     return buildMesh(femParams.type, matParams, femParams)
 end
-function buildMesh(type::T1, matParams::T2, femParams::T3) where {T1 <: DispatchRegularCuboidMesh,T2 <: MaterialParameters,T3 <: FEMParameters}
+function buildMesh(::T1, matParams::T2, femParams::T3) where {T1 <: DispatchRegularCuboidMesh,T2 <: MaterialParameters,T3 <: FEMParameters}
     return RegularCuboidMesh(femParams.order, matParams, femParams)
 end
 
@@ -10,15 +10,15 @@ end
 E Tarleton edmund.tarleton@materials.ox.ac.uk
 3D FEM code using linear 8 node element with 8 integration pts (2x2x2) per element.
 
-   4. ----- .3
-   |\\       |\\
-   | \\      | \\
-   1.-\\---- .2 \\
-    \\  \\     \\  \\
-     \\ 8. ------ .7
-      \\ |      \\ |
-       \\|       \\|
-       5. ----- .6
+   4.-------.3
+   |\\       \\
+   | \\      |\\
+   1.-\\---- .2\\
+    \\  \\   \\ \\
+     \\ 8.--------.7
+      \\ |     \\ |
+       \\|      \\|
+        5.--------.6
 
 rectangular domain.
 (y going in to the screen) note this is rotated about x axis w.r.t. local (s1,s2,s3) system.
@@ -29,7 +29,7 @@ rectangular domain.
 |
 |------>x-----------------------------------------
 """
-function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
+function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <: LinearElement, T2 <: MaterialParameters, T3 <: FEMParameters}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -49,14 +49,14 @@ function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) w
     h = dy / my
     d = dz / mz
 
-    mel = mx * my * mz
+    numElem = mx * my * mz
     mx1 = mx + 1
     my1 = my + 1
     mz1 = mz + 1
-    mno = mx1 * my1 * mz1
+    numNode = mx1 * my1 * mz1
 
-    coord = zeros(dxType, 3, mno)           # Node coordinates.
-    connectivity = zeros(mxType, 8, mel)    # Element connectivity.
+    coord = zeros(dxType, 3, numNode)           # Node coordinates.
+    connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
     localK = zeros(dxType, 24, 24)          # K for an element.
     nx = Array{SMatrix{3,8,dxType}}(undef, 8) # Gauss nodes real space.
     B = zeros(dxType, 6, 24, 8)
@@ -64,9 +64,9 @@ function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) w
     nodeEl = 1:8 # Local node numbers.
     dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
     
-    V1 = zeros(dxType, mel * 24^2)
-    V2 = zeros(dxType, mel * 24^2)
-    V3 = zeros(dxType, mel * 24^2)
+    V1 = zeros(dxType, numElem * 24^2)
+    V2 = zeros(dxType, numElem * 24^2)
+    V3 = zeros(dxType, numElem * 24^2)
 
     # For a regular cuboid mesh this is predefined.
     vertices = SMatrix{3,8,dxType}(
@@ -201,7 +201,7 @@ function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) w
 
     localK = localK * detJ
     cntr = 0
-    @inbounds for p in 1:mel
+    @inbounds for p in 1:numElem
         globalNode = connectivity[nodeEl, p]; # Global node numbers
         dofGlobal = Tuple(Iterators.flatten((3 * (globalNode .- 1) .+ 1, 3 * (globalNode .- 1) .+ 2, 3 * (globalNode .- 1) .+ 3))) # Global degree of freedom
         for i = 1:24
@@ -214,8 +214,8 @@ function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) w
         end
     end
 
-    mno3 = 3 * mno
-    globalK = sparse(V1, V2, V3, mno3, mno3)
+    numNode3 = 3 * numNode
+    globalK = sparse(V1, V2, V3, numNode3, numNode3)
 
     return RegularCuboidMesh(
         order,
@@ -227,6 +227,8 @@ function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) w
         mx,
         my,
         mz,
+        numElem,
+        numNode,
         w,
         h,
         d,
@@ -237,6 +239,6 @@ function RegularCuboidMesh(order::LinearElement, matParams::T1, femParams::T2) w
     )
     
 end
-function RegularCuboidMesh(;order::LinearElement, matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
+function RegularCuboidMesh(; order::T1, matParams::T2, femParams::T3) where {T1<:AbstractElementOrder, T2 <: MaterialParameters, T3 <: FEMParameters}
     return RegularCuboidMesh(order, matParams, femParams)
 end

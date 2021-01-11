@@ -36,6 +36,11 @@ end
 end
 
 ##
+@time @safetestset "Dislocation-FEM" begin
+    include("./DislocationFEMTest.jl")
+end
+
+##
 @time @safetestset "Post-process" begin
     include("./PlotTest.jl")
 end

@@ -11,21 +11,101 @@ fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.jso
 fileSlipSystem = "../data/slipSystems/BCC.json"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
 fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
-dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
-    fileDislocationParameters,
-    fileMaterialParameters,
-    fileFEMParameters,
-    fileIntegrationParameters,
-    fileSlipSystem,
-    fileDislocationLoop,
-)
+dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+    loadParametersJSON(
+        fileDislocationParameters,
+        fileMaterialParameters,
+        fileFEMParameters,
+        fileIntegrationParameters,
+        fileSlipSystem,
+        fileDislocationLoop,
+    )
 intVars = loadIntegrationTimeJSON(fileIntVar)
 # network = DislocationNetwork(dislocationLoop)
 dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
+
 segLen = rand() * (dx * dy * dz) / 1e8
 
 regularCuboidMesh = buildMesh(matParams, femParams)
+numFEMNode = regularCuboidMesh.numNode
 
+f = sparsevec(
+    [112, 118, 133, 141, 213, 244, 262, 272, 317, 3 * numFEMNode],
+    [
+        0.43048187784858616,
+        0.22724536603830137,
+        0.4340867899691503,
+        0.6660863546953892,
+        0.30358515797696106,
+        0.2945958951093859,
+        0.7278367502911502,
+        0.7095924334694701,
+        0.1642050526375538,
+        0,
+    ],
+)
+fHat = sparsevec(
+    [32, 48, 55, 88, 138, 148, 191, 230, 253, 335, 3 * numFEMNode],
+    [
+        0.09706224225842108,
+        0.07773687633248638,
+        0.13682398802299178,
+        0.4752286167553166,
+        0.7423196193496164,
+        0.8286077556473421,
+        0.7023632196408749,
+        0.9813639162461198,
+        0.5296701796678411,
+        0.5523797553266823,
+        0,
+    ],
+)
+u = sparsevec(
+    [30, 127, 195, 221, 316, 325, 338, 348, 370, 3 * numFEMNode],
+    [
+        0.8792592573507609,
+        0.8430664083925272,
+        0.4711050560756602,
+        0.4860071865093816,
+        0.7905698600135145,
+        0.39047211692578077,
+        0.6545538020629462,
+        0.5446700211111557,
+        0.8865721648558644,
+        0,
+    ],
+)
+uHat = sparsevec(
+    [91, 126, 130, 195, 217, 226, 229, 256, 281, 293, 309, 342, 3 * numFEMNode],
+    [
+        0.5231621885339968,
+        0.5771429489788034,
+        0.7151190318538345,
+        0.7283662326812077,
+        0.6314274719472075,
+        0.9814688915693632,
+        0.5672795171250207,
+        0.002712918060655989,
+        0.1788941754890383,
+        0.188299784057536,
+        0.8489027048214433,
+        0.029995302953659708,
+        0,
+    ],
+)
+forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
+
+@time σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
+σHatTest = [
+    -0.012540380057364 -0.084737139530472 0
+    -0.084737139530472 -0.032246691576078 0.015024315519587
+    0 0.015024315519587 -0.012540380057364
+]
+isapprox(σHat, σHatTest)
+
+Bold = copy(B)
+isapprox(Bold, B)
+##
 prismPentagon = DislocationLoop(;
     loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
     numSides = 5,   # 5-sided loop.
@@ -37,7 +117,14 @@ prismPentagon = DislocationLoop(;
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
     label = SVector{5,nodeType}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
+    range = SMatrix{3,2,Float64}(
+        0 + segLen,
+        0 + segLen,
+        0 + segLen,
+        dx - segLen,
+        dy - segLen,
+        dz - segLen,
+    ),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 prismHeptagon = DislocationLoop(;
@@ -51,7 +138,14 @@ prismHeptagon = DislocationLoop(;
     _bVec = slipSystems.bVec[:, 1],
     label = SVector{7,nodeType}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0,
-    range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
+    range = SMatrix{3,2,Float64}(
+        0 + segLen,
+        0 + segLen,
+        0 + segLen,
+        dx - segLen,
+        dy - segLen,
+        dz - segLen,
+    ),  # Distribution range
     dist = Rand(),
 )
 
@@ -59,22 +153,24 @@ network = DislocationNetwork((prismHeptagon, prismPentagon))
 using Plots
 gr()
 plotNodes(
-        regularCuboidMesh, 
-        network,
-        m = 1,
-        l = 3,
-        linecolor = :blue, 
-        marker = :circle, 
-        markercolor = :blue, 
-        legend = false)
+    regularCuboidMesh,
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
 plotNodes(
-        network,
-        m = 1,
-        l = 3,
-        linecolor = :blue, 
-        marker = :circle, 
-        markercolor = :blue, 
-        legend = false)
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
 ##
 
 
@@ -82,16 +178,22 @@ plotNodes(
 
 ##
 nodeEl = 1:8 # Local node numbers.
-dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
+dofLocal = Tuple(Iterators.flatten((
+    3 * (nodeEl .- 1) .+ 1,
+    3 * (nodeEl .- 1) .+ 2,
+    3 * (nodeEl .- 1) .+ 3,
+)))
 
-test = [-0.006220084679281   0.006220084679281  -0.006220084679281
-   0.006220084679281   0.001666666666667  -0.001666666666667
-   0.001666666666667   0.000446581987385   0.001666666666667
-  -0.001666666666667   0.001666666666667   0.006220084679281
-  -0.001666666666667  -0.006220084679281  -0.001666666666667
-   0.001666666666667  -0.001666666666667  -0.000446581987385
-   0.000446581987385  -0.000446581987385   0.000446581987385
-  -0.000446581987385  -0.001666666666667   0.001666666666667]
+test = [
+    -0.006220084679281 0.006220084679281 -0.006220084679281
+    0.006220084679281 0.001666666666667 -0.001666666666667
+    0.001666666666667 0.000446581987385 0.001666666666667
+    -0.001666666666667 0.001666666666667 0.006220084679281
+    -0.001666666666667 -0.006220084679281 -0.001666666666667
+    0.001666666666667 -0.001666666666667 -0.000446581987385
+    0.000446581987385 -0.000446581987385 0.000446581987385
+    -0.000446581987385 -0.001666666666667 0.001666666666667
+]
 isapprox(nx', test)
 ##
 
@@ -116,16 +218,32 @@ dNdS[1]
 
 p = 1 / sqrt(3)
 gaussNodes = SMatrix{3,8}(
-        -p, -p, -p,
-         p, -p, -p,
-         p,  p, -p,
-        -p,  p, -p,
-        -p, -p,  p,
-         p, -p,  p,
-         p,  p,  p,
-        -p,  p,  p,
-    )
-typeof(gaussNodes[1,:]) <: AbstractVector
+    -p,
+    -p,
+    -p,
+    p,
+    -p,
+    -p,
+    p,
+    p,
+    -p,
+    -p,
+    p,
+    -p,
+    -p,
+    -p,
+    p,
+    p,
+    -p,
+    p,
+    p,
+    p,
+    p,
+    -p,
+    p,
+    p,
+)
+typeof(gaussNodes[1, :]) <: AbstractVector
 ##
 test = normalize(SVector{3}(rand(3)))
 normalize!(test)
@@ -140,18 +258,18 @@ DefaultLibrary
 
 P1 = polyhedron(vrep([
     -1.9 -1.7
-    -1.8  0.5
-     1.7  0.7
-     1.9 -0.3
-     0.9 -1.1
+    -1.8 0.5
+    1.7 0.7
+    1.9 -0.3
+    0.9 -1.1
 ]))
 
 vrep([
     -1.9 -1.7
-    -1.8  0.5
-     1.7  0.7
-     1.9 -0.3
-     0.9 -1.1
+    -1.8 0.5
+    1.7 0.7
+    1.9 -0.3
+    0.9 -1.1
 ])
 
 
@@ -162,15 +280,17 @@ dx = 2000
 dy = 2000
 dz = 2000
 
-vertices = [0 0 0
-            dx 0 0
-            0 dy 0
-            dx dy 0
-            0 0 dz
-            dx 0 dz
-            0 dy dz
-            dx dy dz]
-vertices = [0, 0, 0; dx, 0, 0; 0, dy, 0; dx, dy, 0; 0, 0, dz; dx, 0, dz; 0, dy, dz; dx, dy, dz];
+vertices = [
+    0 0 0
+    dx 0 0
+    0 dy 0
+    dx dy 0
+    0 0 dz
+    dx 0 dz
+    0 dy dz
+    dx dy dz
+]
+vertices = [0, 0, 0; dx,0, 0; 0,dy, 0; dx,dy, 0; 0,0, dz; dx, 0, dz; 0, dy, dz; dx, dy, dz];
 
 
 test = points(vrep(vertices))
@@ -180,7 +300,7 @@ removevredundancy!(P2)
 @show hrep(P2)
 @show vrep(P2)
 
-in(P2, polyhedron(vrep([-10. -5 -6])))
+in(P2, polyhedron(vrep([-10.0 -5 -6])))
 
 
 ininterior(vrep(vertices), vrep([1 2 3]))
@@ -247,18 +367,18 @@ function comparing3(a, b, i, j, i2, j2)
 
     equalSlipPlane = let
         flag = true
-        for k in 1:3
+        for k = 1:3
             flag = flag && isapprox(a[k, i], b[k, j])
         end
         flag
     end
-    equalSlipPlane ? for i in 1:3
+    equalSlipPlane ? for i = 1:3
         a[i, i2] = b[i, j2]
     end : nothing
 end
 comparing3(a, b, i, j, i2, j2)
 
-[i for i in 1:3]
+[i for i = 1:3]
 
 @btime foo(a, b)
 @btime bar(a, b)
@@ -284,7 +404,7 @@ function sendit(c, d, e)
 end
 sendit(c, d, e)
 function sendit2(c, d, e)
-    @inbounds @simd for i in 500:5000
+    @inbounds @simd for i = 500:5000
         c[i, 10000] = 0
         d[i, 10000] = 0
         e[i, 10000] = 0
@@ -296,7 +416,7 @@ sendit2(c, d, e)
 @btime sendit(c, d, e)
 @btime sendit2(c, d, e)
 
-for j in 1:2, i in 1:3
+for j = 1:2, i = 1:3
     println(i, j)
 end
 
@@ -404,7 +524,7 @@ coord[3, :] = range(0, dz, length = numNode)
 b = Float64[1; 1; 1]
 n = Float64[-1; 1; 0]
 
-for i in 1:(numSeg - 1)
+for i = 1:(numSeg-1)
     links[:, i] .= (i, i + 1)
     bVec[:, i] = b
     slipPlane[:, i] = n
@@ -676,7 +796,7 @@ function baar(intParams, intVars, dlnParams, matParams, network)
     network2 = deepcopy(network)
     intVars2 = deepcopy(intVars)
 
-    anim = @animate for i in 1:500
+    anim = @animate for i = 1:500
         fig = plotNodes(
             network2,
             m = 3,

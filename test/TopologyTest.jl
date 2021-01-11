@@ -9,14 +9,15 @@ cd(@__DIR__)
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
-        fileDislocationParameters,
-        fileMaterialParameters,
-        fileFEMParameters,
-        fileIntegrationParameters,
-        fileSlipSystem,
-        fileDislocationLoop,
-    )
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+        loadParametersJSON(
+            fileDislocationParameters,
+            fileMaterialParameters,
+            fileFEMParameters,
+            fileIntegrationParameters,
+            fileSlipSystem,
+            fileDislocationLoop,
+        )
 
     square = DislocationLoop(;
         loopType = loopShear(),
@@ -106,8 +107,8 @@ cd(@__DIR__)
     network.coord[:, 6:end] .+= [10; 10; 10]
     factor = rand()
 
-    for j in 1:size(network.segForce, 1)
-        for i in 1:size(network.segForce, 3)
+    for j = 1:size(network.segForce, 1)
+        for i = 1:size(network.segForce, 3)
             network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
             network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
             network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
@@ -1419,14 +1420,15 @@ end
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
-        fileDislocationParameters,
-        fileMaterialParameters,
-        fileFEMParameters,
-        fileIntegrationParameters,
-        fileSlipSystem,
-        fileDislocationLoop,
-    )
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+        loadParametersJSON(
+            fileDislocationParameters,
+            fileMaterialParameters,
+            fileFEMParameters,
+            fileIntegrationParameters,
+            fileSlipSystem,
+            fileDislocationLoop,
+        )
 
     pentagon = DislocationLoop(;
         loopType = loopPrism(),
@@ -1445,8 +1447,8 @@ end
     network = DislocationNetwork(pentagon; memBuffer = 1)
     network.coord[:, 6:end] .+= [10; 10; 10]
     factor = rand()
-    for j in 1:size(network.segForce, 1)
-        for i in 1:size(network.segForce, 3)
+    for j = 1:size(network.segForce, 1)
+        for i = 1:size(network.segForce, 3)
             network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
             network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
             network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
@@ -1750,14 +1752,15 @@ end
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
-        fileDislocationParameters,
-        fileMaterialParameters,
-        fileFEMParameters,
-        fileIntegrationParameters,
-        fileSlipSystem,
-        fileDislocationLoop,
-    )
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+        loadParametersJSON(
+            fileDislocationParameters,
+            fileMaterialParameters,
+            fileFEMParameters,
+            fileIntegrationParameters,
+            fileSlipSystem,
+            fileDislocationLoop,
+        )
 
     prismPentagon = DislocationLoop(;
         loopType = loopPrism(),

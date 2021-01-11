@@ -10,14 +10,15 @@ cd(@__DIR__)
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
-        fileDislocationParameters,
-        fileMaterialParameters,
-        fileFEMParameters,
-        fileIntegrationParameters,
-        fileSlipSystem,
-        fileDislocationLoop,
-    )
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+        loadParametersJSON(
+            fileDislocationParameters,
+            fileMaterialParameters,
+            fileFEMParameters,
+            fileIntegrationParameters,
+            fileSlipSystem,
+            fileDislocationLoop,
+        )
 
     missing, missing, missing, missing, missing, dislocationLoop2 = loadParametersJSON(
         fileDislocationParameters,
@@ -82,7 +83,13 @@ cd(@__DIR__)
     network2 = loadNetworkJSON(networkDumpJSON)
     integTime2 = loadIntegrationTimeJSON(simulationJSON[7])
     # Reload simulationJLD2.
-    dlnParams3, matParams3, femParams3, intParams3, slipSystems3, dislocationLoop3, integTime3 = load(
+    dlnParams3,
+    matParams3,
+    femParams3,
+    intParams3,
+    slipSystems3,
+    dislocationLoop3,
+    integTime3 = load(
         paramDumpJLD2,
         "dlnParams",
         "matParams",

@@ -9,14 +9,15 @@ cd(@__DIR__)
     fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop = loadParametersJSON(
-        fileDislocationParameters,
-        fileMaterialParameters,
-        fileFEMParameters,
-        fileIntegrationParameters,
-        fileSlipSystem,
-        fileDislocationLoop,
-    )
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+        loadParametersJSON(
+            fileDislocationParameters,
+            fileMaterialParameters,
+            fileFEMParameters,
+            fileIntegrationParameters,
+            fileSlipSystem,
+            fileDislocationLoop,
+        )
     dlnParamsPar = DislocationParameters(;
         coreRad = dlnParams.coreRad,
         coreRadMag = dlnParams.coreRadMag,

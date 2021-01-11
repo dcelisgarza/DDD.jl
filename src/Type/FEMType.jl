@@ -72,6 +72,8 @@ struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9} <: AbstractRegularCuboidMes
     mx::T5
     my::T5
     mz::T5
+    numElem::T5
+    numNode::T5
     w::T4
     h::T4
     d::T4
@@ -79,4 +81,11 @@ struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9} <: AbstractRegularCuboidMes
     coord::T7
     connectivity::T8
     K::T9
+end
+
+struct ForceDisplacement{T1,T2,T3,T4}
+    u::T1       # Displacement.
+    f::T2       # Force.
+    uHat::T3    # Corrective displacement.
+    fHat::T4    # Force displacement.
 end

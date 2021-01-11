@@ -59,7 +59,8 @@ end
     makeConnect!(network)
 
     idx = rand(1:10)
-    @test network[idx] == (network.links[:, idx],
+    @test network[idx] == (
+        network.links[:, idx],
         network.slipPlane[:, idx],
         network.bVec[:, idx],
         network.coord[:, idx],
@@ -69,10 +70,12 @@ end
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
         network.segIdx[idx, :],
-        network.segForce[:, :, idx],)
+        network.segForce[:, :, idx],
+    )
 
     idx = rand(1:10, 5)
-    @test network[idx] == (network.links[:, idx],
+    @test network[idx] == (
+        network.links[:, idx],
         network.slipPlane[:, idx],
         network.bVec[:, idx],
         network.coord[:, idx],
@@ -82,7 +85,8 @@ end
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
         network.segIdx[idx, :],
-        network.segForce[:, :, idx],)
+        network.segForce[:, :, idx],
+    )
 end
 
 @testset "Loop generation" begin
@@ -141,15 +145,15 @@ end
     @test network.label[1:size(loops[1].links, 2)] == loops[1].label
     # Check that the last loop was transfered correctly.
     nodeLoop2 = loops[end].numSides * loops[end].nodeSide * loops[end].numLoops
-    @test network.links[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+    @test network.links[:, (totalNodes-size(loops[end].links, 2)+1):totalNodes] ==
           loops[end].links .+ nodeLoop1 .+ nodeLoop2 .- size(loops[end].links, 2)
-    @test network.slipPlane[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+    @test network.slipPlane[:, (totalNodes-size(loops[end].links, 2)+1):totalNodes] ==
           loops[end].slipPlane
-    @test network.bVec[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+    @test network.bVec[:, (totalNodes-size(loops[end].links, 2)+1):totalNodes] ==
           loops[end].bVec
-    @test network.coord[:, (totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+    @test network.coord[:, (totalNodes-size(loops[end].links, 2)+1):totalNodes] ==
           loops[end].coord
-    @test network.label[(totalNodes - size(loops[end].links, 2) + 1):totalNodes] ==
+    @test network.label[(totalNodes-size(loops[end].links, 2)+1):totalNodes] ==
           loops[end].label
     network2 = DislocationNetwork(;
         links = zeros(Int, 2, 1),
@@ -193,8 +197,10 @@ end
 
     import DDD: loopKink
     loopType = loopKink
-    @test_logs (:warn,
-        "DislocationLoop: Constructor for $loopType not defined, defaulting to prismatic loop.",) DislocationLoop(;
+    @test_logs (
+        :warn,
+        "DislocationLoop: Constructor for $loopType not defined, defaulting to prismatic loop.",
+    ) DislocationLoop(;
         loopType = loopKink(),
         numSides = 4,
         nodeSide = 1,

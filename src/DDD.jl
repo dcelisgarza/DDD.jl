@@ -26,7 +26,8 @@ export AbstractCrystalStruct,
     DispatchRegularCuboidMesh,
     RegularCuboidMesh,
     buildMesh,
-    FEMParameters
+    FEMParameters,
+    ForceDisplacement
 export MaterialParameters
 export nodeType,
     SlipSystem,
@@ -44,7 +45,12 @@ export Rand, Randn, Zeros, Regular, loopDistribution
 
 include("./Processing/ProcessingBase.jl")
 export calcSegForce,
-    calcSegForce!, calcSelfForce, calcSelfForce!, calcSegSegForce, calcSegSegForce!
+       calcSegForce!, 
+       calcSelfForce, 
+       calcSelfForce!, 
+       calcSegSegForce, 
+       calcSegSegForce!,
+       calc_σHat
 export dlnMobility, dlnMobility!
 export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
 export shapeFunction, shapeFunctionDeriv
