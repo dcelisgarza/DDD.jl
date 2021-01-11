@@ -167,7 +167,7 @@ cd(@__DIR__)
     @test isapprox(fPK, fPKTest[idx, :])
 
     network.segForce .= 0
-    calcPKForce!(regularCuboidMesh, forceDisplacement, network)
+    calcPKForce!(regularCuboidMesh, forceDisplacement, network, idx)
     @test isapprox(fPK, network.segForce[:, 1, idx] * 2)
     @test isapprox(network.segForce[:, 1, idx], network.segForce[:, 2, idx])
 
@@ -176,7 +176,7 @@ cd(@__DIR__)
     @test isapprox(fPK', fPKTest[idx, :])
     
     network.segForce .= 0
-    calcPKForce!(regularCuboidMesh, forceDisplacement, network)
+    calcPKForce!(regularCuboidMesh, forceDisplacement, network, idx)
     @test isapprox(fPK, network.segForce[:, 1, idx] * 2)
     @test isapprox(network.segForce[:, 1, idx], network.segForce[:, 2, idx])
 
@@ -185,7 +185,7 @@ cd(@__DIR__)
     @test isapprox(fPK', fPKTest[idx, :])
 
     network.segForce .= 0
-    calcPKForce!(regularCuboidMesh, forceDisplacement, network)
+    calcPKForce!(regularCuboidMesh, forceDisplacement, network, idx)
     @test isapprox(fPK, network.segForce[:, 1, idx] * 2)
     @test isapprox(network.segForce[:, 1, idx], network.segForce[:, 2, idx])
 
