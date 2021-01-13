@@ -81,16 +81,17 @@ outside = findall(indices)
 # Change the label of the nodes outside to a temporary flag for newly exited nodes.
 label[outside] .= 6
 # Find intersects.
-https://github.com/JuliaGeometry/TriangleIntersect.jl
-https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
+# https://github.com/JuliaGeometry/TriangleIntersect.jl
+# https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
 
 function lineplanecollision(planenorm::Vector, planepnt::Vector, raydir::Vector, raypnt::Vector)
-    ndotu = dot(planenorm, raydir)
+    # https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
+    ndotu = dot(planenorm, raydir) # l ⋅ n
     ndotu ≈ 0 && return nothing
  
-    w  = raypnt - planepnt
-    si = -dot(planenorm, w) / ndotu
-    ψ  = w .+ si .* raydir .+ planepnt
+    w  = raypnt - planepnt  # l0 - p0
+    si = -dot(planenorm, w) / ndotu # d = (p0 - l0) ⋅ n / (l ⋅ n)
+    ψ  = w .+ si .* raydir .+ planepnt # p0 + l*d + l0 - p0 = l*d + l0 = Intersect
     return ψ
 end
  
