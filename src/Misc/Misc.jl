@@ -212,4 +212,27 @@ function rot3D(
     )
 end
 
+"""⊗(::AbstractVector, ::AbstractVector)
+Tensor product.
+"""
 ⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1,T2} = x * y'
+
+"""
+n = plane normal
+p0 = plane point
+l = line vector
+l0 = line point
+```
+linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
+```
+
+Find the intersect between plane and line.
+"""
+function linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
+    lDotN = l ⋅ n
+    lDotN ≈ 0 && return nothing
+
+    d = (p0 - l0) ⋅ n / lDotN
+    intersect = l0 + d * l
+    return intersect
+end

@@ -84,15 +84,13 @@ label[outside] .= 6
 # https://github.com/JuliaGeometry/TriangleIntersect.jl
 # https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
 
-function lineplanecollision(planenorm::Vector, planepnt::Vector, raydir::Vector, raypnt::Vector)
-    # https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
-    ndotu = dot(planenorm, raydir) # l ⋅ n
-    ndotu ≈ 0 && return nothing
- 
-    w  = raypnt - planepnt  # l0 - p0
-    si = -dot(planenorm, w) / ndotu # d = (p0 - l0) ⋅ n / (l ⋅ n)
-    ψ  = w .+ si .* raydir .+ planepnt # p0 + l*d + l0 - p0 = l*d + l0 = Intersect
-    return ψ
+function linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
+    lDotN = l ⋅ n
+    lDotN ≈ 0 && return nothing
+
+    d = (p0 - l0) ⋅ n / lDotN
+    intersect = l0 + d * l
+    return intersect
 end
  
 # Define plane
@@ -104,6 +102,22 @@ raydir = Float64[0, -1, -2]
 raypnt = Float64[0,  0, 10]
  
 ψ = lineplanecollision(planenorm, planepnt, raydir, raypnt)
+ψ2 = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+
+# Define plane
+planenorm = SVector(0, 0, 1)
+planepnt  = SVector(0, 0, 5)
+ 
+# Define ray
+raydir = SVector(0, -1, 0)
+raypnt = SVector(0,  0, 10)
+
+@btime lineplanecollision(planenorm, planepnt, raydir, raypnt)
+@btime linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+
+
+ψ = lineplanecollision(planenorm, planepnt, raydir, raypnt)
+linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
 println("Intersection at $ψ")
 
 
