@@ -82,7 +82,28 @@ outside = findall(indices)
 label[outside] .= 6
 # Find intersects.
 https://github.com/JuliaGeometry/TriangleIntersect.jl
+https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
 
+function lineplanecollision(planenorm::Vector, planepnt::Vector, raydir::Vector, raypnt::Vector)
+    ndotu = dot(planenorm, raydir)
+    ndotu ≈ 0 && return nothing
+ 
+    w  = raypnt - planepnt
+    si = -dot(planenorm, w) / ndotu
+    ψ  = w .+ si .* raydir .+ planepnt
+    return ψ
+end
+ 
+# Define plane
+planenorm = Float64[0, 0, 1]
+planepnt  = Float64[0, 0, 5]
+ 
+# Define ray
+raydir = Float64[0, -1, -2]
+raypnt = Float64[0,  0, 10]
+ 
+ψ = lineplanecollision(planenorm, planepnt, raydir, raypnt)
+println("Intersection at $ψ")
 
 
 
