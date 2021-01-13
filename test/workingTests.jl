@@ -85,10 +85,14 @@ label[outside] .= 6
 # https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
 
 function linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
-    lDotN = l ⋅ n
-    lDotN ≈ 0 && return nothing
+    den = l ⋅ n
+    num = (p0 - l0) ⋅ n
+    if den ≈ 0
+        num ≈ 0 && return Inf
+        return nothing
+    end
 
-    d = (p0 - l0) ⋅ n / lDotN
+    d = num / den
     intersect = l0 + d * l
     return intersect
 end
@@ -101,8 +105,33 @@ planepnt  = Float64[0, 0, 5]
 raydir = Float64[0, -1, -2]
 raypnt = Float64[0,  0, 10]
  
-ψ = lineplanecollision(planenorm, planepnt, raydir, raypnt)
-ψ2 = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+planenorm = Float64[0, 0, 1]
+planepnt  = Float64[0, 0, 5]
+raydir = Float64[0, 1, 0]
+raypnt = Float64[0,  0, 5]
+ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+isinf(ψ)
+
+planenorm = Float64[0, 0, 1]
+planepnt  = Float64[0, 0, 5]
+raydir = Float64[0, 1, 0]
+raypnt = Float64[0,  0, 6]
+ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+isnothing(ψ)
+
+
+
+@btime linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+
+
+
+planenorm = Float64[0, 0, 1]
+planepnt  = Float64[0, 0, 5]
+raydir = Float64[0, 0, 1]
+raypnt = Float64[0,  0, 5]
+
+ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+@test isapprox(ψ,  [0, -2.5, 5.0])
 
 # Define plane
 planenorm = SVector(0, 0, 1)

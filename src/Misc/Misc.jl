@@ -229,10 +229,14 @@ linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
 Find the intersect between plane and line.
 """
 function linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
-    lDotN = l ⋅ n
-    lDotN ≈ 0 && return nothing
+    den = l ⋅ n
+    num = (p0 - l0) ⋅ n
+    if den ≈ 0 
+        num ≈ 0 && return Inf
+        return nothing
+    end
 
-    d = (p0 - l0) ⋅ n / lDotN
+    d = num / den
     intersect = l0 + d * l
     return intersect
 end

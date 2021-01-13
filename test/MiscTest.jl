@@ -32,6 +32,51 @@ cd(@__DIR__)
     p = rot3D(xyz, uvw, abc, θ)
     @test isapprox(p, [-21.1690, 31.0685, -30.6029]; atol = 1e-4)
     @test compStruct(1, 1.2) == false
+
+    planenorm = Float64[0, 0, 1]
+    planepnt  = Float64[0, 0, 5]
+    raydir = Float64[0, -1, -2]
+    raypnt = Float64[0,  0, 10]
+
+    ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+    @test isapprox(ψ,  [0, -2.5, 5.0])
+
+    planenorm = Float64[0, 2, 1]
+    planepnt  = Float64[0, 0, 5]
+    raydir = Float64[0, -1, -2]
+    raypnt = Float64[0,  0, 10]
+    ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+    @test isapprox(ψ, [0.0, -1.25, 7.5])
+
+    planenorm = Float64[0, 0, 1]
+    planepnt  = Float64[0, 0, 5]
+    raydir = Float64[0, 1, 2]
+    raypnt = Float64[0,  0, 10]
+
+    ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+    @test isapprox(ψ,  [0, -2.5, 5.0])
+
+    planenorm = Float64[0, 0, 1]
+    planepnt  = Float64[0, 0, 5]
+    raydir = Float64[0, 1, -2]
+    raypnt = Float64[0,  0, 10]
+
+    ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+    @test isapprox(ψ,  [0, 2.5, 5.0])
+
+    planenorm = Float64[0, 0, 1]
+    planepnt  = Float64[0, 0, 5]
+    raydir = Float64[0, 1, 0]
+    raypnt = Float64[0,  0, 5]
+    ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+    @test isinf(ψ)
+
+    planenorm = Float64[0, 0, 1]
+    planepnt  = Float64[0, 0, 5]
+    raydir = Float64[0, 1, 0]
+    raypnt = Float64[0,  0, 6]
+    ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
+    @test isnothing(ψ)
 end
 
 @testset "Auxiliary" begin
@@ -42,6 +87,7 @@ end
         "srfFix" => nodeType(4),
         "virtual" => nodeType(5),
         "srfMob" => nodeType(3),
+        "tmp" => nodeType(6)
     )
 
     @test makeInstanceDict(nodeType) == dict
