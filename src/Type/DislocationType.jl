@@ -19,6 +19,7 @@ end
     srfMob = 3
     srfFix = 4
     virtual = 5
+    tmp = 6
 end
 
 """

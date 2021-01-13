@@ -21,14 +21,77 @@ dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
         fileDislocationLoop,
     )
 intVars = loadIntegrationTimeJSON(fileIntVar)
-# network = DislocationNetwork(dislocationLoop)
-dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
-
-segLen = rand() * (dx * dy * dz) / 1e8
-
+network = DislocationNetwork(dislocationLoop)
 regularCuboidMesh = buildMesh(matParams, femParams)
-numFEMNode = regularCuboidMesh.numNode
 
+dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
+segLen = dx / 10
+prismSquare = DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 4,   # 5-sided loop.
+    nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 10,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeType}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+
+shearSquare = DislocationLoop(;
+    loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
+    numSides = 4,   # 5-sided loop.
+    nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 10,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
+    _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeType}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+network = DislocationNetwork((shearSquare, prismSquare))
+##
+using Polyhedra, LazySets
+
+# Create convex hull, put it inside fem mesh builder.
+vertices = regularCuboidMesh.vertices
+# Need to create an array of arrays of points.
+points = [vertices[:, i] for i in 1:size(vertices, 2)]
+# Create convex hull and polytope. You can then check if 
+# [x, y, z] ∈ P 
+# to see if the point [x, y, z] is inside the domain or 
+# [x, y, z] ∉ P
+# to check if it's outside.
+hull = convex_hull(points)
+P = VPolytope(hull)
+
+coord = network.coord
+label = network.label
+# Findall internal nodes.
+idx = findall(x -> x == 1, label)
+# Find the location of the nodes that are outside the domain, P.
+indices = map((x, y, z) -> [x, y, z] ∉ P, coord[1, idx], coord[2, idx], coord[3, idx])
+outside = findall(indices)
+# Change the label of the nodes outside to a temporary flag for newly exited nodes.
+label[outside] .= 6
+# Find intersects.
+https://github.com/JuliaGeometry/TriangleIntersect.jl
+
+
+
+
+
+
+##
+dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
+numFEMNode = regularCuboidMesh.numNode
+segLen = rand() * (dx * dy * dz) / 1e8
 f = sparsevec(
     [112, 118, 133, 141, 213, 244, 262, 272, 317, 3 * numFEMNode],
     [
