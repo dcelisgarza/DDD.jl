@@ -3,15 +3,16 @@ using Plots
 plotlyjs()
 ##
 using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets
-cd(@__DIR__)
-fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
-fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
-fileFEMParameters = "../inputs/simParams/sampleFEMParameters.json"
-fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
-fileSlipSystem = "../data/slipSystems/BCC.json"
-fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
-dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+@time begin
+    cd(@__DIR__)
+    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+    fileFEMParameters = "../inputs/simParams/sampleFEMParameters.json"
+    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+    fileSlipSystem = "../data/slipSystems/BCC.json"
+    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+    fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
     loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
@@ -20,13 +21,23 @@ dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
         fileSlipSystem,
         fileDislocationLoop,
     )
-intVars = loadIntegrationTimeJSON(fileIntVar)
+    intVars = loadIntegrationTimeJSON(fileIntVar)
 # network = DislocationNetwork(dislocationLoop)
-regularCuboidMesh = buildMesh(matParams, femParams)
+    femParams = FEMParameters(
+                    femParams.type, 
+                    femParams.order,
+                    Float64(femParams.dx),
+                    Float64(femParams.dy),
+                    Float64(femParams.dz),
+                    40,
+                    40,
+                    40
+                )
+    regularCuboidMesh = buildMesh(matParams, femParams)
 
-dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
-segLen = dx / 10
-prismSquare = DislocationLoop(;
+    dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
+    segLen = dx / 10
+    prismSquare = DislocationLoop(;
     loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
     numSides = 4,   # 5-sided loop.
     nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
@@ -41,7 +52,7 @@ prismSquare = DislocationLoop(;
     dist = Rand(),  # Loop distribution.
 )
 
-shearSquare = DislocationLoop(;
+    shearSquare = DislocationLoop(;
     loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
     numSides = 4,   # 5-sided loop.
     nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
@@ -55,10 +66,12 @@ shearSquare = DislocationLoop(;
     range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
-network = DislocationNetwork((shearSquare, prismSquare))
+    network = DislocationNetwork((shearSquare, prismSquare))
+end
 ##
-vertices = regularCuboidMesh.vertices
-plotNodes(regularCuboidMesh, network,
+@time begin
+    vertices = regularCuboidMesh.vertices
+    plotNodes(regularCuboidMesh, network,
     m = 1,
     l = 3,
     linecolor = :blue,
@@ -66,27 +79,20 @@ plotNodes(regularCuboidMesh, network,
     markercolor = :blue,
     legend = false,)
 
-# Find which nodes are outside the domain.
-coord = network.coord
-label = network.label
-# Findall internal nodes.
-idx = findall(x -> x == 1, label)
-# Find the location of the nodes that are outside the domain, P.
-indices = map((x, y, z) -> [x, y, z] ∉ vertices, coord[1, idx], coord[2, idx], coord[3, idx])
-outside = findall(indices)
-# Change the label of the nodes outside to a temporary flag for newly exited nodes.
-label[outside] .= 6
+    # Find which nodes are outside the domain.
+    coord = network.coord
+    label = network.label
+    # Findall internal nodes.
+    idx = findall(x -> x == 1, label)
+    # Find the location of the nodes that are outside the domain, P.
+    indices = map((x, y, z) -> eltype(vertices)[x, y, z] ∉ vertices, coord[1, idx], coord[2, idx], coord[3, idx])
+    outside = findall(indices)
+    # Change the label of the nodes outside to a temporary flag for newly exited nodes.
+    # label[outside] .= 6
 
-# Plot nodes outside the domain.
-scatter!(coord[1,outside], coord[2,outside], coord[3,outside], markersize = 3)
-
-
-
-
-
-
-
-
+    # Plot nodes outside the domain.
+    scatter!(coord[1, outside], coord[2, outside], coord[3, outside], markersize = 3)
+end
 
 
 

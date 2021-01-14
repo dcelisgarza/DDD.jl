@@ -9,7 +9,8 @@ export makeTypeDict, compStruct, intAngle, externalAngle, rot3D, makeInstanceDic
 export inclusiveComparison, ⊗, linePlaneIntersect
 
 include("./Type/TypeBase.jl")
-export AbstractCrystalStruct,
+export AbstractDlnSeg,
+    AbstractCrystalStruct,
     BCC,
     FCC,
     HCP,
@@ -28,7 +29,10 @@ export AbstractCrystalStruct,
     RegularCuboidMesh,
     buildMesh,
     FEMParameters,
-    ForceDisplacement
+    ForceDisplacement,
+    AbstractMobility,
+    AbstractDlnStr,
+    AbstractDistribution
 export MaterialParameters
 export nodeType,
     SlipSystem,
