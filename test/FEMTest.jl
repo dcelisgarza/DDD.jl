@@ -79,7 +79,8 @@ end
         0 0 0 0 1.000000000000000 0
         0 0 0 0 0 1.000000000000000
     ]
-    @test isapprox(regularCuboidMesh.vertices', testVertices)
+    vertices = reshape(collect(Iterators.flatten(regularCuboidMesh.vertices.vertices)), 3, 8)
+    @test isapprox(vertices', testVertices)
     @test isapprox(regularCuboidMesh.C, testC)
 
     @test regularCuboidMesh.dx == femParams.dx

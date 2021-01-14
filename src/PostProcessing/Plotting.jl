@@ -37,8 +37,9 @@ function plotNodes(mesh::T1, network::DislocationNetwork, args...; kw...) where 
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...) =#
     end
 
-    vertices = mesh.vertices
-    vertices = mesh.vertices
+    # Plot FEM domain.
+    vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
+    vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
     face1 = [1, 2, 4, 3, 1]
     face2 = [5, 6, 8, 7, 5]
     surf1 = vertices[:, face1]
@@ -124,8 +125,9 @@ function plotNodes!(fig, mesh::T1, network::DislocationNetwork, args...; kw...) 
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...) =#
     end
 
-    vertices = mesh.vertices
-    vertices = mesh.vertices
+    # Plot FEM domain.
+    vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
+    vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
     face1 = [1, 2, 4, 3, 1]
     face2 = [5, 6, 8, 7, 5]
     surf1 = vertices[:, face1]

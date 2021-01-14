@@ -2,7 +2,7 @@
 using Plots
 plotlyjs()
 ##
-using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD
+using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets
 cd(@__DIR__)
 fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
 fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
@@ -21,7 +21,7 @@ dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
         fileDislocationLoop,
     )
 intVars = loadIntegrationTimeJSON(fileIntVar)
-network = DislocationNetwork(dislocationLoop)
+# network = DislocationNetwork(dislocationLoop)
 regularCuboidMesh = buildMesh(matParams, femParams)
 
 dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
@@ -57,46 +57,40 @@ shearSquare = DislocationLoop(;
 )
 network = DislocationNetwork((shearSquare, prismSquare))
 ##
-using Polyhedra, LazySets
-
-# Create convex hull, put it inside fem mesh builder.
 vertices = regularCuboidMesh.vertices
-# Need to create an array of arrays of points.
-points = [vertices[:, i] for i in 1:size(vertices, 2)]
-# Create convex hull and polytope. You can then check if 
-# [x, y, z] ∈ P 
-# to see if the point [x, y, z] is inside the domain or 
-# [x, y, z] ∉ P
-# to check if it's outside.
-hull = convex_hull(points)
-P = VPolytope(hull)
+plotNodes(regularCuboidMesh, network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,)
 
+# Find which nodes are outside the domain.
 coord = network.coord
 label = network.label
 # Findall internal nodes.
 idx = findall(x -> x == 1, label)
 # Find the location of the nodes that are outside the domain, P.
-indices = map((x, y, z) -> [x, y, z] ∉ P, coord[1, idx], coord[2, idx], coord[3, idx])
+indices = map((x, y, z) -> [x, y, z] ∉ vertices, coord[1, idx], coord[2, idx], coord[3, idx])
 outside = findall(indices)
 # Change the label of the nodes outside to a temporary flag for newly exited nodes.
 label[outside] .= 6
-# Find intersects.
-# https://github.com/JuliaGeometry/TriangleIntersect.jl
-# https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
 
-function linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
-    den = l ⋅ n
-    num = (p0 - l0) ⋅ n
-    if den ≈ 0
-        num ≈ 0 && return Inf
-        return nothing
-    end
+# Plot nodes outside the domain.
+scatter!(coord[1,outside], coord[2,outside], coord[3,outside], markersize = 3)
 
-    d = num / den
-    intersect = l0 + d * l
-    return intersect
-end
- 
+
+
+
+
+
+
+
+
+
+
+##
 # Define plane
 planenorm = Float64[0, 0, 1]
 planepnt  = Float64[0, 0, 5]

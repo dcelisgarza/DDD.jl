@@ -67,17 +67,20 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     V2 = zeros(dxType, numElem * 24^2)
     V3 = zeros(dxType, numElem * 24^2)
 
-    # For a regular cuboid mesh this is predefined.
-    vertices = SMatrix{3,8,dxType}(
-                                0, 0, 0,
-                                dx, 0, 0,
-                                0, dy, 0,
-                                dx, dy, 0,
-                                0, 0, dz,
-                                dx, 0, dz,
-                                0, dy, dz,
-                                dx, dy, dz
-                            )
+    # For a regular cuboid mesh this is predefined. Making a volumetric polytope allows us to check if points lie inside the volume simply by doing [x, y, z] ∈ vertices, or checking if they do not belong by doing [x, y, z] ∉ vertices. The symbols are typed as \in and \notin + Tab.
+    vertices = VPolytope(
+            SMatrix{3,8,dxType}(
+                0, 0, 0,
+                dx, 0, 0,
+                0, dy, 0,
+                dx, dy, 0,
+                0, 0, dz,
+                dx, 0, dz,
+                0, dy, dz,
+                dx, dy, dz
+            )
+        )
+
     E = 2 * μ * (1 + ν)                 # Young's modulus
     Lame = E * νomνInv / (1 - 2 * ν)    # Lamé's relation
     CDiag = Lame + 2 * μ
