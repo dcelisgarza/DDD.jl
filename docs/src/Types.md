@@ -35,3 +35,7 @@ DislocationParameters
 ```@docs
 DislocationLoop
 ```
+
+```@docs
+DislocationNetwork
+```
