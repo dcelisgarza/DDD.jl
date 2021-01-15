@@ -5,7 +5,8 @@ makedocs(;
     format = Documenter.HTML(),
     pages = [
         "Home" => "index.md",
-        "Types" => "Types.md"
+        "Types" => "Types.md",
+        "Constructors" => "Constructors.md"
         # "Dislocations" => "Dislocations.md",
         # "IO" => "io.md",
         # "Post Processing" => "postProcessing.md",
