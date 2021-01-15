@@ -6,7 +6,8 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Types" => "Types.md",
-        "Constructors" => "Constructors.md"
+        "Constructors" => "Constructors.md",
+        "Extended Methods" => "ExtendedMethods.md"
         # "Dislocations" => "Dislocations.md",
         # "IO" => "io.md",
         # "Post Processing" => "postProcessing.md",

@@ -646,7 +646,7 @@ The recommended way of creating a network is to use a `source` of type [`Disloca
 
 * `args...` are optional arguments that will be passed on to the [`loopDistribution`](@ref) function which distributes the loops in `sources` according to the type of their `dist` variable.
 * `kw...` are optional keyword arguments that will also be passed to `loopDistribution`.
-* `memBuffer` is the numerical value for allocating memory in advance. The quantity, `memBuffer × N`, where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data. If no `memBuffer` is provided, the number of entries allocated will be ``\\textrm{round}(N \\log_{2}(N))``.
+* `memBuffer` is the numerical value for allocating memory in advance. The quantity, `memBuffer × N`, where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data. If no `memBuffer` is provided, the number of entries allocated will be `round(N*log2(N)).
 """
 function DislocationNetwork(
     sources::T1,
@@ -772,7 +772,7 @@ function DislocationNetwork!(
     numNode = nodeTotal
 
     # Allocate memory.
-    available = length(findall(x -> x == 0, network.label))
+    available = length(findall(x -> getNodeType(x) == none, network.label))
     if nodeTotal > available
         newEntries = Int(round(nodeTotal * log2(nodeTotal)))
         network = push!(network, newEntries)
@@ -786,7 +786,7 @@ function DislocationNetwork!(
     
     # Since the network has already been created, initIdx is the next available index to store new data.
     initIdx::Int = 1
-    first = findfirst(x -> x == 0, label)
+    first = findfirst(x -> getNodeType(x) == none, label)
     isnothing(first) ? initIdx = 1 : initIdx = first
     makeNetwork!(
         links,

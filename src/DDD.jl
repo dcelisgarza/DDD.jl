@@ -34,9 +34,14 @@ export AbstractDlnSeg,
     ForceDisplacement,
     AbstractMobility,
     AbstractDlnStr,
-    AbstractDistribution
+    AbstractDistribution,
+    limits!,
+    translatePoints!,
+    makeNetwork!,
+    makeSegment
 export MaterialParameters
 export nodeType,
+    getNodeType,
     SlipSystem,
     DislocationParameters,
     DislocationLoop,

@@ -28,9 +28,16 @@ Different types of nodes behave differently. There are only a finite number of t
     intFix = 2
     srfMob = 3
     srfFix = 4
-    virtual = 5
+    ext = 5
     tmp = 6
 end
+"""
+```
+getNodeType(x::nodeType)
+```
+Used internally to find the type of node without having to remember the indices. One can simply use `getNodeType(x) == srfMob` to see if `x` is a mobile surface node.
+"""
+getNodeType(x::nodeType) = x
 
 """
 ```

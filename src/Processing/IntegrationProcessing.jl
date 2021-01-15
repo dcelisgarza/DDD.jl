@@ -14,11 +14,11 @@ function deriv!(
     numNode = network.numNode[1]
 
     # Fixed nodes do not move, internal fixed, surface fixed, external.
-    idxFixed = findall(x -> x == 2 || x == 4 || x == 5, label)
+    idxFixed = findall(x -> getNodeType(x) == intFix || getNodeType(x) == srfFix || getNodeType(x) == ext, label)
     !isnothing(idxFixed) ? nodeVel[:, idxFixed] .= 0 : nothing
 
     # Make surface velocity zero along the surface normal.
-    idxSurf = findall(x -> x == 3, label)
+    idxSurf = findall(x -> getNodeType(x) == srfMob, label)
     for node in idxSurf
         # Find the links where node appears.
         nodeLink1 = links[1, :] .== node

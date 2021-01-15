@@ -3,16 +3,15 @@ using Plots
 plotlyjs()
 ##
 using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets
-@time begin
-    cd(@__DIR__)
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
-    fileFEMParameters = "../inputs/simParams/sampleFEMParameters.json"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
-    fileSlipSystem = "../data/slipSystems/BCC.json"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+cd(@__DIR__)
+fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
+fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
+fileFEMParameters = "../inputs/simParams/sampleFEMParameters.json"
+fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
+fileSlipSystem = "../data/slipSystems/BCC.json"
+fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
+fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
+dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
     loadParametersJSON(
         fileDislocationParameters,
         fileMaterialParameters,
@@ -21,9 +20,9 @@ using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets
         fileSlipSystem,
         fileDislocationLoop,
     )
-    intVars = loadIntegrationTimeJSON(fileIntVar)
+intVars = loadIntegrationTimeJSON(fileIntVar)
 # network = DislocationNetwork(dislocationLoop)
-    femParams = FEMParameters(
+femParams = FEMParameters(
                     femParams.type, 
                     femParams.order,
                     Float64(femParams.dx),
@@ -33,11 +32,11 @@ using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets
                     40,
                     40
                 )
-    regularCuboidMesh = buildMesh(matParams, femParams)
+regularCuboidMesh = buildMesh(matParams, femParams)
 
-    dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
-    segLen = dx / 10
-    prismSquare = DislocationLoop(;
+dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
+segLen = dx / 10
+prismSquare = DislocationLoop(;
     loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
     numSides = 4,   # 5-sided loop.
     nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
@@ -52,7 +51,7 @@ using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets
     dist = Rand(),  # Loop distribution.
 )
 
-    shearSquare = DislocationLoop(;
+shearSquare = DislocationLoop(;
     loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
     numSides = 4,   # 5-sided loop.
     nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
@@ -66,8 +65,7 @@ using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets
     range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
-    network = DislocationNetwork((shearSquare, prismSquare))
-end
+network = DislocationNetwork((shearSquare, prismSquare))
 ##
 @time begin
     vertices = regularCuboidMesh.vertices

@@ -241,16 +241,43 @@ DislocationNetwork!(
 ```
 
 ```@docs
-makeNetwork!(
-    links,
-    slipPlane,
-    bVec,
-    coord,
-    label,
-    sources,
-    lims,
-    initIdx,
-    args...;
-    kw...,
-)
+makeNetwork!
+```
+
+## Utility
+
+```@docs
+loopDistribution
+```
+
+```@docs
+limits!
+```
+
+```@docs
+translatePoints!
+```
+
+```@docs
+makeSegment
+```
+
+```@docs
+makeConnect
+```
+
+```@docs
+makeConnect!
+```
+
+```@docs
+getSegmentIdx
+```
+
+```@docs
+getSegmentIdx!
+```
+
+```@docs
+checkNetwork
 ```

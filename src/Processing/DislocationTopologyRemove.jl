@@ -405,7 +405,7 @@ function coarsenNetwork!(
     i = 1
     @inbounds while i <= numNode
         # We only want to coarsen real internal nodes. Else we skip to the next node.
-        if !(connectivity[1, i] == 2 && label[i] == 1)
+        if !(connectivity[1, i] == 2 && getNodeType(label[i]) == intMob)
             i += 1
             continue
         end
@@ -422,7 +422,7 @@ function coarsenNetwork!(
         link2_nodeOppI = links[oppColLink2, link2] # Node i is connected to this node as part of link 2.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source, thus we skip to the next node.
-        if label[link1_nodeOppI] == 2 && label[link2_nodeOppI] == 2
+        if getNodeType(label[link1_nodeOppI]) == intFix && getNodeType(label[link2_nodeOppI]) == intFix
             i += 1
             continue
         end
@@ -565,7 +565,7 @@ function coarsenVirtualNetwork!(
     i = 1
     while i <= numNode
         # Only find virtual nodes with two connections.
-        if label[i] == 5 && connectivity[1, i] == 2
+        if getNodeType(label[i]) == ext && connectivity[1, i] == 2
             # This is where node i appears in connectivity.
             node1 = connectivity[2, i] # Link where node i appears first.
             linkCol1 = 3 - connectivity[3, i] # Column of links where it appears.
@@ -576,7 +576,7 @@ function coarsenVirtualNetwork!(
             linkNode2 = links[node2, linkCol2] # Second node connected to target node.
 
             # Only if both nodes are virtual.
-            if label[linkNode1] == label[linkNode2] == 5
+            if getNodeType(label[linkNode1]) == getNodeType(label[linkNode2]) == ext
                 # Coordinate of node i.
                 iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
 

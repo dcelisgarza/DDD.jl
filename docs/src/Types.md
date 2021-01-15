@@ -9,6 +9,10 @@ nodeType
 ```
 
 ```@docs
+getNodeType
+```
+
+```@docs
 AbstractDlnSeg
 ```
 
