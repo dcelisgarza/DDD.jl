@@ -586,7 +586,7 @@ DislocationNetwork(;
     T6 <: AbstractArray{T,N} where {T,N},
 }
 ```
-Keyword constructor for [`DislocationNetwork`](@ref) calls the positional one.
+Keyword constructor for [`DislocationNetwork`](@ref), calls the positional one.
 """
 function DislocationNetwork(;
     links::T1,
@@ -646,7 +646,7 @@ The recommended way of creating a network is to use a `source` of type [`Disloca
 
 * `args...` are optional arguments that will be passed on to the [`loopDistribution`](@ref) function which distributes the loops in `sources` according to the type of their `dist` variable.
 * `kw...` are optional keyword arguments that will also be passed to `loopDistribution`.
-* `memBuffer` is the numerical value for allocating memory in advance. The quantity ``\\textrm{memBuffer} × N`` where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data. If no `memBuffer` is provided, the number of entries allocated will be ``\\textrm{round}(N \\log_{2}(N))``.
+* `memBuffer` is the numerical value for allocating memory in advance. The quantity, `memBuffer × N`, where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data. If no `memBuffer` is provided, the number of entries allocated will be ``\\textrm{round}(N \\log_{2}(N))``.
 """
 function DislocationNetwork(
     sources::T1,
@@ -681,6 +681,7 @@ function DislocationNetwork(
     segForce = zeros(Float64, 3, 2, nodeBuffer)
     
     initIdx = 1
+    # Fill the matrices that will make up the network.
     makeNetwork!(
         links,
         slipPlane,
@@ -783,6 +784,7 @@ function DislocationNetwork!(
     coord = network.coord
     label = network.label
     
+    # Since the network has already been created, initIdx is the next available index to store new data.
     initIdx::Int = 1
     first = findfirst(x -> x == 0, label)
     isnothing(first) ? initIdx = 1 : initIdx = first
@@ -806,6 +808,23 @@ function DislocationNetwork!(
     checkConsistency ? checkNetwork(network) : nothing
     return network
 end
+"""
+```
+makeNetwork!(
+    links,
+    slipPlane,
+    bVec,
+    coord,
+    label,
+    sources,
+    lims,
+    initIdx,
+    args...;
+    kw...,
+)
+```
+Internal function called by the recommended [`DislocationNetwork`](@ref) method and its mutating counterpart [`DislocationNetwork!`](@ref), to automatically fill the matrices with the information from `sources`.
+"""
 function makeNetwork!(
     links,
     slipPlane,

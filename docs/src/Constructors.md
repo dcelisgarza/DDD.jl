@@ -239,3 +239,18 @@ DislocationNetwork!(
     T4 <: Bool,
 }
 ```
+
+```@docs
+makeNetwork!(
+    links,
+    slipPlane,
+    bVec,
+    coord,
+    label,
+    sources,
+    lims,
+    initIdx,
+    args...;
+    kw...,
+)
+```
