@@ -5,7 +5,7 @@ Base.convert(::Type{nodeType}, x::Real) = nodeType(Int(x))
 Base.zero(::Type{nodeType}) = nodeType(0)
 
 # DislocationLoop.
-Base.getindex(x::DislocationLoop, i::Int) = i == 1 ? x : throw(BoundsError())
+Base.getindex(x::DislocationLoop, i) = i == 1 ? x : throw(BoundsError())
 Base.eachindex(x::DislocationLoop) = 1
 """
 ```
@@ -60,7 +60,7 @@ push!(network::DislocationNetwork, n::Int)
 ```
 Pushes `n` new datapoints into `network`.
 """
-function Base.push!(network::DislocationNetwork, n::Int)
+function Base.push!(network::DislocationNetwork, n)
     elemT = eltype(network.coord)
     network = DislocationNetwork(;
         links = hcat(network.links, zeros(Int, 2, n)),

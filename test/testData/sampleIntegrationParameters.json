@@ -1,5 +1,5 @@
 {
-    "method": "DDD.CustomTrapezoid()",
+    "method": "DDD.AdaptiveEulerTrapezoid()",
     "tmin": 0,
     "tmax": 1e13,
     "dtmin": 1e-6,

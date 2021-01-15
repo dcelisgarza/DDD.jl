@@ -51,7 +51,7 @@ function deriv!(
 end
 
 function integrate!(
-    intMethod::CustomTrapezoid,
+    intMethod::AdaptiveEulerTrapezoid,
     intParams::T1,
     intVars::T2,
     dlnParams::T3,

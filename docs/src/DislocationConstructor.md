@@ -244,7 +244,7 @@ DislocationNetwork!(
 makeNetwork!
 ```
 
-## Utility
+### Utility
 
 ```@docs
 loopDistribution

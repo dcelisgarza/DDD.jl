@@ -5,9 +5,13 @@ makedocs(;
     format = Documenter.HTML(),
     pages = [
         "Home" => "index.md",
-        "Types" => "Types.md",
-        "Constructors" => "Constructors.md",
-        "Extended Methods" => "ExtendedMethods.md"
+        "Dislocation Types" => "DislocationType.md",
+        "Dislocation Constructors" => "DislocationConstructor.md",
+        "Dislocation Extended Methods" => "DislocationExtendedMethods.md",
+        "FEM Types" => "FEMType.md",
+        "FEM Constructors" => "FEMConstructor.md",
+        "Integration Types" => "IntegrationType.md",
+        "Integration Constructors" => "IntegrationConstructor.md",
         # "Dislocations" => "Dislocations.md",
         # "IO" => "io.md",
         # "Post Processing" => "postProcessing.md",

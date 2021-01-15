@@ -1,35 +1,106 @@
-
+"""
+```
+FEMParameters(
+    type::T1,
+    order::T2,
+    dx::T3,
+    dy::T3,
+    dz::T3,
+    mx::T4,
+    my::T4,
+    mz::T4
+) where {
+    T1 <: AbstractMesh,
+    T2 <: AbstractElementOrder,
+    T3 <: AbstractFloat,
+    T4 <: Integer
+}
+```
+Constructor for [`FEMParameters`](@ref).
+"""
+function FEMParameters(type::T1, order::T2, dx::T3, dy::T3, dz::T3, mx::T4, my::T4, mz::T4) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractFloat,T4 <: Integer}
+    FEMParameters{T1,T2,T3,T4}(type, order, dx, dy, dz, mx, my, mz)
+end
+"""
+```
+FEMParameters(;
+    type::T1,
+    order::T2,
+    dx::T3,
+    dy::T3,
+    dz::T3,
+    mx::T4,
+    my::T4,
+    mz::T4
+) where {
+    T1 <: AbstractMesh,
+    T2 <: AbstractElementOrder,
+    T3 <: AbstractFloat,
+    T4 <: Integer
+}
+```
+Keyword constructor for [`FEMParameters`](@ref). Calls the positional constructor.
+"""
+function FEMParameters(; type::T1, order::T2, dx::T3, dy::T3, dz::T3, mx::T4, my::T4, mz::T4) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractFloat,T4 <: Integer}
+    return FEMParameters(type, order, dx, dy, dz, mx, my, mz)
+end
+"""
+```
+buildMesh(matParams::T1, femParams::T2) 
+    where {T1 <: MaterialParameters,T2 <: FEMParameters}
+```
+Internally calls another `buildMesh` that dispatches based on [`FEMParameters`](@ref).`type`.
+"""
 function buildMesh(matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
     return buildMesh(femParams.type, matParams, femParams)
 end
+"""
+```
+buildMesh(::T1, matParams::T2, femParams::T3) 
+    where {T1 <: DispatchRegularCuboidMesh,T2 <: MaterialParameters,T3 <: FEMParameters}
+```
+Builds a [`RegularCuboidMesh`](@ref) by dispatching on `femParams.type == DispatchRegularCuboidMesh()`.
+"""
 function buildMesh(::T1, matParams::T2, femParams::T3) where {T1 <: DispatchRegularCuboidMesh,T2 <: MaterialParameters,T3 <: FEMParameters}
     return RegularCuboidMesh(femParams.order, matParams, femParams)
 end
 
 """
-E Tarleton edmund.tarleton@materials.ox.ac.uk
+```
+RegularCuboidMesh(
+    order::T1, 
+    matParams::T2, 
+    femParams::T3
+) where {
+    T1 <: LinearElement,
+    T2 <: MaterialParameters,
+    T3 <: FEMParameters
+}
+```
+Created by: E. Tarleton `edmund.tarleton@materials.ox.ac.uk`
+
 3D FEM code using linear 8 node element with 8 integration pts (2x2x2) per element.
 
+```
    4.-------.3
-   |\\       \\
-   | \\      |\\
-   1.-\\---- .2\\
-    \\  \\   \\ \\
-     \\ 8.--------.7
-      \\ |     \\ |
-       \\|      \\|
+   | \\       |\\
+   |  \\      | \\    my
+   1.--\\---- .2 \\
+    \\   \\     \\  \\
+     \\  8.--------.7
+      \\  |      \\ |  mz
+       \\ |       \\|
         5.--------.6
-
-rectangular domain.
-(y going in to the screen) note this is rotated about x axis w.r.t. local (s1,s2,s3) system.
- -------------------------------------------------
-
-^z                   (mx,my)
-|
-|
-|------>x-----------------------------------------
+             mx
+y   ^z
+ ↖  |
+  \\ |
+   \\|---->x
+```
+!!! note
+    This is rotated about the `x` axis w.r.t. to the local `(s1, s2, s3)` system. [`calc_σHat`](@ref) uses custom linear shape functions that eliminate the need for a Jacobian, speeding up the calculation. We keep the Jacobian in this function because it's only run at simulation initialisation so it's not performance critical, which lets us use standard shape functions.
 """
-function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <: LinearElement, T2 <: MaterialParameters, T3 <: FEMParameters}
+function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <: LinearElement,T2 <: MaterialParameters,T3 <: FEMParameters}
 
     μ = matParams.μ
     ν = matParams.ν
@@ -238,6 +309,20 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     )
     
 end
-function RegularCuboidMesh(; order::T1, matParams::T2, femParams::T3) where {T1<:AbstractElementOrder, T2 <: MaterialParameters, T3 <: FEMParameters}
+"""
+```
+RegularCuboidMesh(;
+    order::T1, 
+    matParams::T2, 
+    femParams::T3
+) where {
+    T1 <: AbstractElementOrder,
+    T2 <: MaterialParameters,
+    T3 <: FEMParameters
+}
+```
+Keyword constructor for [`RegularCuboidMesh`](@ref).
+"""
+function RegularCuboidMesh(; order::T1, matParams::T2, femParams::T3) where {T1 <: AbstractElementOrder,T2 <: MaterialParameters,T3 <: FEMParameters}
     return RegularCuboidMesh(order, matParams, femParams)
 end

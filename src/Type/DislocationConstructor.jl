@@ -55,7 +55,7 @@ DislocationParameters(
     parGPU::T4 = false,
     slipStepCritLen::T1 = maxSegLen / 2,
     slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
-) where {T1,T2 <: Int,T3 <: AbstractMobility,T4 <: Bool}
+) where {T1,T2 <: Integer,T3 <: AbstractMobility,T4 <: Bool}
 ```
 The constructor for [`DislocationParameters`](@ref) provides a few default values and calculates derived quantities.
 """
@@ -80,7 +80,7 @@ function DislocationParameters(
     parGPU::T4 = false,
     slipStepCritLen::T1 = maxSegLen / 2,
     slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
-) where {T1,T2 <: Int,T3 <: AbstractMobility,T4 <: Bool}
+) where {T1,T2 <: Integer,T3 <: AbstractMobility,T4 <: Bool}
 
     coreRad == minSegLen == maxSegLen == 0 ? nothing :
     @assert coreRad < minSegLen < maxSegLen
@@ -136,7 +136,7 @@ DislocationParameters(;
     parGPU::T4 = false,
     slipStepCritLen::T1 = maxSegLen / 2,
     slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
-) where {T1,T2 <: Int,T3 <: AbstractMobility,T4 <: Bool}
+) where {T1,T2 <: Integer,T3 <: AbstractMobility,T4 <: Bool}
 ```
 Keyword constructor for [`DislocationParameters`](@ref). Calls the positional constructor internally.
 """
@@ -161,7 +161,7 @@ function DislocationParameters(;
     parGPU::T4 = false,
     slipStepCritLen::T1 = maxSegLen / 2,
     slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
-) where {T1,T2 <: Int,T3 <: AbstractMobility,T4 <: Bool}
+) where {T1,T2 <: Integer,T3 <: AbstractMobility,T4 <: Bool}
     return DislocationParameters(
         coreRad,
         coreRadMag,
@@ -203,7 +203,7 @@ DislocationLoop(
     dist::T4,
 ) where {
     T1 <: AbstractDlnStr,
-    T2 <: Int,
+    T2 <: Integer,
     T3 <: AbstractVector{nodeType},
     T4 <: AbstractDistribution,
 }
@@ -223,7 +223,7 @@ function DislocationLoop(
     buffer,
     range,
     dist::T4,
-) where {T1 <: AbstractDlnStr,T2 <: Int,T3 <: AbstractVector{nodeType},T4 <: AbstractDistribution,}
+) where {T1 <: AbstractDlnStr,T2 <: Integer,T3 <: AbstractVector{nodeType},T4 <: AbstractDistribution,}
 
     nodeTotal::Int = 0
     links = zeros(MMatrix{2,nodeTotal,Int})
@@ -265,7 +265,7 @@ DislocationLoop(
     dist::T5,
 ) where {
     T1 <: loopPure,
-    T2 <: Int,
+    T2 <: Integer,
     T3 <: AbstractArray{T,N} where {T,N},
     T4 <: AbstractVector{nodeType},
     T5 <: AbstractDistribution,
@@ -286,7 +286,7 @@ function DislocationLoop(
     buffer,
     range,
     dist::T5,
-) where {T1 <: loopPure,T2 <: Int,T3 <: AbstractArray{T,N} where {T,N},T4 <: AbstractVector{nodeType},T5 <: AbstractDistribution,}
+) where {T1 <: loopPure,T2 <: Integer,T3 <: AbstractArray{T,N} where {T,N},T4 <: AbstractVector{nodeType},T5 <: AbstractDistribution,}
 
     nodeTotal = numSides * nodeSide # Calculate total number of nodes for memory allocation.
     numSegLen = length(segLen) # Number of segment lengths.
@@ -393,7 +393,7 @@ DislocationLoop(
     dist::T5,
 ) where {
     T1 <: loopImpure,
-    T2 <: Int,
+    T2 <: Integer,
     T3 <: AbstractArray{T,N} where {T,N},
     T4 <: AbstractVector{nodeType},
     T5 <: AbstractDistribution,
@@ -414,7 +414,7 @@ function DislocationLoop(
     buffer,
     range,
     dist::T5,
-) where {T1 <: loopImpure,T2 <: Int,T3 <: AbstractArray{T,N} where {T,N},T4 <: AbstractVector{nodeType},T5 <: AbstractDistribution,}
+) where {T1 <: loopImpure,T2 <: Integer,T3 <: AbstractArray{T,N} where {T,N},T4 <: AbstractVector{nodeType},T5 <: AbstractDistribution,}
 
     @warn "DislocationLoop: Constructor for $(typeof(loopType)) not defined, defaulting to prismatic loop."
     return DislocationLoop(
@@ -449,7 +449,7 @@ DislocationLoop(;
     dist::T8,
 ) where {
     T1 <: AbstractDlnStr,
-    T2 <: Int,
+    T2 <: Integer,
     T3 <: Union{T where {T},AbstractArray{T,N} where {T,N}},
     T4 <: AbstractArray{T,N} where {T,N},
     T5 <: AbstractVector{nodeType},
@@ -473,7 +473,7 @@ function DislocationLoop(;
     buffer::T6,
     range::T7,
     dist::T8,
-) where {T1 <: AbstractDlnStr,T2 <: Int,T3 <: Union{T where {T},AbstractArray{T,N} where {T,N}},T4 <: AbstractArray{T,N} where {T,N},T5 <: AbstractVector{nodeType},T6,T7 <: AbstractArray{T,N} where {T,N},T8 <: AbstractDistribution,}
+) where {T1 <: AbstractDlnStr,T2 <: Integer,T3 <: Union{T where {T},AbstractArray{T,N} where {T,N}},T4 <: AbstractArray{T,N} where {T,N},T5 <: AbstractVector{nodeType},T6,T7 <: AbstractArray{T,N} where {T,N},T8 <: AbstractDistribution,}
     return DislocationLoop(
         loopType,
         numSides,
@@ -513,7 +513,7 @@ DislocationNetwork(
     T2 <: AbstractArray{T,N} where {T,N},
     T3 <: AbstractVector{nodeType},
     T4 <: Union{Int,AbstractVector{Int}},
-    T5 <: Int,T6 <: AbstractArray{T,N} where {T,N},
+    T5 <: Integer,T6 <: AbstractArray{T,N} where {T,N},
 }
 ```
 [`DislocationNetwork`](@ref) constructor provides default values, validates inputs and calculates derived quantities.
@@ -533,7 +533,7 @@ function DislocationNetwork(
     linksConnect::T1 = zeros(Int, 2, size(links, 2)),
     segIdx::T1 = zeros(Int, size(links, 2), 3),
     segForce::T6 = zeros(3, size(links)...),
-) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: Union{Int,AbstractVector{Int}},T5 <: Int,T6 <: AbstractArray{T,N} where {T,N},}
+) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: Union{Int,AbstractVector{Int}},T5 <: Integer,T6 <: AbstractArray{T,N} where {T,N},}
 
     @assert size(links, 1) == size(segForce, 2) == 2
     @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
@@ -582,7 +582,7 @@ DislocationNetwork(;
     T1 <: AbstractArray{T,N} where {T,N},
     T2 <: AbstractArray{T,N} where {T,N},
     T3 <: AbstractVector{nodeType},T4 <: AbstractVector{Int},
-    T5 <: Int,
+    T5 <: Integer,
     T6 <: AbstractArray{T,N} where {T,N},
 }
 ```
@@ -603,7 +603,7 @@ function DislocationNetwork(;
     linksConnect::T1 = zeros(Int, 2, size(links, 2)),
     segIdx::T1 = zeros(Int, size(links, 2), 3),
     segForce::T6 = zeros(3, size(links, 2), 0),
-) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: AbstractVector{Int},T5 <: Int,T6 <: AbstractArray{T,N} where {T,N},}
+) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: AbstractVector{Int},T5 <: Integer,T6 <: AbstractArray{T,N} where {T,N},}
 
     return DislocationNetwork(
         links,
@@ -636,7 +636,7 @@ DislocationNetwork(
                 AbstractVector{T},
                 NTuple{N,T} where N
                 } where {T <: DislocationLoop},
-    T2 <: Int,
+    T2 <: Integer,
     T3 <: Bool,
 }
 ```
@@ -655,7 +655,7 @@ function DislocationNetwork(
     memBuffer = nothing,
     checkConsistency::T3 = true,
     kw...,
-) where {T1 <: Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop},T2 <: Int,T3 <: Bool,}
+) where {T1 <: Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop},T2 <: Integer,T3 <: Bool,}
 
     # Initialisation.
     nodeTotal::Int = 0
@@ -738,7 +738,7 @@ DislocationNetwork!(
                 AbstractVector{T},
                 NTuple{N,T} where N
                 } where {T <: DislocationLoop},
-    T3 <: Int,
+    T3 <: Integer,
     T4 <: Bool,
 }
 ```
@@ -751,7 +751,7 @@ function DislocationNetwork!(
     args...;
     checkConsistency::T4 = true,
     kw...,
-) where {T1 <: DislocationNetwork,T2 <: Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop},T3 <: Int,T4 <: Bool,}
+) where {T1 <: DislocationNetwork,T2 <: Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop},T3 <: Integer,T4 <: Bool,}
     # For comments see DislocationNetwork. It is a 1-to-1 translation except that this one modifies the network in-place.
     
     iszero(network) && return DislocationNetwork(

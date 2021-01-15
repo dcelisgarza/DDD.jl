@@ -38,7 +38,8 @@ export AbstractDlnSeg,
     limits!,
     translatePoints!,
     makeNetwork!,
-    makeSegment
+    makeSegment,
+    AbstractElementOrder
 export MaterialParameters
 export nodeType,
     getNodeType,

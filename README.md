@@ -73,7 +73,7 @@ DislocationParameters{Float64,Int64,Bool,mobBCC}(90.0, 8100.0, 0.00032, 320.0, 1
 The integration parameters are placed into the following immutable structure.
 ```julia
 julia> IntegrationParameters(;
-      method = CustomTrapezoid(),
+      method = AdaptiveEulerTrapezoid(),
       tmin = 0.0,
       tmax = 1e10,
       dtmin = 1e-6,
@@ -85,7 +85,7 @@ julia> IntegrationParameters(;
       maxiter = 10,
   )
 
-IntegrationParameters{CustomTrapezoid,Float64,Int64}(CustomTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
+IntegrationParameters{AdaptiveEulerTrapezoid,Float64,Int64}(AdaptiveEulerTrapezoid(), 0.0, 1.0e10, 1.0e-6, 1.0e15, 1.0e-6, 1.0e-6, 1.2, 20.0, 10)
 ```
 And we keep track of the time, step, and time step in this mutable one.
 ```julia
@@ -381,7 +381,7 @@ This is just the integration.
   - [ ] FCC
 - [ ] Integration
   - [x] Refactor integrator structures
-  - [ ] CustomTrapezoid
+  - [ ] AdaptiveEulerTrapezoid
     - [x] Implementation
     - [ ] Testing
   - [ ] Look into using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for structure and perhaps use/extension of methods
