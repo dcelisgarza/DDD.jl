@@ -5,8 +5,7 @@ SlipSystem(crystalStruct::T1, slipPlane::T2, bVec::T2) where {T1 <: AbstractCrys
 ```
 
 ```@docs
-SlipSystem(;crystalStruct::T1, slipPlane::T2, bVec::T2) 
-    where {T1 <: AbstractCrystalStruct,T2}
+SlipSystem(;crystalStruct::T1, slipPlane::T2, bVec::T2) where {T1 <: AbstractCrystalStruct,T2}
 ```
 
 ```@docs

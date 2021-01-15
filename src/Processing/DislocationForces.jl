@@ -60,6 +60,121 @@ function calcSegForce!(
 
     return nothing
 end
+"""
+```
+calc_σHat(
+    mesh::RegularCuboidMesh,
+    forceDisplacement::ForceDisplacement,
+    x0::AbstractVector{T} where {T},
+)
+```
+Calculate the reaction stress, ``̂σ``, from a dislocation.
+"""
+function calc_σHat(
+    mesh::RegularCuboidMesh,
+    forceDisplacement::ForceDisplacement,
+    x0::AbstractVector{T} where {T},
+)
+
+    # Unroll structure.
+    mx = mesh.mx        # num elem in x
+    my = mesh.my        # num elem in y
+    mz = mesh.mz        # num elem in z
+    wInv = 1 / mesh.w    # 1 / width
+    hInv = 1 / mesh.h    # 1 / height
+    dInv = 1 / mesh.d    # 1 / depth
+    C = mesh.C
+    connectivity = mesh.connectivity
+    coord = mesh.coord
+    elemT = eltype(coord)
+
+    uHat = forceDisplacement.uHat
+
+    x, y, z = x0
+
+    # Find element index closest to the coordinate.
+    i::Int = max(ceil(x * wInv), 1)
+    j::Int = max(ceil(y * hInv), 1)
+    k::Int = max(ceil(z * dInv), 1)
+
+    # Calculate index of the elements.
+    idx = i + (k - 1) * mx + (j - 1) * mx * mz
+
+    # Diametrically opposed points in a cubic element.
+    n1 = connectivity[1, idx]
+    n7 = connectivity[7, idx]
+
+    # Find element midpoints.
+    xc = 0.5 * (coord[1, n1] + coord[1, n7])
+    yc = 0.5 * (coord[2, n1] + coord[2, n7])
+    zc = 0.5 * (coord[3, n1] + coord[3, n7])
+
+    # Setting up Jacobian.
+    ds1dx = 2 * wInv
+    ds2dy = 2 * hInv
+    ds3dz = 2 * dInv
+
+    s1 = (x - xc) * ds1dx
+    s2 = (y - yc) * ds2dy
+    s3 = (z - zc) * ds3dz
+
+    pm1 = (-1, 1, 1, -1, - 1, 1, 1, -1)
+    pm2 = (1, 1, 1, 1, -1, -1, -1, -1)
+    pm3 = (-1, -1, 1, 1, -1, -1, 1, 1)
+
+    ds1dx *= 0.125
+    ds2dy *= 0.125
+    ds3dz *= 0.125
+
+    B = zeros(elemT, 6, 24)
+    U = MVector{24,elemT}(zeros(24))
+    @inbounds @simd for i in 1:8
+        dNdS1 = pm1[i] * (1 + pm2[i] * s2) * (1 + pm3[i] * s3) * ds1dx
+        dNdS2 = (1 + pm1[i] * s1) * pm2[i] * (1 + pm3[i] * s3) * ds2dy
+        dNdS3 = (1 + pm1[i] * s1) * (1 + pm2[i] * s2) * pm3[i] * ds3dz
+        # Indices calculated once for performance.
+        idx1 = 3 * i
+        idx2 = 3 * (i - 1)
+        # Linear index of the z-coordinate of node i of the idx'th FE element.
+        idx3 = 3 * connectivity[i, idx]
+
+        # Constructing the Jacobian for node i.
+        B[1, idx2 + 1] = dNdS1
+        B[2, idx2 + 2] = dNdS2
+        B[3, idx2 + 3] = dNdS3
+
+        B[4, idx2 + 1] = B[2, idx2 + 2]
+        B[4, idx2 + 2] = B[1, idx2 + 1]
+
+        B[5, idx2 + 1] = B[3, idx1 + 0]
+        B[5, idx1 + 0] = B[1, idx2 + 1]
+
+        B[6, idx2 + 2] = B[3, idx1 + 0]
+        B[6, idx1 + 0] = B[2, idx2 + 2]
+
+        # Building uhat for the nodes of the finite element closest to the point of interest. From idx3, the finite element is the i2'th element and the the node we're looking at is the j'th node. The node index is idx3 = label[i2,j].
+        U[idx1 - 2] = uHat[idx3 - 2]
+        U[idx1 - 1] = uHat[idx3 - 1]
+        U[idx1 - 0] = uHat[idx3 - 0]
+    end
+
+    # Isotropic stress tensor in vector form.
+    # σ_vec[1] = σ_xx
+    # σ_vec[2] = σ_yy
+    # σ_vec[3] = σ_zz
+    # σ_vec[4] = σ_xy = σ_yx
+    # σ_vec[5] = σ_xz = σ_xz
+    # σ_vec[6] = σ_yz = σ_zy
+    # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
+    σ_vec = C * B * U
+    σ = SMatrix{3,3,elemT}(
+        σ_vec[1], σ_vec[4], σ_vec[5],
+        σ_vec[4], σ_vec[2], σ_vec[6],
+        σ_vec[5], σ_vec[6], σ_vec[3],
+    )
+
+    return σ
+end
 
 """
 ```
@@ -335,9 +450,9 @@ function calcSelfForce!(
         torTot = tor + torCore
         # Longitudinal component of core self interaction.
         lonCore = (bScrew^2 + bEdgeSq * omNuInv) * E
-
+        
         selfForce = torTot * bEdgeVec - lonCore * tVecI
-
+        
         for j in 1:3
             segForce[j, 1, idxi] -= selfForce[j]
             segForce[j, 2, idxi] += selfForce[j]
@@ -696,7 +811,7 @@ function calcSegSegForce(
     omcSq = 1 - cSq
 
     if omcSq > sqrt(eps(typeof(omcSq)))
-
+        
         omcSqI = 1 / omcSq
 
         # Single cross products.
@@ -734,24 +849,24 @@ function calcSegSegForce(
         R1 = n21 - n11
         R2 = n22 - n12
         d = (R2 ⋅ t2ct1) * omcSqI
-
+        
         μ4πd = μ4π * d
         μ4πνd = μ4πν * d
         μ4πνdSq = μ4πνd * d
         μ4πνdCu = μ4πνdSq * d
         μ4πνaSqd = μ4πνaSq * d
         μ8πaSqd = μ8πaSq * d
-
+        
         lim11 = R1 ⋅ t1
         lim12 = R1 ⋅ t2
         lim21 = R2 ⋅ t1
         lim22 = R2 ⋅ t2
-
+        
         x1 = (lim12 - c * lim11) * omcSqI
         x2 = (lim22 - c * lim21) * omcSqI
         y1 = (lim11 - c * lim12) * omcSqI
         y2 = (lim21 - c * lim22) * omcSqI
-
+        
         integ = SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y1)
         integ = integ .- SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x1, y2)
         integ = integ .- SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x2, y1)
@@ -764,42 +879,42 @@ function calcSegSegForce(
         V3 = t1ct2 * b1ct1db2 - t1cb2ct1 * t2db1
         V4 = -b1ct1 * t2ct1db2
         V5 = b2ct2ct1 * t2db1 - t1ct2 * b2ct2db1
-
+        
         tmp1 = μ4πνd * t1ct2db1
         tmp2 = μ4πνd * b2ct2db1
         V7 = μ4πd * V1 - μ4πνd * V2 + tmp1 * b2ct2ct1 + tmp2 * t1ct2ct1
-
+        
         tmp1 = μ4πν * t2db1
         tmp2 = μ4πν * b2ct2db1
         V8 = μ4π * V5 - tmp1 * b2ct2ct1 + tmp2 * t1ct2
-
+        
         tmp1 = μ4πν * t1db1
         V9 = -tmp1 * b2ct2ct1 + μ4π * V3 - μ4πν * V4
-
+        
         tmp1 = μ4πνdCu * t1ct2cb2dt2 * t1ct2db1
         V10 = μ8πaSqd * V1 - μ4πνaSqd * V2 - tmp1 * t1ct2ct1
-
+        
         tmp1 = μ4πνdSq * t1ct2cb2dt2 * t2db1
         tmp2 = μ4πνdSq * t1ct2cb2dt2 * t1ct2db1
         V11 = μ8πaSq * V5 + tmp1 * t1ct2ct1 - tmp2 * t1ct2
-
+        
         tmp1 = μ4πνdSq * (t2ct1db2 * t1ct2db1 + t1ct2cb2dt2 * t1db1)
         V12 = μ8πaSq * V3 - μ4πνaSq * V4 + tmp1 * t1ct2ct1
-
+        
         tmp1 = μ4πνd * (t1ct2cb2dt2 * t1db1 + t2ct1db2 * t1ct2db1)
         tmp2 = μ4πνd * t2ct1db2 * t2db1
         V13 = tmp1 * t1ct2 - tmp2 * t1ct2ct1
-
+        
         tmp1 = μ4πνd * t1ct2cb2dt2 * t2db1
         V14 = tmp1 * t1ct2
-
+        
         tmp1 = μ4πνd * t2ct1db2 * t1db1
         V15 = -tmp1 * t1ct2ct1
-
+        
         tmpVec1 = μ4πν * t2ct1db2 * t1ct2
         V16 = -tmpVec1 * t2db1
         V17 = -tmpVec1 * t1db1
-
+        
         Fint1 = integ[3] - y2 * integ[1]
         Fint2 = integ[4] - y2 * integ[2]
         Fint3 = integ[6] - y2 * integ[3]
@@ -811,7 +926,7 @@ function calcSegSegForce(
         Fint9 = integ[17] - y2 * integ[12]
         Fint10 = integ[15] - y2 * integ[13]
         Fint11 = integ[19] - y2 * integ[14]
-
+        
         Fnode1 =
             (
                 V7 * Fint1 +
@@ -826,7 +941,7 @@ function calcSegSegForce(
                 V16 * Fint10 +
                 V17 * Fint11
             ) * t1N
-
+        
         Fint1 = y1 * integ[1] - integ[3]
         Fint2 = y1 * integ[2] - integ[4]
         Fint3 = y1 * integ[3] - integ[6]
@@ -838,7 +953,7 @@ function calcSegSegForce(
         Fint9 = y1 * integ[12] - integ[17]
         Fint10 = y1 * integ[13] - integ[15]
         Fint11 = y1 * integ[14] - integ[19]
-
+        
         Fnode2 =
             (
                 V7 * Fint1 +
@@ -861,42 +976,42 @@ function calcSegSegForce(
         V3 = t2ct1 * b1ct1db2 - b1ct1ct2 * t1db2
         V5 = t2cb1ct2 * t1db2 - t2ct1 * b2ct2db1
         V6 = b2ct2 * t1ct2db1
-
+        
         tmp1 = μ4πνd * t2ct1db2
         tmp2 = μ4πνd * b1ct1db2
         V7 = μ4πd * V1 - μ4πνd * V2 + tmp1 * b1ct1ct2 + tmp2 * t2ct1ct2
-
+        
         tmp1 = μ4πν * t2db2
         V8 = tmp1 * b1ct1ct2 + μ4π * V5 - μ4πν * V6
-
+        
         tmp1 = μ4πν * t1db2
         tmp2 = μ4πν * b1ct1db2
         V9 = μ4π * V3 + tmp1 * b1ct1ct2 - tmp2 * t2ct1
-
+        
         tmp1 = μ4πνdCu * t2ct1cb1dt1 * t2ct1db2
         V10 = μ8πaSqd * V1 - μ4πνaSqd * V2 - tmp1 * t2ct1ct2
-
+        
         tmp1 = μ4πνdSq * (t1ct2db1 * t2ct1db2 + t2ct1cb1dt1 * t2db2)
         V11 = μ8πaSq * V5 - μ4πνaSq * V6 - tmp1 * t2ct1ct2
-
+        
         tmp1 = μ4πνdSq * t2ct1cb1dt1 * t1db2
         tmp2 = μ4πνdSq * t2ct1cb1dt1 * t2ct1db2
         V12 = μ8πaSq * V3 - tmp1 * t2ct1ct2 + tmp2 * t2ct1
-
+        
         tmp1 = μ4πνd * (t2ct1cb1dt1 * t2db2 + t1ct2db1 * t2ct1db2)
         tmp2 = μ4πνd * t1ct2db1 * t1db2
         V13 = tmp1 * t2ct1 - tmp2 * t2ct1ct2
-
+        
         tmp1 = μ4πνd * t1ct2db1 * t2db2
         V14 = -tmp1 * t2ct1ct2
-
+        
         tmp1 = μ4πνd * t2ct1cb1dt1 * t1db2
         V15 = tmp1 * t2ct1
-
+        
         tmpVec1 = μ4πν * t1ct2db1 * t2ct1
         V16 = tmpVec1 * t2db2
         V17 = tmpVec1 * t1db2
-
+        
         Fint1 = x2 * integ[1] - integ[2]
         Fint2 = x2 * integ[2] - integ[5]
         Fint3 = x2 * integ[3] - integ[4]
@@ -908,7 +1023,7 @@ function calcSegSegForce(
         Fint9 = x2 * integ[12] - integ[14]
         Fint10 = x2 * integ[13] - integ[18]
         Fint11 = x2 * integ[14] - integ[15]
-
+        
         Fnode3 =
             (
                 V7 * Fint1 +
@@ -923,7 +1038,7 @@ function calcSegSegForce(
                 V16 * Fint10 +
                 V17 * Fint11
             ) * t2N
-
+        
         Fint1 = integ[2] - x1 * integ[1]
         Fint2 = integ[5] - x1 * integ[2]
         Fint3 = integ[4] - x1 * integ[3]
@@ -935,7 +1050,7 @@ function calcSegSegForce(
         Fint9 = integ[14] - x1 * integ[12]
         Fint10 = integ[18] - x1 * integ[13]
         Fint11 = integ[15] - x1 * integ[14]
-
+        
         Fnode4 =
             (
                 V7 * Fint1 +
@@ -1106,7 +1221,7 @@ function calcParSegSegForce(
         )
         Fnode1 += Fnode1Core
         Fnode2 += Fnode2Core
-
+        
         nothing, nothing, Fnode1Core, Fnode2Core = calcSegSegForce(
             aSq,
             μ4π,
@@ -1222,7 +1337,7 @@ function calcParSegSegForce(
         )
         Fnode3 += Fnode3Core
         Fnode4 += Fnode4Core
-
+        
         nothing, nothing, Fnode3Core, Fnode4Core = calcSegSegForce(
             aSq,
             μ4π,

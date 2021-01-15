@@ -39,7 +39,8 @@ export AbstractDlnSeg,
     translatePoints!,
     makeNetwork!,
     makeSegment,
-    AbstractElementOrder
+    AbstractElementOrder,
+    AbstractIntegrator
 export MaterialParameters
 export nodeType,
     getNodeType,

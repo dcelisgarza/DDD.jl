@@ -8,10 +8,13 @@ makedocs(;
         "Dislocation Types" => "DislocationType.md",
         "Dislocation Constructors" => "DislocationConstructor.md",
         "Dislocation Extended Methods" => "DislocationExtendedMethods.md",
+        "Material Types" => "MaterialType.md",
+        "Material Constructors" => "MaterialConstructor.md",
         "FEM Types" => "FEMType.md",
         "FEM Constructors" => "FEMConstructor.md",
         "Integration Types" => "IntegrationType.md",
         "Integration Constructors" => "IntegrationConstructor.md",
+        "Calculate Forces" => "Forces.md"
         # "Dislocations" => "Dislocations.md",
         # "IO" => "io.md",
         # "Post Processing" => "postProcessing.md",

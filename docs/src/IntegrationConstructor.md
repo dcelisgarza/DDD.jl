@@ -39,11 +39,9 @@ IntegrationParameters(;
 ```
 
 ```@docs
-IntegrationTime(dt::T1, time::T1, step::T2) 
-    where {T1 <: AbstractFloat,T2 <: Integer}
+IntegrationTime(dt::T1, time::T1, step::T2) where {T1 <: AbstractFloat,T2 <: Integer}
 ```
 
 ```@docs
-IntegrationTime(; dt::T1, time::T1, step::T2) 
-    where {T1 <: AbstractFloat,T2 <: Integer}
+IntegrationTime(; dt::T1, time::T1, step::T2) where {T1 <: AbstractFloat,T2 <: Integer}
 ```
