@@ -24,6 +24,8 @@ AbstractDistribution
 AbstractMobility
 ```
 
+## Storage Structures
+
 ```@docs
 SlipSystem
 ```
