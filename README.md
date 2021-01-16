@@ -20,7 +20,7 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 - Performant.
 - Easily parallelisable.
 
-# Example
+## Example
 
 Before running a simulation we need to initialise some variables simulation. For this example, we will use the keyword initialisers because it makes it clear what we're doing. The positional and keyword constructors calculate derived quantities, perform input validations and provide default values. Keyword constructors also make the code easier to read.
 
@@ -127,7 +127,7 @@ julia> segLen = (dlnParams.minSegLen + dlnParams.maxSegLen) / 2
 943.4
 
 julia> dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
-(2000.0, 2000.0, 2000.0)
+(5000.0, 5000.0, 5000.0)
 
 julia> prismPentagon = DislocationLoop(;
            loopType = loopPrism(),
