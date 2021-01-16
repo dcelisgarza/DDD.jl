@@ -440,15 +440,17 @@ cd(@__DIR__)
     @test isapprox(remoteForcePar[:, 1, :], f1')
     @test isapprox(remoteForcePar[:, 2, :], f2')
 
+    PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network)
     selfForce = calcSelfForce(dlnParams, matParams, network)
     remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
     remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
     sumForceSer =
-        (selfForce[1] .+ remoteForceSer[:, 1, :], selfForce[2] .+ remoteForceSer[:, 2, :])
+        (selfForce[1] .+ remoteForceSer[:, 1, :] + 0.5 * PKForce, selfForce[2] .+ remoteForceSer[:, 2, :] + 0.5 * PKForce)
     sumForcePar =
-        (selfForce[1] .+ remoteForcePar[:, 1, :], selfForce[2] .+ remoteForcePar[:, 2, :])
-    totalForceSer = calcSegForce(dlnParams, matParams, network)
-    totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
+        (selfForce[1] .+ remoteForcePar[:, 1, :] + 0.5 * PKForce, selfForce[2] .+ remoteForcePar[:, 2, :] + 0.5 * PKForce)
+
+    totalForceSer = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForcePar = calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
 
     @test isapprox(totalForceSer[:, 1, :], sumForceSer[1])
     @test isapprox(totalForcePar[:, 2, :], sumForcePar[2])
@@ -456,16 +458,16 @@ cd(@__DIR__)
     @test isapprox(totalForceSer[:, 2, :], totalForcePar[:, 2, :])
 
     idx = rand(1:(network.numSeg[1]), Int(network.numSeg[1] / 2))
-    totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
-    totalForceSer = calcSegForce(dlnParams, matParams, network)
-    totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
+    totalForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+    totalForceSer = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForcePar = calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
     idx = rand(1:(network.numSeg[1]))
-    totalForceIdx = calcSegForce(dlnParams, matParams, network, idx)
-    totalForceSer = calcSegForce(dlnParams, matParams, network)
-    totalForcePar = calcSegForce(dlnParamsPar, matParams, network)
+    totalForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+    totalForceSer = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForcePar = calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
@@ -502,17 +504,21 @@ cd(@__DIR__)
     @test isapprox(network.segForce[:, :, idx], par[:, :, idx])
     @test isapprox(par, ser)
 
-    tot = calcSegForce(dlnParams, matParams, network)
-    @test isapprox(tot[:, 1, :], self[1] + ser[:, 1, :])
-    @test isapprox(tot[:, 2, :], self[2] + ser[:, 2, :])
+    tot = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    @test isapprox(tot[:, 1, :], self[1] + ser[:, 1, :] + 0.5 * PKForce)
+    @test isapprox(tot[:, 2, :], self[2] + ser[:, 2, :] + 0.5 * PKForce)
     network.segForce .= 0
-    calcSegForce!(dlnParams, matParams, network)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     @test isapprox(tot, network.segForce[:, :, 1:numSeg])
 
-    tot = calcSegForce(dlnParams, matParams, network, idx)
-    @test isapprox(tot[:, 1, :], self[1][:, idx] + ser[:, 1, idx])
-    @test isapprox(tot[:, 2, :], self[2][:, idx] + ser[:, 2, idx])
+    tot = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+    @test isapprox(tot[:, 1, :], self[1][:, idx] + ser[:, 1, idx] + 0.5 * PKForce[:, idx])
+    @test isapprox(tot[:, 2, :], self[2][:, idx] + ser[:, 2, idx] + 0.5 * PKForce[:, idx])
     network.segForce .= 0
-    calcSegForce!(dlnParams, matParams, network, idx)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
     @test isapprox(tot, network.segForce[:, :, idx])
+
+    network.coord .+= dx * dy * dz
+    PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network)
+    @test isapprox(PKForce, zeros(3, numSeg))
 end

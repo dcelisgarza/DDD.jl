@@ -1,5 +1,5 @@
 using DDD
-using Test
+using Test, SparseArrays
 
 cd(@__DIR__)
 @testset "BCC mobility" begin
@@ -47,8 +47,17 @@ cd(@__DIR__)
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
+    
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
-    calcSegForce!(dlnParams, matParams, network)
+
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    f = spzeros(regularCuboidMesh.numNode * 3)
+    fHat = spzeros(regularCuboidMesh.numNode * 3)
+    u = spzeros(regularCuboidMesh.numNode * 3)
+    uHat = spzeros(regularCuboidMesh.numNode * 3)
+    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
 
     network2 = deepcopy(network)
     dlnMobility!(dlnParams, matParams, network2)

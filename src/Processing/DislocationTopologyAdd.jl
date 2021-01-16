@@ -171,10 +171,10 @@ end
 function refineNetwork!(
     dlnParams::T1,
     matParams::T2,
-    network::T3,
-    # mesh::RegularCuboidMesh,
-    # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
+    mesh::T3,
+    forceDisplacement::T4,
+    network::T5,
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
 
     maxAreaSq = dlnParams.maxAreaSq
     maxSegLen = dlnParams.maxSegLen
@@ -278,7 +278,8 @@ function refineNetwork!(
                 oppColLink = 3 .- colLink
                 oldNode = links[oppColLink, link]
                 # Calculate segment force for segment link.
-                calcSegForce!(dlnParams, matParams, network, link)
+                calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, link)
+
                 # Calculate old node velocity.
                 dlnMobility!(dlnParams, matParams, network, oldNode)
                 nodeVel = network.nodeVel
@@ -338,7 +339,7 @@ function refineNetwork!(
                 oppColLink = 3 .- colLink
                 oldNode = links[oppColLink, link]
                 # Calculate segment force for segment link.
-                calcSegForce!(dlnParams, matParams, network, link)
+                calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, link)
                 # Calculate old node velocity.
                 dlnMobility!(dlnParams, matParams, network, oldNode)
                 nodeVel = network.nodeVel
@@ -403,7 +404,7 @@ function refineNetwork!(
                 colOppLink = 3 .- colLink
                 oldNode = links[colOppLink, link]
                 # Calculate segment force for segment link.
-                calcSegForce!(dlnParams, matParams, network, link)
+                calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, link)
                 # Calculate old node velocity.
                 dlnMobility!(dlnParams, matParams, network, oldNode)
                 nodeVel = network.nodeVel

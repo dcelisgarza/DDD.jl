@@ -1,5 +1,5 @@
 using DDD
-using Test, Statistics
+using Test, Statistics, SparseArrays
 cd(@__DIR__)
 
 @testset "Merge nodes" begin
@@ -33,6 +33,14 @@ cd(@__DIR__)
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
     )
+
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    f = spzeros(regularCuboidMesh.numNode * 3)
+    fHat = spzeros(regularCuboidMesh.numNode * 3)
+    u = spzeros(regularCuboidMesh.numNode * 3)
+    uHat = spzeros(regularCuboidMesh.numNode * 3)
+    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+
     network = DislocationNetwork(square, memBuffer = 1)
     missing, network = mergeNode!(network, 3, 1)
     @test network.links == zeros(Int, 2, 4)
@@ -55,7 +63,7 @@ cd(@__DIR__)
     @test network.segForce == zeros(3, 2, 4)
 
     network = DislocationNetwork(square, memBuffer = 1)
-    network = coarsenNetwork!(dlnParams, matParams, network)
+    network = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     @test network.links == zeros(Int, 2, 4)
     @test network.slipPlane == zeros(3, 4)
     @test network.bVec == zeros(3, 4)
@@ -86,7 +94,7 @@ cd(@__DIR__)
     )
     network = DislocationNetwork(square, memBuffer = 1)
     network2 = deepcopy(network)
-    network2 = coarsenNetwork!(dlnParams, matParams, network2)
+    network2 = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
     @test compStruct(network, network2)
 
     pentagon = DislocationLoop(;
@@ -1281,7 +1289,7 @@ cd(@__DIR__)
     network2.slipPlane[:, 11:14] .= network2.slipPlane[:, 1]
     makeConnect!(network2)
     getSegmentIdx!(network2)
-    calcSegForce!(dlnParams, matParams, network2)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
     network3 = deepcopy(network2)
     retVal, network3 = mergeNode!(network3, 11, 3)
     numNode = 10
@@ -1791,11 +1799,19 @@ end
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
+
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    f = spzeros(regularCuboidMesh.numNode * 3)
+    fHat = spzeros(regularCuboidMesh.numNode * 3)
+    u = spzeros(regularCuboidMesh.numNode * 3)
+    uHat = spzeros(regularCuboidMesh.numNode * 3)
+    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
 
     network2 = deepcopy(network)
-    calcSegForce!(dlnParams, matParams, network2)
-    network2 = coarsenNetwork!(dlnParams, matParams, network2)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    network2 = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
     links = [
         6 2
         2 3
@@ -1987,9 +2003,16 @@ end
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    f = spzeros(regularCuboidMesh.numNode * 3)
+    fHat = spzeros(regularCuboidMesh.numNode * 3)
+    u = spzeros(regularCuboidMesh.numNode * 3)
+    uHat = spzeros(regularCuboidMesh.numNode * 3)
+    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
     network2 = deepcopy(network)
-    network2 = refineNetwork!(dlnParams, matParams, network2)
+    network2 = refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
     @test compStruct(network, network2)
 end
 
@@ -2022,12 +2045,18 @@ end
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
     )
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    f = spzeros(regularCuboidMesh.numNode * 3)
+    fHat = spzeros(regularCuboidMesh.numNode * 3)
+    u = spzeros(regularCuboidMesh.numNode * 3)
+    uHat = spzeros(regularCuboidMesh.numNode * 3)
+    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
 
     network = DislocationNetwork(shearDecagon, memBuffer = 1)
-    calcSegForce!(dlnParams, matParams, network)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     dlnMobility(dlnParams, matParams, network)
-    network = coarsenNetwork!(dlnParams, matParams, network)
-    network = refineNetwork!(dlnParams, matParams, network)
+    network = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network = refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     links = [
         11 2
         2 3
@@ -2234,9 +2263,9 @@ end
     network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
     makeConnect!(network)
     getSegmentIdx!(network)
-    calcSegForce!(dlnParams, matParams, network)
-    network = coarsenNetwork!(dlnParams, matParams, network)
-    network = refineNetwork!(dlnParams, matParams, network)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network = refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
 
     numNode = 18
     numSeg = 21

@@ -66,6 +66,75 @@ shearSquare = DislocationLoop(;
     dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork((shearSquare, prismSquare))
+
+
+##
+
+f = sprand(regularCuboidMesh.numNode * 3, 0.01)
+fHat = sprand(regularCuboidMesh.numNode * 3, 0.01)
+u = sprand(regularCuboidMesh.numNode * 3, 0.01)
+uHat = sprand(regularCuboidMesh.numNode * 3, 0.01)
+forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
+
+totalSegForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+
+PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network)
+selfForce = calcSelfForce(dlnParams, matParams, network)
+segSegForce = calcSegSegForce(dlnParams, matParams, network)
+totalSegForcePieces = similar(segSegForce)
+
+totalSegForcePieces[:,1,:] = segSegForce[:, 1, :] + selfForce[1][:, :] + 0.5 * PKForce
+totalSegForcePieces[:,2,:] = segSegForce[:, 2, :] + selfForce[2][:, :] + 0.5 * PKForce
+isapprox(totalSegForcePieces, totalSegForce)
+
+network.segForce .= 0
+calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+isapprox(network.segForce[:,:,1:network.numSeg[1]], totalSegForce)
+
+
+
+idx = rand(1:network.numSeg[1])
+@btime totalSegForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+
+PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network, idx)
+selfForce = calcSelfForce(dlnParams, matParams, network, idx)
+segSegForce = calcSegSegForce(dlnParams, matParams, network, idx)
+totalSegForcePieces = similar(segSegForce)
+
+totalSegForcePieces[:,1,:] = segSegForce[:, 1, :] + selfForce[1][:, :] + 0.5 * PKForce
+totalSegForcePieces[:,2,:] = segSegForce[:, 2, :] + selfForce[2][:, :] + 0.5 * PKForce
+isapprox(totalSegForcePieces, totalSegForce)
+
+@btime begin
+    network.segForce .= 0
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+end
+isapprox(network.segForce[:,:,idx], totalSegForce)
+
+
+
+idx = rand(1:network.numSeg[1], 10)
+@btime totalSegForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+
+PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network, idx)
+selfForce = calcSelfForce(dlnParams, matParams, network, idx)
+segSegForce = calcSegSegForce(dlnParams, matParams, network, idx)
+totalSegForcePieces = similar(segSegForce)
+
+totalSegForcePieces[:,1,:] = segSegForce[:, 1, :] + selfForce[1][:, :] + 0.5 * PKForce
+totalSegForcePieces[:,2,:] = segSegForce[:, 2, :] + selfForce[2][:, :] + 0.5 * PKForce
+isapprox(totalSegForcePieces, totalSegForce)
+
+@btime begin
+    network.segForce .= 0
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+end
+isapprox(network.segForce[:,:,idx], totalSegForce)
+
+dx * dy * dz
+network.coord .+= dx * dy * dz
+PKZeros = calcPKForce(regularCuboidMesh, forceDisplacement, network)
+isequal(PKZeros, zeros(3, network.numSeg[1]))
 ##
 @time begin
     vertices = regularCuboidMesh.vertices
@@ -113,7 +182,7 @@ isinf(ψ)
 planenorm = Float64[0, 0, 1]
 planepnt  = Float64[0, 0, 5]
 raydir = Float64[0, 1, 0]
-raypnt = Float64[0,  0, 6]
+raypnt = Float64[0, 0, 6]
 ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
 isnothing(ψ)
 

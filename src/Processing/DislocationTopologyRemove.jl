@@ -387,8 +387,10 @@ end
 function coarsenNetwork!(
     dlnParams::T1,
     matParams::T2,
-    network::T3,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
+    mesh::T3,
+    forceDisplacement::T4,
+    network::T5,
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
 
     minAreaSq = dlnParams.minAreaSq
     minSegLen = dlnParams.minSegLen
@@ -518,7 +520,7 @@ function coarsenNetwork!(
 
             if nodeNotMerged == i || nodeNotMerged == link1_nodeOppI
                 # Calculate segment force for segment linkMerged.
-                calcSegForce!(dlnParams, matParams, network, linkMerged)
+                calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, linkMerged)
                 # Calculate node velocity.
                 nodes = SVector{2,Int}(links[1, linkMerged], links[2, linkMerged])
                 dlnMobility!(dlnParams, matParams, network, nodes)

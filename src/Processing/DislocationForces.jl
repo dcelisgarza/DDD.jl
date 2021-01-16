@@ -13,22 +13,22 @@ calcSegForce(
 function calcSegForce(
     dlnParams::T1,
     matParams::T2,
-    network::T3,
-    # dlnFEM::T4,
-    # mesh::T5,
+    mesh::T3,
+    forceDisplacement::T4,
+    network::T5,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork,}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
 
     isnothing(idx) ? numSeg = network.numSeg[1] : numSeg = length(idx)
 
-    # pkForce = pkForce(mesh, dlnFEM, network)
+    PKForce = calcPKForce(mesh, forceDisplacement, network, idx)
     selfForce = calcSelfForce(dlnParams, matParams, network, idx)
     segForce = calcSegSegForce(dlnParams, matParams, network, idx)
 
     @inbounds for i in 1:numSeg
         for j in 1:2
             @simd for k in 1:3
-                segForce[k, j, i] += selfForce[j][k, i]
+                segForce[k, j, i] += selfForce[j][k, i] + 0.5 * PKForce[k, i]
             end
         end
     end
@@ -38,11 +38,11 @@ end
 function calcSegForce!(
     dlnParams::T1,
     matParams::T2,
-    network::T3,
+    mesh::T3,
+    forceDisplacement::T4,
+    network::T5,
     idx = nothing,
-    # mesh::RegularCuboidMesh,
-    # dlnFEM::DislocationFEMCorrective;
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
@@ -54,7 +54,7 @@ function calcSegForce!(
     end
     network.segForce[:, :, range] .= 0
 
-    # pkForce!(mesh, dlnFEM, network)
+    calcPKForce!(mesh, forceDisplacement, network, idx)
     calcSelfForce!(dlnParams, matParams, network, idx)
     calcSegSegForce!(dlnParams, matParams, network, idx)
 
@@ -75,20 +75,25 @@ function calc_σHat(
     forceDisplacement::ForceDisplacement,
     x0::AbstractVector{T} where {T},
 )
+    C = mesh.C
+    connectivity = mesh.connectivity
+    coord = mesh.coord
+    elemT = eltype(coord)
+    uHat = forceDisplacement.uHat
+
+    # If the node is outside the domain, return zero.
+    if Array(x0) ∉ mesh.vertices
+        σ = SMatrix{3,3,elemT}(zeros(3, 3))
+        return σ
+    end
 
     # Unroll structure.
     mx = mesh.mx        # num elem in x
     my = mesh.my        # num elem in y
     mz = mesh.mz        # num elem in z
-    wInv = 1 / mesh.w    # 1 / width
-    hInv = 1 / mesh.h    # 1 / height
-    dInv = 1 / mesh.d    # 1 / depth
-    C = mesh.C
-    connectivity = mesh.connectivity
-    coord = mesh.coord
-    elemT = eltype(coord)
-
-    uHat = forceDisplacement.uHat
+    wInv = 1 / mesh.w   # 1 / width
+    hInv = 1 / mesh.h   # 1 / height
+    dInv = 1 / mesh.d   # 1 / depth
 
     x, y, z = x0
 

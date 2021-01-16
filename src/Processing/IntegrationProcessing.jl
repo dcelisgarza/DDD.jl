@@ -1,10 +1,12 @@
 function deriv!(
     dlnParams::T1,
     matParams::T2,
-    network::T3,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
+    mesh::T3,
+    forceDisplacement::T4,
+    network::T5,
+) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
 
-    calcSegForce!(dlnParams, matParams, network)
+    calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network)
     dlnMobility!(dlnParams, matParams, network)
 
     links = network.links
