@@ -33,6 +33,9 @@ export AbstractDlnSeg,
     FEMParameters,
     ForceDisplacement,
     AbstractMobility,
+    mobBCC,
+    mobFCC,
+    mobHCP,
     AbstractDlnStr,
     AbstractDistribution,
     limits!,
@@ -54,7 +57,7 @@ export nodeType,
     getSegmentIdx!,
     makeConnect,
     makeConnect!
-export IntegrationParameters, IntegrationTime
+export IntegrationParameters, IntegrationTime, AbstractIntegrator, AdaptiveEulerTrapezoid
 export Rand, Randn, Zeros, Regular, loopDistribution
 
 include("./Processing/ProcessingBase.jl")

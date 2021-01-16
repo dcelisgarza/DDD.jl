@@ -15,7 +15,7 @@ function SlipSystem(
             @assert isapprox(dot(slipPlane, bVec), 0) "SlipSystem: slip plane, n == $(slipPlane), and Burgers vector, b = $(bVec), must be orthogonal."
         else
             idx = findall(x -> !isapprox(x, 0), vec(sum(slipPlane .* bVec, dims = 1)))
-            @assert isempty(idx) "SlipSystem: entries of the slip plane, n[$idx, :] = $(slipPlane[idx,:]), and Burgers vector, b[$idx, :] = $(bVec[idx,:]), are not orthogonal."
+            @assert isempty(idx) "SlipSystem: entries of the slip plane, n[:, $idx] = $(slipPlane[:, idx]), and Burgers vector, b[:, $idx] = $(bVec[:, idx]), are not orthogonal."
         end
     end
 
