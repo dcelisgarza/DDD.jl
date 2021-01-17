@@ -63,48 +63,52 @@ struct FEMParameters{T1,T2,T3,T4}
 end
 """
 ```
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11} <: AbstractRegularCuboidMesh
     order::T1           # Element order.
     vertices::T2        # Vertices.
-    C::T3               # Stiffness tensor.
-    dx::T4              # Size in x.  
-    dy::T4              # Size in y.
-    dz::T4              # Size in z.
-    mx::T5              # Number of elements in x.
-    my::T5              # Number of elements in y.
-    mz::T5              # Number of elements in z.
-    numElem::T5         # Total number of elements.
-    numNode::T5         # Total number of nodes.
-    w::T4               # Element width (size in x).
-    h::T4               # Element height (size in y).
-    d::T4               # Element depth (size in z).
-    B::T6               # Jacobian matrix.
-    coord::T7           # Node coordinates.
-    connectivity::T8    # Node connectivity.
-    K::T9               # Stiffness matrix.
+    faces::T3           # Faces.
+    faceNorm::T4        # Face normals.
+    C::T5               # Stiffness tensor.
+    dx::T6              # Size in x.  
+    dy::T6              # Size in y.
+    dz::T6              # Size in z.
+    mx::T7              # Number of elements in x.
+    my::T7              # Number of elements in y.
+    mz::T7              # Number of elements in z.
+    numElem::T7         # Total number of elements.
+    numNode::T7         # Total number of nodes.
+    w::T6               # Element width (size in x).
+    h::T6               # Element height (size in y).
+    d::T6               # Element depth (size in z).
+    B::T8               # Jacobian matrix.
+    coord::T9           # Node coordinates.
+    connectivity::T10   # Node connectivity.
+    K::T11              # Stiffness matrix.
 end
 ```
 Stores data for a regular cuboid mesh.
 """
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11} <: AbstractRegularCuboidMesh
     order::T1
     vertices::T2
-    C::T3
-    dx::T4
-    dy::T4
-    dz::T4
-    mx::T5
-    my::T5
-    mz::T5
-    numElem::T5
-    numNode::T5
-    w::T4
-    h::T4
-    d::T4
-    B::T6
-    coord::T7
-    connectivity::T8
-    K::T9
+    faces::T3
+    faceNorm::T4
+    C::T5
+    dx::T6
+    dy::T6
+    dz::T6
+    mx::T7
+    my::T7
+    mz::T7
+    numElem::T7
+    numNode::T7
+    w::T6
+    h::T6
+    d::T6
+    B::T8
+    coord::T9
+    connectivity::T10
+    K::T11
 end
 
 """

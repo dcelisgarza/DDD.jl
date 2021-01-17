@@ -243,7 +243,7 @@ julia> fig = plotNodes(
 )
 ```
 
-Which produces the following image, which as expected has really large dislocation networks.
+Which produces the following image, which as expected has really large dislocation loops.
 
 ![network1](./examples/network1.png)
 

@@ -1,5 +1,5 @@
 using DDD
-using Test, StaticArrays, SparseArrays
+using Test, StaticArrays, SparseArrays, LinearAlgebra
 cd(@__DIR__)
 @testset "Shape functions" begin
     points = Float64[
@@ -80,7 +80,17 @@ end
         0 0 0 0 0 1.000000000000000
     ]
     vertices = reshape(collect(Iterators.flatten(regularCuboidMesh.vertices.vertices)), 3, 8)
+    faces = regularCuboidMesh.faces
+    normals = regularCuboidMesh.faceNorm
+
     @test isapprox(vertices', testVertices)
+    
+    faceCoord = vertices[:, faces]
+    p = faceCoord[:, 2, :] - faceCoord[:, 1, :]
+    q = faceCoord[:, 3, :] - faceCoord[:, 1, :]
+    n = reshape(collect(Iterators.flatten([normalize(p[:,i] × q[:,i]) for i in 1:size(p, 2)])), 3, 6)
+    @test isapprox(n, normals)
+
     @test isapprox(regularCuboidMesh.C, testC)
 
     @test regularCuboidMesh.dx == femParams.dx

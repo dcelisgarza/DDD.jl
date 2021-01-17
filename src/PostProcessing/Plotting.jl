@@ -40,12 +40,12 @@ function plotNodes(mesh::T1, network::DislocationNetwork, args...; kw...) where 
     # Plot FEM domain.
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
-    face1 = [1, 2, 4, 3, 1]
-    face2 = [5, 6, 8, 7, 5]
+    face1 = SVector{5,Int}(1, 2, 4, 3, 1)
+    face2 = SVector{5,Int}(5, 6, 8, 7, 5)
     surf1 = vertices[:, face1]
     surf2 = vertices[:, face2]
-    plot!(fig, surf1[1,:], surf1[2,:], surf1[3,:], linecolor = :black, linewidth = 2)
-    plot!(fig, surf2[1,:], surf2[2,:], surf2[3,:], linecolor = :black, linewidth = 2)
+    plot!(fig, surf1[1, :], surf1[2, :], surf1[3, :], linecolor = :black, linewidth = 2)
+    plot!(fig, surf2[1, :], surf2[2, :], surf2[3, :], linecolor = :black, linewidth = 2)
     side = vertices[:, [1, 5]]
     plot!(fig, side[1, :], side[2, :], side[3, :], linecolor = :black, linewidth = 2)
     side = vertices[:, [2, 6]]
@@ -128,12 +128,12 @@ function plotNodes!(fig, mesh::T1, network::DislocationNetwork, args...; kw...) 
     # Plot FEM domain.
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, 8)
-    face1 = [1, 2, 4, 3, 1]
-    face2 = [5, 6, 8, 7, 5]
+    face1 = SVector{5,Int}(1, 2, 4, 3, 1)
+    face2 = SVector{5,Int}(5, 6, 8, 7, 5)
     surf1 = vertices[:, face1]
     surf2 = vertices[:, face2]
-    plot!(fig, surf1[1,:], surf1[2,:], surf1[3,:], linecolor = :black, linewidth = 2)
-    plot!(fig, surf2[1,:], surf2[2,:], surf2[3,:], linecolor = :black, linewidth = 2)
+    plot!(fig, surf1[1, :], surf1[2, :], surf1[3, :], linecolor = :black, linewidth = 2)
+    plot!(fig, surf2[1, :], surf2[2, :], surf2[3, :], linecolor = :black, linewidth = 2)
     side = vertices[:, [1, 5]]
     plot!(fig, side[1, :], side[2, :], side[3, :], linecolor = :black, linewidth = 2)
     side = vertices[:, [2, 6]]

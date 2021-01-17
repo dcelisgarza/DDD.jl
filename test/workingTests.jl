@@ -69,97 +69,95 @@ network = DislocationNetwork((shearSquare, prismSquare))
 
 
 ##
+using Plots
+vertices = reshape(collect(Iterators.flatten(regularCuboidMesh.vertices.vertices)), 3, 8)
+faces = regularCuboidMesh.faces
+normals = regularCuboidMesh.faceNorm
 
-f = sprand(regularCuboidMesh.numNode * 3, 0.01)
-fHat = sprand(regularCuboidMesh.numNode * 3, 0.01)
-u = sprand(regularCuboidMesh.numNode * 3, 0.01)
-uHat = sprand(regularCuboidMesh.numNode * 3, 0.01)
-forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
+# https://stackoverflow.com/questions/47021821/julia-flattening-array-of-array-tuples
+using RecursiveArrayTools
 
-totalSegForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-
-PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network)
-selfForce = calcSelfForce(dlnParams, matParams, network)
-segSegForce = calcSegSegForce(dlnParams, matParams, network)
-totalSegForcePieces = similar(segSegForce)
-
-totalSegForcePieces[:,1,:] = segSegForce[:, 1, :] + selfForce[1][:, :] + 0.5 * PKForce
-totalSegForcePieces[:,2,:] = segSegForce[:, 2, :] + selfForce[2][:, :] + 0.5 * PKForce
-isapprox(totalSegForcePieces, totalSegForce)
-
-network.segForce .= 0
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-isapprox(network.segForce[:,:,1:network.numSeg[1]], totalSegForce)
+regularCuboidMesh.vertices.vertices
+norm(regularCuboidMesh.vertices, [1,2,3])
 
 
 
-idx = rand(1:network.numSeg[1])
-@btime totalSegForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+faceCoord = vertices[:, faces]
 
-PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network, idx)
-selfForce = calcSelfForce(dlnParams, matParams, network, idx)
-segSegForce = calcSegSegForce(dlnParams, matParams, network, idx)
-totalSegForcePieces = similar(segSegForce)
+p = faceCoord[:, 2, :] - faceCoord[:, 1, :]
+q = faceCoord[:, 3, :] - faceCoord[:, 1, :]
 
-totalSegForcePieces[:,1,:] = segSegForce[:, 1, :] + selfForce[1][:, :] + 0.5 * PKForce
-totalSegForcePieces[:,2,:] = segSegForce[:, 2, :] + selfForce[2][:, :] + 0.5 * PKForce
-isapprox(totalSegForcePieces, totalSegForce)
+n = reshape(collect(Iterators.flatten([normalize(p[:,i] × q[:,i]) for i in 1:size(p, 2)])), 3, 6)
+isapprox(n, normals)
 
-@btime begin
-    network.segForce .= 0
-    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-end
-isapprox(network.segForce[:,:,idx], totalSegForce)
+faceCoord[:, 3, 5]
+faceCoord[:, 2, 5]
+faceCoord[:, 1, 5]
+p[:, 1] × q[:, 1]
 
 
+regularCuboidMesh.vertices.vertices[1:2]
 
-idx = rand(1:network.numSeg[1], 10)
-@btime totalSegForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+plotNodes!(regularCuboidMesh, network)
 
-PKForce = calcPKForce(regularCuboidMesh, forceDisplacement, network, idx)
-selfForce = calcSelfForce(dlnParams, matParams, network, idx)
-segSegForce = calcSegSegForce(dlnParams, matParams, network, idx)
-totalSegForcePieces = similar(segSegForce)
 
-totalSegForcePieces[:,1,:] = segSegForce[:, 1, :] + selfForce[1][:, :] + 0.5 * PKForce
-totalSegForcePieces[:,2,:] = segSegForce[:, 2, :] + selfForce[2][:, :] + 0.5 * PKForce
-isapprox(totalSegForcePieces, totalSegForce)
+# Infinite domain.
+infDom = VPolytope([
+    [Inf, Inf, Inf],
+    [Inf, Inf, Inf],
+    [Inf, Inf, Inf],
+    [Inf, Inf, Inf],
+    [Inf, Inf, Inf],
+    [Inf, Inf, Inf],
+    [Inf, Inf, Inf],
+    [Inf, Inf, Inf],
+    ])
 
-@btime begin
-    network.segForce .= 0
-    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-end
-isapprox(network.segForce[:,:,idx], totalSegForce)
+[Inf,Inf,Inf] ∉ infDom
 
-dx * dy * dz
-network.coord .+= dx * dy * dz
-PKZeros = calcPKForce(regularCuboidMesh, forceDisplacement, network)
-isequal(PKZeros, zeros(3, network.numSeg[1]))
 ##
-@time begin
-    vertices = regularCuboidMesh.vertices
-    plotNodes(regularCuboidMesh, network,
-    m = 1,
-    l = 3,
-    linecolor = :blue,
-    marker = :circle,
-    markercolor = :blue,
-    legend = false,)
+# Surface remeshing
+using Polyhedra
+regularCuboidMesh.vertices.vertices
 
-    # Find which nodes are outside the domain.
-    coord = network.coord
-    label = network.label
-    # Findall internal nodes.
-    idx = findall(x -> x == 1, label)
-    # Find the location of the nodes that are outside the domain, P.
-    indices = map((x, y, z) -> eltype(vertices)[x, y, z] ∉ vertices, coord[1, idx], coord[2, idx], coord[3, idx])
-    outside = findall(indices)
-    # Change the label of the nodes outside to a temporary flag for newly exited nodes.
-    # label[outside] .= 6
+vertices = [0.0 0.0 0.0;
+2000.0 0.0 0.0;
+0.0 2000.0 0.0;
+2000.0 2000.0 0.0;
+0.0 0.0 2000.0;
+2000.0 0.0 2000.0;
+0.0 2000.0 2000.0;
+2000.0 2000.0 2000.0]
+vRep = vrep(vertices)
+poly = polyhedron(vRep)
+npoints(poly)
+hrep(poly)
+allhalfspaces(poly.hrep)
 
-    # Plot nodes outside the domain.
-    scatter!(coord[1, outside], coord[2, outside], coord[3, outside], markersize = 3)
-end
+# @time begin
+vertices = regularCuboidMesh.vertices
+plotNodes(regularCuboidMesh, network,
+m = 1,
+l = 3,
+linecolor = :blue,
+marker = :circle,
+markercolor = :blue,
+legend = false,)
+
+# Find which nodes are outside the domain.
+coord = network.coord
+label = network.label
+# Findall internal nodes.
+idx = findall(x -> x == 1, label)
+# Find the location of the nodes that are outside the domain, P.
+indices = map((x, y, z) -> eltype(vertices)[x, y, z] ∉ vertices, coord[1, idx], coord[2, idx], coord[3, idx])
+outside = findall(indices)
+# Change the label of the nodes outside to a temporary flag for newly exited nodes.
+# label[outside] .= 6
+
+# Plot nodes outside the domain.
+scatter!(coord[1, outside], coord[2, outside], coord[3, outside], markersize = 3)
+# end
 
 
 

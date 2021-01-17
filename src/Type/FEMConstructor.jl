@@ -151,6 +151,26 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
                 dx, dy, dz
             )
         )
+    
+    # Faces as defined by the vertices.
+    faces = SMatrix{4, 6, mxType}(
+        2, 1, 4, 3, # xy plane @ min z
+        5, 6, 7, 8, # xy plane @ max z
+        1, 2, 5, 6, # xz plane @ min y
+        4, 3, 8, 7, # xz plane @ max y
+        3, 1, 7, 3, # yz plane @ min x
+        2, 4, 6, 8, # yz plane @ max x
+    )
+    
+    # Face normal of the corresponding face.
+    faceNorm = SMatrix{3,6,dxType}(
+         0,  0, -1,
+         0,  0,  1,
+         0, -1,  0,
+         0,  1,  0,
+        -1,  0,  0,
+         1,  0,  0,
+    )
 
     E = 2 * μ * (1 + ν)                 # Young's modulus
     Lame = E * νomνInv / (1 - 2 * ν)    # Lamé's relation
@@ -290,6 +310,8 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     return RegularCuboidMesh(
         order,
         vertices,
+        faces,
+        faceNorm,
         C,
         dx,
         dy,
