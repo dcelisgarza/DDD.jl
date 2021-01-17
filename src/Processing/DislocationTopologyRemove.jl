@@ -407,7 +407,7 @@ function coarsenNetwork!(
     i = 1
     @inbounds while i <= numNode
         # We only want to coarsen real internal nodes. Else we skip to the next node.
-        if !(connectivity[1, i] == 2 && getNodeType(label[i]) == intMob)
+        if !(connectivity[1, i] == 2 && label[i] == intMob)
             i += 1
             continue
         end
@@ -424,7 +424,7 @@ function coarsenNetwork!(
         link2_nodeOppI = links[oppColLink2, link2] # Node i is connected to this node as part of link 2.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source, thus we skip to the next node.
-        if getNodeType(label[link1_nodeOppI]) == intFix && getNodeType(label[link2_nodeOppI]) == intFix
+        if label[link1_nodeOppI] == intFix && label[link2_nodeOppI] == intFix
             i += 1
             continue
         end

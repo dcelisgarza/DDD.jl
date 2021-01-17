@@ -67,6 +67,7 @@ struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11} <: AbstractRegularC
     order::T1           # Element order.
     vertices::T2        # Vertices.
     faces::T3           # Faces.
+    faceMidPt::T3       # Face midpoints.
     faceNorm::T4        # Face normals.
     C::T5               # Stiffness tensor.
     dx::T6              # Size in x.  
@@ -88,27 +89,29 @@ end
 ```
 Stores data for a regular cuboid mesh.
 """
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12} <: AbstractRegularCuboidMesh
     order::T1
     vertices::T2
     faces::T3
+    faceMidPt::T4
     faceNorm::T4
     C::T5
     dx::T6
     dy::T6
     dz::T6
-    mx::T7
-    my::T7
-    mz::T7
-    numElem::T7
-    numNode::T7
+    scale::T7
+    mx::T8
+    my::T8
+    mz::T8
+    numElem::T8
+    numNode::T8
     w::T6
     h::T6
     d::T6
-    B::T8
-    coord::T9
-    connectivity::T10
-    K::T11
+    B::T9
+    coord::T10
+    connectivity::T11
+    K::T12
 end
 
 """

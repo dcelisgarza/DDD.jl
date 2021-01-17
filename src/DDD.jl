@@ -69,9 +69,10 @@ export calcSegForce,
     calcSegSegForce!,
     calc_σHat,
     calcPKForce,
-    calcPKForce!
+    calcPKForce!,
+    remeshSurfaceNetwork!
 export dlnMobility, dlnMobility!
-export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!
+export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!
 export shapeFunction, shapeFunctionDeriv
 
 include("./PostProcessing/Plotting.jl")

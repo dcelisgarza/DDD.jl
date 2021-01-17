@@ -138,9 +138,11 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     V2 = zeros(dxType, numElem * 24^2)
     V3 = zeros(dxType, numElem * 24^2)
 
+    # Length scale.
+    scale = SVector{3,dxType}(dx, dy, dz) * cbrt(dx * dy * dz)
+
     # For a regular cuboid mesh this is predefined. Making a volumetric polytope allows us to check if points lie inside the volume simply by doing [x, y, z] ∈ vertices, or checking if they do not belong by doing [x, y, z] ∉ vertices. The symbols are typed as \in and \notin + Tab.
-    vertices = VPolytope(
-            SMatrix{3,8,dxType}(
+    vtx = SMatrix{3,8,dxType}(
                 0, 0, 0,
                 dx, 0, 0,
                 0, dy, 0,
@@ -150,7 +152,8 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
                 0, dy, dz,
                 dx, dy, dz
             )
-        )
+
+    vertices = VPolytope(vtx)
     
     # Faces as defined by the vertices.
     faces = SMatrix{4, 6, mxType}(
@@ -158,9 +161,11 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
         5, 6, 7, 8, # xy plane @ max z
         1, 2, 5, 6, # xz plane @ min y
         4, 3, 8, 7, # xz plane @ max y
-        3, 1, 7, 3, # yz plane @ min x
+        3, 1, 7, 5, # yz plane @ min x
         2, 4, 6, 8, # yz plane @ max x
     )
+
+    faceMidPt = mean(vtx[:, faces], dims = 2)[:,1,:]
     
     # Face normal of the corresponding face.
     faceNorm = SMatrix{3,6,dxType}(
@@ -311,11 +316,13 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
         order,
         vertices,
         faces,
+        faceMidPt,
         faceNorm,
         C,
         dx,
         dy,
         dz,
+        scale,
         mx,
         my,
         mz,

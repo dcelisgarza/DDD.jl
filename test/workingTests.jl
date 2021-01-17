@@ -67,8 +67,49 @@ shearSquare = DislocationLoop(;
 )
 network = DislocationNetwork((shearSquare, prismSquare))
 
+##
+# fig1 = plotNodes(regularCuboidMesh, 
+#     network,
+#     m = 1,
+#     l = 3,
+#     linecolor = :blue,
+#     marker = :circle,
+#     markercolor = :blue,
+#     legend = false,
+# )
+
+network.nodeVel[:, 1:network.numNode[1]] .= rand(3, network.numNode[1])
+network2 = deepcopy(network)
+network2 = remeshSurfaceNetwork!(
+    regularCuboidMesh, 
+    network2
+)
+
+label = network2.label
+coord = network2.coord
+surface = findall(x -> x == 3, label)
+external = findall(x -> x == 5, label)
+temporary = findall(x -> x == 6, label)
+
+
+# network2.coord[:, external]
+# scatter!(fig1, coord[1, surface], coord[2, surface], coord[3, surface], markersize = 2, markercolor = :red)
+# scatter!(fig1, coord[1, external], coord[2, external], coord[3, external], markersize = 2, markercolor = :black)
+
+fig2 = plotNodes(regularCuboidMesh, 
+    network2,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
 
 ##
+
+
+
 using Plots
 vertices = reshape(collect(Iterators.flatten(regularCuboidMesh.vertices.vertices)), 3, 8)
 faces = regularCuboidMesh.faces

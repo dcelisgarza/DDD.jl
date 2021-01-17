@@ -192,7 +192,7 @@ calcPKForce(
 Calculate the Peach-Koehler force on segments.
 
 ``
-f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{l}
+f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{t}
 ``
 """
 function calcPKForce(
@@ -224,7 +224,7 @@ function calcPKForce(
     idxNode2 = @view segIdx[idx, 3]
     # Un normalised segment vectors. Use views for speed.
     bVec = @view bVec[:, idxBvec]
-    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
     midNode = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
 
     PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
@@ -232,9 +232,9 @@ function calcPKForce(
     @inbounds @simd for i in eachindex(idx)
         x0 = SVector{3,elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
         b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        l = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
+        t = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
         σHat = calc_σHat(mesh, forceDisplacement, x0)
-        pkForce = (σHat * b) × l
+        pkForce = (σHat * b) × t
         for j in 1:3
             PKForce[j, i] = pkForce[j]
         end
@@ -269,7 +269,7 @@ function calcPKForce!(
     idxNode2 = @view segIdx[idx, 3]
     # Un normalised segment vectors. Use views for speed.
     bVec = @view bVec[:, idxBvec]
-    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
     midNode = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
 
     # Loop over segments.
@@ -277,9 +277,9 @@ function calcPKForce!(
         idxi = idx[i]
         x0 = SVector{3,elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
         b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        l = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
+        t = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
         σHat = calc_σHat(mesh, forceDisplacement, x0)
-        pkForce = (σHat * b) × l
+        pkForce = (σHat * b) × t
         for j in 1:3
             segForce[j, 1, idxi] += pkForce[j] * 0.5
             segForce[j, 2, idxi] += pkForce[j] * 0.5
@@ -334,13 +334,13 @@ function calcSelfForce(
     idxNode2 = @view segIdx[idx, 3]
     # Un normalised segment vectors. Use views for speed.
     bVec = @view bVec[:, idxBvec]
-    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
     selfForceNode2 = zeros(3, numSeg)
 
     @inbounds @simd for i in eachindex(idx)
         # Finding the norm of each line vector.
-        tVecI = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
+        tVecI = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
         tVecSq = tVecI ⋅ tVecI
         L = sqrt(tVecSq)
         Linv = 1 / L
@@ -349,20 +349,20 @@ function calcSelfForce(
         La = sqrt(tVecSq + aSq)
         bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-        # Screw component, scalar projection of bVec onto l.
+        # Screw component, scalar projection of bVec onto t.
         bScrew = tVecI ⋅ bVecI
-        # Edge component, vector rejection of bVec onto l.
+        # Edge component, vector rejection of bVec onto t.
         bEdgeVec = bVecI - bScrew * tVecI
         # Finding the norm squared of each edge component.
         bEdgeSq = bEdgeVec ⋅ bEdgeVec
         #= 
         A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
         553?595: gives this expression in appendix A p590
-        f^{s}_{43} = -(μ/(4π)) [ l × (l × b)](l ⋅ b) { v/(1-v) ( ln[
+        f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
                                                                                                                                                                                                                                                                                                                 
-        lVec × (lVec × bVec)    = lVec (lVec ⋅ bVec) - bVec (lVec ⋅ lVec)
-        = lVec * bScrew - bVec
+        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
+        = tVec * bScrew - bVec
         = - bEdgeVec =#
         # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
         LaMa = La - a
@@ -415,12 +415,12 @@ function calcSelfForce!(
     idxNode1 = @view segIdx[idx, 2]
     idxNode2 = @view segIdx[idx, 3]
     bVec = @view bVec[:, idxBvec]
-    lVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
 
     @inbounds @simd for i in eachindex(idx)
         idxi = idx[i]
         # Finding the norm of each line vector.
-        tVecI = SVector{3,elemT}(lVec[1, i], lVec[2, i], lVec[3, i])
+        tVecI = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
         tVecSq = tVecI ⋅ tVecI
         L = sqrt(tVecSq)
         Linv = 1 / L
@@ -429,20 +429,20 @@ function calcSelfForce!(
         La = sqrt(tVecSq + aSq)
         bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-        # Screw component, scalar projection of bVec onto l.
+        # Screw component, scalar projection of bVec onto t.
         bScrew = tVecI ⋅ bVecI
-        # Edge component, vector rejection of bVec onto l.
+        # Edge component, vector rejection of bVec onto t.
         bEdgeVec = bVecI - bScrew * tVecI
         # Finding the norm squared of each edge component.
         bEdgeSq = bEdgeVec ⋅ bEdgeVec
         #= 
         A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
         553?595: gives this expression in appendix A p590
-        f^{s}_{43} = -(μ/(4π)) [ l × (l × b)](l ⋅ b) { v/(1-v) ( ln[
+        f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
         (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
                                                                                                                                                                                                                                                                                                                 
-        lVec × (lVec × bVec)    = lVec (lVec ⋅ bVec) - bVec (lVec ⋅ lVec)
-        = lVec * bScrew - bVec
+        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
+        = tVec * bScrew - bVec
         = - bEdgeVec =#
         # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
         LaMa = La - a

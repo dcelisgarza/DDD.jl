@@ -228,10 +228,11 @@ linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
 
 Find the intersect between plane and line.
 """
-function linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
+function linePlaneIntersect(n, p0, l, l0)
     den = l ⋅ n
     num = (p0 - l0) ⋅ n
-    if den ≈ 0 
+
+    if den ≈ 0
         num ≈ 0 && return Inf
         return nothing
     end

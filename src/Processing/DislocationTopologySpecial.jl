@@ -1,4 +1,167 @@
-function remeshSurfaceNetwork!()
+function remeshSurfaceNetwork!(
+    mesh::AbstractMesh, 
+    network::DislocationNetwork
+)
+    scale = mesh.scale
+    vertices = mesh.vertices
+    faceMidPt = mesh.faceMidPt
+    faceNorm = mesh.faceNorm
+    numFaces = size(faceMidPt, 2)
+    
+    label = network.label
+    links = network.links
+    coord = network.coord
+    elemT = eltype(coord)
+    numNode = network.numNode[1]
+    connectivity = network.connectivity
+
+    # Findall internal nodes.
+    idx = findall(x -> x == intMob, label)
+    numInt = length(idx)
+    # Find the location of the nodes that are newly outside the domain, P.
+    nodeCoord = zeros(elemT, 3)
+    @inbounds @simd for i in 1:numInt
+        idxi = idx[i]
+        for j in 1:3
+            nodeCoord[j] = coord[j, idxi]
+        end
+        if nodeCoord ∉ vertices
+            label[i] = tmp
+        end
+    end
+
+    for node1 in 1:numNode
+        # We only want to check connections of mobile internal or external nodes.
+        label[node1] == intMob || label[node1] == ext ? nothing : continue
+        # Find the number of connections to the node.
+        numCon = connectivity[1, node1]
+        # Loop through all connections of node1.
+        for j in 1:numCon
+            idx = 2 * j
+            # Link where node1 appears for its connection j.
+            linkId = connectivity[idx, node1]
+            # Column where node1 appears.
+            colLink = connectivity[idx + 1, node1]
+            # Neigbour node from j'th link node1 appears.
+            node2 = links[3 - colLink, linkId]
+
+            if label[node2] == tmp
+                network = makeSurfaceNode!(mesh, network, node1, node2, j)
+                label = network.label
+                links = network.links
+                connectivity = network.connectivity
+            end
+        end
+    end
+
+    label = network.label
+    coord = network.coord
+    nodeVel = network.nodeVel
+    numNode = network.numNode[1]
+    intersectArr = zeros(elemT, 3)
+
+    for i in 1:numNode
+        # We only want to change the temporary nodes.
+        label[i] != tmp ? continue : nothing
+
+        intersectArr[1] = 0
+        intersectArr[2] = 0
+        intersectArr[3] = 0
+
+        # Assume nodes moved with linear velocity and crossed the surface. We use this velocity as the vector to move them back.
+        vel = SVector{3,elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
+        velN = norm(vel)
+        iszero(velN) ? throw(ErrorException("total node velocity must be greater than zero")) : nothing
+        vel = vel / velN
+
+        l0 = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
+        distMin::elemT = Inf
+        # Declare new node.
+        newNode = SVector{3,elemT}(0, 0, 0)
+        for j in 1:numFaces
+            oldMin = distMin
+            intersect = linePlaneIntersect(faceNorm[:, j], faceMidPt[:, j], vel, l0)
+            if isnothing(intersect)
+                continue
+            else
+                intersectArr[:] = intersect[:]
+                if intersectArr ∉ vertices
+                    continue
+                end
+            end
+            distMin = min(sum((intersect - l0).^2), oldMin)
+            if distMin < oldMin
+                # The new node will be placed at the point where the line direction intersects the nearest face, which is face j.
+                newNode = intersect
+            end
+        end
+        isinf(distMin) ? label[i] = intMob : coord[:, i] = newNode
+        
+        face = 0
+        distances = (faceMidPt[1, :] .- l0[1]).^2 + (faceMidPt[2, :] .- l0[2]).^2 + (faceMidPt[3, :] .- l0[3]).^2
+        
+        missing, face = findmin(distances)
+        
+        for j in 1:3
+            coord[j, i] = coord[j, i] + faceNorm[j, face] * scale[j]
+        end
+        
+        label[i] = ext
+
+    end
+
+    return network
+end
+
+function makeSurfaceNode!(
+    mesh::AbstractMesh, 
+    network::DislocationNetwork,
+    node1::Integer,
+    node2::Integer,
+    idx::Integer
+)
+    vertices = mesh.vertices
+    faceMidPt = mesh.faceMidPt
+    faceNorm = mesh.faceNorm
+    numFaces = size(faceMidPt, 2)
+    coord = network.coord
+    elemT = eltype(coord)
+
+    coordNode1 = SVector{3,elemT}(coord[1, node1], coord[2, node1], coord[3, node1])
+    coordNode2 = SVector{3,elemT}(coord[1, node2], coord[2, node2], coord[3, node2])
+    t = coordNode2 - coordNode1
+    l0 = coordNode1 + 0.5 * t 
+    
+    # Find the minimum distance from the internal node to a plane.
+    distMin::elemT = Inf
+    # Declare new node.
+    newNode = SVector{3,elemT}(0, 0, 0)
+    # This can't be a static vector because the convex hull check doesn't have a method for it.
+    intersectArr = zeros(elemT, 3)
+    for i in 1:numFaces
+        oldMin = distMin
+        intersect = linePlaneIntersect(faceNorm[:, i], faceMidPt[:, i], t, l0)
+        if isnothing(intersect)
+            continue
+        else
+            intersectArr[:] = intersect[:]
+            if intersectArr ∉ vertices
+                continue
+            end
+        end
+        distMin = min(sum((intersect - l0).^2), oldMin)
+        if distMin < oldMin
+            # The new node will be placed at the point where the line direction intersects the nearest face, which is face i.
+            newNode = intersect
+        end
+    end
+    isinf(distMin) && return network
+    # We set the surface node velocity to zero. It will be calculated later.
+    network = splitNode!(network, node1, idx, newNode, SVector{3,elemT}(0, 0, 0))
+    # Set the label of the new node to be a surface node.
+    network.label[network.numNode[1]] = srfMob
+
+    return network
 end
 
 """
@@ -20,90 +183,90 @@ May 2017
 
 Adapted Jan 2021 Daniel Celis Garza, Github @dcelisgarza
 """
-function coarsenVirtualNetwork!(
+    function coarsenVirtualNetwork!(
     dlnParams::T1,
     network::T2,
 ) where {T1 <: DislocationParameters,T2 <: DislocationNetwork}
 
-    critLen = dlnParams.slipStepCritLen
-    critArea = dlnParams.slipStepCritArea
-    label = network.label
-    links = network.links
-    coord = network.coord
-    numNode = network.numNode[1]
-    connectivity = network.connectivity
-    elemT = eltype(coord)
+        critLen = dlnParams.slipStepCritLen
+        critArea = dlnParams.slipStepCritArea
+        label = network.label
+        links = network.links
+        coord = network.coord
+        numNode = network.numNode[1]
+        connectivity = network.connectivity
+        elemT = eltype(coord)
 
-    i = 1
-    while i <= numNode
+        i = 1
+        while i <= numNode
         # Only find virtual nodes with two connections.
-        if getNodeType(label[i]) == ext && connectivity[1, i] == 2
+            if label[i] == ext && connectivity[1, i] == 2
             # This is where node i appears in connectivity.
-            node1 = connectivity[2, i] # Link where node i appears first.
-            linkCol1 = 3 - connectivity[3, i] # Column of links where it appears.
-            node2 = connectivity[4, i] # Link where node i appears second.
-            linkCol2 = 3 - connectivity[5, i] # Column of links where it appears.
+                node1 = connectivity[2, i] # Link where node i appears first.
+                linkCol1 = 3 - connectivity[3, i] # Column of links where it appears.
+                node2 = connectivity[4, i] # Link where node i appears second.
+                linkCol2 = 3 - connectivity[5, i] # Column of links where it appears.
 
-            linkNode1 = links[node1, linkCol1] # First node connected to target node.
-            linkNode2 = links[node2, linkCol2] # Second node connected to target node.
+                linkNode1 = links[node1, linkCol1] # First node connected to target node.
+                linkNode2 = links[node2, linkCol2] # Second node connected to target node.
 
             # Only if both nodes are virtual.
-            if getNodeType(label[linkNode1]) == getNodeType(label[linkNode2]) == ext
+                if label[linkNode1] == label[linkNode2] == ext
                 # Coordinate of node i.
-                iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
+                    iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
 
                 # Vector of link 1.
-                coordVec1 =
+                    coordVec1 =
                     SVector{3,elemT}(
                         coord[1, linkNode1],
                         coord[2, linkNode1],
                         coord[3, linkNode1],
                     ) - iCoord
-                normVec1 = norm(coordVec1)
+                    normVec1 = norm(coordVec1)
 
                 # Vector of link 2.
-                coordVec2 =
+                    coordVec2 =
                     SVector{3,elemT}(
                         coord[1, linkNode2],
                         coord[2, linkNode2],
                         coord[3, linkNode2],
                     ) - iCoord
-                normVec2 = norm(coordVec2)
+                    normVec2 = norm(coordVec2)
 
                 # Angle between vectors.
-                θ = acos(norm(coordVec1 ⋅ coordVec2) / (normVec1 * normVec2))
+                    θ = acos(norm(coordVec1 ⋅ coordVec2) / (normVec1 * normVec2))
 
                 # Area formed by the triangle formed by link 1 and link 2.
-                area = 0.5 * normVec1 * normVec2 * sin(θ)
+                    area = 0.5 * normVec1 * normVec2 * sin(θ)
 
                 # If the length of link 1 and the angle change are below the critical size, merge node i to the first connected node.
-                if normVec1 < critLen && area < critArea
-                    nothing, network = mergeNode!(network, linkNode1, i)
-                    getSegmentIdx!(network)
-                    links = network.links
-                    coord = network.coord
-                    label = network.label
-                    numNode = network.numNode[1]
-                    connectivity = network.connectivity
+                    if normVec1 < critLen && area < critArea
+                        nothing, network = mergeNode!(network, linkNode1, i)
+                        getSegmentIdx!(network)
+                        links = network.links
+                        coord = network.coord
+                        label = network.label
+                        numNode = network.numNode[1]
+                        connectivity = network.connectivity
                     # If the length of link 1 and the angle change are below the critical size, merge node i to the second connected node.
-                elseif normVec2 < critLen && area < critArea
-                    nothing, network = mergeNode!(network, linkNode2, i)
-                    getSegmentIdx!(network)
-                    links = network.links
-                    coord = network.coord
-                    label = network.label
-                    numNode = network.numNode[1]
-                    connectivity = network.connectivity
+                    elseif normVec2 < critLen && area < critArea
+                        nothing, network = mergeNode!(network, linkNode2, i)
+                        getSegmentIdx!(network)
+                        links = network.links
+                        coord = network.coord
+                        label = network.label
+                        numNode = network.numNode[1]
+                        connectivity = network.connectivity
+                    else
+                        i += 1
+                    end
                 else
                     i += 1
                 end
             else
                 i += 1
             end
-        else
-            i += 1
+
         end
 
     end
-
-end

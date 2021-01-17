@@ -772,7 +772,7 @@ function DislocationNetwork!(
     numNode = nodeTotal
 
     # Allocate memory.
-    available = length(findall(x -> getNodeType(x) == none, network.label))
+    available = length(findall(x -> x == none, network.label))
     if nodeTotal > available
         newEntries = Int(round(nodeTotal * log2(nodeTotal)))
         network = push!(network, newEntries)
@@ -786,7 +786,7 @@ function DislocationNetwork!(
     
     # Since the network has already been created, initIdx is the next available index to store new data.
     initIdx::Int = 1
-    first = findfirst(x -> getNodeType(x) == none, label)
+    first = findfirst(x -> x == none, label)
     isnothing(first) ? initIdx = 1 : initIdx = first
     makeNetwork!(
         links,
