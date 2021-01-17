@@ -82,9 +82,9 @@ function plotNodes(mesh::T1, network::DislocationNetwork, args...; kw...) where 
     side = vertices[:, [4, 8]];
     plot!(fig, side[1, :], side[2, :], side[3, :], linecolor = :black, linewidth = 2)
     
-    xlims = (minimum(vertices[1, :]), maximum(vertices[1, :]))
-    ylims = (minimum(vertices[2, :]), maximum(vertices[2, :]))
-    zlims = (minimum(vertices[3, :]), maximum(vertices[3, :]))
+    xlims = (minimum(vertices[1, :]) - maximum(vertices[1, :]), maximum(vertices[1, :]) + maximum(vertices[1, :]))
+    ylims = (minimum(vertices[2, :]) - maximum(vertices[2, :]), maximum(vertices[2, :]) + maximum(vertices[2, :]))
+    zlims = (minimum(vertices[3, :]) - maximum(vertices[3, :]), maximum(vertices[3, :]) + maximum(vertices[3, :]))
     plot!(fig, xlims = xlims, ylims = ylims, zlims = zlims, aspect_ratio = 1)
 
     return fig
@@ -124,10 +124,10 @@ function plotNodes!(fig, mesh::T1, network::DislocationNetwork, args...; kw...) 
     side = vertices[:, [4, 8]];
     plot!(fig, side[1, :], side[2, :], side[3, :], linecolor = :black, linewidth = 2)
     
-    xlims!(minimum(vertices[1, :]), maximum(vertices[1, :]))
-    ylims!(minimum(vertices[2, :]), maximum(vertices[2, :]))
-    zlims!(minimum(vertices[3, :]), maximum(vertices[3, :]))
-    # plot!(fig, xlims = xlims, ylims = ylims, zlims = zlims, aspect_ratio = :equal)
+    xlims = (minimum(vertices[1, :]) - maximum(vertices[1, :]), maximum(vertices[1, :]) + maximum(vertices[1, :]))
+    ylims = (minimum(vertices[2, :]) - maximum(vertices[2, :]), maximum(vertices[2, :]) + maximum(vertices[2, :]))
+    zlims = (minimum(vertices[3, :]) - maximum(vertices[3, :]), maximum(vertices[3, :]) + maximum(vertices[3, :]))
+    plot!(fig, xlims = xlims, ylims = ylims, zlims = zlims, aspect_ratio = 1)
 
     return fig
 end

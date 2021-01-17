@@ -1,3 +1,33 @@
+function findIntersectVolume(mesh::AbstractMesh, l, l0, tmpArr)
+    vertices = mesh.vertices
+    faceMidPt = mesh.faceMidPt
+    faceNorm = mesh.faceNorm
+    numFaces = size(faceMidPt, 2)
+    elemT = eltype(l)
+
+    distMin::elemT = Inf
+    # Declare new node.
+    newNode = SVector{3,elemT}(0, 0, 0)
+    for j in 1:numFaces
+        oldMin = distMin
+        intersect = linePlaneIntersect(faceNorm[:, j], faceMidPt[:, j], l, l0)
+        if isnothing(intersect)
+            continue
+        else
+            tmpArr[:] = intersect[:]
+            if tmpArr ∉ vertices
+                continue
+            end
+        end
+        distMin = min(sum((intersect - l0).^2), oldMin)
+        if distMin < oldMin
+            # The new node will be placed at the point where the line direction intersects the nearest face, which is face j.
+            newNode = intersect
+        end
+    end
+    return distMin, newNode
+end
+
 function remeshSurfaceNetwork!(
     mesh::AbstractMesh, 
     network::DislocationNetwork
@@ -73,33 +103,14 @@ function remeshSurfaceNetwork!(
         velN = norm(vel)
         iszero(velN) ? throw(ErrorException("total node velocity must be greater than zero")) : nothing
         vel = vel / velN
-
         l0 = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
-        distMin::elemT = Inf
-        # Declare new node.
-        newNode = SVector{3,elemT}(0, 0, 0)
-        for j in 1:numFaces
-            oldMin = distMin
-            intersect = linePlaneIntersect(faceNorm[:, j], faceMidPt[:, j], vel, l0)
-            if isnothing(intersect)
-                continue
-            else
-                intersectArr[:] = intersect[:]
-                if intersectArr ∉ vertices
-                    continue
-                end
-            end
-            distMin = min(sum((intersect - l0).^2), oldMin)
-            if distMin < oldMin
-                # The new node will be placed at the point where the line direction intersects the nearest face, which is face j.
-                newNode = intersect
-            end
-        end
+        
+        distMin, newNode = findIntersectVolume(mesh, vel, l0, intersectArr)
+
         isinf(distMin) ? label[i] = intMob : coord[:, i] = newNode
         
         face = 0
         distances = (faceMidPt[1, :] .- l0[1]).^2 + (faceMidPt[2, :] .- l0[2]).^2 + (faceMidPt[3, :] .- l0[3]).^2
-        
         missing, face = findmin(distances)
         
         for j in 1:3
@@ -130,31 +141,9 @@ function makeSurfaceNode!(
     coordNode1 = SVector{3,elemT}(coord[1, node1], coord[2, node1], coord[3, node1])
     coordNode2 = SVector{3,elemT}(coord[1, node2], coord[2, node2], coord[3, node2])
     t = coordNode2 - coordNode1
-    l0 = coordNode1 + 0.5 * t 
-    
-    # Find the minimum distance from the internal node to a plane.
-    distMin::elemT = Inf
-    # Declare new node.
-    newNode = SVector{3,elemT}(0, 0, 0)
-    # This can't be a static vector because the convex hull check doesn't have a method for it.
     intersectArr = zeros(elemT, 3)
-    for i in 1:numFaces
-        oldMin = distMin
-        intersect = linePlaneIntersect(faceNorm[:, i], faceMidPt[:, i], t, l0)
-        if isnothing(intersect)
-            continue
-        else
-            intersectArr[:] = intersect[:]
-            if intersectArr ∉ vertices
-                continue
-            end
-        end
-        distMin = min(sum((intersect - l0).^2), oldMin)
-        if distMin < oldMin
-            # The new node will be placed at the point where the line direction intersects the nearest face, which is face i.
-            newNode = intersect
-        end
-    end
+    distMin, newNode = findIntersectVolume(mesh, t, coordNode1, intersectArr)
+
     isinf(distMin) && return network
     # We set the surface node velocity to zero. It will be calculated later.
     network = splitNode!(network, node1, idx, newNode, SVector{3,elemT}(0, 0, 0))

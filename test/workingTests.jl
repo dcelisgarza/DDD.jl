@@ -68,15 +68,16 @@ shearSquare = DislocationLoop(;
 network = DislocationNetwork((shearSquare, prismSquare))
 
 ##
-# fig1 = plotNodes(regularCuboidMesh, 
-#     network,
-#     m = 1,
-#     l = 3,
-#     linecolor = :blue,
-#     marker = :circle,
-#     markercolor = :blue,
-#     legend = false,
-# )
+fig1 = plotNodes(
+    regularCuboidMesh, 
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
 
 network.nodeVel[:, 1:network.numNode[1]] .= rand(3, network.numNode[1])
 network2 = deepcopy(network)
@@ -91,20 +92,37 @@ surface = findall(x -> x == 3, label)
 external = findall(x -> x == 5, label)
 temporary = findall(x -> x == 6, label)
 
+plotNodes!(
+    fig1,
+    regularCuboidMesh, 
+    network2,
+    m = 2,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :green,
+    legend = false,
+)
+
+scatter!(coord[1, surface], coord[2, surface],coord[3, surface], markersize = 3, markercolor = :cyan)
 
 # network2.coord[:, external]
 # scatter!(fig1, coord[1, surface], coord[2, surface], coord[3, surface], markersize = 2, markercolor = :red)
 # scatter!(fig1, coord[1, external], coord[2, external], coord[3, external], markersize = 2, markercolor = :black)
 
-fig2 = plotNodes(regularCuboidMesh, 
-    network2,
-    m = 1,
-    l = 3,
-    linecolor = :blue,
-    marker = :circle,
-    markercolor = :blue,
-    legend = false,
-)
+
+
+
+
+# scatter!(coord[1, temporary], coord[2, temporary],coord[3, temporary], markersize = 3, markercolor = :green)
+
+
+
+maximum(network2.connectivity[1,:])
+
+
+
+
 
 ##
 
