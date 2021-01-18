@@ -58,14 +58,16 @@ function integrate!(
     intVars::T2,
     dlnParams::T3,
     matParams::T4,
-    network::T5,
-) where {T1 <: IntegrationParameters,T2 <: IntegrationTime,T3 <: DislocationParameters,T4 <: MaterialParameters,T5 <: DislocationNetwork,}
+    mesh::T5,
+    forceDisplacement::T6,
+    network::T7,
+) where {T1 <: IntegrationParameters,T2 <: IntegrationTime,T3 <: DislocationParameters,T4 <: MaterialParameters,T5 <: AbstractMesh,T6 <: ForceDisplacement,T7 <: DislocationNetwork,}
 
     numNode = network.numNode[1]
     numNode == 0 && return network
 
     # Calculate current velocity.
-    deriv!(dlnParams, matParams, network)
+    deriv!(dlnParams, matParams, mesh, forceDisplacement, network)
 
     # Store current position and velocity.
     idx = 1:numNode
@@ -90,7 +92,7 @@ function integrate!(
         network.coord[:, idx] = initCoord + initVel * dt
 
         # Calculate new velocity from new coords.
-        deriv!(dlnParams, matParams, network)
+        deriv!(dlnParams, matParams, mesh, forceDisplacement, network)
         coord = network.coord
         nodeVel = network.nodeVel
 
@@ -119,7 +121,7 @@ function integrate!(
             if dtOldGood
                 # If it was, use the previous time step.
                 network.coord[:, idx] = initCoord + initVel * dtOld
-                deriv!(dlnParams, matParams, network)
+                deriv!(dlnParams, matParams, mesh, forceDisplacement, network)
                 break
             else
                 # If it wasn't, make the timestep smaller.

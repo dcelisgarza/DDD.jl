@@ -196,9 +196,9 @@ f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarr
 ``
 """
 function calcPKForce(
-    mesh::RegularCuboidMesh,
-    forceDisplacement::ForceDisplacement,
-    network::DislocationNetwork,
+    mesh::T1,
+    forceDisplacement::T2,
+    network::T3,
     idx = nothing,
 ) where {T1 <: RegularCuboidMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
     
@@ -243,9 +243,9 @@ function calcPKForce(
     return PKForce
 end
 function calcPKForce!(
-    mesh::RegularCuboidMesh,
-    forceDisplacement::ForceDisplacement,
-    network::DislocationNetwork,
+    mesh::T1,
+    forceDisplacement::T2,
+    network::T3,
     idx = nothing,
 ) where {T1 <: RegularCuboidMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
     
