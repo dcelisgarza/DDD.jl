@@ -63,28 +63,29 @@ struct FEMParameters{T1,T2,T3,T4}
 end
 """
 ```
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12} <: AbstractRegularCuboidMesh
     order::T1           # Element order.
     vertices::T2        # Vertices.
     faces::T3           # Faces.
-    faceMidPt::T3       # Face midpoints.
+    faceMidPt::T4       # Face midpoints.
     faceNorm::T4        # Face normals.
     C::T5               # Stiffness tensor.
     dx::T6              # Size in x.  
     dy::T6              # Size in y.
     dz::T6              # Size in z.
-    mx::T7              # Number of elements in x.
-    my::T7              # Number of elements in y.
-    mz::T7              # Number of elements in z.
-    numElem::T7         # Total number of elements.
-    numNode::T7         # Total number of nodes.
+    scale::T7           # Length scale.
+    mx::T8              # Number of elements in x.
+    my::T8              # Number of elements in y.
+    mz::T8              # Number of elements in z.
+    numElem::T8         # Total number of elements.
+    numNode::T8         # Total number of nodes.
     w::T6               # Element width (size in x).
     h::T6               # Element height (size in y).
     d::T6               # Element depth (size in z).
-    B::T8               # Jacobian matrix.
-    coord::T9           # Node coordinates.
-    connectivity::T10   # Node connectivity.
-    K::T11              # Stiffness matrix.
+    B::T9               # Jacobian matrix.
+    coord::T10          # Node coordinates.
+    connectivity::T11   # Node connectivity.
+    K::T12              # Stiffness matrix.
 end
 ```
 Stores data for a regular cuboid mesh.

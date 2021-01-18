@@ -46,7 +46,6 @@ export AbstractDlnSeg,
     AbstractIntegrator
 export MaterialParameters
 export nodeType,
-    getNodeType,
     SlipSystem,
     DislocationParameters,
     DislocationLoop,
