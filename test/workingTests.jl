@@ -25,12 +25,12 @@ intVars = loadIntegrationTimeJSON(fileIntVar)
 femParams = FEMParameters(
                     femParams.type, 
                     femParams.order,
-                    Float64(femParams.dx),
+                    Float64(femParams.dx / 5),
                     Float64(femParams.dy),
                     Float64(femParams.dz),
-                    40,
-                    40,
-                    40
+                    20,
+                    20,
+                    20
                 )
 regularCuboidMesh = buildMesh(matParams, femParams)
 
@@ -68,6 +68,9 @@ shearSquare = DislocationLoop(;
 network = DislocationNetwork((shearSquare, prismSquare))
 
 ##
+pyplot()
+regularCuboidMesh.vertices
+dx, dy, dz
 fig1 = plotNodes(
     regularCuboidMesh, 
     network,
@@ -78,6 +81,10 @@ fig1 = plotNodes(
     markercolor = :blue,
     legend = false,
 )
+xlims!(0, dx)
+ylims!(0, dy)
+zlims!(0, dz)
+plot!(aspect_ratio = (1, 0, 1))
 
 network.nodeVel[:, 1:network.numNode[1]] .= rand(3, network.numNode[1])
 network2 = deepcopy(network)
@@ -91,6 +98,7 @@ coord = network2.coord
 surface = findall(x -> x == 3, label)
 external = findall(x -> x == 5, label)
 temporary = findall(x -> x == 6, label)
+regularCuboidMesh.faceMidPt[:, 6]
 
 plotNodes!(
     fig1,
@@ -98,9 +106,20 @@ plotNodes!(
     network2,
     m = 2,
     l = 3,
-    linecolor = :blue,
+    linecolor = :orange,
     marker = :circle,
-    markercolor = :green,
+    markercolor = :orange,
+    legend = false,
+)
+regularCuboidMesh.faceMidPt[1, :] .* regularCuboidMesh.faceNorm[1, :] .+ regularCuboidMesh.faceMidPt[2, :] .* regularCuboidMesh.faceNorm[2, :] .+ regularCuboidMesh.faceMidPt[3, :] .* regularCuboidMesh.faceNorm[3, :]
+fig2 = plotNodes(
+    regularCuboidMesh, 
+    network2,
+    m = 2,
+    l = 3,
+    linecolor = :orange,
+    marker = :circle,
+    markercolor = :orange,
     legend = false,
 )
 

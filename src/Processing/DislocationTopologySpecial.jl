@@ -6,11 +6,12 @@ function findIntersectVolume(mesh::AbstractMesh, l, l0, tmpArr)
     elemT = eltype(l)
 
     distMin::elemT = Inf
+    face = 0
     # Declare new node.
     newNode = SVector{3,elemT}(0, 0, 0)
-    for j in 1:numFaces
+    for i in 1:numFaces
         oldMin = distMin
-        intersect = linePlaneIntersect(faceNorm[:, j], faceMidPt[:, j], l, l0)
+        intersect = linePlaneIntersect(faceNorm[:, i], faceMidPt[:, i], l, l0)
         if isnothing(intersect)
             continue
         else
@@ -21,11 +22,12 @@ function findIntersectVolume(mesh::AbstractMesh, l, l0, tmpArr)
         end
         distMin = min(sum((intersect - l0).^2), oldMin)
         if distMin < oldMin
-            # The new node will be placed at the point where the line direction intersects the nearest face, which is face j.
+            # The new node will be placed at the point where the line direction intersects the nearest face, which is face i.
             newNode = intersect
+            face = i
         end
     end
-    return distMin, newNode
+    return distMin, newNode, face
 end
 
 function remeshSurfaceNetwork!(
@@ -105,13 +107,20 @@ function remeshSurfaceNetwork!(
         vel = vel / velN
         l0 = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
         
-        distMin, newNode = findIntersectVolume(mesh, vel, l0, intersectArr)
+        distMin, newNode, face = findIntersectVolume(mesh, vel, l0, intersectArr)
 
-        isinf(distMin) ? label[i] = intMob : coord[:, i] = newNode
-        
-        face = 0
-        distances = (faceMidPt[1, :] .- l0[1]).^2 + (faceMidPt[2, :] .- l0[2]).^2 + (faceMidPt[3, :] .- l0[3]).^2
-        missing, face = findmin(distances)
+        # If there is no intersect then flag it as internal mobile for the time being and find the nearest plane to project it out of.
+        if isinf(distMin)
+            label[i] = intMob
+            l0 = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
+            # D = |(x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
+            distances = ((l0[1] .+ faceMidPt[1, :]) .* faceNorm[1, :] .+ (l0[2] .+ faceMidPt[2, :]) .* faceNorm[2, :] .+ (l0[3] .+ faceMidPt[3, :]) .* faceNorm[3, :]).^2
+            missing, face = findmin(distances)
+        else
+            # If there is an intersect, move the node to the intersect and we will project it out of the face it intersected.
+            coord[:, i] = newNode
+        end
+
         
         for j in 1:3
             coord[j, i] = coord[j, i] + faceNorm[j, face] * scale[j]
@@ -142,7 +151,7 @@ function makeSurfaceNode!(
     coordNode2 = SVector{3,elemT}(coord[1, node2], coord[2, node2], coord[3, node2])
     t = coordNode2 - coordNode1
     intersectArr = zeros(elemT, 3)
-    distMin, newNode = findIntersectVolume(mesh, t, coordNode1, intersectArr)
+    distMin, newNode, missing = findIntersectVolume(mesh, t, coordNode1, intersectArr)
 
     isinf(distMin) && return network
     # We set the surface node velocity to zero. It will be calculated later.
