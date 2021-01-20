@@ -35,7 +35,7 @@ femParams = FEMParameters(
 regularCuboidMesh = buildMesh(matParams, femParams)
 
 dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
-segLen = dx / 10
+segLen = dx / 5
 prismSquare = DislocationLoop(;
     loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
     numSides = 4,   # 5-sided loop.
@@ -68,7 +68,6 @@ shearSquare = DislocationLoop(;
 network = DislocationNetwork((shearSquare, prismSquare))
 
 ##
-pyplot()
 regularCuboidMesh.vertices
 dx, dy, dz
 fig1 = plotNodes(
@@ -81,6 +80,7 @@ fig1 = plotNodes(
     markercolor = :blue,
     legend = false,
 )
+# png(fig1, "original")
 xlims!(0, dx)
 ylims!(0, dy)
 zlims!(0, dz)
@@ -115,15 +115,15 @@ regularCuboidMesh.faceMidPt[1, :] .* regularCuboidMesh.faceNorm[1, :] .+ regular
 fig2 = plotNodes(
     regularCuboidMesh, 
     network2,
-    m = 2,
+    m = 1,
     l = 3,
-    linecolor = :orange,
+    linecolor = :black,
     marker = :circle,
-    markercolor = :orange,
+    markercolor = :black,
     legend = false,
 )
 
-scatter!(coord[1, surface], coord[2, surface],coord[3, surface], markersize = 3, markercolor = :cyan)
+scatter!(coord[1, surface], coord[2, surface],coord[3, surface], markersize = 2, markercolor = :cyan)
 
 # network2.coord[:, external]
 # scatter!(fig1, coord[1, surface], coord[2, surface], coord[3, surface], markersize = 2, markercolor = :red)

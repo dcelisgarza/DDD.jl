@@ -16,8 +16,13 @@ function dlnMobility!(
 
     return dlnMobility!(dlnParams.mobility, dlnParams, matParams, network, idx)
 end
+"""
+Original by Bruce Bromage at the Department of Materials of the University of Oxford, @brucebromage on github.
+
+This is outdated, new capabilities include rotating the frame of reference and better handling of cross-slip.
+"""
 function dlnMobility(
-    mobility::T1,
+    ::T1,
     dlnParams::T2,
     matParams::T3,
     network::T4,

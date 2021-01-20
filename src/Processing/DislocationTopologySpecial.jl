@@ -79,9 +79,6 @@ function remeshSurfaceNetwork!(
 
             if label[node2] == tmp
                 network = makeSurfaceNode!(mesh, network, node1, node2, j)
-                label = network.label
-                links = network.links
-                connectivity = network.connectivity
             end
         end
     end
@@ -96,38 +93,196 @@ function remeshSurfaceNetwork!(
         # We only want to change the temporary nodes.
         label[i] != tmp ? continue : nothing
 
-        intersectArr[1] = 0
-        intersectArr[2] = 0
-        intersectArr[3] = 0
-
         # Assume nodes moved with linear velocity and crossed the surface. We use this velocity as the vector to move them back.
         vel = SVector{3,elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
         velN = norm(vel)
-        iszero(velN) ? throw(ErrorException("total node velocity must be greater than zero")) : nothing
+        iszero(velN) ? throw(ErrorException("norm of the nodal velocity must be greater than zero")) : nothing
         vel = vel / velN
         l0 = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
         
         distMin, newNode, face = findIntersectVolume(mesh, vel, l0, intersectArr)
 
-        # If there is no intersect then flag it as internal mobile for the time being and find the nearest plane to project it out of.
+        # If there is no intersect find the nearest plane to project it out of.
         if isinf(distMin)
-            label[i] = intMob
-            l0 = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
             # D = |(x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
             distances = ((l0[1] .+ faceMidPt[1, :]) .* faceNorm[1, :] .+ (l0[2] .+ faceMidPt[2, :]) .* faceNorm[2, :] .+ (l0[3] .+ faceMidPt[3, :]) .* faceNorm[3, :]).^2
-            missing, face = findmin(distances)
-        else
-            # If there is an intersect, move the node to the intersect and we will project it out of the face it intersected.
-            coord[:, i] = newNode
+            distMin, face = findmin(distances)
+            newNode = l0 + faceNorm[:, face] * distMin
         end
+        # If there is an intersect, move the node to the intersect and we will project it out of the face it intersected.
+        coord[:, i] = newNode
 
-        
         for j in 1:3
             coord[j, i] = coord[j, i] + faceNorm[j, face] * scale[j]
         end
         
         label[i] = ext
+    end
 
+    # Find connected surface nodes and merge them.
+    links = network.links
+    connectivity = network.connectivity
+    node1 = 1
+    while node1 < numNode
+        if label[node1] != srfMob || label[node1] != srfFix
+            node1 += 1
+            continue
+        end
+
+        # Find number of connections to node.
+        check::Bool = false
+        numCon = connectivity[1, node1]
+        # Loop through the number of connections.
+        for j in 1:numCon
+            idx = 2 * j
+            linkId = connectivity[idx, node1]
+            colLink = connectivity[idx + 1, node1]
+            node2 = links[3 - colLink, linkId]
+            # Check if the node connected is a surface node aso we can merge node1 into node2.
+            if label[node2] == srfMob || label[node2] == srfFix
+                missing, network = mergeNode!(network, node2, node1)
+                getSegmentIdx!(network)
+                links = network.links
+                label = network.label
+                numNode = network.numNode[1]
+                connectivity = network.connectivity
+                node1 = 1
+                check = true
+                break
+            end
+        end
+        check ? continue : nothing
+        node1 += 1
+    end
+
+    # Find surface nodes that are only connected to virtual nodes and project them to be external too.
+    numNode = network.numNode[1]
+    label = network.label
+    coord = network.coord
+    connectivity = network.connectivity
+    for node1 in 1:numNode
+        label[node1] == srfMob || label[node1] == srfFix ? continue : nothing
+
+        # Number of external connections.
+        numExtCon = 0
+        numCon = connectivity[1, node1]
+        for j in 1:numCon
+            linkId = connectivity[idx, node1]
+            colLink = connectivity[idx + 1, node1]
+            node2 = links[3 - colLink, linkId]
+
+            if label[node2] == ext
+                numExtCon += 1
+            end
+        end
+
+        # If the surface node is only connected to external nodes move away from the surface.
+        if numCon == numExtCon
+            # Check if node1 intersects a surface by projecting along the surface normal. Do this for all surfaces and find the minimum distance to a surface. Save the surface node1 intercepts and the coordinate where it does so.
+            l0 = SVector{3,elemT}(coord[1, node1], coord[2, node1], coord[3, node1])
+            face = 0
+            distMin::elemT = Inf
+            newNode = SVector{3,elemT}(0, 0, 0)
+            for j in 1:numFaces
+                oldDist = distMin
+                distMin, newNodeMin, faceMin = findIntersectVolume(mesh, faceNorm[:, j], l0, intersectArr)
+                distMin = min(distMin, oldDist)
+                if distMin < oldDist
+                    face = faceMin
+                    newNode = newNodeMin
+                end
+            end
+
+            # If there is no intersect with a surface find the nearest plane to project out of.
+            if isinf(distMin)
+                # D = |(x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
+                distances = ((l0[1] .+ faceMidPt[1, :]) .* faceNorm[1, :] .+ (l0[2] .+ faceMidPt[2, :]) .* faceNorm[2, :] .+ (l0[3] .+ faceMidPt[3, :]) .* faceNorm[3, :]).^2
+                distMin, face = findmin(distances)
+                # Point where the node intersects with the plane.
+                newNode = l0 + faceNorm[:, face] * distMin
+            end
+
+            # Move the node to the intersect and we will project it out of the face it intersected.
+            coord[:, node1] = newNode
+
+            for j in 1:3
+                coord[j, node1] = coord[j, node1] + faceNorm[j, face] * scale[j]
+            end
+
+            label[node1] = ext
+        end
+    end
+
+    # Ensure surface nodes are only connected to one virtual node.
+    node1 = 1
+    while node1 < numNode
+        # Only check surface nodes.
+        if label[node1] != srfMob || label[node1] != srfFix
+            node1 += 1
+            continue
+        end
+
+        # Only check surface nodes connected to more than 2 node.
+        if connectivity[1, node1] <= 2
+            node1 += 1
+            continue
+        end
+
+        # Go through the connections checking if there is more than one connection to an external node.
+        for j in 1:connectivity[1, node1] - 1
+            idx1 = 2 * j
+            linkId1 = connectivity[idx1, node1]
+            colLink1 = connectivity[idx1 + 1, node1]
+            node2 = links[3 - colLink1, linkId1]
+
+            # If the first connection is not external go to the next iteration.
+            label[node2] != ext ? continue : nothing
+
+            for k in j + 1:connectivity[1, node1]
+                idx2 = 2 * k
+                linkId2 = connectivity[idx2, node1]
+                colLink2 = connectivity[idx2 + 1, node1]
+                node3 = links[3 - colLink2, linkId2]
+                # If the next connection is not external go to the next iteration.
+                label[node2] != ext ? continue : nothing
+
+                missing, network = mergeNode!(network, node3, node1)
+                getSegmentIdx!(network)
+                links = network.links
+                label = network.label
+                numNode = network.numNode[1]
+                connectivity = network.connectivity
+                # We merged a node, so we want to repeat the outer loop.
+                node1 = 1
+                break
+            end
+            # If we get here it means the inner loop found one external connection to an external node but the inner loop didn't find another, so we can cut the outer loop as it would just retread the steps of the inner one.
+            break
+        end
+        node1 += 1
+    end
+
+    # Make surface nodes if necessary.
+    numNode = network.numNode[1]
+    links = network.links
+    connectivity = network.connectivity
+    for node1 in 1:numNode
+        label[node1] != ext ? continue : nothing
+
+        numCon = connectivity[1, node1]
+        for j in 1:numCon
+            idx = 2 * j
+            # Link where node1 appears for its connection j.
+            linkId = connectivity[idx, node1]
+            # Column where node1 appears.
+            colLink = connectivity[idx + 1, node1]
+            # Neigbour node from j'th link node1 appears.
+            node2 = links[3 - colLink, linkId]
+
+            if label[node2] == intMob || label[node2] == intFix
+                network = makeSurfaceNode!(mesh, network, node1, node2, j)
+            end
+        end    
     end
 
     return network

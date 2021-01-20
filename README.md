@@ -20,6 +20,42 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 - Performant.
 - Easily parallelisable.
 
+## Checklist of capabilities
+
+- [x] Building regular cuboid mesh.
+- [ ] Loading conditions.
+  - [x] Structure for boundary conditions.
+  - [ ] Procedure to generate boundary conditions.
+  - [ ] Loading function.
+- [x] Forces
+  - [x] Peach-Koehler force for regular cuboid mesh.
+  - [ ] Peach-Koehler force for infinite domain (`σHat` is an input rather than calculated via FEM).
+  - [x] `O(N^2)` Segment-segment force.
+    - [x] Serial
+    - [x] CPU parallelised
+  - [x] Self-forces.
+- [ ] Topology
+  - [x] Internal remeshing.
+    - [x] Mesh refinement.
+    - [x] Mesh coarsening.
+  - [x] Surface remeshing (untested).
+    - Original network before surface remeshing. ![original](examples/original.png)
+    - External segments projected orthongonally to the face they exited from, if they were external to begin with and no intersection with the surfaces is found, project along the normal of the plane of the volume's surfaces whose orthogonal distance to the point is shortest. ![remeshed_proj](examples/remeshed_virtual_proj.png)
+    - Cyan nodes are surface nodes, their virtual segments (those things jutting out of the volume) are orthogonal to the face they sit on. ![remeshed](examples/remeshed.png)
+  - [ ] External remeshing.
+  - [ ] Collision.
+  - [ ] Separation.
+- [ ] DDD-FEM coupling.
+  - [ ] Displacements.
+  - [ ] Tractions.
+- [ ] Integrators
+  - [x] Predictor corrector trapezoid (untested).
+- [ ] Mobility laws
+  - [x] Outdated BCC mobility law.
+  - [ ] FCC
+  - [ ] BCC
+  - [ ] HCP
+
 ## Example
 
 Before running a simulation we need to initialise some variables simulation. For this example, we will use the keyword initialisers because it makes it clear what we're doing. The positional and keyword constructors calculate derived quantities, perform input validations and provide default values. Keyword constructors also make the code easier to read.
@@ -247,118 +283,9 @@ Which produces the following image, which as expected has really large dislocati
 
 ![network1](./examples/network1.png)
 
-In dislocation dynamics, external nodes do not contribute to the forces on internal nodes but are required to calculate displacements from dislocations. We now have the capability of finding these. We haven't yet implemented the remeshing to stop the code from accounting for them, but we will in the future.
+In dislocation dynamics, external nodes do not contribute to the forces on internal nodes but are required to calculate displacements from dislocations. We now have the capability of finding these. We haven't yet fully implemented the remeshing to stop the code from accounting for them, but we will in the future.
 
-We'll rename the relevant variables to make it easier to read the code.
-
-```julia
-julia> vertices = regularCuboidMesh.vertices
-LazySets.VPolytope{Float64,StaticArrays.SArray{Tuple{3},Float64,1,3}}(StaticArrays.SArray{Tuple{3},Float64,1,3}[[0.0, 0.0, 0.0], [5000.0, 0.0, 0.0], [0.0, 5000.0, 0.0], [5000.0, 5000.0, 0.0], [0.0, 0.0, 5000.0], [5000.0, 0.0, 5000.0], [0.0, 5000.0, 5000.0], [5000.0, 5000.0, 5000.0]])
-
-julia> coord = network.coord
-3×1712 Array{Float64,2}:
--382.902     2.23898   755.689  1509.14  1589.66  1670.17   966.484   262.796  -252.624  -768.044  2909.33  3294.47  …  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
-1272.1     886.957    1402.38   1917.8   2621.49  3325.17  3244.66   3164.14   2410.69   1657.24   3409.71  3024.57     0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
-4345.76   5116.04     5354.07   5592.1   4968.93  4345.76  3722.59   3099.42   3337.45   3575.48   1389.21  2159.5      0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0   
-
-julia> label = network.label
-1712-element Array{nodeType,1}:
-intMob::nodeType = 1
-intMob::nodeType = 1
-intMob::nodeType = 1
-intMob::nodeType = 1
-intMob::nodeType = 1
-intMob::nodeType = 1
-intMob::nodeType = 1
-intMob::nodeType = 1
-⋮
-none::nodeType = 0
-none::nodeType = 0
-none::nodeType = 0
-none::nodeType = 0
-none::nodeType = 0
-none::nodeType = 0
-none::nodeType = 0
-```
-
-Since all current nodes are flagged as internal and there are many uninitialised nodes we'll only check the internal ones.
-
-```julia
-julia> internal = findall(x -> x == 1, label)
-220-element Array{Int64,1}:
-1
-2
-3
-4
-5
-6
-7
-8
-⋮
-214
-215
-216
-217
-218
-219
-220
-```
-
-Then we can use the functionality of `LazySets.jl` to simply check which node's `(x, y, z)` coordinate lies inside the polytope defined by the FE domain's vertices and use `findall()` to transform the boolean array into an array of indices we call `outside` that we can use to index the coordinates and superimpose them on the old plot.
-
-```julia
-julia> flags = map((x, y, z) -> eltype(vertices)[x, y, z] ∉ vertices, coord[1, internal], coord[2, internal], coord[3, internal])
-220-element Array{Bool,1}:
-1
-1
-1
-1
-0
-0
-0
-0
-⋮
-1
-0
-0
-0
-0
-0
-1
-
-julia> outside = findall(flags)
-94-element Array{Int64,1}:
-1
-2
-3
-4
-9
-10
-16
-17
-⋮
-209
-210
-211
-212
-213
-214
-220
-
-julia> scatter!(fig, coord[1, outside], coord[2, outside], coord[3, outside], markersize = 3)
- ```
-
-All the nodes ouside the domain are now plotted as much larger circles.
-
-![outside](examples/network_outside.png)
-
-We can now also detect the interset between a vector and a plane, so we'll be able to remesh the surface and external nodes soon so we can perform force calculations that ignore these nodes.
-
-So far we can calculate the Peach-Koehler, segment-segment and self- forces. We can also perform the basic topological operations of adding and removing nodes from the network. We have an integrator, an outdated BCC mobility law and a velocity calculating function. The docs are rather spartan but examples will be progressively expanded.
-
-# TODO/WIP
-
-## Shaky, move-y bois
+## Fun stuff, neat stuff, slick stuff. -- G Brooks
 
 The integration may be buggy, I haven't tested it yet. Coarsen and refine have passed every test i've thrown at them.
 
@@ -377,55 +304,3 @@ This shows the same but without network refining and lower error bounds.
 This is just the integration.
 
 ![integ](/examples/integ.gif)
-
-## Working Objectives
-- [x] IO
-  - [x] Input validation
-    - [ ] Sensible input generators
-  - [ ] Performance
-    - [ ] Compression
-    - [ ] Asyncronicity
-- [ ] Topology functions
-  - [x] Internal Remeshing
-    - [x] Coarsen mesh
-    - [x] Refine mesh
-  - [ ] Surface remeshing
-  - [ ] Virtual node remeshing
-- [x] Self-segment force
-- [x] Seg-seg force
-  - [ ] Test tiny segment edge case
-  - [ ] Distributed and gpu parallelisation
-- [x] PK force
-  - [x] Implementation
-  - [x] Tests
-- [ ] Post processing
-  - [x] Plot nodes
-    - [ ] Asyncronicity
-  - [ ] Plot recipe
-  - [ ] Statistical analysis
-- [ ] Mobility function
-  - [x] Generic mobility function
-  - [x] BCC
-  - [ ] FCC
-- [ ] Integration
-  - [x] Refactor integrator structures
-  - [x] AdaptiveEulerTrapezoid
-    - [x] Implementation
-    - [ ] Testing
-  - [ ] Look into using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) for structure and perhaps use/extension of methods
-  - [ ] Make integrator
-- [ ] Couple to FEM, perhaps use a package from [JuliaFEM](http://www.juliafem.org/).
-  - [x] Mesh and FE matrices generation
-  - [ ] Boundary conditions
-    - [ ] Neuman
-    - [ ] Dirichlet
-  - [ ] Displacements
-    - [ ] Parallelisation
-  - [ ] Tractions
-    - [ ] Parallelisation
-- [x] Polyhedral operations for FEM coupling. [Create convex hull and check if a point is inside the convex hull.](https://juliareach.github.io/LazySets.jl/release-1.11/man/convex_hulls.html)
-
-### Tentative Objectives
-
-- [ ] Keep an eye on [JuliaIO](https://github.com/JuliaIO), [JuliaFEM](https://github.com/JuliaFEM/), [SciML](https://github.com/sciml) because their methods might be useful.
-- [ ] https://www.youtube.com/watch?v=hKHdbfxCV44
