@@ -48,6 +48,7 @@ end
     femParams = FEMParameters(;
         type = DispatchRegularCuboidMesh(),
         order = LinearElement(),
+        model = CantileverLoad(),
         dx = Float64(1009),
         dy = Float64(1013),
         dz = Float64(1019),

@@ -78,15 +78,17 @@ end
 function loadFEMParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
     meshDict = makeTypeDict(AbstractMesh)
     orderDict = makeTypeDict(AbstractElementOrder)
+    modelDict = makeTypeDict(AbstractModel)
 
     FemParams = FEMParameters(;
-        type = meshDict[dict["type"]], 
-        order = orderDict[dict["order"]], 
-        dx = convert(Float64, dict["dx"]), 
-        dy = convert(Float64, dict["dy"]), 
-        dz = convert(Float64, dict["dz"]), 
-        mx = convert(Int, dict["mx"]), 
-        my = convert(Int, dict["my"]), 
+        type = meshDict[dict["type"]],
+        order = orderDict[dict["order"]],
+        model = modelDict[dict["model"]],
+        dx = convert(Float64, dict["dx"]),
+        dy = convert(Float64, dict["dy"]),
+        dz = convert(Float64, dict["dz"]),
+        mx = convert(Int, dict["mx"]),
+        my = convert(Int, dict["my"]),
         mz = convert(Int, dict["mz"]),
     )
     return FemParams

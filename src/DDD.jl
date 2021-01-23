@@ -44,7 +44,10 @@ export AbstractDlnSeg,
     makeSegment,
     AbstractElementOrder,
     AbstractIntegrator,
-    BoundaryCondition
+    BoundaryCondition,
+    AbstractModel,
+    AbstractCantileverBend,
+    CantileverLoad
 export MaterialParameters
 export nodeType,
     SlipSystem,

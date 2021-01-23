@@ -38,9 +38,20 @@ struct LinearQuadrangle2D <: AbstractShapeFunction2D end
 
 """
 ```
+abstract type AbstractModel end
+abstract type AbstractCantileverBend <: AbstractModel end
+struct CantileverLoad <: AbstractCantileverBend end
+```
+"""
+abstract type AbstractModel end
+abstract type AbstractCantileverBend <: AbstractModel end
+struct CantileverLoad <: AbstractCantileverBend end
+"""
+```
 struct FEMParameters{T1,T2,T3,T4}
     type::T1    # Mesh type.
     order::T2   # Element order.
+    model::T3   # M
     dx::T3      # Size in x.
     dy::T3      # Size in y.
     dz::T3      # Size in z.
@@ -51,15 +62,16 @@ end
 ```
 Stores the FE parameters.
 """
-struct FEMParameters{T1,T2,T3,T4}
+struct FEMParameters{T1,T2,T3,T4,T5}
     type::T1
     order::T2
-    dx::T3
-    dy::T3
-    dz::T3
-    mx::T4
-    my::T4
-    mz::T4
+    model::T3
+    dx::T4
+    dy::T4
+    dz::T4
+    mx::T5
+    my::T5
+    mz::T5
 end
 """
 ```

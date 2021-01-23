@@ -3,46 +3,59 @@
 FEMParameters(
     type::T1,
     order::T2,
-    dx::T3,
-    dy::T3,
-    dz::T3,
-    mx::T4,
-    my::T4,
-    mz::T4
+    model::T3,
+    dx::T4,
+    dy::T4,
+    dz::T4,
+    mx::T5,
+    my::T5,
+    mz::T5
 ) where {
     T1 <: AbstractMesh,
-    T2 <: AbstractElementOrder,
-    T3 <: AbstractFloat,
-    T4 <: Integer
+    T2 <: AbstractModel,
+    T3 <: AbstractElementOrder,
+    T4 <: AbstractFloat,
+    T5 <: Integer
 }
 ```
 Constructor for [`FEMParameters`](@ref).
 """
-function FEMParameters(type::T1, order::T2, dx::T3, dy::T3, dz::T3, mx::T4, my::T4, mz::T4) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractFloat,T4 <: Integer}
-    FEMParameters{T1,T2,T3,T4}(type, order, dx, dy, dz, mx, my, mz)
+function FEMParameters(type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4, mx::T5, my::T5, mz::T5) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3<:AbstractModel, T4 <: AbstractFloat,T5 <: Integer}
+    FEMParameters{T1,T2,T3,T4,T5}(type, order, model, dx, dy, dz, mx, my, mz)
 end
 """
 ```
 FEMParameters(;
     type::T1,
     order::T2,
-    dx::T3,
-    dy::T3,
-    dz::T3,
-    mx::T4,
-    my::T4,
-    mz::T4
+    model::T3,
+    dx::T4,
+    dy::T4,
+    dz::T4,
+    mx::T5,
+    my::T5,
+    mz::T5
 ) where {
     T1 <: AbstractMesh,
-    T2 <: AbstractElementOrder,
-    T3 <: AbstractFloat,
-    T4 <: Integer
+    T2 <: AbstractModel,
+    T3 <: AbstractElementOrder,
+    T4 <: AbstractFloat,
+    T5 <: Integer
 }
 ```
 Keyword constructor for [`FEMParameters`](@ref). Calls the positional constructor.
 """
-function FEMParameters(; type::T1, order::T2, dx::T3, dy::T3, dz::T3, mx::T4, my::T4, mz::T4) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractFloat,T4 <: Integer}
-    return FEMParameters(type, order, dx, dy, dz, mx, my, mz)
+function FEMParameters(; type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4, mx::T5, my::T5, mz::T5) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3<:AbstractModel, T4 <: AbstractFloat,T5 <: Integer}
+    return FEMParameters(type, order, model, dx, dy, dz, mx, my, mz)
+end
+"""
+```
+BoundaryCondition(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+```
+Boundary condition keyword constructor.
+"""
+function BoundaryCondition(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+    return BoundaryCondition(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
 end
 """
 ```
@@ -90,7 +103,7 @@ Created by: E. Tarleton `edmund.tarleton@materials.ox.ac.uk`
      \\  8.--------.7
       \\  |      \\ |  mz
        \\ |       \\|
-5.--------.6
+         5.--------.6
              mx
 y   ^z
  ↖  |
@@ -127,16 +140,20 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     mxm1 = mx - 1
     mym1 = my - 1
     mzm1 = mz - 1
+    mx1mz1 = mx1 * mz1
+    mymx1mz1 = my * mx1mz1
+    mzmx1 = mz * mx1
     numNode = mx1 * my1 * mz1
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
     
     # Nodes corresponding to the vertices.
-    cornerNode = SVector{8,mxType}(1, mx1, 1 + mz * mx1, mx1 * mz1, 1 + my * mx1 * mz1, mx1 + my * mx1 * mz1, 1 + my * mx1 * mz1 + mz * mx1, mx1 + my * mx1 * mz1 + mz * mx1)
+    cornerNode = SVector{8,mxType}(1, mx1, 1 + mymx1mz1, mx1 + mymx1mz1, 1 + mzmx1, mx1mz1, 
+                                    1 + mymx1mz1 + mzmx1, mx1 + mymx1mz1 + mzmx1)
     # Nodes corresponding to the edges.
-    edgeNode = (zeros(mxType, mxm1), zeros(mxType, mxm1), zeros(mxType, mxm1), zeros(mxType, mxm1),
-                zeros(mxType, mym1), zeros(mxType, mym1), zeros(mxType, mym1), zeros(mxType, mym1),
+    edgeNode = (zeros(mxType, mxm1), zeros(mxType, mym1), zeros(mxType, mxm1), zeros(mxType, mym1), 
+                zeros(mxType, mxm1), zeros(mxType, mym1), zeros(mxType, mxm1), zeros(mxType, mym1),
                 zeros(mxType, mzm1), zeros(mxType, mzm1), zeros(mxType, mzm1), zeros(mxType, mzm1))
     # Nodes corresponding to the faces.
     faceNode = (zeros(mxType, mxm1 * mym1), zeros(mxType, mxm1 * mym1),
@@ -225,28 +242,36 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
 
     # Fill node coordinates.
     @inbounds @simd for k in 1:mz1
+        km1 = k - 1
         for j in 1:my1
+            jm1 = j - 1
             for i in 1:mx1
-                globalNode = i + (k - 1) * mx1 + (j - 1) * mx1 * mz1
+                globalNode = i + km1 * mx1 + jm1 * mx1mz1
                 coord[1, globalNode] = (i - 1) * w
-                coord[2, globalNode] = (j - 1) * h
-                coord[3, globalNode] = (k - 1) * d
+                coord[2, globalNode] = jm1 * h
+                coord[3, globalNode] = km1 * d
             end
         end
     end
 
     # Fill element connectivity.
     @inbounds @simd for k in 1:mz
+        km1 = k - 1
+        kmx1 = k * mx1
+        km1mx1 = km1 * mx1
         for j in 1:my
+            jm1 = j - 1
+            mx1mz1j = mx1mz1 * j
+            mx1mz1jm1 = mx1mz1 * jm1
             for i in 1:mx
-                globalElem = i + (k - 1) * mx + (j - 1) * mx * mz
-                connectivity[1, globalElem] = i + (k - 1) * mx1 + mx1 * mz1 * j
+                globalElem = i + km1 * mx + jm1 * mx * mz
+                connectivity[1, globalElem] = i + km1mx1 + mx1mz1j
                 connectivity[2, globalElem] = connectivity[1, globalElem] + 1
-                connectivity[4, globalElem] = i + k * mx1 + mx1 * mz1 * j
+                connectivity[4, globalElem] = i + kmx1 + mx1mz1j
                 connectivity[3, globalElem] = connectivity[4, globalElem] + 1
-                connectivity[5, globalElem] = i + (k - 1) * mx1 + mx1 * mz1 * (j - 1)
+                connectivity[5, globalElem] = i + km1mx1 + mx1mz1jm1
                 connectivity[6, globalElem] = connectivity[5, globalElem] + 1
-                connectivity[8, globalElem] = i + k * mx1 + mx1 * mz1 * (j - 1)
+                connectivity[8, globalElem] = i + kmx1 + mx1mz1jm1
                 connectivity[7, globalElem] = connectivity[8, globalElem] + 1
             end
         end
@@ -254,44 +279,64 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
 
     # Edge node along x
     @inbounds @simd for i in 1:mxm1
-        edgeNode[1][i] = i + 1
-        edgeNode[2][i] = i + 1 + mz * mx1
-        edgeNode[3][i] = i + 1 + my * mz1 * mx1
-        edgeNode[4][i] = i + 1 + mz * mx1 + my * mz1 * mx1
+        ip1 = i + 1
+        edgeNode[1][i] = ip1
+        edgeNode[3][i] = ip1 + mymx1mz1
+        edgeNode[5][i] = ip1 + mzmx1
+        edgeNode[7][i] = ip1 + mzmx1 + mymx1mz1
     end
     # Edge node along y
     @inbounds @simd for i in 1:mym1
-        edgeNode[5][i] = 1 + i * mx1 * mz1
-        edgeNode[6][i] = mx1 + i * mx1 * mz1
-        edgeNode[7][i] = 1 + i * mx1 * mz1 + mz * mx1
-        edgeNode[8][i] = mx1 + i * mx1 * mz1 + mz * mx1
+        imx1mz1 = i * mx1mz1
+        edgeNode[2][i] = 1 + imx1mz1
+        edgeNode[4][i] = mx1 + imx1mz1
+        edgeNode[6][i] = 1 + imx1mz1 + mzmx1
+        edgeNode[8][i] = mx1 + imx1mz1 + mzmx1
     end
     # Edge node along z
     @inbounds @simd for i in 1:mzm1
-        edgeNode[9][i] = 1 + i * mx1
-        edgeNode[10][i] = (i + 1) * mx1
-        edgeNode[11][i] = 1 + my * mx1 * mz1 + i * mx1
-        edgeNode[12][i] = my * mx1 * mz1 + (1 + i) * mx1
+        ip1 = i + 1
+        ip1mx1 = ip1 * mx1
+        imx1 = i * mx1
+        edgeNode[9][i] = 1 + imx1
+        edgeNode[10][i] = ip1mx1
+        edgeNode[11][i] = 1 + mymx1mz1 + imx1
+        edgeNode[12][i] = mymx1mz1 + ip1mx1
     end
     # Face node xy
     @inbounds @simd for j in 1:mym1
+        jm1 = j - 1
+        jmx1mz1 = j * mx1mz1
+        mxm1jm1 = mxm1 * jm1
+        jmx1mz1p1 = jmx1mz1 + 1
         for i in 1:mxm1
-            faceNode[1][i + mxm1 * (j - 1)] = 1 + j * mx1 * mz1 + i
-            faceNode[2][i + mxm1 * (j - 1)] = 1 + j * mx1 * mz1 + i + mx1 * mz
+            ipmxm1jm1 = i + mxm1jm1
+            faceNode[1][ipmxm1jm1] = jmx1mz1p1 + i
+            faceNode[2][ipmxm1jm1] = jmx1mz1p1 + i + mzmx1
         end
     end
     # Face node xz
     @inbounds @simd for j in 1:mzm1
+        jm1 = j - 1
+        jmx1 = j * mx1
+        mxm1jm1 = mxm1 * jm1
+        jmx1p1 = 1 + jmx1
         for i in 1:mxm1
-            faceNode[3][i + mxm1 * (j - 1)] = 1 + j * mx1 + i
-            faceNode[4][i + mxm1 * (j - 1)] = 1 + i + my * mx1 * mz1 + j * mx1
+            ipmxm1jm1 = i + mxm1jm1
+            faceNode[3][ipmxm1jm1] = jmx1p1 + i
+            faceNode[4][ipmxm1jm1] = jmx1p1 + i + mymx1mz1
         end
     end
     # Face node yz
     @inbounds @simd for j in 1:mym1
+        jm1 = j - 1
+        jmx1 = j * mx1
+        mzm1jm1 = mzm1 * jm1
         for i in 1:mzm1
-            faceNode[5][i + mzm1 * (j - 1)] = 1 + i * mx1 * mz1 + j * mx1 
-            faceNode[6][i + mzm1 * (j - 1)] = mx1 + i * mx1 * mz1 + j * mx1 
+            imx1mz1 = i * mx1mz1
+            ipmzm1jm1 = i + mzm1jm1
+            faceNode[5][ipmzm1jm1] = 1 + imx1mz1 + jmx1
+            faceNode[6][ipmzm1jm1] = mx1 + imx1mz1 + jmx1
     end
     end
 
@@ -322,29 +367,32 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
         # Nodes in element.
         for a in nodeEl
             idx = (a - 1) * 3
-            B[1, idx + 1, q] = nx[1, a]
-            B[1, idx + 2, q] = 0
-            B[1, idx + 3, q] = 0
+            idx1 = idx + 1
+            idx2 = idx + 2
+            idx3 = idx + 3
+            B[1, idx1, q] = nx[1, a]
+            B[1, idx2, q] = 0
+            B[1, idx3, q] = 0
 
-            B[2, idx + 1, q] = 0
-            B[2, idx + 2, q] = nx[2, a]
-            B[2, idx + 3, q] = 0
+            B[2, idx1, q] = 0
+            B[2, idx2, q] = nx[2, a]
+            B[2, idx3, q] = 0
 
-            B[3, idx + 1, q] = 0
-            B[3, idx + 2, q] = 0
-            B[3, idx + 3, q] = nx[3, a]
+            B[3, idx1, q] = 0
+            B[3, idx2, q] = 0
+            B[3, idx3, q] = nx[3, a]
 
-            B[4, idx + 1, q] = nx[2, a]
-            B[4, idx + 2, q] = nx[1, a]
-            B[4, idx + 3, q] = 0
+            B[4, idx1, q] = nx[2, a]
+            B[4, idx2, q] = nx[1, a]
+            B[4, idx3, q] = 0
 
-            B[5, idx + 1, q] = nx[3, a]
-            B[5, idx + 2, q] = 0
-            B[5, idx + 3, q] = nx[1, a]
+            B[5, idx1, q] = nx[3, a]
+            B[5, idx2, q] = 0
+            B[5, idx3, q] = nx[1, a]
 
-            B[6, idx + 1, q] = 0
-            B[6, idx + 2, q] = nx[3, a]
-            B[6, idx + 3, q] = nx[2, a]
+            B[6, idx1, q] = 0
+            B[6, idx2, q] = nx[3, a]
+            B[6, idx3, q] = nx[2, a]
     end
     end
 
@@ -369,6 +417,8 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
 
     numNode3 = 3 * numNode
     globalK = sparse(V1, V2, V3, numNode3, numNode3)
+    droptol!(globalK, eps(dxType))
+
 
     return RegularCuboidMesh(
         order,
@@ -415,4 +465,52 @@ Keyword constructor for [`RegularCuboidMesh`](@ref).
 """
 function RegularCuboidMesh(; order::T1, matParams::T2, femParams::T3) where {T1 <: AbstractElementOrder,T2 <: MaterialParameters,T3 <: FEMParameters}
     return RegularCuboidMesh(order, matParams, femParams)
+end
+
+function BoundaryCondition(femParams::T1, femMesh::T2, args...; kw...) where {T1 <: FEMParameters,T2 <: AbstractMesh}
+    return BoundaryCondition(femParams.model, femMesh, args...; kw...)
+end
+function BoundaryCondition(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
+    numNode = femMesh.numNode
+    cornerNode = femMesh.cornerNode
+    edgeNode = femMesh.edgeNode
+    faceNode = femMesh.faceNode
+
+    if !haskey(kw, "uGamma")
+        uGamma = [cornerNode[1]; cornerNode[3]; cornerNode[5]; cornerNode[7]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]]
+    else
+        uGamma = kw["uGamma"]
+    end
+
+    if !haskey(kw, "mGamma")
+        mGamma = [cornerNode[6]; cornerNode[8]; edgeNode[8]]
+    else
+        mGamma = kw["mGamma"]
+    end
+
+    if !haskey(kw, "tGamma")
+        tGamma = setdiff((cornerNode; edgeNode; faceNode), (uGamma; mGamma))
+    else
+        tGamma = kw["tGamma"]
+    end
+    
+    if !haskey(kw, "uDofs")
+        uDofs = [3 * uGamma .- 2; 3 * uGamma .- 1; 3 * uGamma; 3 * mGamma]
+    else
+        uDofs = kw["uDofs"]
+    end
+    
+    if !haskey(kw, "tDofs")
+        tDofs = setdiff(1:numNode, uDofs)
+    else
+        tDofs = kw["tDofs"]
+    end
+
+    if !haskey(kw, "mDofs")
+        mDofs = nothing
+    else
+        mDofs = setdiff(1:numNode, (uDofs, tDofs))
+    end
+
+    return BoundaryCondition(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
 end
