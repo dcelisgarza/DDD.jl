@@ -90,7 +90,7 @@ Created by: E. Tarleton `edmund.tarleton@materials.ox.ac.uk`
      \\  8.--------.7
       \\  |      \\ |  mz
        \\ |       \\|
-        5.--------.6
+5.--------.6
              mx
 y   ^z
  ↖  |
@@ -124,12 +124,27 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     mx1 = mx + 1
     my1 = my + 1
     mz1 = mz + 1
+    mxm1 = mx - 1
+    mym1 = my - 1
+    mzm1 = mz - 1
     numNode = mx1 * my1 * mz1
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
-    localK = zeros(dxType, 24, 24)              # K for an element.
-    B = zeros(dxType, 6, 24, 8)
+    
+    # Nodes corresponding to the vertices.
+    cornerNode = SVector{8,mxType}(1, mx1, 1 + mz * mx1, mx1 * mz1, 1 + my * mx1 * mz1, mx1 + my * mx1 * mz1, 1 + my * mx1 * mz1 + mz * mx1, mx1 + my * mx1 * mz1 + mz * mx1)
+    # Nodes corresponding to the edges.
+    edgeNode = (zeros(mxType, mxm1), zeros(mxType, mxm1), zeros(mxType, mxm1), zeros(mxType, mxm1),
+                zeros(mxType, mym1), zeros(mxType, mym1), zeros(mxType, mym1), zeros(mxType, mym1),
+                zeros(mxType, mzm1), zeros(mxType, mzm1), zeros(mxType, mzm1), zeros(mxType, mzm1))
+    # Nodes corresponding to the faces.
+    faceNode = (zeros(mxType, mxm1 * mym1), zeros(mxType, mxm1 * mym1),
+                zeros(mxType, mxm1 * mzm1), zeros(mxType, mxm1 * mzm1),
+                zeros(mxType, mym1 * mzm1), zeros(mxType, mym1 * mzm1))
+
+    localK = zeros(dxType, 24, 24)  # K for an element.
+    B = zeros(dxType, 6, 24, 8)     # Jacobian matrix.
 
     nodeEl = 1:8 # Local node numbers.
     dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
@@ -156,7 +171,7 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     vertices = VPolytope(vtx)
     
     # Faces as defined by the vertices.
-    faces = SMatrix{4, 6, mxType}(
+    faces = SMatrix{4,6,mxType}(
         2, 1, 4, 3, # xy plane @ min z
         5, 6, 7, 8, # xy plane @ max z
         1, 2, 5, 6, # xz plane @ min y
@@ -209,9 +224,9 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), gaussNodes[1, :], gaussNodes[2, :], gaussNodes[3, :])
 
     # Fill node coordinates.
-    @inbounds for k in 1:mz1
+    @inbounds @simd for k in 1:mz1
         for j in 1:my1
-            @simd for i in 1:mx1
+            for i in 1:mx1
                 globalNode = i + (k - 1) * mx1 + (j - 1) * mx1 * mz1
                 coord[1, globalNode] = (i - 1) * w
                 coord[2, globalNode] = (j - 1) * h
@@ -221,9 +236,9 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     end
 
     # Fill element connectivity.
-    @inbounds for k in 1:mz
+    @inbounds @simd for k in 1:mz
         for j in 1:my
-            @simd for i in 1:mx
+            for i in 1:mx
                 globalElem = i + (k - 1) * mx + (j - 1) * mx * mz
                 connectivity[1, globalElem] = i + (k - 1) * mx1 + mx1 * mz1 * j
                 connectivity[2, globalElem] = connectivity[1, globalElem] + 1
@@ -235,6 +250,49 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
                 connectivity[7, globalElem] = connectivity[8, globalElem] + 1
             end
         end
+    end
+
+    # Edge node along x
+    @inbounds @simd for i in 1:mxm1
+        edgeNode[1][i] = i + 1
+        edgeNode[2][i] = i + 1 + mz * mx1
+        edgeNode[3][i] = i + 1 + my * mz1 * mx1
+        edgeNode[4][i] = i + 1 + mz * mx1 + my * mz1 * mx1
+    end
+    # Edge node along y
+    @inbounds @simd for i in 1:mym1
+        edgeNode[5][i] = 1 + i * mx1 * mz1
+        edgeNode[6][i] = mx1 + i * mx1 * mz1
+        edgeNode[7][i] = 1 + i * mx1 * mz1 + mz * mx1
+        edgeNode[8][i] = mx1 + i * mx1 * mz1 + mz * mx1
+    end
+    # Edge node along z
+    @inbounds @simd for i in 1:mzm1
+        edgeNode[9][i] = 1 + i * mx1
+        edgeNode[10][i] = (i + 1) * mx1
+        edgeNode[11][i] = 1 + my * mx1 * mz1 + i * mx1
+        edgeNode[12][i] = my * mx1 * mz1 + (1 + i) * mx1
+    end
+    # Face node xy
+    @inbounds @simd for j in 1:mym1
+        for i in 1:mxm1
+            faceNode[1][i + mxm1 * (j - 1)] = 1 + j * mx1 * mz1 + i
+            faceNode[2][i + mxm1 * (j - 1)] = 1 + j * mx1 * mz1 + i + mx1 * mz
+        end
+    end
+    # Face node xz
+    @inbounds @simd for j in 1:mzm1
+        for i in 1:mxm1
+            faceNode[3][i + mxm1 * (j - 1)] = 1 + j * mx1 + i
+            faceNode[4][i + mxm1 * (j - 1)] = 1 + i + my * mx1 * mz1 + j * mx1
+        end
+    end
+    # Face node yz
+    @inbounds @simd for j in 1:mym1
+        for i in 1:mzm1
+            faceNode[5][i + mzm1 * (j - 1)] = 1 + i * mx1 * mz1 + j * mx1 
+            faceNode[6][i + mzm1 * (j - 1)] = mx1 + i * mx1 * mz1 + j * mx1 
+    end
     end
 
     localCoord = SMatrix{3,8,dxType}(
@@ -259,10 +317,10 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
     invJ = inv(J)'
 
     # Gauss quadrature nodes.
-    @inbounds for q in nodeEl
+    @inbounds @simd for q in nodeEl
         nx = invJ * dNdS[q]
         # Nodes in element.
-        @simd for a in nodeEl
+        for a in nodeEl
             idx = (a - 1) * 3
             B[1, idx + 1, q] = nx[1, a]
             B[1, idx + 2, q] = 0
@@ -287,7 +345,7 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
             B[6, idx + 1, q] = 0
             B[6, idx + 2, q] = nx[3, a]
             B[6, idx + 3, q] = nx[2, a]
-        end
+    end
     end
 
     @inbounds @simd for q in nodeEl
@@ -296,17 +354,17 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
 
     localK = localK * detJ
     cntr = 0
-    @inbounds for p in 1:numElem
+    @inbounds @simd for p in 1:numElem
         globalNode = connectivity[nodeEl, p]; # Global node numbers
         dofGlobal = Tuple(Iterators.flatten((3 * (globalNode .- 1) .+ 1, 3 * (globalNode .- 1) .+ 2, 3 * (globalNode .- 1) .+ 3))) # Global degree of freedom
         for i = 1:24
-            @simd for j = 1:24
+            for j = 1:24
                 cntr += 1
                 V1[cntr] = dofGlobal[i]
                 V2[cntr] = dofGlobal[j]
                 V3[cntr] = localK[dofLocal[i], dofLocal[j]]
             end
-        end
+    end
     end
 
     numNode3 = 3 * numNode
@@ -334,8 +392,11 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
         B,
         coord,
         connectivity,
+        cornerNode,
+        edgeNode,
+        faceNode,
         globalK,
-    )
+)
     
 end
 """

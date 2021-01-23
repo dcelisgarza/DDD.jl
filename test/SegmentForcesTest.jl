@@ -81,7 +81,7 @@ cd(@__DIR__)
         0.8489027048214433,
         0.029995302953659708,
     ]
-    forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
+    forceDisplacement = ForceDisplacement(nothing, uHat * 1000, u * 1000, nothing, fHat * 1000, f * 1000)
     
     prismSquare = DislocationLoop(;
         loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.

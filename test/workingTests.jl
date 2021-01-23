@@ -25,14 +25,72 @@ intVars = loadIntegrationTimeJSON(fileIntVar)
 femParams = FEMParameters(
                     femParams.type, 
                     femParams.order,
-                    Float64(femParams.dx / 5),
-                    Float64(femParams.dy),
-                    Float64(femParams.dz),
+                    30 / 3.18e-4,
+                    5 / 3.18e-4,
+                    5 / 3.18e-4,
                     20,
-                    20,
-                    20
+                    3,
+                    3
                 )
 regularCuboidMesh = buildMesh(matParams, femParams)
+matParams = MaterialParameters(;μ = 1., μMag = 1., ν = 0.305, E = 1., crystalStruct = BCC())
+regularCuboidMesh.B[:,:,1]
+
+
+faces = regularCuboidMesh.faces
+connectivity = regularCuboidMesh.connectivity
+cornerNode = regularCuboidMesh.cornerNode
+edgeNode = regularCuboidMesh.edgeNode
+faceNode = regularCuboidMesh.faceNode
+coord = regularCuboidMesh.coord
+K = copy(regularCuboidMesh.K)
+droptol!(K, nnz(K) * eps(eltype(K)))
+
+
+Sleft = [faceNode[5]..., edgeNode[5]..., edgeNode[7]..., edgeNode[9]..., edgeNode[11]..., cornerNode[1], cornerNode[3], cornerNode[5], cornerNode[7]]
+Smixed = [edgeNode[8]..., cornerNode[4], cornerNode[8]]
+fixedDofs = [3 * Sleft .- 2..., 3 * Sleft .- 1..., 3 * Sleft..., 3 * Smixed...]
+freeDofs = setdiff(1:regularCuboidMesh.numNode, fixedDofs)
+A = K[freeDofs,freeDofs]
+C = cholesky(Hermitian(A))
+
+L = sparse(C.L)
+P = sparse(1:317, C.p, ones(317))
+L * L' ≈  A[C.p, C.p]
+P' * L * L' * P ≈ A
+
+
+C * C' ≈ K[freeDofs,freeDofs]
+
+
+
+
+scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3)
+scatter!(coord[1, Sleft], coord[2, Sleft], coord[3, Sleft], markershape = :circle, markersize = 3)
+scatter!(coord[1, Smixed], coord[2, Smixed], coord[3, Smixed], markershape = :circle, markersize = 3)
+
+
+
+scatter!(coord[1, edgeNode[1]], coord[2, edgeNode[1]], coord[3, edgeNode[1]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[2]], coord[2, edgeNode[2]], coord[3, edgeNode[2]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[3]], coord[2, edgeNode[3]], coord[3, edgeNode[3]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[4]], coord[2, edgeNode[4]], coord[3, edgeNode[4]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[5]], coord[2, edgeNode[5]], coord[3, edgeNode[5]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[6]], coord[2, edgeNode[6]], coord[3, edgeNode[6]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[7]], coord[2, edgeNode[7]], coord[3, edgeNode[7]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[8]], coord[2, edgeNode[8]], coord[3, edgeNode[8]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[9]], coord[2, edgeNode[9]], coord[3, edgeNode[9]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[10]], coord[2, edgeNode[10]], coord[3, edgeNode[10]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[11]], coord[2, edgeNode[11]], coord[3, edgeNode[11]], markershape = :circle, markersize = 3)
+scatter!(coord[1, edgeNode[12]], coord[2, edgeNode[12]], coord[3, edgeNode[12]], markershape = :circle, markersize = 3)
+scatter!(coord[1, faceNode[1]], coord[2, faceNode[1]], coord[3, faceNode[1]], markershape = :rect, markersize = 2)
+scatter!(coord[1, faceNode[2]], coord[2, faceNode[2]], coord[3, faceNode[2]], markershape = :rect, markersize = 2)
+scatter!(coord[1, faceNode[3]], coord[2, faceNode[3]], coord[3, faceNode[3]], markershape = :rect, markersize = 2)
+scatter!(coord[1, faceNode[4]], coord[2, faceNode[4]], coord[3, faceNode[4]], markershape = :rect, markersize = 2)
+scatter!(coord[1, faceNode[5]], coord[2, faceNode[5]], coord[3, faceNode[5]], markershape = :rect, markersize = 2)
+scatter!(coord[1, faceNode[6]], coord[2, faceNode[6]], coord[3, faceNode[6]], markershape = :rect, markersize = 2)
+
+
 
 dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
 segLen = dx / 5
@@ -364,7 +422,7 @@ uHat = sparsevec(
         0,
     ],
 )
-forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
+forceDisplacement = ForceDisplacement(nothing, uHat, u, nothing, fHat, f)
 
 
 σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])

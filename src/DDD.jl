@@ -43,7 +43,8 @@ export AbstractDlnSeg,
     makeNetwork!,
     makeSegment,
     AbstractElementOrder,
-    AbstractIntegrator
+    AbstractIntegrator,
+    BoundaryCondition
 export MaterialParameters
 export nodeType,
     SlipSystem,

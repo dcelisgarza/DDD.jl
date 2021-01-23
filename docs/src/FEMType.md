@@ -27,3 +27,7 @@ RegularCuboidMesh
 ```@docs
 ForceDisplacement
 ```
+
+```@docs
+BoundaryCondition
+```

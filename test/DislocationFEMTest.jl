@@ -80,7 +80,7 @@ cd(@__DIR__)
         0.029995302953659708,
     ]
 
-    forceDisplacement = ForceDisplacement(u * 1000, f * 1000, uHat * 1000, fHat * 1000)
+    forceDisplacement = ForceDisplacement(nothing, uHat * 1000, u * 1000, nothing, fHat * 1000, f * 1000)
 
     σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
     σHatTest = [

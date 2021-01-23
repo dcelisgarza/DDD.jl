@@ -39,7 +39,7 @@ cd(@__DIR__)
     fHat = spzeros(regularCuboidMesh.numNode * 3)
     u = spzeros(regularCuboidMesh.numNode * 3)
     uHat = spzeros(regularCuboidMesh.numNode * 3)
-    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+    forceDisplacement = ForceDisplacement(nothing, uHat, u, nothing, fHat, f)
 
     network = DislocationNetwork(square, memBuffer = 1)
     missing, network = mergeNode!(network, 3, 1)
@@ -1805,7 +1805,7 @@ end
     fHat = spzeros(regularCuboidMesh.numNode * 3)
     u = spzeros(regularCuboidMesh.numNode * 3)
     uHat = spzeros(regularCuboidMesh.numNode * 3)
-    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+    forceDisplacement = ForceDisplacement(nothing, uHat, u, nothing, fHat, f)
 
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
 
@@ -2008,7 +2008,7 @@ end
     fHat = spzeros(regularCuboidMesh.numNode * 3)
     u = spzeros(regularCuboidMesh.numNode * 3)
     uHat = spzeros(regularCuboidMesh.numNode * 3)
-    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+    forceDisplacement = ForceDisplacement(nothing, uHat, u, nothing, fHat, f)
 
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
     network2 = deepcopy(network)
@@ -2050,7 +2050,7 @@ end
     fHat = spzeros(regularCuboidMesh.numNode * 3)
     u = spzeros(regularCuboidMesh.numNode * 3)
     uHat = spzeros(regularCuboidMesh.numNode * 3)
-    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+    forceDisplacement = ForceDisplacement(nothing, uHat, u, nothing, fHat, f)
 
     network = DislocationNetwork(shearDecagon, memBuffer = 1)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)

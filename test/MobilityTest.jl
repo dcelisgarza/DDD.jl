@@ -55,7 +55,7 @@ cd(@__DIR__)
     fHat = spzeros(regularCuboidMesh.numNode * 3)
     u = spzeros(regularCuboidMesh.numNode * 3)
     uHat = spzeros(regularCuboidMesh.numNode * 3)
-    forceDisplacement = ForceDisplacement(u, f, uHat, fHat)
+    forceDisplacement = ForceDisplacement(nothing, uHat, u, nothing, fHat, f)
 
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
 
