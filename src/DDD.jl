@@ -44,7 +44,7 @@ export AbstractDlnSeg,
     makeSegment,
     AbstractElementOrder,
     AbstractIntegrator,
-    BoundaryCondition,
+    Boundaries,
     AbstractModel,
     AbstractCantileverBend,
     CantileverLoad

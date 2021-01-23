@@ -20,7 +20,7 @@ FEMParameters(
 ```
 Constructor for [`FEMParameters`](@ref).
 """
-function FEMParameters(type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4, mx::T5, my::T5, mz::T5) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3<:AbstractModel, T4 <: AbstractFloat,T5 <: Integer}
+function FEMParameters(type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4, mx::T5, my::T5, mz::T5) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractModel, T4 <: AbstractFloat,T5 <: Integer}
     FEMParameters{T1,T2,T3,T4,T5}(type, order, model, dx, dy, dz, mx, my, mz)
 end
 """
@@ -50,12 +50,12 @@ function FEMParameters(; type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4,
 end
 """
 ```
-BoundaryCondition(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
 ```
 Boundary condition keyword constructor.
 """
-function BoundaryCondition(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
-    return BoundaryCondition(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+    return Boundaries(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
 end
 """
 ```
@@ -327,26 +327,15 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
             faceNode[4][ipmxm1jm1] = jmx1p1 + i + mymx1mz1
         end
     end
-    # Face node yz
-    # @inbounds @simd for j in 1:mym1
-    #     jm1 = j - 1
-    #     jmx1 = j * mx1
-    #     mzm1jm1 = mzm1 * jm1
-    #     for i in 1:mzm1
-    #         imx1mz1 = i * mx1mz1
-    #         ipmzm1jm1 = i + mzm1jm1
-    #         faceNode[5][ipmzm1jm1] = 1 + imx1mz1 + jmx1
-    #         faceNode[6][ipmzm1jm1] = mx1 + imx1mz1 + jmx1
-    # end
-    # end
 
     @inbounds @simd for j in 1:mym1
         jm1 = j - 1
-        jmx1mz1 = j*mx1mz1
+        jmx1mz1 = j * mx1mz1
         for i in 1:mzm1
-            imx1 = i*mx1
-            faceNode[5][i + jm1*mzm1] = 1 + jmx1mz1 + imx1
-            faceNode[6][i + jm1*mzm1] = mx1 + jmx1mz1 + imx1
+            imx1 = i * mx1
+            jmx1mz1pimx1 = jmx1mz1 + imx1
+            faceNode[5][i + jm1*mzm1] = 1 + jmx1mz1pimx1
+            faceNode[6][i + jm1*mzm1] = mx1 + jmx1mz1pimx1
     end
     end
 
@@ -449,7 +438,6 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
         w,
         h,
         d,
-        B,
         coord,
         connectivity,
         cornerNode,
@@ -477,10 +465,22 @@ function RegularCuboidMesh(; order::T1, matParams::T2, femParams::T3) where {T1 
     return RegularCuboidMesh(order, matParams, femParams)
 end
 
-function BoundaryCondition(femParams::T1, femMesh::T2, args...; kw...) where {T1 <: FEMParameters,T2 <: AbstractMesh}
-    return BoundaryCondition(femParams.model, femMesh, args...; kw...)
+"""
+```
+Boundaries(femParams::T1, femMesh::T2, args...; kw...) where {T1 <: FEMParameters,T2 <: AbstractMesh}
+```
+Predefined boundaries.
+"""
+function Boundaries(femParams::T1, femMesh::T2, args...; kw...) where {T1 <: FEMParameters,T2 <: AbstractMesh}
+    return Boundaries(femParams.model, femMesh, args...; kw...)
 end
-function BoundaryCondition(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
+"""
+```
+Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
+```
+Cantilever loading boundaries.
+"""
+function Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
     numNode = femMesh.numNode
     faceNorm = femMesh.faceNorm
     cornerNode = femMesh.cornerNode
@@ -499,5 +499,5 @@ function BoundaryCondition(::T1, femMesh::T2, args...; kw...) where {T1 <: Canti
 
     !haskey(kw, "mDofs") ? mDofs = nothing : mDofs = setdiff(1:numNode, (uDofs, tDofs))
 
-    return BoundaryCondition(; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma, uDofs = uDofs, tDofs = tDofs, mDofs = mDofs)
+    return Boundaries(; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma, uDofs = uDofs, tDofs = tDofs, mDofs = mDofs)
 end

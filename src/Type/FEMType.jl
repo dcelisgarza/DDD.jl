@@ -94,18 +94,17 @@ struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15} <: 
     w::T6               # Element width (size in x).
     h::T6               # Element height (size in y).
     d::T6               # Element depth (size in z).
-    B::T9               # Jacobian matrix.
-    coord::T10          # Node coordinates.
-    connectivity::T11   # Node connectivity.
-    corners::T12        # Corner labels.
-    edges::T13          # Edge labels.
-    faces::T14          # Face labels.
-    K::T15              # Stiffness matrix.
+    coord::T9           # Node coordinates.
+    connectivity::T10   # Node connectivity.
+    corners::T11        # Corner labels.
+    edges::T12          # Edge labels.
+    faces::T13          # Face labels.
+    K::T14              # Stiffness matrix.
 end
 ```
 Stores data for a regular cuboid mesh.
 """
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14} <: AbstractRegularCuboidMesh
     order::T1
     vertices::T2
     faces::T3
@@ -124,13 +123,12 @@ struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15} <: 
     w::T6
     h::T6
     d::T6
-    B::T9
-    coord::T10
-    connectivity::T11
-    cornerNode::T12
-    edgeNode::T13
-    faceNode::T14
-    K::T15
+    coord::T9
+    connectivity::T10
+    cornerNode::T11
+    edgeNode::T12
+    faceNode::T13
+    K::T14
 end
 
 """
@@ -157,7 +155,7 @@ end
 
 """
 ```
-struct BoundaryCondition{T1,T2,T3,T4,T5,T6}
+struct Boundaries{T1,T2,T3,T4,T5,T6}
     uGamma::T1  # Nodes with displacement boundaries.
     tGamma::T2  # Nodes with traction boundaries.
     mGamma::T3  # Nodes with displacement and traction boundaries.
@@ -168,7 +166,7 @@ end
 ```
 Stores the nodes and degrees of freedom upon which the different boundary conditions are applied.
 """
-struct BoundaryCondition{T1,T2,T3,T4,T5,T6}
+struct Boundaries{T1,T2,T3,T4,T5,T6}
     uGamma::T1
     tGamma::T2
     mGamma::T3

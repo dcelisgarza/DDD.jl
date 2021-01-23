@@ -29,5 +29,5 @@ ForceDisplacement
 ```
 
 ```@docs
-BoundaryCondition
+Boundaries
 ```

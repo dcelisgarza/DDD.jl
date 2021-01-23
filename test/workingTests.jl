@@ -26,12 +26,12 @@ femParams = FEMParameters(
                     femParams.type, 
                     femParams.order,
                     femParams.model,
-                    30.,
-                    5.,
-                    5.,
-                    20,
-                    20,
-                    20
+                    57.,
+                    43.,
+                    37.,
+                    23,
+                    27,
+                    13
                 )
 
 regularCuboidMesh = buildMesh(matParams, femParams)
@@ -45,7 +45,7 @@ edgeNode = regularCuboidMesh.edgeNode
 faceNode = regularCuboidMesh.faceNode
 coord = regularCuboidMesh.coord
 
-cantileverBC = BoundaryCondition(femParams, regularCuboidMesh)
+cantileverBC = Boundaries(femParams, regularCuboidMesh)
 uGamma = cantileverBC.uGamma
 mGamma = cantileverBC.mGamma
 left = findall(x -> x == 0, coord[1, :])
@@ -54,52 +54,7 @@ loadEdge2 = findall(x -> x ≈ dz, coord[3, :])
 loadEdge = intersect(loadEdge1, loadEdge2)
 norm(coord[:, left]) ≈ norm(coord[:, uGamma])
 norm(coord[:, loadEdge]) ≈ norm(coord[:, mGamma])
-
-
-
-scatter(coord[1, left], coord[2, left], coord[3, left], markershape = :diamond, markersize = 3)
-
-cantileverBC.uGamma[3]
-cantileverBC.uDofs
-faceNorm = regularCuboidMesh.faceNorm
-
-
-x1, w1 = gausslegendre(69)
-a, b =  rand() * 50, rand() * 69
-bma = (b - a) / 2
-bpa = (b + a) / 2
-x1 = bma * x1 .+ bpa
-w1 = bma * w1
-
-
-x, w = gausslegendre(69, a, b)
-isequal(x,x1)
-isequal(w,w1)
-
-println("")
-
-femParams = FEMParameters(;
-        type = DispatchRegularCuboidMesh(),
-        order = LinearElement(),
-        model = CantileverLoad(),
-        dx = Float64(1009),
-        dy = Float64(1013),
-        dz = Float64(1019),
-        mx = 11,
-        my = 13,
-        mz = 17,
-    )
-
-regularCuboidMesh = buildMesh(matParams, femParams)
-dx = regularCuboidMesh.dx
-dz = regularCuboidMesh.dz
-faces = regularCuboidMesh.faces
-coord = regularCuboidMesh.coord
-connectivity = regularCuboidMesh.connectivity
-cornerNode = regularCuboidMesh.cornerNode
-edgeNode = regularCuboidMesh.edgeNode
-faceNode = regularCuboidMesh.faceNode
-coord = regularCuboidMesh.coord
+##
 
 
 scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3)

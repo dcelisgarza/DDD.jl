@@ -216,7 +216,7 @@ end
     faceNode = regularCuboidMesh.faceNode
     coord = regularCuboidMesh.coord
 
-    cantileverBC = BoundaryCondition(femParams, regularCuboidMesh)
+    cantileverBC = Boundaries(femParams, regularCuboidMesh)
     uGamma = cantileverBC.uGamma
     mGamma = cantileverBC.mGamma
     left = findall(x -> x == 0, coord[1, :])
