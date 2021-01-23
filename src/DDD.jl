@@ -6,7 +6,7 @@ using LinearAlgebra,
 # Miscelaneous.
 include("./Misc/Misc.jl")
 export makeTypeDict, compStruct, intAngle, externalAngle, rot3D, makeInstanceDict
-export inclusiveComparison, ⊗, linePlaneIntersect
+export inclusiveComparison, ⊗, linePlaneIntersect, gausslegendre
 
 include("./Type/TypeBase.jl")
 export AbstractDlnSeg,

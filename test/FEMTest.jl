@@ -189,3 +189,41 @@ end
     @test isapprox(K[idxK], KTest)
 
 end
+
+@testset "Boundary conditions" begin
+    DictMaterialParameters = loadJSON("./testData/sampleMaterialParameters.json")
+    matParams = loadMaterialParametersJSON(DictMaterialParameters)
+    femParams = FEMParameters(;
+        type = DispatchRegularCuboidMesh(),
+        order = LinearElement(),
+        model = CantileverLoad(),
+        dx = Float64(1009),
+        dy = Float64(1013),
+        dz = Float64(1019),
+        mx = 11,
+        my = 13,
+        mz = 17,
+    )
+
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    dx = regularCuboidMesh.dx
+    dz = regularCuboidMesh.dz
+    faces = regularCuboidMesh.faces
+    coord = regularCuboidMesh.coord
+    connectivity = regularCuboidMesh.connectivity
+    cornerNode = regularCuboidMesh.cornerNode
+    edgeNode = regularCuboidMesh.edgeNode
+    faceNode = regularCuboidMesh.faceNode
+    coord = regularCuboidMesh.coord
+
+    cantileverBC = BoundaryCondition(femParams, regularCuboidMesh)
+    uGamma = cantileverBC.uGamma
+    mGamma = cantileverBC.mGamma
+    left = findall(x -> x == 0, coord[1, :])
+
+    loadEdge1 = findall(x -> x ≈ dx, coord[1, :])
+    loadEdge2 = findall(x -> x ≈ dz, coord[3, :])
+    loadEdge = intersect(loadEdge1, loadEdge2)
+    @test norm(coord[:, left]) ≈ norm(coord[:, uGamma])
+    @test norm(coord[:, loadEdge]) ≈ norm(coord[:, mGamma])
+end

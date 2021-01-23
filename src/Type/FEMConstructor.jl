@@ -328,15 +328,25 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
         end
     end
     # Face node yz
+    # @inbounds @simd for j in 1:mym1
+    #     jm1 = j - 1
+    #     jmx1 = j * mx1
+    #     mzm1jm1 = mzm1 * jm1
+    #     for i in 1:mzm1
+    #         imx1mz1 = i * mx1mz1
+    #         ipmzm1jm1 = i + mzm1jm1
+    #         faceNode[5][ipmzm1jm1] = 1 + imx1mz1 + jmx1
+    #         faceNode[6][ipmzm1jm1] = mx1 + imx1mz1 + jmx1
+    # end
+    # end
+
     @inbounds @simd for j in 1:mym1
         jm1 = j - 1
-        jmx1 = j * mx1
-        mzm1jm1 = mzm1 * jm1
+        jmx1mz1 = j*mx1mz1
         for i in 1:mzm1
-            imx1mz1 = i * mx1mz1
-            ipmzm1jm1 = i + mzm1jm1
-            faceNode[5][ipmzm1jm1] = 1 + imx1mz1 + jmx1
-            faceNode[6][ipmzm1jm1] = mx1 + imx1mz1 + jmx1
+            imx1 = i*mx1
+            faceNode[5][i + jm1*mzm1] = 1 + jmx1mz1 + imx1
+            faceNode[6][i + jm1*mzm1] = mx1 + jmx1mz1 + imx1
     end
     end
 
@@ -477,41 +487,17 @@ function BoundaryCondition(::T1, femMesh::T2, args...; kw...) where {T1 <: Canti
     edgeNode = femMesh.edgeNode
     faceNode = femMesh.faceNode
 
-    if !haskey(kw, "uGamma")
-        uGamma = [cornerNode[1]; cornerNode[3]; cornerNode[5]; cornerNode[7]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]]
-    else
-        uGamma = kw["uGamma"]
-    end
+    !haskey(kw, "uGamma") ? uGamma = [cornerNode[1]; cornerNode[3]; cornerNode[5]; cornerNode[7]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]] : uGamma = kw["uGamma"]
 
-    if !haskey(kw, "mGamma")
-        mGamma = [cornerNode[6]; cornerNode[8]; edgeNode[8]]
-    else
-        mGamma = kw["mGamma"]
-    end
+    !haskey(kw, "mGamma") ? mGamma = [cornerNode[6]; cornerNode[8]; edgeNode[8]] : mGamma = kw["mGamma"]
 
-    if !haskey(kw, "tGamma")
-        tGamma = setdiff((cornerNode; edgeNode; faceNode), (uGamma; mGamma))
-    else
-        tGamma = kw["tGamma"]
-    end
+    !haskey(kw, "tGamma") ? tGamma = setdiff([cornerNode; edgeNode; faceNode], [uGamma; mGamma]) : tGamma = kw["tGamma"]
     
-    if !haskey(kw, "uDofs")
-        uDofs = [3 * uGamma .- 2; 3 * uGamma .- 1; 3 * uGamma; 3 * mGamma]
-    else
-        uDofs = kw["uDofs"]
-    end
+    !haskey(kw, "uDofs") ? uDofs = [3 * uGamma .- 2; 3 * uGamma .- 1; 3 * uGamma; 3 * mGamma] : uDofs = kw["uDofs"]
     
-    if !haskey(kw, "tDofs")
-        tDofs = setdiff(1:numNode, uDofs)
-    else
-        tDofs = kw["tDofs"]
-    end
+    !haskey(kw, "tDofs") ? tDofs = setdiff(1:numNode, uDofs) : tDofs = kw["tDofs"]
 
-    if !haskey(kw, "mDofs")
-        mDofs = nothing
-    else
-        mDofs = setdiff(1:numNode, (uDofs, tDofs))
-    end
+    !haskey(kw, "mDofs") ? mDofs = nothing : mDofs = setdiff(1:numNode, (uDofs, tDofs))
 
-    return BoundaryCondition(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+    return BoundaryCondition(; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma, uDofs = uDofs, tDofs = tDofs, mDofs = mDofs)
 end

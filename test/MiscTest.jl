@@ -95,3 +95,19 @@ end
     @test inclusiveComparison(data[rand(1:5)], data...)
     @test !inclusiveComparison(data, data[rand(1:5)] * 6)
 end
+
+@testset "Quadrature" begin
+    n = 17
+    a = -13
+    b = 23
+    x, w = gausslegendre(n, a, b)
+
+    bma = (b - a) * 0.5
+    bpa = (b + a) * 0.5
+    x1, w1 = gausslegendre(n)
+    x1 = bma * x1 .+ bpa
+    w1 = bma * w1
+
+    @test x ≈ x1
+    @test w ≈ w1
+end
