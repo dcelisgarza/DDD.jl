@@ -241,3 +241,19 @@ function linePlaneIntersect(n, p0, l, l0)
     intersect = l0 + d * l
     return intersect
 end
+"""
+```
+FastGaussQuadrature.gausslegendre(n::Integer, a, b)
+```
+Compute Gauss-Legendre quadrature points and weights for the interval [a, b].
+"""
+function FastGaussQuadrature.gausslegendre(n::Integer, a, b)
+    bma = (b - a) * 0.5
+    bpa = (b + a) * 0.5
+    x, w = gausslegendre(n)
+    @inbounds @simd for i in 1:n
+        x[i] = bma * x[i] + bpa
+        w[i] = bma * w[i]
+    end
+    return x, w
+end

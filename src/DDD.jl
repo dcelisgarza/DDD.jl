@@ -1,7 +1,7 @@
 module DDD
 
 using LinearAlgebra,
-    SparseArrays, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO, LazySets
+    SparseArrays, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO, LazySets, FastGaussQuadrature
 
 # Miscelaneous.
 include("./Misc/Misc.jl")

@@ -472,6 +472,7 @@ function BoundaryCondition(femParams::T1, femMesh::T2, args...; kw...) where {T1
 end
 function BoundaryCondition(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
     numNode = femMesh.numNode
+    faceNorm = femMesh.faceNorm
     cornerNode = femMesh.cornerNode
     edgeNode = femMesh.edgeNode
     faceNode = femMesh.faceNode
