@@ -59,7 +59,8 @@ export nodeType,
     getSegmentIdx,
     getSegmentIdx!,
     makeConnect,
-    makeConnect!
+    makeConnect!,
+    integrate!
 export IntegrationParameters, IntegrationTime, AbstractIntegrator, AdaptiveEulerTrapezoid
 export Rand, Randn, Zeros, Regular, loopDistribution
 
@@ -79,7 +80,7 @@ export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!
 export shapeFunction, shapeFunctionDeriv
 
 include("./PostProcessing/Plotting.jl")
-export plotNodes, plotNodes!
+export plotNodes, plotNodes!, plotFEDomain
 
 include("./IO/IOBase.jl")
 export loadJSON,

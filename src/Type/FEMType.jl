@@ -155,22 +155,24 @@ end
 
 """
 ```
-struct Boundaries{T1,T2,T3,T4,T5,T6}
+struct Boundaries{T1,T2,T3,T4,T5,T6,T7}
     uGamma::T1  # Nodes with displacement boundaries.
     tGamma::T2  # Nodes with traction boundaries.
     mGamma::T3  # Nodes with displacement and traction boundaries.
     uDofs::T4   # Degrees of freedom with specified displacements.
     tDofs::T5   # Degrees of feedom with specified tractions.
     mDofs::T6   # Degrees of feedom with specified displacements and tractions.
+    tK::T7      # Stiffness matrix of traction degrees of freedom.
 end
 ```
 Stores the nodes and degrees of freedom upon which the different boundary conditions are applied.
 """
-struct Boundaries{T1,T2,T3,T4,T5,T6}
+struct Boundaries{T1,T2,T3,T4,T5,T6,T7}
     uGamma::T1
     tGamma::T2
     mGamma::T3
     uDofs::T4
     tDofs::T5
     mDofs::T6
+    tK::T7
 end

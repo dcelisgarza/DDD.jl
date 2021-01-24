@@ -50,12 +50,20 @@ function FEMParameters(; type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4,
 end
 """
 ```
+ForceDisplacement(; uTilde, uHat, u, fTilde, fHat, f)
+```
+"""
+function ForceDisplacement(; uTilde, uHat, u, fTilde, fHat, f)
+    return ForceDisplacement(uTilde, uHat, u, fTilde, fHat, f)
+end
+"""
+```
 Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
 ```
 Boundary condition keyword constructor.
 """
-function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
-    return Boundaries(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
+    return Boundaries(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 end
 """
 ```
@@ -482,10 +490,12 @@ Cantilever loading boundaries.
 """
 function Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
     numNode = femMesh.numNode
+    numNode3 = numNode * 3
     faceNorm = femMesh.faceNorm
     cornerNode = femMesh.cornerNode
     edgeNode = femMesh.edgeNode
     faceNode = femMesh.faceNode
+    K = femMesh.K
 
     !haskey(kw, "uGamma") ? uGamma = [cornerNode[1]; cornerNode[3]; cornerNode[5]; cornerNode[7]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]] : uGamma = kw["uGamma"]
 
@@ -499,5 +509,8 @@ function Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLo
 
     !haskey(kw, "mDofs") ? mDofs = nothing : mDofs = setdiff(1:numNode, (uDofs, tDofs))
 
-    return Boundaries(; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma, uDofs = uDofs, tDofs = tDofs, mDofs = mDofs)
+    tK = cholesky(Hermitian(K[tDofs, tDofs]))
+    boundaries = Boundaries(; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma, uDofs = uDofs, tDofs = tDofs, mDofs = mDofs, tK = tK)
+    forceDisplacement = ForceDisplacement(uTilde = spzeros(numNode3), uHat = spzeros(numNode3), u = spzeros(numNode3), fTilde = spzeros(numNode3), fHat = spzeros(numNode3), f = spzeros(numNode3))
+    return boundaries, forceDisplacement
 end

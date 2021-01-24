@@ -162,3 +162,19 @@ function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     end
     return fig
 end
+
+function plotFEDomain(mesh::T) where {T <: AbstractMesh}
+    cornerNode = mesh.cornerNode
+    edgeNode = mesh.edgeNode
+    faceNode = mesh.faceNode
+    coord = mesh.coord
+
+    fig = scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3, label = "Corners")
+    @inbounds for i in 1:length(edgeNode)
+        scatter!(fig, coord[1, edgeNode[i]], coord[2, edgeNode[i]], coord[3, edgeNode[i]], markershape = :circle, markersize = 3, label = "Edge $i")
+    end
+    @inbounds for i in 1:length(faceNode)
+        scatter!(fig, coord[1, faceNode[i]], coord[2, faceNode[i]], coord[3, faceNode[i]], markershape = :square, markersize = 3, label = "Face $i")
+    end
+    return fig
+end
