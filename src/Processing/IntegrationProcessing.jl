@@ -190,7 +190,7 @@ function integrate!(
     exponent = intParams.exponent
     maxiter = intParams.maxiter
 
-    dt = intVars.dt
+    dt = max(intVars.dt, dtmin)
     time = intVars.time
     step = intVars.step
 
