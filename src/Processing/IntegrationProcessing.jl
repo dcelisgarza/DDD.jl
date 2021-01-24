@@ -216,8 +216,10 @@ function integrate!(
         err = @views distance - (nodeVel[:, idx] + initVel) / 2 * dt
         maxErr = maximum(abs.(err))        
 
+        if dt <= dtmin
+            counter = maxiter + 1
         # Check if errors are under the tolerances.
-        if maxDist < abstol && maxErr < reltol
+        elseif maxDist < abstol && maxErr < reltol
             dtOld = dt
             factor =
             maxchange *
@@ -226,18 +228,16 @@ function integrate!(
             dtOldGood = true
             dt = min(dt * factor, dtmax)
             counter += 1
+        # If the errors are over the tolerances, check if the previous time step is good.
+        elseif dtOldGood
+            dt = dtOld
+            counter = maxiter
+        # If it wasn't, make the timestep smaller.
         else
-            # If the errors are over the tolerances, check if the previous time step is good.
-            if dtOldGood
-                dt = dtOld
-                counter = maxiter
-            else
-                # If it wasn't, make the timestep smaller.
-                dt = dt / 2
-            end
+            dt = dt / 2
         end
         
-        if counter > maxiter || dt == dtmax || dt < dtmin
+        if counter > maxiter || dt == dtmax
             convergent = true
         end
 
