@@ -1,6 +1,7 @@
 ##
 using Plots
 plotlyjs()
+# gr()
 ##
 using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets, FastGaussQuadrature
 cd(@__DIR__)
@@ -132,8 +133,8 @@ network = DislocationNetwork((shearSquare, prismSquare))
 ##
 numNode = 101
 numSeg = numNode - 1
-x = range(-500, 500, length = numNode)
-y = range(-500, 500, length = numNode)
+x = range(-150, 150, length = numNode)
+y = range(-150, 150, length = numNode)
 X = ones(length(y)) .* x'
 Y = ones(length(x))' .* y
 Z = ones(length(x))' .* ones(numNode) * 5
@@ -208,8 +209,8 @@ display(plt)
 
 numNode = 101
 numSeg = numNode - 1
-x = range(-500, 500, length = numNode)
-y = range(-500, 500, length = numNode)
+x = range(-150, 150, length = numNode)
+y = range(-150, 150, length = numNode)
 X = ones(length(y)) .* x'
 Y = ones(length(x))' .* y
 Z = ones(length(x))' .* ones(numNode) * 5
@@ -279,6 +280,7 @@ plt = contourf(x, y, stress[5,:,:])
 display(plt)
 plt = contourf(x, y, stress[6,:,:])
 display(plt)
+
 
 ##
 
