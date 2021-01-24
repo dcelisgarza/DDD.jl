@@ -501,8 +501,8 @@ DislocationNetwork(
     label::T3,
     nodeVel::T2,
     nodeForce::T2,
-    numNode::T4 = zeros(Int, 1),
-    numSeg::T4 = zeros(Int, 1),
+    numNode::T4 = length(label),
+    numSeg::T4 = size(links, 2),
     maxConnect::T5 = 4,
     connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
     linksConnect::T1 = zeros(Int, 2, size(links, 2)),
@@ -518,49 +518,53 @@ DislocationNetwork(
 ```
 [`DislocationNetwork`](@ref) constructor provides default values, validates inputs and calculates derived quantities.
 """
-function DislocationNetwork(
-    links::T1,
-    slipPlane::T2,
-    bVec::T2,
-    coord::T2,
-    label::T3,
-    nodeVel::T2,
-    nodeForce::T2,
-    numNode::T4 = zeros(Int, 1),
-    numSeg::T4 = zeros(Int, 1),
-    maxConnect::T5 = 4,
-    connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
-    linksConnect::T1 = zeros(Int, 2, size(links, 2)),
-    segIdx::T1 = zeros(Int, size(links, 2), 3),
-    segForce::T6 = zeros(3, size(links)...),
-) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: Union{Int,AbstractVector{Int}},T5 <: Integer,T6 <: AbstractArray{T,N} where {T,N},}
+# function DislocationNetwork(
+#     links::T1,
+#     slipPlane::T2,
+#     bVec::T2,
+#     coord::T2,
+#     label::T3,
+#     nodeVel::T2,
+#     nodeForce::T2,
+#     numNode::T4 = length(label),
+#     numSeg::T4 = size(links, 2),
+#     maxConnect::T5 = 4,
+#     connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
+#     linksConnect::T1 = zeros(Int, 2, size(links, 2)),
+#     segIdx::T1 = zeros(Int, size(links, 2), 3),
+#     segForce::T6 = zeros(3, 2, size(links, 2)),
+# ) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: Union{Int,AbstractVector{Int}},T5 <: Integer,T6 <: AbstractArray{T,N} where {T,N},}
+    
+#     @assert size(links, 1) == size(segForce, 2) == 2
+#     @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
+#     @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
+#     @assert size(coord, 2) == length(label)
+#     @assert length(numNode) == length(numSeg) == 1
 
-    @assert size(links, 1) == size(segForce, 2) == 2
-    @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
-    @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
-    @assert size(coord, 2) == length(label)
-    @assert length(numNode) == length(numSeg) == 1
+#     typeof(numNode) <: AbstractVector ? numNodeArr = numNode : numNodeArr = [numNode]
+#     typeof(numSeg) <: AbstractVector ? numSegArr = numSeg : numSegArr = [numSeg]
 
-    typeof(numNode) <: AbstractVector ? numNodeArr = numNode : numNodeArr = [numNode]
-    typeof(numSeg) <: AbstractVector ? numSegArr = numSeg : numSegArr = [numSeg]
+#     network = DislocationNetwork{T1,T2,T3,typeof(numNodeArr),T5,T6}(
+#         links,
+#         slipPlane,
+#         bVec,
+#         coord,
+#         label,
+#         nodeVel,
+#         nodeForce,
+#         numNodeArr,
+#         numSegArr,
+#         maxConnect,
+#         connectivity,
+#         linksConnect,
+#         segIdx,
+#         segForce,
+#     )
+#     makeConnect!(network)
+#     getSegmentIdx!(network)
 
-    return DislocationNetwork{T1,T2,T3,typeof(numNodeArr),T5,T6}(
-        links,
-        slipPlane,
-        bVec,
-        coord,
-        label,
-        nodeVel,
-        nodeForce,
-        numNodeArr,
-        numSegArr,
-        maxConnect,
-        connectivity,
-        linksConnect,
-        segIdx,
-        segForce,
-    )
-end
+#     return network
+# end
 """
 ```
 DislocationNetwork(;
@@ -571,9 +575,9 @@ DislocationNetwork(;
     label::T3,
     nodeVel::T2,
     nodeForce::T2,
-    numNode::T4 = zeros(Int, 1),
-    numSeg::T4 = zeros(Int, 1),
-    maxConnect::T5 = 0,
+    numNode::T4 = length(label),
+    numSeg::T4 = size(links, 2),
+    maxConnect::T5 = 4,
     connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
     linksConnect::T1 = zeros(Int, 2, size(links, 2)),
     segIdx::T1 = zeros(Int, size(links, 2), 3),
@@ -596,16 +600,25 @@ function DislocationNetwork(;
     label::T3,
     nodeVel::T2,
     nodeForce::T2,
-    numNode::T4 = zeros(Int, 1),
-    numSeg::T4 = zeros(Int, 1),
-    maxConnect::T5 = 0,
+    numNode::T4 = length(label),
+    numSeg::T4 = size(links, 2),
+    maxConnect::T5 = 4,
     connectivity::T1 = zeros(Int, 1 + 2 * maxConnect, length(label)),
     linksConnect::T1 = zeros(Int, 2, size(links, 2)),
     segIdx::T1 = zeros(Int, size(links, 2), 3),
-    segForce::T6 = zeros(3, size(links, 2), 0),
-) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: AbstractVector{Int},T5 <: Integer,T6 <: AbstractArray{T,N} where {T,N},}
+    segForce::T6 = zeros(3, 2, size(links, 2)),
+) where {T1 <: AbstractArray{T,N} where {T,N},T2 <: AbstractArray{T,N} where {T,N},T3 <: AbstractVector{nodeType},T4 <: Union{Int,AbstractVector{Int}},T5 <: Integer,T6 <: AbstractArray{T,N} where {T,N},}
 
-    return DislocationNetwork(
+    @assert size(links, 1) == size(segForce, 2) == 2
+    @assert size(bVec, 1) == size(slipPlane, 1) == size(coord, 1) size(segForce, 1) == 3
+    @assert size(links, 2) == size(bVec, 2) == size(slipPlane, 2) == size(segForce, 3)
+    @assert size(coord, 2) == length(label)
+    @assert length(numNode) == length(numSeg) == 1
+
+    typeof(numNode) <: AbstractVector ? numNodeArr = numNode : numNodeArr = [numNode]
+    typeof(numSeg) <: AbstractVector ? numSegArr = numSeg : numSegArr = [numSeg]
+
+    network = DislocationNetwork{T1,T2,T3,typeof(numNodeArr),T5,T6}(
         links,
         slipPlane,
         bVec,
@@ -613,14 +626,18 @@ function DislocationNetwork(;
         label,
         nodeVel,
         nodeForce,
-        numNode,
-        numSeg,
+        numNodeArr,
+        numSegArr,
         maxConnect,
         connectivity,
         linksConnect,
         segIdx,
         segForce,
     )
+    makeConnect!(network)
+    getSegmentIdx!(network)
+
+    return network
 end
 """
 ```

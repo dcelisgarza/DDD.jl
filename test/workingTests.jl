@@ -35,81 +35,67 @@ femParams = FEMParameters(
                 )
 
 regularCuboidMesh = buildMesh(matParams, femParams)
-dx = regularCuboidMesh.dx
-dz = regularCuboidMesh.dz
-faces = regularCuboidMesh.faces
-coord = regularCuboidMesh.coord
-connectivity = regularCuboidMesh.connectivity
-cornerNode = regularCuboidMesh.cornerNode
-edgeNode = regularCuboidMesh.edgeNode
-faceNode = regularCuboidMesh.faceNode
-coord = regularCuboidMesh.coord
+cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 
-cantileverBC = Boundaries(femParams, regularCuboidMesh)
-uGamma = cantileverBC.uGamma
-mGamma = cantileverBC.mGamma
-left = findall(x -> x == 0, coord[1, :])
-loadEdge1 = findall(x -> x ≈ dx, coord[1, :])
-loadEdge2 = findall(x -> x ≈ dz, coord[3, :])
-loadEdge = intersect(loadEdge1, loadEdge2)
-norm(coord[:, left]) ≈ norm(coord[:, uGamma])
-norm(coord[:, loadEdge]) ≈ norm(coord[:, mGamma])
+# dx = regularCuboidMesh.dx
+# dz = regularCuboidMesh.dz
+# faces = regularCuboidMesh.faces
+# coord = regularCuboidMesh.coord
+# connectivity = regularCuboidMesh.connectivity
+# cornerNode = regularCuboidMesh.cornerNode
+# edgeNode = regularCuboidMesh.edgeNode
+# faceNode = regularCuboidMesh.faceNode
+# coord = regularCuboidMesh.coord
+# uGamma = cantileverBC.uGamma
+# mGamma = cantileverBC.mGamma
+# left = findall(x -> x == 0, coord[1, :])
+# loadEdge1 = findall(x -> x ≈ dx, coord[1, :])
+# loadEdge2 = findall(x -> x ≈ dz, coord[3, :])
+# loadEdge = intersect(loadEdge1, loadEdge2)
+# norm(coord[:, left]) ≈ norm(coord[:, uGamma])
+# norm(coord[:, loadEdge]) ≈ norm(coord[:, mGamma])
+# scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3)
+# scatter!(coord[1, edgeNode[1]], coord[2, edgeNode[1]], coord[3, edgeNode[1]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[2]], coord[2, edgeNode[2]], coord[3, edgeNode[2]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[3]], coord[2, edgeNode[3]], coord[3, edgeNode[3]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[4]], coord[2, edgeNode[4]], coord[3, edgeNode[4]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[5]], coord[2, edgeNode[5]], coord[3, edgeNode[5]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[6]], coord[2, edgeNode[6]], coord[3, edgeNode[6]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[7]], coord[2, edgeNode[7]], coord[3, edgeNode[7]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[8]], coord[2, edgeNode[8]], coord[3, edgeNode[8]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[9]], coord[2, edgeNode[9]], coord[3, edgeNode[9]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[10]], coord[2, edgeNode[10]], coord[3, edgeNode[10]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[11]], coord[2, edgeNode[11]], coord[3, edgeNode[11]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, edgeNode[12]], coord[2, edgeNode[12]], coord[3, edgeNode[12]], markershape = :circle, markersize = 3)
+# scatter!(coord[1, faceNode[1]], coord[2, faceNode[1]], coord[3, faceNode[1]], markershape = :rect, markersize = 2)
+# scatter!(coord[1, faceNode[2]], coord[2, faceNode[2]], coord[3, faceNode[2]], markershape = :rect, markersize = 2)
+# scatter!(coord[1, faceNode[3]], coord[2, faceNode[3]], coord[3, faceNode[3]], markershape = :rect, markersize = 2)
+# scatter!(coord[1, faceNode[4]], coord[2, faceNode[4]], coord[3, faceNode[4]], markershape = :rect, markersize = 2)
+# scatter!(coord[1, faceNode[5]], coord[2, faceNode[5]], coord[3, faceNode[5]], markershape = :rect, markersize = 2)
+# scatter!(coord[1, faceNode[6]], coord[2, faceNode[6]], coord[3, faceNode[6]], markershape = :rect, markersize = 2)
+# Sleft = cantileverBC.uGamma
+# loadedEdge = cantileverBC.mGamma
+# scatter(coord[1, Sleft], coord[2, Sleft], coord[3, Sleft], markershape = :diamond, markersize = 3)
+# scatter!(coord[1, loadedEdge], coord[2, loadedEdge], coord[3, loadedEdge], markershape = :diamond, markersize = 3)
+# regularCuboidMesh.K
+# tDofs = cantileverBC.tDofs
+# K = copy(regularCuboidMesh.K)
+
+# A = K[tDofs,tDofs]
+# C = cholesky(Hermitian(A))
+# D = cholesky(Hermitian(K[tDofs,tDofs]))
+# vec = rand(length(tDofs)) * 1000
+# C \ vec ≈ A \ vec ≈ D \ vec ≈ K[tDofs,tDofs] \ vec
+# @btime C \ vec 
+# @btime A \ vec
+# @btime D \ vec
+# @btime K[tDofs,tDofs] \ vec
 ##
+# scatter!(coord[1, Sleft], coord[2, Sleft], coord[3, Sleft], markershape = :circle, markersize = 3)
+# scatter!(coord[1, Smixed], coord[2, Smixed], coord[3, Smixed], markershape = :circle, markersize = 3)
 
-
-scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3)
-scatter!(coord[1, edgeNode[1]], coord[2, edgeNode[1]], coord[3, edgeNode[1]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[2]], coord[2, edgeNode[2]], coord[3, edgeNode[2]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[3]], coord[2, edgeNode[3]], coord[3, edgeNode[3]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[4]], coord[2, edgeNode[4]], coord[3, edgeNode[4]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[5]], coord[2, edgeNode[5]], coord[3, edgeNode[5]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[6]], coord[2, edgeNode[6]], coord[3, edgeNode[6]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[7]], coord[2, edgeNode[7]], coord[3, edgeNode[7]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[8]], coord[2, edgeNode[8]], coord[3, edgeNode[8]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[9]], coord[2, edgeNode[9]], coord[3, edgeNode[9]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[10]], coord[2, edgeNode[10]], coord[3, edgeNode[10]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[11]], coord[2, edgeNode[11]], coord[3, edgeNode[11]], markershape = :circle, markersize = 3)
-scatter!(coord[1, edgeNode[12]], coord[2, edgeNode[12]], coord[3, edgeNode[12]], markershape = :circle, markersize = 3)
-scatter!(coord[1, faceNode[1]], coord[2, faceNode[1]], coord[3, faceNode[1]], markershape = :rect, markersize = 2)
-scatter!(coord[1, faceNode[2]], coord[2, faceNode[2]], coord[3, faceNode[2]], markershape = :rect, markersize = 2)
-scatter!(coord[1, faceNode[3]], coord[2, faceNode[3]], coord[3, faceNode[3]], markershape = :rect, markersize = 2)
-scatter!(coord[1, faceNode[4]], coord[2, faceNode[4]], coord[3, faceNode[4]], markershape = :rect, markersize = 2)
-scatter!(coord[1, faceNode[5]], coord[2, faceNode[5]], coord[3, faceNode[5]], markershape = :rect, markersize = 2)
-scatter!(coord[1, faceNode[6]], coord[2, faceNode[6]], coord[3, faceNode[6]], markershape = :rect, markersize = 2)
-
-
-
-
-Sleft = cantileverBC.uGamma
-loadedEdge = cantileverBC.mGamma
-scatter(coord[1, Sleft], coord[2, Sleft], coord[3, Sleft], markershape = :diamond, markersize = 3)
-scatter!(coord[1, loadedEdge], coord[2, loadedEdge], coord[3, loadedEdge], markershape = :diamond, markersize = 3)
-##
-regularCuboidMesh.K
-tDofs = cantileverBC.tDofs
-K = copy(regularCuboidMesh.K)
-
-A = K[tDofs,tDofs]
-C = cholesky(Hermitian(A))
-D = cholesky(Hermitian(K[tDofs,tDofs]))
-vec = rand(length(tDofs)) * 1000
-C \ vec ≈ A \ vec ≈ D \ vec ≈ K[tDofs,tDofs] \ vec
-@btime C \ vec 
-@btime A \ vec
-@btime D \ vec
-@btime K[tDofs,tDofs] \ vec
 
 ##
-
-
-scatter!(coord[1, Sleft], coord[2, Sleft], coord[3, Sleft], markershape = :circle, markersize = 3)
-scatter!(coord[1, Smixed], coord[2, Smixed], coord[3, Smixed], markershape = :circle, markersize = 3)
-
-
-
-
-
-
 
 dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
 segLen = dx / 5
@@ -144,7 +130,171 @@ shearSquare = DislocationLoop(;
 )
 network = DislocationNetwork((shearSquare, prismSquare))
 ##
-matParams = MaterialParameters(;μ = 1., μMag = 1., ν = 0.305, E = 1., crystalStruct = BCC())
+
+numNode = 101
+numSeg = numNode - 1
+
+x = range(-500, 500, length = numNode)
+y = range(-500, 500, length = numNode)
+X = ones(length(y)) .* x'
+Y = ones(length(x))' .* y
+Z = ones(length(x))' .* ones(numNode) * 5
+points = [X[:]'; Y[:]'; zeros(length(X))']
+
+l = [1; 0; 0]
+b = [0; 1; 0]
+n = [0; 1; 0]
+a = 5 * norm(b)
+
+links = zeros(Int, 2, numSeg)
+slipPlane = zeros(3, numSeg)
+bVec = zeros(3, numSeg)
+coord = [x'; zeros(numNode)'; 5 * ones(numNode)']
+label = zeros(nodeType, numNode)
+nodeVel = similar(coord)
+nodeForce = similar(coord)
+for i in 1:numSeg
+    links[:, i] .= (i, i + 1)
+    slipPlane[:, i] = n
+    bVec[:, i] = b
+end
+
+matParams = MaterialParameters(;
+    crystalStruct = BCC(),
+    μ = 1.0,
+    μMag = 1.0,
+    ν = 0.28,
+    E = 0.1,
+)
+
+dlnParams = DislocationParameters(;
+      coreRad = a,
+      coreRadMag = 1.,
+      minSegLen = a + 2,
+      maxSegLen = a + 3,
+      minArea = a + 1,
+      maxArea = a + 2,
+      edgeDrag = 1.,
+      screwDrag = 1.,
+      climbDrag = 1.,
+      lineDrag = 1.,
+      maxConnect = 4,
+      mobility = mobBCC(),
+  )
+
+network = DislocationNetwork(;
+      links = links,
+      slipPlane = slipPlane,
+      bVec = bVec,
+      coord = coord,
+      label = label,
+      nodeVel = nodeVel,
+      nodeForce = nodeForce,
+  )
+
+function fieldPointStressSurf(X, Y, Z, dlnParams, matParams, network)
+    gridSize = size(X)
+    sigma = zeros(3, 3, gridSize[1], gridSize[2])
+    for col in 1:gridSize[1]
+        for row in 1:gridSize[2]
+            x0 = SVector{3,eltype(X)}(X[row, col], Y[row, col], Z[row, col])
+
+            stress = calc_σTilde(x0, dlnParams, matParams, network)
+            sigma[1, 1, row, col] = stress[1]
+            sigma[2, 2, row, col] = stress[2]
+            sigma[3, 3, row, col] = stress[3]
+            sigma[1, 2, row, col] = stress[4]
+            sigma[2, 1, row, col] = stress[4]
+            sigma[2, 3, row, col] = stress[5]
+            sigma[3, 2, row, col] = stress[5]
+            sigma[1, 3, row, col] = stress[6]
+            sigma[3, 1, row, col] = stress[6]
+        end
+    end
+    return sigma
+end
+σ = fieldPointStressSurf(X, Y, Z, dlnParams, matParams, network)
+contourf(x,y,σ[1,3,:,:])
+contourf(x,y,σ[2,3,:,:])
+##
+numNode = 101
+numSeg = numNode - 1
+
+x = range(-500, 500, length = numNode)
+y = range(-500, 500, length = numNode)
+X = ones(length(y)) .* x'
+Y = ones(length(x))' .* y
+Z = ones(length(x))' .* ones(numNode) * 5
+points = [X[:]'; Y[:]'; zeros(length(X))']
+
+l = [0; 0; 1]
+b = [1; 0; 0]
+n = [0; 1; 0]
+a = 5 * norm(b)
+
+links = zeros(Int, 2, numSeg)
+slipPlane = zeros(3, numSeg)
+bVec = zeros(3, numSeg)
+coord = [zeros(numNode)'; zeros(numNode)'; range(a, a + numNode, length = numNode)']
+label = zeros(nodeType, numNode)
+nodeVel = similar(coord)
+nodeForce = similar(coord)
+for i in 1:numSeg
+    links[:, i] .= (i, i + 1)
+    slipPlane[:, i] = n
+    bVec[:, i] = b
+end
+
+matParams = MaterialParameters(;
+    crystalStruct = BCC(),
+    μ = 1.0,
+    μMag = 1.0,
+    ν = 0.28,
+    E = 0.1,
+)
+dlnParams = DislocationParameters(;
+      coreRad = a,
+      coreRadMag = 1.,
+      minSegLen = a + 2,
+      maxSegLen = a + 3,
+      minArea = a + 1,
+      maxArea = a + 2,
+      edgeDrag = 1.,
+      screwDrag = 1.,
+      climbDrag = 1.,
+      lineDrag = 1.,
+      maxConnect = 4,
+      mobility = mobBCC(),
+  )
+
+network = DislocationNetwork(;
+      links = links,
+      slipPlane = slipPlane,
+      bVec = bVec,
+      coord = coord,
+      label = label,
+      nodeVel = nodeVel,
+      nodeForce = nodeForce,
+  )
+
+σ = fieldPointStressSurf(X, Y, Z, dlnParams, matParams, network)
+
+contourf(x, y, σ[1,3,:,:])
+contourf(x, y, σ[2,3,:,:])
+contourf(x, y, σ[3,3,:,:])
+
+
+
+
+
+
+
+
+
+
+  ##
+
+matParams = MaterialParameters(; crystalStruct = BCC(), μ = 1., μMag = 1., ν = 0.305, E = 1.)
 ##
 regularCuboidMesh.vertices
 dx, dy, dz

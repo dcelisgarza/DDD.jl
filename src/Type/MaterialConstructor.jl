@@ -12,13 +12,13 @@ MaterialParameters(
 Constructor for [`MaterialParameters`](@ref) automatically calculates derived quantities and sets the Peierls-Nabarro stress to a default of `σPN = 0`.
 """
 function MaterialParameters(
-    μ::T1,
-    μMag::T1,
-    ν::T1,
-    E::T1,
-    crystalStruct::T2,
-    σPN::T1 = 0,
-) where {T1,T2 <: AbstractCrystalStruct}
+    crystalStruct::T1,
+    μ::T2,
+    μMag::T2,
+    ν::T2,
+    E::T2,
+    σPN::T2 = 0,
+) where {T1 <: AbstractCrystalStruct,T2}
     omνInv = 1 / (1 - ν)
     opνInv = 1 / (1 + ν)
     νomνInv = ν * omνInv
@@ -26,7 +26,9 @@ function MaterialParameters(
     μ4π = μ / (4π)
     μ8π = μ4π / 2
     μ4πν = μ4π * omνInv
+    νμ4πν = ν * μ4πν
     return MaterialParameters(
+        crystalStruct,
         μ,
         μMag,
         ν,
@@ -38,7 +40,7 @@ function MaterialParameters(
         μ4π,
         μ8π,
         μ4πν,
-        crystalStruct,
+        νμ4πν,
         σPN,
     )
 end
@@ -56,12 +58,12 @@ MaterialParameters(;
 Keyword constructor for [`MaterialParameters`](@ref).
 """
 function MaterialParameters(;
-    μ::T1,
-    μMag::T1,
-    ν::T1,
-    E::T1,
-    crystalStruct::T2,
-    σPN::T1 = 0.0,
-) where {T1,T2 <: AbstractCrystalStruct}
-    return MaterialParameters(μ, μMag, ν, E, crystalStruct, σPN)
+    crystalStruct::T1,
+    μ::T2,
+    μMag::T2,
+    ν::T2,
+    E::T2,
+    σPN::T2 = 0.0,
+) where {T1 <: AbstractCrystalStruct,T2}
+    return MaterialParameters(crystalStruct, μ, μMag, ν, E, σPN)
 end

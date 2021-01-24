@@ -79,6 +79,7 @@ function remeshSurfaceNetwork!(
 
             if label[node2] == tmp
                 network = makeSurfaceNode!(mesh, network, node1, node2, j)
+                getSegmentIdx!(network)
             end
         end
     end
@@ -281,6 +282,7 @@ function remeshSurfaceNetwork!(
 
             if label[node2] == intMob || label[node2] == intFix
                 network = makeSurfaceNode!(mesh, network, node1, node2, j)
+                getSegmentIdx!(network)
             end
         end    
     end

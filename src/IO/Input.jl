@@ -61,12 +61,12 @@ function loadMaterialParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
 
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
-    MaterialParams = MaterialParameters(
+    MaterialParams = MaterialParameters(;
+        crystalStruct = crystalStruct[dict["crystalStruct"]],
         μ = convert(Float64, dict["μ"]),
         μMag = convert(Float64, dict["μMag"]),
         ν = convert(Float64, dict["ν"]),
         E = convert(Float64, dict["E"]),
-        crystalStruct = crystalStruct[dict["crystalStruct"]],
         σPN = convert(Float64, dict["σPN"]),
     )
 
