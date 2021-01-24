@@ -130,106 +130,18 @@ shearSquare = DislocationLoop(;
 )
 network = DislocationNetwork((shearSquare, prismSquare))
 ##
-
 numNode = 101
 numSeg = numNode - 1
-
 x = range(-500, 500, length = numNode)
 y = range(-500, 500, length = numNode)
 X = ones(length(y)) .* x'
 Y = ones(length(x))' .* y
 Z = ones(length(x))' .* ones(numNode) * 5
-points = [X[:]'; Y[:]'; zeros(length(X))']
+points = [X[:]'; Y[:]'; Z[:]']
 
-l = [1; 0; 0]
-b = [0; 1; 0]
-n = [0; 1; 0]
-a = 5 * norm(b)
-
-links = zeros(Int, 2, numSeg)
-slipPlane = zeros(3, numSeg)
-bVec = zeros(3, numSeg)
-coord = [x'; zeros(numNode)'; 5 * ones(numNode)']
-label = zeros(nodeType, numNode)
-nodeVel = similar(coord)
-nodeForce = similar(coord)
-for i in 1:numSeg
-    links[:, i] .= (i, i + 1)
-    slipPlane[:, i] = n
-    bVec[:, i] = b
-end
-
-matParams = MaterialParameters(;
-    crystalStruct = BCC(),
-    μ = 1.0,
-    μMag = 1.0,
-    ν = 0.28,
-    E = 0.1,
-)
-
-dlnParams = DislocationParameters(;
-      coreRad = a,
-      coreRadMag = 1.,
-      minSegLen = a + 2,
-      maxSegLen = a + 3,
-      minArea = a + 1,
-      maxArea = a + 2,
-      edgeDrag = 1.,
-      screwDrag = 1.,
-      climbDrag = 1.,
-      lineDrag = 1.,
-      maxConnect = 4,
-      mobility = mobBCC(),
-  )
-
-network = DislocationNetwork(;
-      links = links,
-      slipPlane = slipPlane,
-      bVec = bVec,
-      coord = coord,
-      label = label,
-      nodeVel = nodeVel,
-      nodeForce = nodeForce,
-  )
-
-function fieldPointStressSurf(X, Y, Z, dlnParams, matParams, network)
-    gridSize = size(X)
-    sigma = zeros(3, 3, gridSize[1], gridSize[2])
-    for col in 1:gridSize[1]
-        for row in 1:gridSize[2]
-            x0 = SVector{3,eltype(X)}(X[row, col], Y[row, col], Z[row, col])
-
-            stress = calc_σTilde(x0, dlnParams, matParams, network)
-            sigma[1, 1, row, col] = stress[1]
-            sigma[2, 2, row, col] = stress[2]
-            sigma[3, 3, row, col] = stress[3]
-            sigma[1, 2, row, col] = stress[4]
-            sigma[2, 1, row, col] = stress[4]
-            sigma[2, 3, row, col] = stress[5]
-            sigma[3, 2, row, col] = stress[5]
-            sigma[1, 3, row, col] = stress[6]
-            sigma[3, 1, row, col] = stress[6]
-        end
-    end
-    return sigma
-end
-σ = fieldPointStressSurf(X, Y, Z, dlnParams, matParams, network)
-contourf(x,y,σ[1,3,:,:])
-contourf(x,y,σ[2,3,:,:])
-##
-numNode = 101
-numSeg = numNode - 1
-
-x = range(-500, 500, length = numNode)
-y = range(-500, 500, length = numNode)
-X = ones(length(y)) .* x'
-Y = ones(length(x))' .* y
-Z = ones(length(x))' .* ones(numNode) * 5
-points = [X[:]'; Y[:]'; zeros(length(X))']
-
-l = [0; 0; 1]
-b = [1; 0; 0]
-n = [0; 1; 0]
+l = Float64[0; 0; 1]
+b = Float64[1; 0; 0]
+n = b × l
 a = 5 * norm(b)
 
 links = zeros(Int, 2, numSeg)
@@ -253,46 +165,122 @@ matParams = MaterialParameters(;
     E = 0.1,
 )
 dlnParams = DislocationParameters(;
-      coreRad = a,
-      coreRadMag = 1.,
-      minSegLen = a + 2,
-      maxSegLen = a + 3,
-      minArea = a + 1,
-      maxArea = a + 2,
-      edgeDrag = 1.,
-      screwDrag = 1.,
-      climbDrag = 1.,
-      lineDrag = 1.,
-      maxConnect = 4,
-      mobility = mobBCC(),
-  )
-
+    coreRad = a,
+    coreRadMag = 1.,
+    minSegLen = a + 2,
+    maxSegLen = a + 3,
+    minArea = a + 1,
+    maxArea = a + 2,
+    edgeDrag = 1.,
+    screwDrag = 1.,
+    climbDrag = 1.,
+    lineDrag = 1.,
+    maxConnect = 4,
+    mobility = mobBCC(),
+)
 network = DislocationNetwork(;
-      links = links,
-      slipPlane = slipPlane,
-      bVec = bVec,
-      coord = coord,
-      label = label,
-      nodeVel = nodeVel,
-      nodeForce = nodeForce,
-  )
+    links = links,
+    slipPlane = slipPlane,
+    bVec = bVec,
+    coord = coord,
+    label = label,
+    nodeVel = nodeVel,
+    nodeForce = nodeForce,
+)
+makeConnect!(network)
+getSegmentIdx!(network)
 
-σ = fieldPointStressSurf(X, Y, Z, dlnParams, matParams, network)
+stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, numNode, :)
+plt = contourf(x, y, stress[1,:,:])
+display(plt)
+plt = contourf(x, y, stress[2,:,:])
+display(plt)
+plt = contourf(x, y, stress[3,:,:])
+display(plt)
+plt = contourf(x, y, stress[4,:,:])
+display(plt)
+plt = contourf(x, y, stress[5,:,:])
+display(plt)
+plt = contourf(x, y, stress[6,:,:])
+display(plt)
 
-contourf(x, y, σ[1,3,:,:])
-contourf(x, y, σ[2,3,:,:])
-contourf(x, y, σ[3,3,:,:])
+##
 
+numNode = 101
+numSeg = numNode - 1
+x = range(-500, 500, length = numNode)
+y = range(-500, 500, length = numNode)
+X = ones(length(y)) .* x'
+Y = ones(length(x))' .* y
+Z = ones(length(x))' .* ones(numNode) * 5
+points = [X[:]'; Y[:]'; Z[:]']
 
+l = Float64[0; 0; 1]
+b = Float64[0; 0; 1]
+n = b × l
+a = 5 * norm(b)
 
+links = zeros(Int, 2, numSeg)
+slipPlane = zeros(3, numSeg)
+bVec = zeros(3, numSeg)
+coord = [zeros(numNode)'; zeros(numNode)'; range(a, a + numNode, length = numNode)']
+label = zeros(nodeType, numNode)
+nodeVel = similar(coord)
+nodeForce = similar(coord)
+for i in 1:numSeg
+    links[:, i] .= (i, i + 1)
+    slipPlane[:, i] = n
+    bVec[:, i] = b
+end
 
+matParams = MaterialParameters(;
+    crystalStruct = BCC(),
+    μ = 1.0,
+    μMag = 1.0,
+    ν = 0.28,
+    E = 0.1,
+)
+dlnParams = DislocationParameters(;
+    coreRad = a,
+    coreRadMag = 1.,
+    minSegLen = a + 2,
+    maxSegLen = a + 3,
+    minArea = a + 1,
+    maxArea = a + 2,
+    edgeDrag = 1.,
+    screwDrag = 1.,
+    climbDrag = 1.,
+    lineDrag = 1.,
+    maxConnect = 4,
+    mobility = mobBCC(),
+)
+network = DislocationNetwork(;
+    links = links,
+    slipPlane = slipPlane,
+    bVec = bVec,
+    coord = coord,
+    label = label,
+    nodeVel = nodeVel,
+    nodeForce = nodeForce,
+)
+makeConnect!(network)
+getSegmentIdx!(network)
 
+stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, numNode, :)
+plt = contourf(x, y, stress[1,:,:])
+display(plt)
+plt = contourf(x, y, stress[2,:,:])
+display(plt)
+plt = contourf(x, y, stress[3,:,:])
+display(plt)
+plt = contourf(x, y, stress[4,:,:])
+display(plt)
+plt = contourf(x, y, stress[5,:,:])
+display(plt)
+plt = contourf(x, y, stress[6,:,:])
+display(plt)
 
-
-
-
-
-  ##
+##
 
 matParams = MaterialParameters(; crystalStruct = BCC(), μ = 1., μMag = 1., ν = 0.305, E = 1.)
 ##

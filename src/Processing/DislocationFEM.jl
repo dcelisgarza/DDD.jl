@@ -9,6 +9,16 @@ calc_σTilde(
 ) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
 ```
 Calculate stress on points `x0`.
+##
+Returns
+```
+σxx = σ[1, :]
+σyy = σ[2, :]
+σzz = σ[3, :]
+σxy = σ[4, :]
+σxz = σ[5, :]
+σyz = σ[6, :]
+``
 """
 function calc_σTilde(
     x0,
@@ -45,16 +55,16 @@ function calc_σTilde(
 
     numPoints = div(length(x0), 3)
     σ = zeros(6, numPoints)
-
-    # Loop over grid points.
-    @inbounds @simd for j in 1:numPoints
-        x = SVector{3,elemT}(x0[1, j], x0[2, j], x0[3, j])
-        # Loop over segments.
-        for i in eachindex(idx)
-            b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-            n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
-            n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
-            t = normalize(n2 - n1)
+    
+    # Loop over segments.
+    @inbounds @simd for i in eachindex(idx)
+        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
+        n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
+        t = normalize(n2 - n1)
+        # Loop over grid points.
+        for j in 1:numPoints
+            x = SVector{3,elemT}(x0[1, j], x0[2, j], x0[3, j])
 
             R = x - n1
             Rdt = R ⋅ t
@@ -182,8 +192,8 @@ function calc_σTilde(
             σ[2, j] += I_03yy * s_03 + I_13yy * s_13 + I_05yy * s_05 +  I_15yy * s_15 + I_25yy * s_25
             σ[3, j] += I_03zz * s_03 + I_13zz * s_13 + I_05zz * s_05 + I_15zz * s_15 + I_25zz * s_25
             σ[4, j] += I_03xy * s_03 + I_13xy * s_13 + I_05xy * s_05 + I_15xy * s_15 + I_25xy * s_25
-            σ[5, j] += I_03yz * s_03 + I_13yz * s_13 + I_05yz * s_05 + I_15yz * s_15 + I_25yz * s_25
-            σ[6, j] += I_03xz * s_03 + I_13xz * s_13 + I_05xz * s_05 + I_15xz * s_15 + I_25xz * s_25      
+            σ[5, j] += I_03xz * s_03 + I_13xz * s_13 + I_05xz * s_05 + I_15xz * s_15 + I_25xz * s_25      
+            σ[6, j] += I_03yz * s_03 + I_13yz * s_13 + I_05yz * s_05 + I_15yz * s_15 + I_25yz * s_25
         end
     end
     return σ
