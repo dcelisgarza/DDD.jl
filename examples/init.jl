@@ -55,7 +55,7 @@
 #     slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
 #     _slipPlane = slipSystems.slipPlane,  # Slip plane of the segments.
 #     _bVec = slipSystems.bVec,            # Burgers vector of the segments.
-#     label = nodeType[1; 2; 1; 2; 1],    # Node labels, has to be equal to the number of nodes.
+#     label = nodeTypeDln[1; 2; 1; 2; 1],    # Node labels, has to be equal to the number of nodes.
 #     buffer = 0.0,   # Buffer to increase the dislocation spread.
 #     range = Float64[          # Distribution range
 #         -100 100 # xmin, xmax
@@ -73,7 +73,7 @@
 #     slipSystem = 1,
 #     _slipPlane = slipSystems.slipPlane,
 #     _bVec = slipSystems.bVec,
-#     label = nodeType[1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2],
+#     label = nodeTypeDln[1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2; 1; 2],
 #     buffer = 0.0,
 #     range = Float64[
 #         -100 100

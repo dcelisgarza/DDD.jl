@@ -92,7 +92,7 @@ cd(@__DIR__)
         slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
         _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
         _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
-        label = SVector{8,nodeType}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
         range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
         dist = Rand(),  # Loop distribution.
@@ -107,7 +107,7 @@ cd(@__DIR__)
         slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
         _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
         _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
-        label = SVector{8,nodeType}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
         range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
         dist = Rand(),  # Loop distribution.
@@ -219,7 +219,7 @@ cd(@__DIR__)
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -281,7 +281,7 @@ cd(@__DIR__)
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -327,7 +327,7 @@ cd(@__DIR__)
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -384,7 +384,7 @@ cd(@__DIR__)
         slipSystem = 1,
         _slipPlane = slipSystems.slipPlane[:, 1],
         _bVec = slipSystems.bVec[:, 1],
-        label = nodeType[1; 2; 1; 2; 1; 2],
+        label = nodeTypeDln[1; 2; 1; 2; 1; 2],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -398,7 +398,7 @@ cd(@__DIR__)
         slipSystem = 1,
         _slipPlane = slipSystems.slipPlane[:, 1],
         _bVec = slipSystems.bVec[:, 1],
-        label = nodeType[1; 2; 1; 2; 1; 2],
+        label = nodeTypeDln[1; 2; 1; 2; 1; 2],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),

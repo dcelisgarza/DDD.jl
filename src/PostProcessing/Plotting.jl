@@ -13,7 +13,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
     fig = plot()
     for i in 1:numNode
         n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
-        label[n1n2[1]] == ext || label[n1n2[2]] == ext ? continue : nothing
+        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
         #= 
@@ -37,7 +37,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     elemT = eltype(links)
     for i in 1:numNode
         n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
-        label[n1n2[1]] == ext || label[n1n2[2]] == ext ? continue : nothing
+        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -56,7 +56,7 @@ function plotNodes(mesh::T1, network::DislocationNetwork, args...; kw...) where 
     fig = plot()
     for i in 1:numNode
         n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
-        label[n1n2[1]] == ext || label[n1n2[2]] == ext ? continue : nothing
+        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
         #= 
@@ -97,7 +97,7 @@ function plotNodes!(fig, mesh::T1, network::DislocationNetwork, args...; kw...) 
     elemT = eltype(links)
     for i in 1:numNode
         n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
-        label[n1n2[1]] == ext || label[n1n2[2]] == ext ? continue : nothing
+        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
         #= 

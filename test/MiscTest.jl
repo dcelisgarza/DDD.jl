@@ -81,16 +81,16 @@ end
 
 @testset "Auxiliary" begin
     dict = Dict(
-        "intFix" => nodeType(2),
-        "none" => nodeType(0),
-        "intMob" => nodeType(1),
-        "srfFix" => nodeType(4),
-        "ext" => nodeType(5),
-        "srfMob" => nodeType(3),
-        "tmp" => nodeType(6)
+        "intFixDln" => nodeTypeDln(2),
+        "noneDln" => nodeTypeDln(0),
+        "intMobDln" => nodeTypeDln(1),
+        "srfFixDln" => nodeTypeDln(4),
+        "extDln" => nodeTypeDln(5),
+        "srfMobDln" => nodeTypeDln(3),
+        "tmpDln" => nodeTypeDln(6)
     )
 
-    @test makeInstanceDict(nodeType) == dict
+    @test makeInstanceDict(nodeTypeDln) == dict
     data = rand(5)
     @test inclusiveComparison(data[rand(1:5)], data...)
     @test !inclusiveComparison(data, data[rand(1:5)] * 6)

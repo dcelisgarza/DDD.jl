@@ -1,35 +1,35 @@
 ## Dislocation Type Declarations
 """
 ```
-@enum nodeType begin
-    none = 0    # Undefined node, value at initialisation.
-    intMob = 1  # Internal mobile node.
-    intFix = 2  # Internal fixed node.
-    srfMob = 3  # Mobile surface node.
-    srfFix = 4  # Fixed surface node.
-    ext = 5     # External node.
-    tmp = 6     # Temporary flag, used during topological operations.
+@enum nodeTypeDln begin
+    noneDln = 0    # Undefined node, value at initialisation.
+    intMobDln = 1  # Internal mobile node.
+    intFixDln = 2  # Internal fixed node.
+    srfMobDln = 3  # Mobile surface node.
+    srfFixDln = 4  # Fixed surface node.
+    extDln = 5     # External node.
+    tmpDln = 6     # Temporary flag, used during topological operations.
 end
 ```
 Different types of nodes behave differently. There are only a finite number of them so an enumerated type provides safety and efficiency. Each value represents a different type of node and therefore its behaviour.
 
 # Meaning
-* `none` are uninitialised nodes.
-* `intMob` are mobile nodes internal to the convex hull of the domain. They take part in tractions, displacements and dislocation interactions.
-* `intFix` are fixed nodes internal to the convex hull of the domain. They participate in the same way as `intMob` nodes except for the fact that their velocities is fixed are zero.
-* `srfMob` are mobile nodes that live on the surface of the convex hull of the domain, they are used to track slip steps and therefore participate in the same things as internal nodes but their velocities are restricted to the convex hull surface.
-* `srfFix` are fixed surface nodes and have the same characteristics as mobile surface nodes except for having zero velocity.
-* `ext` are external nodes that do not participate in dislocation interactions or forces but are used to calculate displacements and track slip steps.
-* `tmp` are nodes that are temporarily flagged before they are assigned another type.
+* `noneDln` are uninitialised nodes.
+* `intMobDln` are mobile nodes internal to the convex hull of the domain. They take part in tractions, displacements and dislocation interactions.
+* `intFixDln` are fixed nodes internal to the convex hull of the domain. They participate in the same way as `intMobDln` nodes except for the fact that their velocities is fixed are zero.
+* `srfMobDln` are mobile nodes that live on the surface of the convex hull of the domain, they are used to track slip steps and therefore participate in the same things as internal nodes but their velocities are restricted to the convex hull surface.
+* `srfFixDln` are fixed surface nodes and have the same characteristics as mobile surface nodes except for having zero velocity.
+* `extDln` are external nodes that do not participate in dislocation interactions or forces but are used to calculate displacements and track slip steps.
+* `tmpDln` are nodes that are temporarily flagged before they are assigned another type.
 """
-@enum nodeType begin
-    none = 0
-    intMob = 1
-    intFix = 2
-    srfMob = 3
-    srfFix = 4
-    ext = 5
-    tmp = 6
+@enum nodeTypeDln begin
+    noneDln = 0
+    intMobDln = 1
+    intFixDln = 2
+    srfMobDln = 3
+    srfFixDln = 4
+    extDln = 5
+    tmpDln = 6
 end
 
 """
@@ -48,7 +48,7 @@ These types are used to automatically generate segments out of Burgers vectors `
 * `segEdge` have ``\\bm{b} ⟂ \\bm{t}`` ,
 * `segEdgeN` have ``\\bm{b} ⟂ \\bm{t}`` and ``\\bm{b} ∥ \\bm{n}`` ,
 * `segScrew` have ``\\bm{b} ∥ \\bm{t}`` ,
-* `segMixed` have none of the above.
+* `segMixed` have noneDln of the above.
 """
 abstract type AbstractDlnSeg end
 struct segNone <: AbstractDlnSeg end

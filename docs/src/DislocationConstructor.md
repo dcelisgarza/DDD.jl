@@ -75,7 +75,7 @@ DislocationLoop(
 ) where {
     T1 <: AbstractDlnStr,
     T2 <: Int,
-    T3 <: AbstractVector{nodeType},
+    T3 <: AbstractVector{nodeTypeDln},
     T4 <: AbstractDistribution,
 }
 ```
@@ -98,7 +98,7 @@ DislocationLoop(
     T1 <: loopPure,
     T2 <: Int,
     T3 <: AbstractArray{T,N} where {T,N},
-    T4 <: AbstractVector{nodeType},
+    T4 <: AbstractVector{nodeTypeDln},
     T5 <: AbstractDistribution,
 }
 ```
@@ -121,7 +121,7 @@ DislocationLoop(
     T1 <: loopImpure,
     T2 <: Int,
     T3 <: AbstractArray{T,N} where {T,N},
-    T4 <: AbstractVector{nodeType},
+    T4 <: AbstractVector{nodeTypeDln},
     T5 <: AbstractDistribution,
 }
 ```
@@ -145,7 +145,7 @@ DislocationLoop(;
     T2 <: Int,
     T3 <: Union{T where {T},AbstractArray{T,N} where {T,N}},
     T4 <: AbstractArray{T,N} where {T,N},
-    T5 <: AbstractVector{nodeType},
+    T5 <: AbstractVector{nodeTypeDln},
     T6,
     T7 <: AbstractArray{T,N} where {T,N},
     T8 <: AbstractDistribution,
@@ -171,7 +171,7 @@ DislocationNetwork(
 ) where {
     T1 <: AbstractArray{T,N} where {T,N},
     T2 <: AbstractArray{T,N} where {T,N},
-    T3 <: AbstractVector{nodeType},
+    T3 <: AbstractVector{nodeTypeDln},
     T4 <: Union{Int,AbstractVector{Int}},
     T5 <: Int,T6 <: AbstractArray{T,N} where {T,N},
 }
@@ -196,7 +196,7 @@ DislocationNetwork(;
 ) where {
     T1 <: AbstractArray{T,N} where {T,N},
     T2 <: AbstractArray{T,N} where {T,N},
-    T3 <: AbstractVector{nodeType},T4 <: AbstractVector{Int},
+    T3 <: AbstractVector{nodeTypeDln},T4 <: AbstractVector{Int},
     T5 <: Int,
     T6 <: AbstractArray{T,N} where {T,N},
 }

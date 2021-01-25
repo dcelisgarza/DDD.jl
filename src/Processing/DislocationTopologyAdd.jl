@@ -29,7 +29,7 @@ function splitNode!(
                 network.coord,
                 zeros(elemT, size(network.coord, 1), numNewEntries),
             ),
-            label = vcat(network.label, zeros(nodeType, numNewEntries)),
+            label = vcat(network.label, zeros(nodeTypeDln, numNewEntries)),
             nodeVel = hcat(
                 network.nodeVel,
                 zeros(elemT, size(network.nodeVel, 1), numNewEntries),
@@ -190,7 +190,7 @@ function refineNetwork!(
     elemT = eltype(network.coord)
 
     @inbounds for i in 1:numNode
-        if connectivity[1, i] == 2 && label[i] == intMob
+        if connectivity[1, i] == 2 && label[i] == intMobDln
             link1 = connectivity[2, i]  # First connection.
             link2 = connectivity[4, i]  # Second connection.
             colLink1 = connectivity[3, i]   # Column where node i is in links of the first connection.
@@ -349,7 +349,7 @@ function refineNetwork!(
                 nodeVel = network.nodeVel
             end
 
-        elseif connectivity[1, i] > 2 && label[i] == intMob
+        elseif connectivity[1, i] > 2 && label[i] == intMobDln
             # Loop through the connections of node i.
             for j in 1:connectivity[1, i]
                 # Find the line direction of the link.

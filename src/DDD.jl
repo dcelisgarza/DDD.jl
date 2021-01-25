@@ -49,7 +49,8 @@ export AbstractDlnSeg,
     AbstractCantileverBend,
     CantileverLoad
 export MaterialParameters
-export nodeType,
+export nodeTypeDln,
+    nodeTypeFE,
     SlipSystem,
     DislocationParameters,
     DislocationLoop,

@@ -22,7 +22,7 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 
 ## Checklist of capabilities
 
-- [x] Building regular cuboid mesh.
+- [x] Building regular cuboid mesh. >10x faster than `Matlab`.
   - [x] Sets of corners, edges and surfaces.
 - [ ] Loading conditions.
   - [x] Structure for boundary conditions.
@@ -30,16 +30,16 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
     - [x] Cantilever boundary conditions.
   - [ ] Loading function.
 - [x] Forces
-  - [x] Peach-Koehler force for regular cuboid mesh.
+  - [x] Peach-Koehler force for regular cuboid mesh. ~10x faster than `Matlab`.
   - [ ] Peach-Koehler force for infinite domain (`σHat` is an input rather than calculated via FEM).
-  - [x] `O(N^2)` Segment-segment force.
+  - [x] `O(N^2)` Segment-segment force.  ~1.1x faster than `C`.
     - [x] Serial
     - [x] CPU parallelised
-  - [x] Self-forces.
+  - [x] Self-forces. ~10x faster than `Matlab`.
 - [ ] Topology
   - [x] Internal remeshing.
-    - [x] Mesh refinement.
-    - [x] Mesh coarsening.
+    - [x] Mesh refinement. >100x faster than `Matlab`.
+    - [x] Mesh coarsening. ~3x faster than `Matlab`.
   - [x] Surface remeshing (untested).
     - Original network before surface remeshing. ![original](examples/original.png)
     - External segments projected orthongonally to the face they exited from, if they were external to begin with and no intersection with the surfaces is found, project along the normal of the plane of the volume's surfaces whose orthogonal distance to the point is shortest. ![remeshed_proj](examples/remeshed_virtual_proj.png)
@@ -49,7 +49,7 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
 - [ ] DDD-FEM coupling.
   - [ ] Displacements.
   - [ ] Tractions.
-    - [x] Field point stresses.
+    - [x] Field point stresses. ~1.3x faster than `C`.
       - ![sxx_edge](examples/sxx_edge.png)
       - ![syy_edge](examples/syy_edge.png)
       - ![szz_edge](examples/szz_edge.png)
@@ -107,8 +107,8 @@ julia> dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop 
                fileDislocationLoop,
        )
 (DislocationParameters{Float64,Int64,mobBCC,Bool}(90.78, 8241.0084, 0.0, 314.47, 1572.33, 628.94, 49444.25, 988884.93, 2.4447338580625e9, 9.77893404781105e11, 1.0, 2.0, 1.0e10, 0.0, 4, mobBCC(), true, true, true, true, false, false, 786.165, 5393.277083825736), MaterialParameters{Float64,BCC}(1.0, 145000.0, 0.28, 1.0, 1.3888888888888888, 0.78125, 0.3888888888888889, 0.21875000000000003, 0.07957747154594767, 0.039788735772973836, 0.11052426603603843, BCC(), 0.0), FEMParameters{DispatchRegularCuboidMesh,LinearElement,Float64,Int64}(DispatchRegularCuboidMesh(), LinearElement(), 2000.0, 2000.0, 2000.0, 5, 5, 5), IntegrationParameters{AdaptiveEulerTrapezoid,Float64,Int64}(AdaptiveEulerTrapezoid(), 0.0, 1.0e13, 1.0e-6, 1.0e15, 10.0, 1.0, 1.2, 20.0, 20), SlipSystem{BCC,StaticArrays.SArray{Tuple{3,12},Float64,2,36}}(BCC(), [1.0 1.0 … 0.0 0.0; 1.0 1.0 … -1.0 -1.0; 0.0 0.0 … 1.0 1.0], [-1.0 
-1.0 … 1.0 -1.0; 1.0 -1.0 … 1.0 1.0; 1.0 1.0 … 1.0 1.0]), DislocationLoop[DislocationLoop{loopPrism,Int64,StaticArrays.SArray{Tuple{24},Float64,1,24},Int64,StaticArrays.MArray{Tuple{2,24},Int64,2,48},StaticArrays.MArray{Tuple{3,24},Float64,2,72},StaticArrays.SArray{Tuple{24},nodeType,1,24},Float64,StaticArrays.SArray{Tuple{3,2},Float64,2,6},Zeros}(loopPrism(), 12, 2, 3, [3.0, 2.0, 1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0  …  1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0, 2.0, 3.0], 1, [1 2 … 23 24; 2 3 … 24 1], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … -0.5773502691896258 -0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [-3.7543135054151 -2.529568634023511 … -4.979058376806686 -4.979058376806689; -4.869668577065509 -6.094413448457098 … -1.5236033621142662 -3.6449237056739108; 1.1153550716504115 3.5648448144335894 … -3.45545501469242 -1.3341346711327793], nodeType[DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob  …  DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob], 0.0, [-100.0 100.0; -100.0 100.0; -100.0 100.0], Zeros()), DislocationLoop{loopShear,Int64,StaticArrays.SArray{Tuple{24},Float64,1,24},Int64,StaticArrays.MArray{Tuple{2,24},Int64,2,48},StaticArrays.MArray{Tuple{3,24},Float64,2,72},StaticArrays.SArray{Tuple{24},nodeType,1,24},Float64,StaticArrays.SArray{Tuple{3,2},Float64,2,6},Zeros}(loopShear(), 12, 2, 3, [3.0, 2.0, 1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0  …  1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0, 2.0, 3.0], 1, [1 2 … 23 24; 2 3 … 24 1], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … -0.5773502691896258 -0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [-2.9630484063384888 -1.7383035349468998 … -4.382428045725459 -4.187793277730079; 2.9630484063384888 1.7383035349468998 … 4.382428045725459 4.187793277730079; 4.636081013814105 7.085570756597283 … 
--0.8007544763131689 2.1865912710309123], nodeType[DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob  …  DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob, DDD.intFix, DDD.intMob], 0.0, [-100.0 100.0; -100.0 100.0; -100.0 100.0], Zeros())])
+1.0 … 1.0 -1.0; 1.0 -1.0 … 1.0 1.0; 1.0 1.0 … 1.0 1.0]), DislocationLoop[DislocationLoop{loopPrism,Int64,StaticArrays.SArray{Tuple{24},Float64,1,24},Int64,StaticArrays.MArray{Tuple{2,24},Int64,2,48},StaticArrays.MArray{Tuple{3,24},Float64,2,72},StaticArrays.SArray{Tuple{24},nodeTypeDln,1,24},Float64,StaticArrays.SArray{Tuple{3,2},Float64,2,6},Zeros}(loopPrism(), 12, 2, 3, [3.0, 2.0, 1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0  …  1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0, 2.0, 3.0], 1, [1 2 … 23 24; 2 3 … 24 1], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … -0.5773502691896258 -0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [-3.7543135054151 -2.529568634023511 … -4.979058376806686 -4.979058376806689; -4.869668577065509 -6.094413448457098 … -1.5236033621142662 -3.6449237056739108; 1.1153550716504115 3.5648448144335894 … -3.45545501469242 -1.3341346711327793], nodeTypeDln[DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln  …  DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln], 0.0, [-100.0 100.0; -100.0 100.0; -100.0 100.0], Zeros()), DislocationLoop{loopShear,Int64,StaticArrays.SArray{Tuple{24},Float64,1,24},Int64,StaticArrays.MArray{Tuple{2,24},Int64,2,48},StaticArrays.MArray{Tuple{3,24},Float64,2,72},StaticArrays.SArray{Tuple{24},nodeTypeDln,1,24},Float64,StaticArrays.SArray{Tuple{3,2},Float64,2,6},Zeros}(loopShear(), 12, 2, 3, [3.0, 2.0, 1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0  …  1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0, 2.0, 3.0], 1, [1 2 … 23 24; 2 3 … 24 1], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … -0.5773502691896258 -0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [-2.9630484063384888 -1.7383035349468998 … -4.382428045725459 -4.187793277730079; 2.9630484063384888 1.7383035349468998 … 4.382428045725459 4.187793277730079; 4.636081013814105 7.085570756597283 … 
+-0.8007544763131689 2.1865912710309123], nodeTypeDln[DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln  …  DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln, DDD.intFixDln, DDD.intMobDln], 0.0, [-100.0 100.0; -100.0 100.0; -100.0 100.0], Zeros())])
 ```
 
 However, we can also manually generate them using the constructors. Here we use keyword constructors, which provide default values and automatically calculate auxiliary parameters.
@@ -184,12 +184,12 @@ julia> prismPentagon = DislocationLoop(;
            slipSystem = 1,
            _slipPlane = slipSystem.slipPlane[:, 1],
            _bVec = slipSystem.bVec[:, 1],
-           label = nodeType.(ones(Int, 10)),
+           label = nodeTypeDln.(ones(Int, 10)),
            buffer = 0,
            range = [0 femParams.dx; 0 femParams.dy; 0 femParams.dz],
            dist = Rand(),
        )
-DislocationLoop{loopPrism,Int64,Array{Float64,1},Int64,StaticArrays.MArray{Tuple{2,10},Int64,2,20},StaticArrays.MArray{Tuple{3,10},Float64,2,30},Array{nodeType,1},Int64,Array{Float64,2},Rand}(loopPrism(), 5, 2, 10, [943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4], 1, [1 2 … 9 10; 2 3 … 10 1], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … -0.5773502691896258 -0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [-918.1630966638565 -533.0216594402482 … -787.8846870407546 -1303.304533887465; -918.1630966638565 -1303.304533887465 … 220.4286860866364 -533.021659440248; 7.958078640513122e-14 770.2828744472168 … -1008.3133731273906 -770.2828744472168], nodeType[DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob], 0, [0.0 2000.0; 0.0 2000.0; 0.0 2000.0], Rand())
+DislocationLoop{loopPrism,Int64,Array{Float64,1},Int64,StaticArrays.MArray{Tuple{2,10},Int64,2,20},StaticArrays.MArray{Tuple{3,10},Float64,2,30},Array{nodeTypeDln,1},Int64,Array{Float64,2},Rand}(loopPrism(), 5, 2, 10, [943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4], 1, [1 2 … 9 10; 2 3 … 10 1], [0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.7071067811865475 0.7071067811865475 … 0.7071067811865475 0.7071067811865475; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … -0.5773502691896258 -0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258], [-918.1630966638565 -533.0216594402482 … -787.8846870407546 -1303.304533887465; -918.1630966638565 -1303.304533887465 … 220.4286860866364 -533.021659440248; 7.958078640513122e-14 770.2828744472168 … -1008.3133731273906 -770.2828744472168], nodeTypeDln[DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln], 0, [0.0 2000.0; 0.0 2000.0; 0.0 2000.0], Rand())
 
 julia> shearHexagon = DislocationLoop(;
            loopType = loopShear(),
@@ -200,24 +200,24 @@ julia> shearHexagon = DislocationLoop(;
            slipSystem = 1,
            _slipPlane = slipSystem.slipPlane[:, 2],
            _bVec = slipSystem.bVec[:, 2],
-           label = nodeType.(ones(Int, 12)),
+           label = nodeTypeDln.(ones(Int, 12)),
            buffer = 0,
            range = [0 femParams.dx; 0 femParams.dy; 0 femParams.dz],
            dist = Rand(),
        )
-DislocationLoop{loopShear,Int64,Array{Float64,1},Int64,StaticArrays.MArray{Tuple{2,12},Int64,2,24},StaticArrays.MArray{Tuple{3,12},Float64,2,36},Array{nodeType,1},Int64,Array{Float64,2},Rand}(loopShear(), 6, 2, 10, [943.4, 943.4, 943.4, 
+DislocationLoop{loopShear,Int64,Array{Float64,1},Int64,StaticArrays.MArray{Tuple{2,12},Int64,2,24},StaticArrays.MArray{Tuple{3,12},Float64,2,36},Array{nodeTypeDln,1},Int64,Array{Float64,2},Rand}(loopShear(), 6, 2, 10, [943.4, 943.4, 943.4, 
 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4, 943.4], 1, [1 2 … 11 12; 2 3 … 12 1], [-0.7071067811865475 -0.7071067811865475 … -0.7071067811865475 -0.7071067811865475; 0.7071067811865475 0.7071067811865475 … 0.7071067811865475 
 0.7071067811865475; 0.0 0.0 … 0.0 0.0], [0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 … 0.5773502691896258 0.5773502691896258; 0.5773502691896258 0.5773502691896258 
-… 0.5773502691896258 0.5773502691896258], [943.3999999999996 1328.541437223608 … -106.01215583541216 558.258562776392; 943.3999999999996 1328.541437223608 … -106.01215583541216 558.258562776392; 943.3999999999995 173.1171255527828 … 1627.1243116708247 1713.682874447215], nodeType[DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob], 0, [0.0 5000.0; 0.0 5000.0; 0.0 5000.0], Rand())
+… 0.5773502691896258 0.5773502691896258], [943.3999999999996 1328.541437223608 … -106.01215583541216 558.258562776392; 943.3999999999996 1328.541437223608 … -106.01215583541216 558.258562776392; 943.3999999999995 173.1171255527828 … 1627.1243116708247 1713.682874447215], nodeTypeDln[DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln], 0, [0.0 5000.0; 0.0 5000.0; 0.0 5000.0], Rand())
 ```
 
 We can then create a network from these two dislocations.
 
 ```julia
 julia> network = DislocationNetwork((prismPentagon, shearHexagon))
-DislocationNetwork{Array{Int64,2},Array{Float64,2},Array{nodeType,1},Array{Int64,1},Int64,Array{Float64,3}}([1 2 … 0 0; 2 3 … 0 0], [0.7071067811865475 0.7071067811865475 … 0.0 0.0; 0.7071067811865475 0.7071067811865475 … 0.0 0.0; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … 0.0 
+DislocationNetwork{Array{Int64,2},Array{Float64,2},Array{nodeTypeDln,1},Array{Int64,1},Int64,Array{Float64,3}}([1 2 … 0 0; 2 3 … 0 0], [0.7071067811865475 0.7071067811865475 … 0.0 0.0; 0.7071067811865475 0.7071067811865475 … 0.0 0.0; 0.0 0.0 … 0.0 0.0], [-0.5773502691896258 -0.5773502691896258 … 0.0 
 0.0; 0.5773502691896258 0.5773502691896258 … 0.0 0.0; 0.5773502691896258 0.5773502691896258 … 0.0 0.0], [-642.7877450115786 -257.6463077879703 … 0.0 
-0.0; 222.94211475290717 -162.1993224707012 … 0.0 0.0; 678.3283402449995 1448.6112146922162 … 0.0 0.0], nodeType[DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob, DDD.intMob  …  DDD.none, DDD.none, DDD.none, DDD.none, DDD.none, DDD.none, DDD.none, DDD.none, DDD.none, DDD.none], [0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0], [0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0], [280], [280], 4, [2 2 … 0 0; 1 1 … 0 0; … ; 0 0 … 0 0; 0 0 … 0 0], [1 2 … 0 0; 1 1 … 0 0], [1 1 2; 2 2 3; … ; 0 0 0; 0 0 0], [0.0 0.0; 0.0 0.0; 0.0 0.0]
+0.0; 222.94211475290717 -162.1993224707012 … 0.0 0.0; 678.3283402449995 1448.6112146922162 … 0.0 0.0], nodeTypeDln[DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln, DDD.intMobDln  …  DDD.noneDln, DDD.noneDln, DDD.noneDln, DDD.noneDln, DDD.noneDln, DDD.noneDln, DDD.noneDln, DDD.noneDln, DDD.noneDln, DDD.noneDln], [0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0], [0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0], [280], [280], 4, [2 2 … 0 0; 1 1 … 0 0; … ; 0 0 … 0 0; 0 0 … 0 0], [1 2 … 0 0; 1 1 … 0 0], [1 1 2; 2 2 3; … ; 0 0 0; 0 0 0], [0.0 0.0; 0.0 0.0; 0.0 0.0]
 
 [0.0 0.0; 0.0 0.0; 0.0 0.0]
 

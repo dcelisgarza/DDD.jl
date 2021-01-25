@@ -35,3 +35,7 @@ calcSegSegForce
 ```@docs
 calcSegSegForce!
 ```
+
+```@docs
+calc_σTilde
+```

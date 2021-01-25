@@ -1,4 +1,17 @@
 """
+@enum nodeTypeFE begin
+    corner = 1
+    edge = 2
+    face = 3
+end
+"""
+@enum nodeTypeFE begin
+    noneFE = 0
+    cornerFE = 1
+    edgeFE = 2
+    faceFE = 3
+end
+"""
 ```
 abstract type AbstractMesh end
 abstract type AbstractRegularCuboidMesh <: AbstractMesh end

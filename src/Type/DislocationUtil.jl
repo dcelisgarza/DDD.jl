@@ -1,8 +1,8 @@
 # Overloaded functions.
-Base.:(==)(x::nodeType, y::Real) = ==(Int(x), y)
-Base.:(==)(x::Real, y::nodeType) = ==(x, Int(y))
-Base.convert(::Type{nodeType}, x::Real) = nodeType(Int(x))
-Base.zero(::Type{nodeType}) = nodeType(0)
+Base.:(==)(x::nodeTypeDln, y::Real) = ==(Int(x), y)
+Base.:(==)(x::Real, y::nodeTypeDln) = ==(x, Int(y))
+Base.convert(::Type{nodeTypeDln}, x::Real) = nodeTypeDln(Int(x))
+Base.zero(::Type{nodeTypeDln}) = nodeTypeDln(0)
 
 # DislocationLoop.
 Base.getindex(x::DislocationLoop, i) = i == 1 ? x : throw(BoundsError())
@@ -23,7 +23,7 @@ function Base.zero(::Type{DislocationLoop})
         slipSystem = convert(Int, 0),
         _slipPlane = zeros(3, 0),
         _bVec = zeros(3, 0),
-        label = zeros(nodeType, 0),
+        label = zeros(nodeTypeDln, 0),
         buffer = convert(Float64, 0),
         range = zeros(3, 0),
         dist = Zeros(),
@@ -43,7 +43,7 @@ function Base.zero(::Type{DislocationNetwork})
         slipPlane = zeros(3, 0),
         bVec = zeros(3, 0),
         coord = zeros(3, 0),
-        label = zeros(nodeType, 0),
+        label = zeros(nodeTypeDln, 0),
         nodeVel = zeros(3, 0),
         nodeForce = zeros(3, 0),
         numNode = [0],
@@ -67,7 +67,7 @@ function Base.push!(network::DislocationNetwork, n)
         slipPlane = hcat(network.slipPlane, zeros(elemT, 3, n)),
         bVec = hcat(network.bVec, zeros(elemT, 3, n)),
         coord = hcat(network.coord, zeros(elemT, 3, n)),
-        label = vcat(network.label, zeros(nodeType, n)),
+        label = vcat(network.label, zeros(nodeTypeDln, n)),
         nodeVel = hcat(network.nodeVel, zeros(elemT, 3, n)),
         nodeForce = hcat(network.nodeForce, zeros(elemT, 3, n)),
         numNode = copy(network.numNode),
@@ -304,7 +304,7 @@ function getSegmentIdx(links, label)
         n1 = links[1, i]
         n2 = links[2, i]
         # Skip external nodes.
-        (label[n1] == ext || label[n2] == ext) ? continue : nothing
+        (label[n1] == extDln || label[n2] == extDln) ? continue : nothing
         numSeg += 1 # Increment index.
         # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
         segIdx[numSeg, :] .= (i, n1, n2)
@@ -336,7 +336,7 @@ function getSegmentIdx!(network::DislocationNetwork)
     @inbounds for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
-        (label[n1] == ext || label[n2] == ext) ? continue : nothing
+        (label[n1] == extDln || label[n2] == extDln) ? continue : nothing
         lNumSeg += 1
         segIdx[lNumSeg, :] .= (i, n1, n2)
     end

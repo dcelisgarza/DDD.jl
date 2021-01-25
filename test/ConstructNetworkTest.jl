@@ -47,7 +47,7 @@ end
         slipPlane = rand(3, 10),
         bVec = rand(3, 10),
         coord = rand(3, 10),
-        label = nodeType.(rand(0:5, 10)),
+        label = nodeTypeDln.(rand(0:5, 10)),
         segForce = rand(3, 2, 10),
         nodeVel = rand(3, 10),
         nodeForce = rand(3, 10),
@@ -156,7 +156,7 @@ end
         slipPlane = zeros(3, 1),
         bVec = zeros(3, 1),
         coord = zeros(3, 1),
-        label = zeros(nodeType, 1),
+        label = zeros(nodeTypeDln, 1),
         segForce = zeros(3, 2, 1),
         nodeVel = zeros(3, 1),
         nodeForce = zeros(3, 1),
@@ -203,7 +203,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 1; 1; 1],
+        label = nodeTypeDln[1; 1; 1; 1],
         buffer = 0.0,
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
@@ -226,8 +226,8 @@ end
 end
 
 @testset "Overloaded type functions" begin
-    @test nodeType(1) == 1
-    @test 1 == nodeType(1)
-    @test convert(nodeType, 2) == nodeType(2)
-    @test zero(nodeType) == nodeType(0)
+    @test nodeTypeDln(1) == 1
+    @test 1 == nodeTypeDln(1)
+    @test convert(nodeTypeDln, 2) == nodeTypeDln(2)
+    @test zero(nodeTypeDln) == nodeTypeDln(0)
 end

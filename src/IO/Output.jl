@@ -13,7 +13,7 @@ JSON.lower(
     },
 }
 
-JSON.lower(t::nodeType)
+JSON.lower(t::nodeTypeDln)
 ```
 Extensions to `JSON.lower` for custom types. Allows these variables to be serialised properly.
 """
@@ -22,7 +22,7 @@ function JSON.lower(
 ) where {T <: Union{AbstractCrystalStruct,AbstractMobility,AbstractIntegrator,AbstractDlnSeg,AbstractDlnStr,AbstractDistribution,DispatchRegularCuboidMesh,LinearElement,CantileverLoad},}
     return string(t)
 end
-JSON.lower(t::nodeType) = Int(t)
+JSON.lower(t::nodeTypeDln) = Int(t)
 
 """
 ```

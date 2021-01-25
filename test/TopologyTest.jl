@@ -28,7 +28,7 @@ cd(@__DIR__)
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 1; 1; 1],
+        label = nodeTypeDln[1; 1; 1; 1],
         buffer = 0.0,
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
@@ -47,7 +47,7 @@ cd(@__DIR__)
     @test network.slipPlane == zeros(3, 4)
     @test network.bVec == zeros(3, 4)
     @test network.coord == zeros(3, 4)
-    @test network.label == zeros(nodeType, 4)
+    @test network.label == zeros(nodeTypeDln, 4)
     @test network.nodeVel == zeros(3, 4)
     @test network.numNode[1] == 0
     @test network.numSeg[1] == 0
@@ -68,7 +68,7 @@ cd(@__DIR__)
     @test network.slipPlane == zeros(3, 4)
     @test network.bVec == zeros(3, 4)
     @test network.coord == zeros(3, 4)
-    @test network.label == zeros(nodeType, 4)
+    @test network.label == zeros(nodeTypeDln, 4)
     @test network.nodeVel == zeros(3, 4)
     @test network.numNode[1] == 0
     @test network.numSeg[1] == 0
@@ -87,7 +87,7 @@ cd(@__DIR__)
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 1; 1; 1],
+        label = nodeTypeDln[1; 1; 1; 1],
         buffer = 0.0,
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
@@ -106,7 +106,7 @@ cd(@__DIR__)
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -1269,7 +1269,7 @@ cd(@__DIR__)
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
+        label = nodeTypeDln[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
         buffer = 0.0,
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
@@ -1447,7 +1447,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -1779,7 +1779,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -1794,7 +1794,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -1983,7 +1983,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -1998,7 +1998,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 2; 1; 2; 1; 1],
+        label = nodeTypeDln[1; 2; 1; 2; 1; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
@@ -2040,7 +2040,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
+        label = nodeTypeDln[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
         buffer = 0.0,
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),
@@ -2243,7 +2243,7 @@ end
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
-        label = nodeType[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
+        label = nodeTypeDln[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
         buffer = 0.0,
         range = Float64[0 0; 0 0; 0 0],
         dist = Zeros(),

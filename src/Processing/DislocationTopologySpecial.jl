@@ -48,7 +48,7 @@ function remeshSurfaceNetwork!(
     connectivity = network.connectivity
 
     # Findall internal nodes.
-    idx = findall(x -> x == intMob, label)
+    idx = findall(x -> x == intMobDln, label)
     numInt = length(idx)
     # Find the location of the nodes that are newly outside the domain, P.
     nodeCoord = zeros(elemT, 3)
@@ -58,13 +58,13 @@ function remeshSurfaceNetwork!(
             nodeCoord[j] = coord[j, idxi]
         end
         if nodeCoord ∉ vertices
-            label[i] = tmp
+            label[i] = tmpDln
         end
     end
 
     for node1 in 1:numNode
         # We only want to check connections of mobile internal or external nodes.
-        label[node1] == intMob || label[node1] == ext ? nothing : continue
+        label[node1] == intMobDln || label[node1] == extDln ? nothing : continue
         # Find the number of connections to the node.
         numCon = connectivity[1, node1]
         # Loop through all connections of node1.
@@ -77,7 +77,7 @@ function remeshSurfaceNetwork!(
             # Neigbour node from j'th link node1 appears.
             node2 = links[3 - colLink, linkId]
 
-            if label[node2] == tmp
+            if label[node2] == tmpDln
                 network = makeSurfaceNode!(mesh, network, node1, node2, j)
                 getSegmentIdx!(network)
             end
@@ -92,7 +92,7 @@ function remeshSurfaceNetwork!(
 
     for i in 1:numNode
         # We only want to change the temporary nodes.
-        label[i] != tmp ? continue : nothing
+        label[i] != tmpDln ? continue : nothing
 
         # Assume nodes moved with linear velocity and crossed the surface. We use this velocity as the vector to move them back.
         vel = SVector{3,elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
@@ -117,7 +117,7 @@ function remeshSurfaceNetwork!(
             coord[j, i] = coord[j, i] + faceNorm[j, face] * scale[j]
         end
         
-        label[i] = ext
+        label[i] = extDln
     end
 
     # Find connected surface nodes and merge them.
@@ -125,7 +125,7 @@ function remeshSurfaceNetwork!(
     connectivity = network.connectivity
     node1 = 1
     while node1 < numNode
-        if label[node1] != srfMob || label[node1] != srfFix
+        if label[node1] != srfMobDln || label[node1] != srfFixDln
             node1 += 1
             continue
         end
@@ -140,7 +140,7 @@ function remeshSurfaceNetwork!(
             colLink = connectivity[idx + 1, node1]
             node2 = links[3 - colLink, linkId]
             # Check if the node connected is a surface node aso we can merge node1 into node2.
-            if label[node2] == srfMob || label[node2] == srfFix
+            if label[node2] == srfMobDln || label[node2] == srfFixDln
                 missing, network = mergeNode!(network, node2, node1)
                 getSegmentIdx!(network)
                 links = network.links
@@ -162,7 +162,7 @@ function remeshSurfaceNetwork!(
     coord = network.coord
     connectivity = network.connectivity
     for node1 in 1:numNode
-        label[node1] == srfMob || label[node1] == srfFix ? continue : nothing
+        label[node1] == srfMobDln || label[node1] == srfFixDln ? continue : nothing
 
         # Number of external connections.
         numExtCon = 0
@@ -172,7 +172,7 @@ function remeshSurfaceNetwork!(
             colLink = connectivity[idx + 1, node1]
             node2 = links[3 - colLink, linkId]
 
-            if label[node2] == ext
+            if label[node2] == extDln
                 numExtCon += 1
             end
         end
@@ -210,7 +210,7 @@ function remeshSurfaceNetwork!(
                 coord[j, node1] = coord[j, node1] + faceNorm[j, face] * scale[j]
             end
 
-            label[node1] = ext
+            label[node1] = extDln
         end
     end
 
@@ -218,7 +218,7 @@ function remeshSurfaceNetwork!(
     node1 = 1
     while node1 < numNode
         # Only check surface nodes.
-        if label[node1] != srfMob || label[node1] != srfFix
+        if label[node1] != srfMobDln || label[node1] != srfFixDln
             node1 += 1
             continue
         end
@@ -237,7 +237,7 @@ function remeshSurfaceNetwork!(
             node2 = links[3 - colLink1, linkId1]
 
             # If the first connection is not external go to the next iteration.
-            label[node2] != ext ? continue : nothing
+            label[node2] != extDln ? continue : nothing
 
             for k in j + 1:connectivity[1, node1]
                 idx2 = 2 * k
@@ -245,7 +245,7 @@ function remeshSurfaceNetwork!(
                 colLink2 = connectivity[idx2 + 1, node1]
                 node3 = links[3 - colLink2, linkId2]
                 # If the next connection is not external go to the next iteration.
-                label[node2] != ext ? continue : nothing
+                label[node2] != extDln ? continue : nothing
 
                 missing, network = mergeNode!(network, node3, node1)
                 getSegmentIdx!(network)
@@ -268,7 +268,7 @@ function remeshSurfaceNetwork!(
     links = network.links
     connectivity = network.connectivity
     for node1 in 1:numNode
-        label[node1] != ext ? continue : nothing
+        label[node1] != extDln ? continue : nothing
 
         numCon = connectivity[1, node1]
         for j in 1:numCon
@@ -280,7 +280,7 @@ function remeshSurfaceNetwork!(
             # Neigbour node from j'th link node1 appears.
             node2 = links[3 - colLink, linkId]
 
-            if label[node2] == intMob || label[node2] == intFix
+            if label[node2] == intMobDln || label[node2] == intFixDln
                 network = makeSurfaceNode!(mesh, network, node1, node2, j)
                 getSegmentIdx!(network)
             end
@@ -314,7 +314,7 @@ function makeSurfaceNode!(
     # We set the surface node velocity to zero. It will be calculated later.
     network = splitNode!(network, node1, idx, newNode, SVector{3,elemT}(0, 0, 0))
     # Set the label of the new node to be a surface node.
-    network.label[network.numNode[1]] = srfMob
+    network.label[network.numNode[1]] = srfMobDln
 
     return network
 end
@@ -355,7 +355,7 @@ Adapted Jan 2021 Daniel Celis Garza, Github @dcelisgarza
         i = 1
         while i <= numNode
         # Only find virtual nodes with two connections.
-            if label[i] == ext && connectivity[1, i] == 2
+            if label[i] == extDln && connectivity[1, i] == 2
             # This is where node i appears in connectivity.
                 node1 = connectivity[2, i] # Link where node i appears first.
                 linkCol1 = 3 - connectivity[3, i] # Column of links where it appears.
@@ -366,7 +366,7 @@ Adapted Jan 2021 Daniel Celis Garza, Github @dcelisgarza
                 linkNode2 = links[node2, linkCol2] # Second node connected to target node.
 
             # Only if both nodes are virtual.
-                if label[linkNode1] == label[linkNode2] == ext
+                if label[linkNode1] == label[linkNode2] == extDln
                 # Coordinate of node i.
                     iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
 

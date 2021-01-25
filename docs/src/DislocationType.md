@@ -5,7 +5,7 @@
 ## Primitive Types
 
 ```@docs
-nodeType
+nodeTypeDln
 ```
 
 ```@docs

@@ -6,7 +6,7 @@ Dislocations are described, generated and validated by custom types, structures 
 
 In discrete dislocation dynamics, dislocations are described by nodes connected by segments. The nodes are labelled according to their type, which is used by the software to decide how they are treated. However, labels are discrete variables, so they cannot take on any value. Additionally, accidentally using non-existent node types may produce silent and difficult to track errors. It is also impractical to validate node types at runtime. We solve these issues by defining a custom enumerated type, which not only limits possible values but informs users and developers of what the values represent.
 ```@docs
-nodeType
+nodeTypeDln
 ```
 Of course, mislabelling a node with an erroneous but defined value may still occur. Preventing such bugs is the task of users and developers, however the problem may is eased by the self-descriptive nature of enumerated types.
 
@@ -93,7 +93,7 @@ DislocationLoop(;
     T2 <: Int,
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{nodeType},
+    T5 <: AbstractVector{nodeTypeDln},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
@@ -119,7 +119,7 @@ DislocationLoop(
     T2 <: Int,
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{nodeType},
+    T5 <: AbstractVector{nodeTypeDln},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
@@ -145,7 +145,7 @@ DislocationLoop(
     T2 <: Int,
     T3 <: Union{T where {T}, AbstractArray{T, N} where {T, N}},
     T4 <: AbstractArray{T, N} where {T, N},
-    T5 <: AbstractVector{nodeType},
+    T5 <: AbstractVector{nodeTypeDln},
     T6,
     T7 <: AbstractArray{T, N} where {T, N},
     T8 <: AbstractDistribution,
@@ -179,7 +179,7 @@ DislocationNetwork(;
 ) where {
     T1 <: AbstractArray{T, N} where {T, N},
     T2 <: AbstractArray{T, N} where {T, N},
-    T3 <: AbstractVector{nodeType},
+    T3 <: AbstractVector{nodeTypeDln},
     T4 <: Int,
     T5 <: AbstractArray{Int, N} where {N},
     T6 <: AbstractArray{T, N} where {T, N},
@@ -250,7 +250,7 @@ It's also useful to define another matrix for indexing segments quickly, this ma
 getSegmentIdx(
     links::T1,
     label::T2,
-) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeType}}
+) where {T1 <: AbstractArray{T, N} where {T, N}, T2 <: AbstractVector{nodeTypeDln}}
 
 getSegmentIdx!(network::DislocationNetwork)
 ```
