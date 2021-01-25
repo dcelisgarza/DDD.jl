@@ -50,14 +50,12 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
   - [ ] Displacements.
   - [ ] Tractions.
     - [x] Field point stresses. ~1.3x faster than `C`.
-      - ![sxx_edge](examples/sxx_edge.png)
-      - ![syy_edge](examples/syy_edge.png)
-      - ![szz_edge](examples/szz_edge.png)
-      - ![sxy_edge](examples/sxy_edge.png)
-      - ![sxz_edge](examples/sxz_edge.png)
-      - ![syz_edge](examples/syz_edge.png)
-      - ![sxz_screw](examples/sxz_screw.png)
-      - ![syz_screw](examples/syz_screw.png)
+      - Edge sxx ![sxx_edge](examples/sxx_edge.png)
+      - Edge syy ![syy_edge](examples/syy_edge.png)
+      - Edge szz ![szz_edge](examples/szz_edge.png)
+      - Edge sxy ![sxy_edge](examples/sxy_edge.png)
+      - Screw xz ![sxz_screw](examples/sxz_screw.png)
+      - Screw yz ![syz_screw](examples/syz_screw.png)
 - [ ] Integrators
   - [x] Predictor corrector trapezoid (untested).
 - [ ] Mobility laws

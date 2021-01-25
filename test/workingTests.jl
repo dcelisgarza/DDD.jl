@@ -1,7 +1,7 @@
 ##
 using Plots
-plotlyjs()
-# gr()
+# plotlyjs()
+gr()
 ##
 using BenchmarkTools, LinearAlgebra, StaticArrays, SparseArrays, DDD, LazySets, FastGaussQuadrature
 cd(@__DIR__)
@@ -147,90 +147,17 @@ contourf(z, y, σ[3, :, :])
 contourf(z, y, σ[4, :, :])
 contourf(z, y, σ[5, :, :])
 contourf(z, y, σ[6, :, :])
-##
-numNode = 101
-numSeg = numNode - 1
-x = range(-150, 150, length = numNode)
-y = range(-150, 150, length = numNode)
-X = ones(length(y)) .* x'
-Y = ones(length(x))' .* y
-Z = ones(length(x))' .* ones(numNode) * 5
-points = [X[:]'; Y[:]'; Z[:]']
-
-l = Float64[0; 0; 1]
-b = Float64[1; 0; 0]
-n = b × l
-a = 5 * norm(b)
-
-links = zeros(Int, 2, numSeg)
-slipPlane = zeros(3, numSeg)
-bVec = zeros(3, numSeg)
-coord = [zeros(numNode)'; zeros(numNode)'; range(a, a + numNode, length = numNode)']
-label = zeros(nodeTypeDln, numNode)
-nodeVel = similar(coord)
-nodeForce = similar(coord)
-for i in 1:numSeg
-    links[:, i] .= (i, i + 1)
-    slipPlane[:, i] = n
-    bVec[:, i] = b
-end
-
-matParams = MaterialParameters(;
-    crystalStruct = BCC(),
-    μ = 1.0,
-    μMag = 1.0,
-    ν = 0.28,
-    E = 0.1,
-)
-dlnParams = DislocationParameters(;
-    coreRad = a,
-    coreRadMag = 1.,
-    minSegLen = a + 2,
-    maxSegLen = a + 3,
-    minArea = a + 1,
-    maxArea = a + 2,
-    edgeDrag = 1.,
-    screwDrag = 1.,
-    climbDrag = 1.,
-    lineDrag = 1.,
-    maxConnect = 4,
-    mobility = mobBCC(),
-)
-network = DislocationNetwork(;
-    links = links,
-    slipPlane = slipPlane,
-    bVec = bVec,
-    coord = coord,
-    label = label,
-    nodeVel = nodeVel,
-    nodeForce = nodeForce,
-)
-makeConnect!(network)
-getSegmentIdx!(network)
-
-stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, numNode, :)
-plt = contourf(x, y, stress[1,:,:])
-display(plt)
-plt = contourf(x, y, stress[2,:,:])
-display(plt)
-plt = contourf(x, y, stress[3,:,:])
-display(plt)
-plt = contourf(x, y, stress[4,:,:])
-display(plt)
-plt = contourf(x, y, stress[5,:,:])
-display(plt)
-plt = contourf(x, y, stress[6,:,:])
-display(plt)
 
 ##
-
-numNode = 101
+numNode = 301
 numSeg = numNode - 1
-x = range(-150, 150, length = numNode)
-y = range(-150, 150, length = numNode)
-X = ones(length(y)) .* x'
-Y = ones(length(x))' .* y
-Z = ones(length(x))' .* ones(numNode) * 5
+len = numNode + 1
+xrange = range(-300, 300, length = len)
+yrange = range(-300, 300, length = len)
+
+X = ones(length(yrange)) .* xrange'
+Y = ones(length(xrange))' .* yrange
+Z = zeros(length(xrange))' .* zeros(len)
 points = [X[:]'; Y[:]'; Z[:]']
 
 l = Float64[0; 0; 1]
@@ -241,8 +168,8 @@ a = 5 * norm(b)
 links = zeros(Int, 2, numSeg)
 slipPlane = zeros(3, numSeg)
 bVec = zeros(3, numSeg)
-coord = [zeros(numNode)'; zeros(numNode)'; range(a, a + numNode, length = numNode)']
-label = zeros(nodeTypeDln, numNode)
+coord = [zeros(len)'; zeros(len)'; xrange']
+label = zeros(nodeTypeDln, len)
 nodeVel = similar(coord)
 nodeForce = similar(coord)
 for i in 1:numSeg
@@ -252,54 +179,146 @@ for i in 1:numSeg
 end
 
 matParams = MaterialParameters(;
-    crystalStruct = BCC(),
-    μ = 1.0,
-    μMag = 1.0,
-    ν = 0.28,
-    E = 0.1,
-)
+        crystalStruct = BCC(),
+        μ = 1.0,
+        μMag = 1.0,
+        ν = 0.28,
+        E = 0.1,
+    )
 dlnParams = DislocationParameters(;
-    coreRad = a,
-    coreRadMag = 1.,
-    minSegLen = a + 2,
-    maxSegLen = a + 3,
-    minArea = a + 1,
-    maxArea = a + 2,
-    edgeDrag = 1.,
-    screwDrag = 1.,
-    climbDrag = 1.,
-    lineDrag = 1.,
-    maxConnect = 4,
-    mobility = mobBCC(),
-)
+        coreRad = a,
+        coreRadMag = 1.,
+        minSegLen = a + 2,
+        maxSegLen = a + 3,
+        minArea = a + 1,
+        maxArea = a + 2,
+        edgeDrag = 1.,
+        screwDrag = 1.,
+        climbDrag = 1.,
+        lineDrag = 1.,
+        maxConnect = 4,
+        mobility = mobBCC(),
+    )
 network = DislocationNetwork(;
-    links = links,
-    slipPlane = slipPlane,
-    bVec = bVec,
-    coord = coord,
-    label = label,
-    nodeVel = nodeVel,
-    nodeForce = nodeForce,
-)
+        links = links,
+        slipPlane = slipPlane,
+        bVec = bVec,
+        coord = coord,
+        label = label,
+        nodeVel = nodeVel,
+        nodeForce = nodeForce,
+    )
 makeConnect!(network)
 getSegmentIdx!(network)
 
-stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, numNode, :)
-plt = contourf(x, y, stress[1,:,:])
+stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, len, :)
+
+σ = zeros(6, size(points, 2))
+calc_σTilde!(σ, points, dlnParams, matParams, network)
+σ =  reshape(σ, 6, len, :)
+
+isequal(σ, stress)
+
+plt = contourf(xrange, yrange, stress[1,:,:], levels = 30)
 display(plt)
-plt = contourf(x, y, stress[2,:,:])
+plt = contourf(xrange, yrange, stress[2,:,:], levels = 30)
 display(plt)
-plt = contourf(x, y, stress[3,:,:])
+plt = contourf(xrange, yrange, stress[3,:,:], levels = 30)
 display(plt)
-plt = contourf(x, y, stress[4,:,:])
+plt = contourf(xrange, yrange, stress[4,:,:], levels = 30)
 display(plt)
-plt = contourf(x, y, stress[5,:,:])
+plt = contourf(xrange, yrange, stress[5,:,:], levels = 30)
 display(plt)
-plt = contourf(x, y, stress[6,:,:])
+plt = contourf(xrange, yrange, stress[6,:,:], levels = 30)
 display(plt)
 
 
 ##
+numNode = 301
+numSeg = numNode - 1
+len = numNode + 1
+xrange = range(-300, 300, length = len)
+yrange = range(-300, 300, length = len)
+
+X = ones(length(yrange)) .* xrange'
+Y = ones(length(xrange))' .* yrange
+Z = zeros(length(xrange))' .* zeros(len)
+points = [X[:]'; Y[:]'; Z[:]']
+
+l = Float64[0; 0; 1]
+b = Float64[1; 0; 0]
+n = b × l
+a = 5 * norm(b)
+
+links = zeros(Int, 2, numSeg)
+slipPlane = zeros(3, numSeg)
+bVec = zeros(3, numSeg)
+coord = [zeros(len)'; zeros(len)'; xrange']
+label = zeros(nodeTypeDln, len)
+nodeVel = similar(coord)
+nodeForce = similar(coord)
+for i in 1:numSeg
+    links[:, i] .= (i, i + 1)
+    slipPlane[:, i] = n
+    bVec[:, i] = b
+end
+
+matParams = MaterialParameters(;
+        crystalStruct = BCC(),
+        μ = 1.0,
+        μMag = 1.0,
+        ν = 0.28,
+        E = 0.1,
+    )
+dlnParams = DislocationParameters(;
+        coreRad = a,
+        coreRadMag = 1.,
+        minSegLen = a + 2,
+        maxSegLen = a + 3,
+        minArea = a + 1,
+        maxArea = a + 2,
+        edgeDrag = 1.,
+        screwDrag = 1.,
+        climbDrag = 1.,
+        lineDrag = 1.,
+        maxConnect = 4,
+        mobility = mobBCC(),
+    )
+network = DislocationNetwork(;
+        links = links,
+        slipPlane = slipPlane,
+        bVec = bVec,
+        coord = coord,
+        label = label,
+        nodeVel = nodeVel,
+        nodeForce = nodeForce,
+    )
+makeConnect!(network)
+getSegmentIdx!(network)
+
+stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, len, :)
+
+σ = zeros(6, size(points, 2))
+calc_σTilde!(σ, points, dlnParams, matParams, network)
+σ =  reshape(σ, 6, len, :)
+
+isequal(σ, stress)
+
+plt = contourf(xrange, yrange, stress[1,:,:], levels = 30)
+display(plt)
+plt = contourf(xrange, yrange, stress[2,:,:], levels = 30)
+display(plt)
+plt = contourf(xrange, yrange, stress[3,:,:], levels = 30)
+display(plt)
+plt = contourf(xrange, yrange, stress[4,:,:], levels = 30)
+display(plt)
+plt = contourf(xrange, yrange, stress[5,:,:], levels = 30)
+display(plt)
+plt = contourf(xrange, yrange, stress[6,:,:], levels = 30)
+display(plt)
+
+##
+
 
 matParams = MaterialParameters(; crystalStruct = BCC(), μ = 1., μMag = 1., ν = 0.305, E = 1.)
 ##

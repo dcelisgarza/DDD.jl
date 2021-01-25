@@ -1,100 +1,135 @@
 using DDD
-using Test, StaticArrays, SparseArrays
+using Test, LinearAlgebra
 cd(@__DIR__)
 
-@testset "Calculating sigma_hat" begin
-    fileDislocationParameters = "../inputs/simParams/sampleDislocationParameters.json"
-    fileMaterialParameters = "../inputs/simParams/sampleMaterialParameters.json"
-    fileFEMParameters = "../inputs/simParams/sampleFEMParameters.json"
-    fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
-    fileSlipSystem = "../data/slipSystems/BCC.json"
-    fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-        loadParametersJSON(
-            fileDislocationParameters,
-            fileMaterialParameters,
-            fileFEMParameters,
-            fileIntegrationParameters,
-            fileSlipSystem,
-            fileDislocationLoop,
-        )
+@testset "Calculating sigma_tilde" begin
+    numNode = 50
+    numSeg = numNode - 1
+    len = numNode + 1
+    xrange = range(-300, 300, length = len)
+    yrange = range(-300, 300, length = len)
 
-    regularCuboidMesh = buildMesh(matParams, femParams)
-    numFEMNode = regularCuboidMesh.numNode
+    X = ones(length(yrange)) .* xrange'
+    Y = ones(length(xrange))' .* yrange
+    Z = zeros(length(xrange))' .* zeros(len)
+    points = [X[:]'; Y[:]'; Z[:]']
 
-    f = spzeros(3 * numFEMNode)
-    f[[112, 118, 133, 141, 213, 244, 262, 272, 317]] = 
-    [
-        0.43048187784858616,
-        0.22724536603830137,
-        0.4340867899691503,
-        0.6660863546953892,
-        0.30358515797696106,
-        0.2945958951093859,
-        0.7278367502911502,
-        0.7095924334694701,
-        0.1642050526375538,
-    ]
-    fHat = spzeros(3 * numFEMNode)
-    fHat[[32, 48, 55, 88, 138, 148, 191, 230, 253, 335]] = 
-    [
-        0.09706224225842108,
-        0.07773687633248638,
-        0.13682398802299178,
-        0.4752286167553166,
-        0.7423196193496164,
-        0.8286077556473421,
-        0.7023632196408749,
-        0.9813639162461198,
-        0.5296701796678411,
-        0.5523797553266823,
-    ]
-    u = spzeros(3 * numFEMNode)
-    u[[30, 127, 195, 221, 316, 325, 338, 348, 370]] = 
-    [
-        0.8792592573507609,
-        0.8430664083925272,
-        0.4711050560756602,
-        0.4860071865093816,
-        0.7905698600135145,
-        0.39047211692578077,
-        0.6545538020629462,
-        0.5446700211111557,
-        0.8865721648558644,
-    ]
-    uHat = spzeros(3 * numFEMNode)
-    uHat[[91, 126, 130, 195, 217, 226, 229, 256, 281, 293, 309, 342]] = 
-    [
-        0.5231621885339968,
-        0.5771429489788034,
-        0.7151190318538345,
-        0.7283662326812077,
-        0.6314274719472075,
-        0.9814688915693632,
-        0.5672795171250207,
-        0.002712918060655989,
-        0.1788941754890383,
-        0.188299784057536,
-        0.8489027048214433,
-        0.029995302953659708,
-    ]
+    l = Float64[0; 0; 1]
+    b = Float64[0; 0; 1]
+    n = b × l
+    a = 5 * norm(b)
 
-    forceDisplacement = ForceDisplacement(nothing, uHat * 1000, u * 1000, nothing, fHat * 1000, f * 1000)
+    links = zeros(Int, 2, numSeg)
+    slipPlane = zeros(3, numSeg)
+    bVec = zeros(3, numSeg)
+    coord = [zeros(len)'; zeros(len)'; xrange']
+    label = zeros(nodeTypeDln, len)
+    nodeVel = similar(coord)
+    nodeForce = similar(coord)
+    for i in 1:numSeg
+        links[:, i] .= (i, i + 1)
+        slipPlane[:, i] = n
+        bVec[:, i] = b
+    end
 
-    σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
-    σHatTest = [
-        -0.023035166204661 -0.155651908782923 0
-        -0.155651908782923 -0.059233284526271 -0.015024315519587
-        0 -0.015024315519587 -0.023035166204661
-    ]
-    @test isapprox(σHat, σHatTest)
+    matParams = MaterialParameters(;
+        crystalStruct = BCC(),
+        μ = 1.0,
+        μMag = 1.0,
+        ν = 0.28,
+        E = 0.1,
+    )
+    dlnParams = DislocationParameters(;
+        coreRad = a,
+        coreRadMag = 1.,
+        minSegLen = a + 2,
+        maxSegLen = a + 3,
+        minArea = a + 1,
+        maxArea = a + 2,
+        edgeDrag = 1.,
+        screwDrag = 1.,
+        climbDrag = 1.,
+        lineDrag = 1.,
+        maxConnect = 4,
+        mobility = mobBCC(),
+    )
+    network = DislocationNetwork(;
+        links = links,
+        slipPlane = slipPlane,
+        bVec = bVec,
+        coord = coord,
+        label = label,
+        nodeVel = nodeVel,
+        nodeForce = nodeForce,
+    )
+    makeConnect!(network)
+    getSegmentIdx!(network)
 
-    σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1893.0, 408.0, 1782.0])
-    σHatTest = [
-        -0.607540206946205 0 -0.972551012187583
-        0 -0.607540206946205 -0.265466730367529
-        -0.972551012187583 -0.265466730367529 -1.562246246433098
-    ]
-    @test isapprox(σHat, σHatTest)
+    stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, len, :)
+
+    σ = zeros(6, size(points, 2))
+    calc_σTilde!(σ, points, dlnParams, matParams, network)
+    σ =  reshape(σ, 6, len, :)
+
+    @test isequal(σ, stress)
+
+    ##
+    l = Float64[0; 0; 1]
+    b = Float64[1; 0; 0]
+    n = b × l
+    a = 5 * norm(b)
+
+    links = zeros(Int, 2, numSeg)
+    slipPlane = zeros(3, numSeg)
+    bVec = zeros(3, numSeg)
+    coord = [zeros(len)'; zeros(len)'; xrange']
+    label = zeros(nodeTypeDln, len)
+    nodeVel = similar(coord)
+    nodeForce = similar(coord)
+    for i in 1:numSeg
+        links[:, i] .= (i, i + 1)
+        slipPlane[:, i] = n
+        bVec[:, i] = b
+    end
+
+    matParams = MaterialParameters(;
+        crystalStruct = BCC(),
+        μ = 1.0,
+        μMag = 1.0,
+        ν = 0.28,
+        E = 0.1,
+    )
+    dlnParams = DislocationParameters(;
+        coreRad = a,
+        coreRadMag = 1.,
+        minSegLen = a + 2,
+        maxSegLen = a + 3,
+        minArea = a + 1,
+        maxArea = a + 2,
+        edgeDrag = 1.,
+        screwDrag = 1.,
+        climbDrag = 1.,
+        lineDrag = 1.,
+        maxConnect = 4,
+        mobility = mobBCC(),
+    )
+    network = DislocationNetwork(;
+        links = links,
+        slipPlane = slipPlane,
+        bVec = bVec,
+        coord = coord,
+        label = label,
+        nodeVel = nodeVel,
+        nodeForce = nodeForce,
+    )
+    makeConnect!(network)
+    getSegmentIdx!(network)
+
+    stress = reshape(calc_σTilde(points, dlnParams, matParams, network), 6, len, :)
+
+    σ = zeros(6, size(points, 2))
+    calc_σTilde!(σ, points, dlnParams, matParams, network)
+    σ =  reshape(σ, 6, len, :)
+
+    @test isequal(σ, stress)
 end

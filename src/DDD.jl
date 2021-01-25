@@ -76,7 +76,8 @@ export calcSegForce,
     calcPKForce,
     calcPKForce!,
     remeshSurfaceNetwork!,
-    calc_σTilde
+    calc_σTilde,
+    calc_σTilde!
 export dlnMobility, dlnMobility!
 export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!
 export shapeFunction, shapeFunctionDeriv
