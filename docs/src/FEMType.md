@@ -14,6 +14,10 @@ AbstractElementOrder
 AbstractShapeFunction
 ```
 
+```@docs
+nodeTypeFE
+```
+
 ## Storage
 
 ```@docs

@@ -7,6 +7,7 @@ cd(@__DIR__)
     @test 1 == nodeTypeFE(1)
     @test nodeTypeFE(3) == 3.0
     @test zero(nodeTypeFE) == 0
+    @test convert(nodeTypeFE, 3.0) == nodeTypeFE(3)
 end
 
 @testset "Shape functions" begin

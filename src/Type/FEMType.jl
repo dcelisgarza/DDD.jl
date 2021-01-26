@@ -1,8 +1,10 @@
 """
 @enum nodeTypeFE begin
-    corner = 1
-    edge = 2
-    face = 3
+    noneFE = 0  # Uninitialised node
+    corner = 1  # Corner node
+    edge = 2    # Edge node
+    face = 3    # Face node
+    intFE = 4   # Internal node
 end
 """
 @enum nodeTypeFE begin
@@ -10,6 +12,7 @@ end
     cornerFE = 1
     edgeFE = 2
     faceFE = 3
+    intFE = 4
 end
 """
 ```
