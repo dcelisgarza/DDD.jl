@@ -70,4 +70,6 @@ cd(@__DIR__)
     fig2 = plotNodes(regularCuboidMesh, network, m = 1, l = 3, legend = false)
     @test fig2.n == totalNodes + 6
 
+    fig3 = plotFEDomain(regularCuboidMesh)
+    @test fig3.n == 19
 end

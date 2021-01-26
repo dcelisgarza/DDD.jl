@@ -1,6 +1,14 @@
 using DDD
 using Test, StaticArrays, SparseArrays, LinearAlgebra
 cd(@__DIR__)
+
+@testset "nodeFE type" begin
+    @test nodeTypeFE(0) == 0
+    @test 1 == nodeTypeFE(1)
+    @test nodeTypeFE(3) == 3.0
+    @test zero(nodeTypeFE) == 0
+end
+
 @testset "Shape functions" begin
     points = Float64[
         0 0 0
