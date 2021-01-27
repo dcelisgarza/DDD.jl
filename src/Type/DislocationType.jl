@@ -182,30 +182,30 @@ end
 Stores the dislocation parameters.
 """
 struct DislocationParameters{T1,T2,T3,T4}
-    coreRad::T1
-    coreRadSq::T1
-    coreRadMag::T1
-    minSegLen::T1
-    maxSegLen::T1
-    twoMinSegLen::T1
-    minArea::T1
-    maxArea::T1
-    minAreaSq::T1
-    maxAreaSq::T1
-    edgeDrag::T1
-    screwDrag::T1
-    climbDrag::T1
-    lineDrag::T1
-    maxConnect::T2
-    mobility::T3
+    mobility::T1
+    coreRad::T2
+    coreRadSq::T2
+    coreRadMag::T2
+    minSegLen::T2
+    maxSegLen::T2
+    twoMinSegLen::T2
+    minArea::T2
+    maxArea::T2
+    minAreaSq::T2
+    maxAreaSq::T2
+    edgeDrag::T2
+    screwDrag::T2
+    climbDrag::T2
+    lineDrag::T2
+    maxConnect::T3
     remesh::T4
     collision::T4
     separation::T4
     virtualRemesh::T4
     parCPU::T4
     parGPU::T4
-    slipStepCritLen::T1
-    slipStepCritArea::T1
+    slipStepCritLen::T2
+    slipStepCritArea::T2
 end
 
 """
