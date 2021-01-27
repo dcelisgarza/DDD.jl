@@ -149,7 +149,7 @@ end
 
 """
 ```
-mutable struct ForceDisplacement{T1,T2,T3,T4}
+struct ForceDisplacement{T1,T2,T3,T4}
     uTilde::T1  # Dislocation displacements.
     uHat::T2    # Corrective displacements.
     u::T3       # Displacement.

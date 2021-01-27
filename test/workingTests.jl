@@ -34,9 +34,60 @@ femParams = FEMParameters(
                     27,
                     13
                 )
-
+##
 regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
+saveJSON("cantileverBC.json", cantileverBC)
+cantileverDict = loadJSON("cantileverBC.json")
+cantileverDict["tGamma"]
+
+cantileverBC.tK[:P]
+tDofs = cantileverBC.tDofs
+
+
+cantileverBC.tK \ A ≈ K[tDofs,tDofs] \ A
+@time cantileverBC.tK \ A 
+@time K[tDofs,tDofs] \ A
+
+
+forceDisplacement.u[3 * cantileverBC.mGamma[:node]] .= -1
+saveJSON("forceDisplacement.json", forceDisplacement)
+forceDisplacement
+save("forceDisp.jld2", "forceDisplacement", forceDisplacement, "cantileverBC", cantileverBC)
+
+Matrix(cantileverBC.tK)
+serialize("out.out", cantileverBC.tK)
+
+A = deserialize("out.out")
+loadedBC.tK
+
+save("out.jld2", "test", cantileverBC.tK)
+
+using JLD2
+@save "out.jld2" cantileverBC.tK
+regularCuboidMesh.K
+
+loadedForceDisp = load("forceDisp.jld2", "forceDisplacement")
+
+isequal(loadedForceDisp.fHat, forceDisplacement.fHat)
+
+ldict = loadForceDisplacement(loadJSON("forceDisplacement.json"))
+sparse(ldict["fTilde"])
+
+
+dict = loadJSON("forceDisplacement.json")
+sparse(Float64.(dict["u"]))
+
+
+isequal
+
+loadedBC = loadBoundaries(cantileverDict)
+
+loadedBC.tGamma[:node]
+
+
+
+
 ##
 
 dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
@@ -71,7 +122,7 @@ shearSquare = DislocationLoop(;
     dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork((shearSquare, prismSquare))
-uGamma = cantileverBC.uGamma
+uGamma = cantileverBC.uGamma[:node]
 coord = regularCuboidMesh.coord
 nodeY = regularCuboidMesh.my + 1
 nodeZ = regularCuboidMesh.mz + 1

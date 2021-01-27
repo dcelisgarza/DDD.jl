@@ -96,6 +96,60 @@ end
 
 """
 ```
+loadBoundaries(dict::Dict{Any,Any})
+```
+Load FEM boundaries.
+"""
+function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
+    uGammaDict = dict["uGamma"]
+    mGammaDict = dict["mGamma"]
+    tGammaDict = dict["tGamma"]
+    println("WORKING")
+    uGamma = try (type = nodeTypeFE.(uGammaDict["type"]), idx = Int.(uGammaDict["idx"]), node = Int.(uGammaDict["node"]))
+    catch err
+        uGamma = nothing
+    end
+
+    mGamma = try (type = nodeTypeFE.(mGammaDict["type"]), idx = Int.(mGammaDict["idx"]), node = Int.(mGammaDict["node"]))
+    catch err
+        mGamma = nothing
+    end
+
+    tGamma = try (type = nodeTypeFE.(tGammaDict["type"]), idx = Int.(tGammaDict["idx"]), node = Int.(tGammaDict["node"]))
+    catch err
+        tGamma = nothing
+    end
+
+    uDofs = try Int.(dict["uDofs"]); catch err; nothing end
+    mDofs = try Int.(dict["mDofs"]); catch err; nothing end
+    tDofs = try Int.(dict["tDofs"]); catch err; nothing end
+
+    typeof(dict["tK"]) <: AbstractArray ? tK = Float64.(dict["tK"]) : tK = nothing
+
+    return Boundaries(; 
+            uGamma = uGamma,
+            tGamma = tGamma,
+            mGamma = mGamma,
+            uDofs = uDofs,
+            tDofs = tDofs,
+            mDofs = mDofs,
+            tK = tK
+        )
+end
+
+function loadForceDisplacement(dict::Dict{T1,T2}) where {T1,T2}
+    return ForceDisplacement(;
+        uTilde = sparse(Float64.(dict["uTilde"])),
+        uHat = sparse(Float64.(dict["uHat"])),
+        u = sparse(Float64.(dict["u"])),
+        fTilde = sparse(Float64.(dict["fTilde"])),
+        fHat = sparse(Float64.(dict["fHat"])),
+        f = sparse(Float64.(dict["f"])),
+    )
+end
+
+"""
+```
 loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationParameters`](@ref).

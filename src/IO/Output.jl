@@ -23,7 +23,8 @@ function JSON.lower(
     return string(t)
 end
 JSON.lower(t::nodeTypeDln) = Int(t)
-
+JSON.lower(t::nodeTypeFE) = Int(t)
+JSON.lower(t::Ptr{SuiteSparse.CHOLMOD.C_Factor{Float64}}) = nothing
 """
 ```
 saveJSON(filename::AbstractString, args...; mode::AbstractString = "w")

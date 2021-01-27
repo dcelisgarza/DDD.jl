@@ -58,7 +58,7 @@ function ForceDisplacement(; uTilde, uHat, u, fTilde, fHat, f)
 end
 """
 ```
-Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs)
+Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 ```
 Boundary condition keyword constructor.
 """
@@ -498,68 +498,65 @@ function Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLo
     K = femMesh.K
 
     # GammaLbl = (SVector{3,nodeTypeFE}(cornerFE, edgeNode, faceFE), SVector{24,Int}(1:8,1:12,1:6))
-    uGammaLbl = (
-        [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
-        [1; 3; 5; 7; 2; 6; 9; 11; 5] # Index
-    )
-    !haskey(kw, "uGamma") ? uGamma = [cornerNode[1]; cornerNode[3]; cornerNode[5]; cornerNode[7]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]] : uGamma = kw["uGamma"]
-
-    mGammaLbl = (
-        [cornerFE; cornerFE; edgeFE],# Type
-        [6; 8; 8] # Index
-    )
-    !haskey(kw, "mGamma") ? mGamma = [cornerNode[6]; cornerNode[8]; edgeNode[8]] : mGamma = kw["mGamma"]
     
-    # Indices
-    uCorner = findall(x -> x == cornerFE, uGammaLbl[1])
-    uEdge = findall(x -> x == edgeFE, uGammaLbl[1])
-    uFace = findall(x -> x == faceFE, uGammaLbl[1])
-    mCorner = findall(x -> x == cornerFE, mGammaLbl[1])
-    mEdge = findall(x -> x == edgeFE, mGammaLbl[1])
-    mFace = findall(x -> x == faceFE, mGammaLbl[1])
+    if !haskey(kw, "uGamma")
+        uGamma = (
+            type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
+            idx = [1; 3; 5; 7; 2; 6; 9; 11; 5], # Index
+            node = [cornerNode[1]; cornerNode[3]; cornerNode[5]; cornerNode[7]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]]
+        ) 
+    else
+        uGamma = kw["uGamma"]
+    end
 
-    muCorner = union(uGammaLbl[2][uCorner], mGammaLbl[2][mCorner])
-    muEdge = union(uGammaLbl[2][uEdge], mGammaLbl[2][mEdge])
-    muFace = union(uGammaLbl[2][uFace], mGammaLbl[2][mFace])
+    if !haskey(kw, "mGamma")
+        mGamma = (
+            type = [cornerFE; cornerFE; edgeFE],# Type
+            idx = [6; 8; 8], # Index
+            node = [cornerNode[6]; cornerNode[8]; edgeNode[8]]
+        )
+    else
+        mGamma = kw["mGamma"]
+    end
 
-    tCorner = setdiff(1:8, muCorner)
-    tEdge = setdiff(1:12, muEdge)
-    tFace = setdiff(1:6, muFace)
+    if !haskey(kw, "tGamma")
+        # Indices
+        uGammaLbl = uGamma[:type]
+        mGammaLbl = mGamma[:type]
+        uCorner = findall(x -> x == cornerFE, uGammaLbl)
+        uEdge = findall(x -> x == edgeFE, uGammaLbl)
+        uFace = findall(x -> x == faceFE, uGammaLbl)
+        mCorner = findall(x -> x == cornerFE, mGammaLbl)
+        mEdge = findall(x -> x == edgeFE, mGammaLbl)
+        mFace = findall(x -> x == faceFE, mGammaLbl)
 
-    tGammaLbl = (
-        [fill(cornerFE, length(tCorner)); fill(edgeFE, length(tEdge)); fill(faceFE, length(tFace))],
-        [tCorner; tEdge; tFace]
-    )
+        uGammaIdx = uGamma[:idx]
+        mGammaIdx = mGamma[:idx]
+        muCorner = union(uGamma[:idx][uCorner], mGamma[:idx][mCorner])
+        muEdge = union(uGamma[:idx][uEdge], mGamma[:idx][mEdge])
+        muFace = union(uGamma[:idx][uFace], mGamma[:idx][mFace])
 
-    !haskey(kw, "tGamma") ? tGamma = setdiff([cornerNode; edgeNode; faceNode], [uGamma; mGamma]) : tGamma = kw["tGamma"]
+        tCorner = setdiff(1:8, muCorner)
+        tEdge = setdiff(1:12, muEdge)
+        tFace = setdiff(1:6, muFace)
+        tGamma = (
+            type = [fill(cornerFE, length(tCorner)); fill(edgeFE, length(tEdge)); fill(faceFE, length(tFace))],
+            idx = [tCorner; tEdge; tFace],
+            node = setdiff([cornerNode; collect(Iterators.flatten(edgeNode)); collect(Iterators.flatten(faceNode))], [uGamma[:node]; mGamma[:node]])
+        )
+    else 
+        tGamma = kw["tGamma"]
+    end
     
-    # nodeTuple = (cornerNode, edgeNode, faceNode)
-    # idx = 1
-    # idxTuple = tGammaLbl[1][idx]
-    # idxSet = tGammaLbl[1][idx]
-    # nodeSet = nodeTuple[idxTuple]
-    # node = nodeSet[idxSet]
-    # target = length(node)
-    # counter = 0
-    # for i in 1:length(tGamma)
-    #     counter += 1
-    #     if counter == target
-    #         idx += 1
-    #         idxTuple = tGammaLbl[1][idx]
-    #         idxSet = tGammaLbl[1][idx]
-    #         nodeSet = nodeTuple[idxTuple]
-    #         node = nodeSet[idxSet]
-    #         target += length(node)
-    #     end
-    # end
-
-    !haskey(kw, "uDofs") ? uDofs = [3 * uGamma .- 2; 3 * uGamma .- 1; 3 * uGamma; 3 * mGamma] : uDofs = kw["uDofs"]
+    uGammaNode = uGamma[:node]
+    mGammaNode = mGamma[:node]
+    !haskey(kw, "uDofs") ? uDofs = [3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode] : uDofs = kw["uDofs"]
     
     !haskey(kw, "tDofs") ? tDofs = setdiff(1:numNode, uDofs) : tDofs = kw["tDofs"]
 
     !haskey(kw, "mDofs") ? mDofs = nothing : mDofs = setdiff(1:numNode, (uDofs, tDofs))
 
-    tK = cholesky(Hermitian(K[tDofs, tDofs]))
+    C = cholesky(Hermitian(K[tDofs, tDofs]))
 
     boundaries = Boundaries(; 
         uGamma = uGamma, 
@@ -568,7 +565,7 @@ function Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLo
         uDofs = uDofs, 
         tDofs = tDofs, 
         mDofs = mDofs, 
-        tK = tK
+        tK = C
     )
     
     forceDisplacement = ForceDisplacement(;

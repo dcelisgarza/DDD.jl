@@ -226,8 +226,8 @@ end
     coord = regularCuboidMesh.coord
 
     cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
-    uGamma = cantileverBC.uGamma
-    mGamma = cantileverBC.mGamma
+    uGamma = cantileverBC.uGamma[:node]
+    mGamma = cantileverBC.mGamma[:node]
     left = findall(x -> x == 0, coord[1, :])
 
     loadEdge1 = findall(x -> x ≈ dx, coord[1, :])
