@@ -32,11 +32,11 @@ function dlnMobility(
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
     # Drag coefficients.
-    edgeDrag = dlnParams.edgeDrag
-    screwDrag = dlnParams.screwDrag
-    climbDrag = dlnParams.climbDrag
-    lineDrag = dlnParams.lineDrag
-    dType = typeof(dlnParams.lineDrag)
+    edgeDrag = dlnParams.dragCoeffs[:edge]
+    screwDrag = dlnParams.dragCoeffs[:screw]
+    climbDrag = dlnParams.dragCoeffs[:climb]
+    lineDrag = dlnParams.dragCoeffs[:line]
+    dType = typeof(lineDrag)
     I3 = SMatrix{3,3,dType}(I)
 
     links = network.links
@@ -192,11 +192,11 @@ function dlnMobility!(
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
     # Drag coefficients.
-    edgeDrag = dlnParams.edgeDrag
-    screwDrag = dlnParams.screwDrag
-    climbDrag = dlnParams.climbDrag
-    lineDrag = dlnParams.lineDrag
-    dType = typeof(dlnParams.lineDrag)
+    edgeDrag = dlnParams.dragCoeffs[:edge]
+    screwDrag = dlnParams.dragCoeffs[:screw]
+    climbDrag = dlnParams.dragCoeffs[:climb]
+    lineDrag = dlnParams.dragCoeffs[:line]
+    dType = typeof(lineDrag)
     I3 = SMatrix{3,3,dType}(I)
 
     links = network.links

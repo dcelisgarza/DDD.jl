@@ -204,10 +204,7 @@ cd(@__DIR__)
         virtualRemesh = dlnParams.virtualRemesh,
         parCPU = true,
         parGPU = dlnParams.parGPU,
-        edgeDrag = dlnParams.edgeDrag,
-        screwDrag = dlnParams.screwDrag,
-        climbDrag = dlnParams.climbDrag,
-        lineDrag = dlnParams.lineDrag,
+        dragCoeffs = dlnParams.dragCoeffs,
         mobility = dlnParams.mobility,
     )
 

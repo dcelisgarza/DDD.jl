@@ -103,7 +103,6 @@ function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
     uGammaDict = dict["uGamma"]
     mGammaDict = dict["mGamma"]
     tGammaDict = dict["tGamma"]
-    println("WORKING")
     uGamma = try (type = nodeTypeFE.(uGammaDict["type"]), idx = Int.(uGammaDict["idx"]), node = Int.(uGammaDict["node"]))
     catch err
         uGamma = nothing
@@ -207,8 +206,12 @@ function loadDislocationParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
 
     mobDict = makeTypeDict(AbstractMobility)
 
+    dragCoeffs = dict["dragCoeffs"]
+    
+
     DislocationParams = DislocationParameters(;
         coreRad = convert(Float64, dict["coreRad"]),
+        dragCoeffs = namedtuple(dict["dragCoeffs"]),
         coreRadMag = convert(Float64, dict["coreRadMag"]),
         coreEnergy = convert(Float64, dict["coreEnergy"]),
         minSegLen = convert(Float64, dict["minSegLen"]),
@@ -222,10 +225,6 @@ function loadDislocationParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
         virtualRemesh = dict["virtualRemesh"],
         parCPU = dict["parCPU"],
         parGPU = dict["parGPU"],
-        edgeDrag = convert(Float64, dict["edgeDrag"]),
-        screwDrag = convert(Float64, dict["screwDrag"]),
-        climbDrag = convert(Float64, dict["climbDrag"]),
-        lineDrag = convert(Float64, dict["lineDrag"]),
         mobility = mobDict[dict["mobility"]],
     )
 

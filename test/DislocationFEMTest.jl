@@ -45,10 +45,7 @@ cd(@__DIR__)
         maxSegLen = a + 3,
         minArea = a + 1,
         maxArea = a + 2,
-        edgeDrag = 1.,
-        screwDrag = 1.,
-        climbDrag = 1.,
-        lineDrag = 1.,
+        dragCoeffs = (edge = 1., screw = 1., climb = 1., line = 1.),
         maxConnect = 4,
         mobility = mobBCC(),
     )
@@ -104,10 +101,7 @@ cd(@__DIR__)
         maxSegLen = a + 3,
         minArea = a + 1,
         maxArea = a + 2,
-        edgeDrag = 1.,
-        screwDrag = 1.,
-        climbDrag = 1.,
-        lineDrag = 1.,
+        dragCoeffs = (edge = 1., screw = 1., climb = 1., line = 1.),
         maxConnect = 4,
         mobility = mobBCC(),
     )

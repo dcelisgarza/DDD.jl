@@ -14,9 +14,6 @@
     "virtualRemesh": true,
     "parCPU": false,
     "parGPU": false,
-    "edgeDrag": 1,
-    "screwDrag": 2,
-    "climbDrag": 10000000000,
-    "lineDrag": 0,
+    "dragCoeffs":{"edge": 1.0,"screw": 2.0,"climb": 10000000000.0,"line": 0.0},
     "mobility": "DDD.mobBCC()"
 }

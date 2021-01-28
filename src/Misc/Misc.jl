@@ -1,3 +1,7 @@
+dictkeys(d::Dict) = (collect(Symbol.(keys(d)))...,)
+dictvalues(d::Dict) = (collect(values(d))...,)
+namedtuple(d::Dict{T1,T2}) where {T1,T2} =
+                  NamedTuple{dictkeys(d)}(dictvalues(d))
 """
 ```
 makeInstanceDict(valType::DataType)
