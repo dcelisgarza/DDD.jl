@@ -1,14 +1,13 @@
-## Dislocation Type Declarations
 """
 ```
 @enum nodeTypeDln begin
-    noneDln = 0    # Undefined node, value at initialisation.
-    intMobDln = 1  # Internal mobile node.
-    intFixDln = 2  # Internal fixed node.
-    srfMobDln = 3  # Mobile surface node.
-    srfFixDln = 4  # Fixed surface node.
-    extDln = 5     # External node.
-    tmpDln = 6     # Temporary flag, used during topological operations.
+    noneDln = 0    # Undefined node, value at initialisation
+    intMobDln = 1  # Internal mobile node
+    intFixDln = 2  # Internal fixed node
+    srfMobDln = 3  # Mobile surface node
+    srfFixDln = 4  # Fixed surface node
+    extDln = 5     # External node
+    tmpDln = 6     # Temporary flag, used during topological operations
 end
 ```
 Different types of nodes behave differently. There are only a finite number of them so an enumerated type provides safety and efficiency. Each value represents a different type of node and therefore its behaviour.
@@ -42,12 +41,11 @@ struct segScrew <: AbstractDlnSeg end   # Screw segment
 struct segMixed <: AbstractDlnSeg end   # Mixed segment
 ```
 
-These types are used to automatically generate segments out of Burgers vectors ``\\bm{b}``, slip planes ``\\bm{n}``, and/or line direction ``\\bm{l}``.
+These types are used to automatically generate segments out of Burgers vectors `b`, slip planes `n`, and/or line direction `l`.
 
-# Meaning
-* `segEdge` have ``\\bm{b} ⟂ \\bm{t}`` ,
-* `segEdgeN` have ``\\bm{b} ⟂ \\bm{t}`` and ``\\bm{b} ∥ \\bm{n}`` ,
-* `segScrew` have ``\\bm{b} ∥ \\bm{t}`` ,
+* `segEdge` have `b ⟂ t`,
+* `segEdgeN` have `b ⟂ t` and `b ∥ n` ,
+* `segScrew` have `b ∥ t` ,
 * `segMixed` have noneDln of the above.
 """
 abstract type AbstractDlnSeg end
@@ -90,7 +88,7 @@ struct loopMixed <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
 const loopImpure = Union{loopMixed,loopJog,loopKink}
-const loopDefined = Union{loopPrism,loopShear,loopMixed,loopJog,loopKink}
+const loopDefined = Union{loopPure,loopImpure}
 struct loopDln <: AbstractDlnStr end
 
 """
@@ -136,24 +134,47 @@ struct mobHCP <: AbstractMobility end
 
 """
 ```
-struct SlipSystem{T1, T2}
-    crystalStruct::T1   # Crystal structure
-    slipPlane::T2       # Slip plane
-    bVec::T2            # Burgers vector
+struct SlipSystem{T1,T2,T3}
+    crystalStruct::T1
+    slipPlane::T2
+    bVec::T3
 end
 ```
 Stores slip systems. 
 """
-struct SlipSystem{T1,T2}
+struct SlipSystem{T1,T2,T3}
     crystalStruct::T1
     slipPlane::T2
-    bVec::T2
+    bVec::T3
 end
 
 """
 ```
+struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21}
+    mobility::T1            # Dislocation core radius
+    dragCoeffs::T2          # Drag coefficients
+    coreRad::T3             # Dislocation core radius
+    coreRadSq::T4           # Dislocation core radius squared
+    coreRadMag::T5          # Magnitude of core radius
+    coreEnergy::T6          # Core energy
+    minSegLen::T7           # Minimum segment length
+    maxSegLen::T8           # Maximum segment length
+    twoMinSegLen::T9        # Minimum segment length times two
+    minArea::T10            # Minimum area for remeshing
+    maxArea::T11            # Maximum area for remeshing
+    minAreaSq::T12          # Minimum area for remeshing squared
+    maxAreaSq::T13          # Maximum area for remeshing squared
+    slipStepCritLen::T14    # Critical length for slip step tracking
+    slipStepCritArea::T15   # Critical area for slip slep tracking
+    remesh::T16
+    collision::T17
+    separation::T18
+    virtualRemesh::T19
+    parCPU::T20
+    parGPU::T21
+end
 struct DislocationParameters{T1,T2,T3,T4}
-    coreRad::T1         # Dislocation core radius.
+    coreRad::T1         
     coreRadSq::T1       # Square of the dislocation core radius.
     coreRadMag::T1      # Magnitude of the core radius (real units for post-processing).
     minSegLen::T1       # Minimum segment length.
@@ -181,28 +202,28 @@ end
 ```
 Stores the dislocation parameters.
 """
-struct DislocationParameters{T1,T2,T3,T4}
+struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21}
     mobility::T1
     dragCoeffs::T2
     coreRad::T3
-    coreRadSq::T3
-    coreRadMag::T3
-    coreEnergy::T3
-    minSegLen::T3
-    maxSegLen::T3
-    twoMinSegLen::T3
-    minArea::T3
-    maxArea::T3
-    minAreaSq::T3
-    maxAreaSq::T3
-    slipStepCritLen::T3
-    slipStepCritArea::T3
-    remesh::T4
-    collision::T4
-    separation::T4
-    virtualRemesh::T4
-    parCPU::T4
-    parGPU::T4
+    coreRadSq::T4
+    coreRadMag::T5
+    coreEnergy::T6
+    minSegLen::T7
+    maxSegLen::T8
+    twoMinSegLen::T9
+    minArea::T10
+    maxArea::T11
+    minAreaSq::T12
+    maxAreaSq::T13
+    slipStepCritLen::T14
+    slipStepCritArea::T15
+    remesh::T16
+    collision::T17
+    separation::T18
+    virtualRemesh::T19
+    parCPU::T20
+    parGPU::T21
 end
 
 """
@@ -226,22 +247,23 @@ end
 ```
 Stores a dislocation loop and parameters used to generate a [`DislocationNetwork`](@ref).
 """
-struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10}
+struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     loopType::T1
     numSides::T2
-    nodeSide::T2
-    numLoops::T2
-    segLen::T3
-    slipSystem::T4
-    links::T5
-    slipPlane::T6
-    bVec::T6
-    coord::T6
-    label::T7
-    buffer::T8
-    range::T9
-    dist::T10
+    nodeSide::T3
+    numLoops::T4
+    segLen::T5
+    slipSystem::T6
+    links::T7
+    slipPlane::T8
+    bVec::T9
+    coord::T10
+    label::T11
+    buffer::T12
+    range::T13
+    dist::T14
 end
+const DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop}
 
 """
 ```

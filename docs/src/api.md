@@ -23,24 +23,26 @@ loadParameters
 saveJSON
 ```
 
-## Post Processing
+## Types
 
 ```@docs
-plotNodes
-plotNodes!
-plotFEDomain
+nodeTypeDln
+AbstractDlnSeg
+AbstractDlnStr
+AbstractDistribution
+AbstractMobility
+SlipSystem{T1,T2,T3}
 ```
 
-## Misc support functions
+## Constructors
 
 ```@docs
-compStruct
-internalAngle
-externalAngle
-rot3D
-⊗
-linePlaneIntersect
-gausslegendre(n::Integer, a, b)
+SlipSystem
+DislocationParameters
+DislocationLoop
+DislocationNetwork
+DislocationNetwork!
+makeNetwork!
 ```
 
 ## Processing
@@ -74,4 +76,24 @@ shapeFunction
 shapeFunctionDeriv
 deriv!
 integrate!
+```
+
+## Post Processing
+
+```@docs
+plotNodes
+plotNodes!
+plotFEDomain
+```
+
+## Misc support functions
+
+```@docs
+compStruct
+internalAngle
+externalAngle
+rot3D
+⊗
+linePlaneIntersect
+gausslegendre(n::Integer, a, b)
 ```
