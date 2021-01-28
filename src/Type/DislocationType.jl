@@ -209,11 +209,11 @@ struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     numLoops::T4    # Number of loops to generate when making the network.
     segLen::T5      # Segment lengths.
     slipSystem::T6  # Slip system.
-    links::T7       # Links.
-    slipPlane::T8   # Slip planes.
-    bVec::T9        # Burgers vectors.
-    coord::T10      # Coordinates.
-    label::T11      # Node labels.
+    label::T7       # Node labels.
+    links::T8       # Links.
+    slipPlane::T9   # Slip planes.
+    bVec::T10       # Burgers vectors.
+    coord::T11      # Coordinates.
     buffer::T12     # Buffer for distributions.
     range::T13      # Range for distributions.
     dist::T14       # Distribution.
@@ -228,11 +228,11 @@ struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     numLoops::T4
     segLen::T5
     slipSystem::T6
-    links::T7
-    slipPlane::T8
-    bVec::T9
-    coord::T10
-    label::T11
+    label::T7
+    links::T8
+    slipPlane::T9
+    bVec::T10
+    coord::T11
     buffer::T12
     range::T13
     dist::T14
@@ -247,21 +247,21 @@ const DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N}
 
 """
 ```
-struct DislocationNetwork{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13}
-    links::T1           # Links
-    slipPlane::T2       # Slip planes
-    bVec::T2
-    coord::T3
+struct DislocationNetwork{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
+    numNode::T1
+    numSeg::T2
+    maxConnect::T3
     label::T4
-    nodeVel::T5
-    nodeForce::T6
-    numNode::T7
-    numSeg::T8
-    maxConnect::T9
-    connectivity::T10
-    linksConnect::T11
-    segIdx::T12
-    segForce::T13
+    links::T5
+    connectivity::T6
+    linksConnect::T7
+    slipPlane::T8
+    segIdx::T9
+    bVec::T10
+    coord::T11
+    nodeVel::T12
+    nodeForce::T13
+    segForce::T14
 end
 ```
 Stores the dislocation network generated from [`DislocationLoop`](@ref).
@@ -270,15 +270,15 @@ struct DislocationNetwork{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     numNode::T1
     numSeg::T2
     maxConnect::T3
-    links::T4
-    slipPlane::T5
-    bVec::T6
-    coord::T7
-    label::T8
-    nodeVel::T9
-    nodeForce::T10
-    connectivity::T11
-    linksConnect::T12
-    segIdx::T13
+    label::T4
+    links::T5
+    connectivity::T6
+    linksConnect::T7
+    slipPlane::T8
+    segIdx::T9
+    bVec::T10
+    coord::T11
+    nodeVel::T12
+    nodeForce::T13
     segForce::T14
 end
