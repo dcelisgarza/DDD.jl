@@ -37,7 +37,6 @@ struct MaterialParameters{T1,T2}
     μ::T2
     μMag::T2
     ν::T2
-    E::T2
     omνInv::T2
     opνInv::T2
     νomνInv::T2

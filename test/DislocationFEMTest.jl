@@ -37,7 +37,6 @@ cd(@__DIR__)
         μ = 1.0,
         μMag = 1.0,
         ν = 0.28,
-        E = 0.1,
     )
     dlnParams = DislocationParameters(;
         coreRad = a,
@@ -97,7 +96,6 @@ cd(@__DIR__)
         μ = 1.0,
         μMag = 1.0,
         ν = 0.28,
-        E = 0.1,
     )
     dlnParams = DislocationParameters(;
         coreRad = a,
