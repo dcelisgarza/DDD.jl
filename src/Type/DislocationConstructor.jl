@@ -389,15 +389,15 @@ function DislocationLoop(;
     numSides::T2,
     nodeSide::T2,
     numLoops::T2,
-    segLen::T3,
+    segLen,
     slipSystem::T2,
-    _slipPlane::T4,
-    _bVec::T4,
-    label::T5,
-    buffer::T6,
-    range::T7,
-    dist::T8,
-) where {T1 <: AbstractDlnStr,T2 <: Integer,T3 <: Union{T where {T},AbstractArray{T,N} where {T,N}},T4 <: AbstractArray{T,N} where {T,N},T5 <: AbstractVector{nodeTypeDln},T6,T7 <: AbstractArray{T,N} where {T,N},T8 <: AbstractDistribution,}
+    _slipPlane::T3,
+    _bVec::T3,
+    label::T4,
+    buffer,
+    range,
+    dist::T5,
+) where {T1 <: AbstractDlnStr,T2 <: Integer,T3 <: AbstractArray{T,N} where {T,N},T4 <: AbstractVector{nodeTypeDln},T5 <: AbstractDistribution,}
     return DislocationLoop(
         loopType,
         numSides,
