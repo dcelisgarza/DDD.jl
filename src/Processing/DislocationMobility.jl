@@ -1,4 +1,14 @@
 """
+```
+dlnMobility(
+    dlnParams::DislocationParameters{T1,T2,T3,T4} where {T1 <: mobBCC,T2,T3,T4},
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+```
+Compute the nodal force and velocities for a `BCC` material.
+
 Original by Bruce Bromage at the Department of Materials of the University of Oxford, @brucebromage on github.
 
 This is outdated, new capabilities include rotating the frame of reference and better handling of cross-slip.
@@ -161,13 +171,27 @@ function dlnMobility(
 
     return nodeForce, nodeVel
 end
+"""
+```
+dlnMobility!(
+    dlnParams::DislocationParameters{T1,T2,T3,T4} where {T1 <: mobBCC,T2,T3,T4},
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+```
+In-place computation of the nodal force and velocities for a `BCC` material.
+
+Original by Bruce Bromage at the Department of Materials of the University of Oxford, @brucebromage on github.
+
+This is outdated, new capabilities include rotating the frame of reference and better handling of cross-slip.
+"""
 function dlnMobility!(
     dlnParams::DislocationParameters{T1,T2,T3,T4} where {T1 <: mobBCC,T2,T3,T4},
     matParams::MaterialParameters,
     network::DislocationNetwork,
     idx = nothing,
 )
-
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
     # Drag coefficients.

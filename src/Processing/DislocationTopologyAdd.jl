@@ -1,12 +1,10 @@
-## Addition
-function splitNode!(
-    network::T1,
-    splitNode::T2,
-    splitConnect::T2,
-    midCoord::T3,
-    midVel::T3,
-) where {T1 <: DislocationNetwork,T2 <: Int,T3 <: AbstractVector{T} where {T}}
-
+"""
+```
+splitNode!(network::DislocationNetwork, splitNode, splitConnect, midCoord, midVel)
+```
+Splits node `splitNode` along connection `splitConnect`, puts it at coordinate `midCoord` with velocity `midVel`. If it is called from within [`refineNetwork!`](@ref), `midCoord` and `midVel` are the coordinate between `splitNode` and the node connected to it via `splitConnect` and gives it the mean velocity of the two nodes.
+"""
+function splitNode!(network::DislocationNetwork, splitNode, splitConnect, midCoord, midVel)
     elemT = eltype(network.bVec)
     # newNode gets inserted between splitNode and the node it is connected to via the connection splitConnect. We want to take this connection and remove it from splitNode. We then connect splitNode to newNode. Then we assign splitConnect to newNode so that it can connect to the node splitNode used to be connected to, this way we close the loop and the connections move from splitNode -> other, to splitNode -> newNode -> other. We copy the connection to a temporary variable, guaranteeing the data isn't modified by removeConnection!().
     tmpConnect = network.connectivity[:, splitNode]
@@ -168,14 +166,25 @@ function splitNode!(
     return network
 end
 
+"""
+```
+refineNetwork!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
+```
+Refines a dislocation network to ensure all the segments are shorter than the maximum allowable length and so no two links form a triangle with an area over the maximum allowed.
+"""
 function refineNetwork!(
-    dlnParams::T1,
-    matParams::T2,
-    mesh::T3,
-    forceDisplacement::T4,
-    network::T5,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
-
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
     maxAreaSq = dlnParams.maxAreaSq
     maxSegLen = dlnParams.maxSegLen
     twoMinSegLen = dlnParams.twoMinSegLen

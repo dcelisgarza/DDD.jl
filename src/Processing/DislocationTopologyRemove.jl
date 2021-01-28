@@ -1,25 +1,10 @@
 """
 ```
-removeNode!(network::DislocationNetwork, nodeGone::Int, lastNode = nothing)
+removeNode!(network::DislocationNetwork, nodeGone, lastNode = nothing)
 ```
-In-place remove `nodeGone`. If `nodeGone` is *not* the last node, this replaces the entries corresponding to `nodeGone` with `lastNode`. Else it simply zeros out the entries corresponding to `lastNode`. This also decreases `numNode` by one. If `lastNode` is nothing, this function finds it.
-
-Modifies
-```
-network.links
-network.coord
-network.label
-network.nodeVel
-network.numNode[1]
-network.connectivity
-```
+Removes node `nodeGone` from network.
 """
-function removeNode!(
-    network::T1,
-    nodeGone::T2,
-    lastNode = nothing,
-) where {T1 <: DislocationNetwork,T2 <: Int}
-
+function removeNode!(network::DislocationNetwork, nodeGone, lastNode = nothing)
     links = network.links
     coord = network.coord
     label = network.label
@@ -60,22 +45,11 @@ end
 
 """
 ```
-removeConnection!(network::DislocationNetwork, nodeKept::Int, connectGone::Int)
+removeConnection!(network::DislocationNetwork, nodeKept, connectGone)
 ```
-In-place remove `connectGone` from the entries corresponding to `nodeKept`. If `connectGone` is not the last connection, it gets replaced by the last connection. Else it simply zeroes out the entries corresponding to `connectGone`. Also reduces the number of connections by one.
-
-Modifies
-```
-network.connectivity
-network.linksConnect
-```
+Removes connection `connectGone` from `nodeKept`.
 """
-function removeConnection!(
-    network::T1,
-    nodeKept::T2,
-    connectGone::T2,
-) where {T1 <: DislocationNetwork,T2 <: Int}
-
+function removeConnection!(network::DislocationNetwork, nodeKept, connectGone)
     connectivity = network.connectivity
     linksConnect = network.linksConnect
 
@@ -108,30 +82,11 @@ end
 
 """
 ```
-removeLink!(network::DislocationNetwork, linkGone::Int, lastLink = nothing)
+removeLink!(network::DislocationNetwork, linkGone, lastLink = nothing)
 ```
-In-place remove `linkGone` with the last valid link. If `linkGone` is *not* the last link, this replaces the entries corresponding to `linkGone` with `lastLink`. Else it simply zeros out the entries corresponding to `lastLink`. This also decreases `numSeg` by one. If `lastLink` is nothing, this function finds it.
-
-Modifies
-```
-network.links
-network.slipPlane
-network.bVec
-network.coord
-network.label
-network.segForce
-network.nodeVel
-network.numSeg[1]
-network.connectivity
-network.linksConnect
-```
+Removes link `linkGone` and uses `lastLink` to reoganise the network.
 """
-function removeLink!(
-    network::T1,
-    linkGone::T2,
-    lastLink = nothing,
-) where {T1 <: DislocationNetwork,T2 <: Int}
-
+function removeLink!(network::DislocationNetwork, linkGone, lastLink = nothing)
     links = network.links
     slipPlane = network.slipPlane
     bVec = network.bVec
@@ -192,16 +147,11 @@ end
 
 """
 ```
-mergeNode!(network::DislocationNetwork, nodeKept::Int, nodeGone::Int)
+mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
 ```
-Merges `nodeGone` into `nodeKept`. After calling this function there are no repeated entries, self-links or double links.
+Merges `nodeGone` into `nodeKept`.
 """
-function mergeNode!(
-    network::T1,
-    nodeKept::T2,
-    nodeGone::T2,
-) where {T1 <: DislocationNetwork,T2 <: Int}
-
+function mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
     @assert nodeKept <= network.numNode[1] && nodeGone <= network.numNode[1] "mergeNode: the node kept after merging, $nodeKept and node removed after merging, $nodeGone, must be in the simulation."
 
     # Return if both nodes to be merged are the same.
@@ -384,14 +334,25 @@ function mergeNode!(
     return nodeKept, network
 end
 
+"""
+```
+coarsenNetwork!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
+```
+Coarsens network such that no links are smaller than the minimum allowable length and so that no two links form triangles with area under the minimum allowed.
+"""
 function coarsenNetwork!(
-    dlnParams::T1,
-    matParams::T2,
-    mesh::T3,
-    forceDisplacement::T4,
-    network::T5,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
-
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
     minAreaSq = dlnParams.minAreaSq
     minSegLen = dlnParams.minSegLen
     maxSegLen = dlnParams.maxSegLen

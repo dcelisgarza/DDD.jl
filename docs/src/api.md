@@ -59,4 +59,11 @@ calcSegSegForce
 calcSegSegForce!
 dlnMobility
 dlnMobility!
+splitNode!
+refineNetwork!
+removeNode!
+removeConnection!
+removeLink!
+mergeNode!
+coarsenNetwork!
 ```
