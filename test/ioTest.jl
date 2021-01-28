@@ -11,7 +11,7 @@ cd(@__DIR__)
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
     dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-        loadParametersJSON(
+        loadParameters(
             fileDislocationParameters,
             fileMaterialParameters,
             fileFEMParameters,
@@ -20,7 +20,7 @@ cd(@__DIR__)
             fileDislocationLoop,
         )
 
-    missing, missing, missing, missing, missing, dislocationLoop2 = loadParametersJSON(
+    missing, missing, missing, missing, missing, dislocationLoop2 = loadParameters(
         fileDislocationParameters,
         fileMaterialParameters,
         fileFEMParameters,
@@ -33,7 +33,7 @@ cd(@__DIR__)
 
     fileDislocationLoop = "./testData/samplePrismShear.json"
     fileIntegTime = "./testData/sampleIntegrationTime.json"
-    integTime = loadIntegrationTimeJSON(fileIntegTime)
+    integTime = loadIntegrationTime(fileIntegTime)
     network = DislocationNetwork(dislocationLoop, memBuffer = 1)
     # Dump simulationJSON.
     paramDumpJSON = "./testData/sampleDump.json"
@@ -71,7 +71,7 @@ cd(@__DIR__)
     save(networkDumpJLD2, "network", network)
     # Reload simulationJSON.
     simulationJSON = loadJSON(paramDumpJSON)
-    dlnParams2 = loadDislocationParametersJSON(simulationJSON[1])
+    dlnParams2 = loadDislocationParameters(simulationJSON[1])
     matParams2 = loadMaterialParameters(simulationJSON[2])
     femParams2 = loadFEMParameters(simulationJSON[3])
     intParams2 = loadIntegrationParameters(simulationJSON[4])
@@ -80,8 +80,8 @@ cd(@__DIR__)
     for i in eachindex(dislocationLoop2)
         dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
     end
-    network2 = loadNetworkJSON(networkDumpJSON)
-    integTime2 = loadIntegrationTimeJSON(simulationJSON[7])
+    network2 = loadNetwork(networkDumpJSON)
+    integTime2 = loadIntegrationTime(simulationJSON[7])
     # Reload simulationJLD2.
     dlnParams3,
     matParams3,

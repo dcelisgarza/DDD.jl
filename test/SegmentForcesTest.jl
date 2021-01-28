@@ -10,7 +10,7 @@ cd(@__DIR__)
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
     dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-        loadParametersJSON(
+        loadParameters(
             fileDislocationParameters,
             fileMaterialParameters,
             fileFEMParameters,
@@ -529,7 +529,7 @@ end
     fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
     fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
     dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-        loadParametersJSON(
+        loadParameters(
             fileDislocationParameters,
             fileMaterialParameters,
             fileFEMParameters,

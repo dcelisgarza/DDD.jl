@@ -29,7 +29,7 @@ JSON.lower(t::Ptr{SuiteSparse.CHOLMOD.C_Factor{Float64}}) = nothing
 ```
 saveJSON(filename::AbstractString, args...; mode::AbstractString = "w")
 ```
-Wrapper for `JSON.print` to a file, `args` are the variables or structures you want to save.
+Wrapper for `JSON.print`.
 """
 function saveJSON(filename::AbstractString, args...; mode::AbstractString = "w")
     open(filename, mode) do io

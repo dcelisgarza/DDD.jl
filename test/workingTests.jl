@@ -13,7 +13,7 @@ fileSlipSystem = "../data/slipSystems/BCC.json"
 fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
 fileIntVar = "../inputs/simParams/sampleIntegrationTime.json"
 dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-    loadParametersJSON(
+    loadParameters(
         fileDislocationParameters,
         fileMaterialParameters,
         fileFEMParameters,
@@ -21,7 +21,7 @@ dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
         fileSlipSystem,
         fileDislocationLoop,
     )
-intVars = loadIntegrationTimeJSON(fileIntVar)
+intVars = loadIntegrationTime(fileIntVar)
 # network = DislocationNetwork(dislocationLoop)
 femParams = FEMParameters(
                     femParams.type, 

@@ -87,9 +87,9 @@ export plotNodes, plotNodes!, plotFEDomain
 
 include("./IO/IOBase.jl")
 export loadJSON,
-    loadDislocationParametersJSON, loadMaterialParameters, loadIntegrationParameters, loadBoundaries, loadForceDisplacement
-export loadSlipSystem, loadDislocationLoop, loadParametersJSON
-export loadDislocationLoop, loadNetworkJSON, loadIntegrationTimeJSON
+    loadDislocationParameters, loadMaterialParameters, loadIntegrationParameters, loadBoundaries, loadForceDisplacement
+export loadSlipSystem, loadDislocationLoop, loadParameters
+export loadDislocationLoop, loadNetwork, loadIntegrationTime
 export loadFEMParameters
 export saveJSON
 

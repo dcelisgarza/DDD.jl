@@ -10,7 +10,7 @@ cd(@__DIR__)
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
     dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-        loadParametersJSON(
+        loadParameters(
             fileDislocationParameters,
             fileMaterialParameters,
             fileFEMParameters,
@@ -1429,7 +1429,7 @@ end
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
     dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-        loadParametersJSON(
+        loadParameters(
             fileDislocationParameters,
             fileMaterialParameters,
             fileFEMParameters,
@@ -1761,7 +1761,7 @@ end
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/samplePrismShear.json"
     dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-        loadParametersJSON(
+        loadParameters(
             fileDislocationParameters,
             fileMaterialParameters,
             fileFEMParameters,
@@ -1965,7 +1965,7 @@ end
     fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
     fileSlipSystem = "../data/slipSystems/BCC.json"
     fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParameters(
         fileDislocationParameters,
         fileMaterialParameters,
         fileFEMParameters,
@@ -2023,7 +2023,7 @@ end
     fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
     fileSlipSystem = "../data/slipSystems/BCC.json"
     fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParameters(
         fileDislocationParameters,
         fileMaterialParameters,
         fileFEMParameters,

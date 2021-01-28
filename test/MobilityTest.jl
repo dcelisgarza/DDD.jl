@@ -9,7 +9,7 @@ cd(@__DIR__)
     fileIntegrationParameters = "../inputs/simParams/sampleIntegrationParameters.json"
     fileSlipSystem = "../data/slipSystems/BCC.json"
     fileDislocationLoop = "../inputs/dln/samplePrismShear.json"
-    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParametersJSON(
+    dlnParams, matParams, femParams, intParams, slipSystems, missing = loadParameters(
         fileDislocationParameters,
         fileMaterialParameters,
         fileFEMParameters,

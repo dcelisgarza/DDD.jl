@@ -92,11 +92,11 @@ julia> fileDislocationLoop = "./inputs/dln/samplePrismShear.json"
 julia> fileIntVar = "./inputs/simParams/sampleIntegrationTime.json"
 "./inputs/simParams/sampleIntegrationTime.json"
 
-julia> intVars = loadIntegrationTimeJSON(fileIntVar)
+julia> intVars = loadIntegrationTime(fileIntVar)
 IntegrationTime{Float64,Int64}(100.0, 0.0, 0)
 
 julia> dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
-           loadParametersJSON(
+           loadParameters(
                fileDislocationParameters,
                fileMaterialParameters,
                fileFEMParameters,
