@@ -32,87 +32,87 @@ function SlipSystem(; crystalStruct::T1, slipPlane::T2, bVec::T2) where {T1 <: A
     return SlipSystem(crystalStruct, slipPlane, bVec)
 end
 
-"""
-```
-DislocationParameters(
-    coreRad::T1,
-    coreRadMag::T1,
-    minSegLen::T1,
-    maxSegLen::T1,
-    minArea::T1,
-    maxArea::T1,
-    edgeDrag::T1,
-    screwDrag::T1,
-    climbDrag::T1,
-    lineDrag::T1,
-    maxConnect::T2,
-    mobility::T3,
-    remesh::T4 = true,
-    collision::T4 = true,
-    separation::T4 = true,
-    virtualRemesh::T4 = true,
-    parCPU::T4 = false,
-    parGPU::T4 = false,
-    slipStepCritLen::T1 = maxSegLen / 2,
-    slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
-) where {T1,T2 <: Integer,T3 <: AbstractMobility,T4 <: Bool}
-```
-The constructor for [`DislocationParameters`](@ref) provides a few default values and calculates derived quantities.
-"""
-function DislocationParameters(
-    mobility::T1,
-    coreRad::T2,
-    coreRadMag::T2,
-    minSegLen::T2,
-    maxSegLen::T2,
-    minArea::T2,
-    maxArea::T2,
-    edgeDrag::T2,
-    screwDrag::T2,
-    climbDrag::T2,
-    lineDrag::T2,
-    maxConnect::T3,
-    remesh::T4 = true,
-    collision::T4 = true,
-    separation::T4 = true,
-    virtualRemesh::T4 = true,
-    parCPU::T4 = false,
-    parGPU::T4 = false,
-    slipStepCritLen::T2 = maxSegLen / 2,
-    slipStepCritArea::T2 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
-) where {T1 <: AbstractMobility,T2,T3 <: Integer,T4 <: Bool}
+# """
+# ```
+# DislocationParameters(
+#     coreRad::T1,
+#     coreRadMag::T1,
+#     minSegLen::T1,
+#     maxSegLen::T1,
+#     minArea::T1,
+#     maxArea::T1,
+#     edgeDrag::T1,
+#     screwDrag::T1,
+#     climbDrag::T1,
+#     lineDrag::T1,
+#     maxConnect::T2,
+#     mobility::T3,
+#     remesh::T4 = true,
+#     collision::T4 = true,
+#     separation::T4 = true,
+#     virtualRemesh::T4 = true,
+#     parCPU::T4 = false,
+#     parGPU::T4 = false,
+#     slipStepCritLen::T1 = maxSegLen / 2,
+#     slipStepCritArea::T1 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
+# ) where {T1,T2 <: Integer,T3 <: AbstractMobility,T4 <: Bool}
+# ```
+# The constructor for [`DislocationParameters`](@ref) provides a few default values and calculates derived quantities.
+# """
+# function DislocationParameters(
+#     mobility::T1,
+#     coreRad::T2,
+#     coreRadMag::T2,
+#     minSegLen::T2,
+#     maxSegLen::T2,
+#     minArea::T2,
+#     maxArea::T2,
+#     edgeDrag::T2,
+#     screwDrag::T2,
+#     climbDrag::T2,
+#     lineDrag::T2,
+#     maxConnect::T3,
+#     remesh::T4 = true,
+#     collision::T4 = true,
+#     separation::T4 = true,
+#     virtualRemesh::T4 = true,
+#     parCPU::T4 = false,
+#     parGPU::T4 = false,
+#     slipStepCritLen::T2 = maxSegLen / 2,
+#     slipStepCritArea::T2 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
+# ) where {T1 <: AbstractMobility,T2,T3 <: Integer,T4 <: Bool}
 
-    coreRad == minSegLen == maxSegLen == 0 ? nothing :
-    @assert coreRad < minSegLen < maxSegLen
-    minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
+#     coreRad == minSegLen == maxSegLen == 0 ? nothing :
+#     @assert coreRad < minSegLen < maxSegLen
+#     minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
 
-    return DislocationParameters(
-        mobility,
-        coreRad,
-        coreRad^2,
-        coreRadMag,
-        minSegLen,
-        maxSegLen,
-        minSegLen * 2,
-        minArea,
-        maxArea,
-        minArea^2,
-        maxArea^2,
-        edgeDrag,
-        screwDrag,
-        climbDrag,
-        lineDrag,
-        maxConnect,
-        remesh,
-        collision,
-        separation,
-        virtualRemesh,
-        parCPU,
-        parGPU,
-        slipStepCritLen,
-        slipStepCritArea,
-    )
-end
+#     return DislocationParameters(
+#         mobility,
+#         coreRad,
+#         coreRad^2,
+#         coreRadMag,
+#         minSegLen,
+#         maxSegLen,
+#         minSegLen * 2,
+#         minArea,
+#         maxArea,
+#         minArea^2,
+#         maxArea^2,
+#         edgeDrag,
+#         screwDrag,
+#         climbDrag,
+#         lineDrag,
+#         maxConnect,
+#         remesh,
+#         collision,
+#         separation,
+#         virtualRemesh,
+#         parCPU,
+#         parGPU,
+#         slipStepCritLen,
+#         slipStepCritArea,
+#     )
+# end
 """
 ```
 DislocationParameters(;
@@ -152,28 +152,41 @@ function DislocationParameters(;
     screwDrag::T2,
     climbDrag::T2,
     lineDrag::T2,
-    maxConnect::T3,
+    coreEnergy::T2 = 1 / (4 * π) * log(coreRad / 0.1),
+    slipStepCritLen::T2 = maxSegLen / 2,
+    slipStepCritArea::T2 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
+    maxConnect::T3 = 4,
     remesh::T4 = true,
     collision::T4 = true,
     separation::T4 = true,
     virtualRemesh::T4 = true,
     parCPU::T4 = false,
     parGPU::T4 = false,
-    slipStepCritLen::T2 = maxSegLen / 2,
-    slipStepCritArea::T2 = 0.5 * (slipStepCritLen^2) * sin(2 * π / 360),
 ) where {T1 <: AbstractMobility,T2,T3 <: Integer,T4 <: Bool}
+    
+    coreRad == minSegLen == maxSegLen == 0 ? nothing :
+    @assert coreRad < minSegLen < maxSegLen
+    minArea == maxArea == 0 ? nothing : @assert minArea < maxArea
+
     return DislocationParameters(
         mobility,
         coreRad,
+        coreRad^2,
         coreRadMag,
+        coreEnergy,
         minSegLen,
         maxSegLen,
+        minSegLen * 2,
         minArea,
         maxArea,
+        minArea^2,
+        maxArea^2,
         edgeDrag,
         screwDrag,
         climbDrag,
         lineDrag,
+        slipStepCritLen,
+        slipStepCritArea,
         maxConnect,
         remesh,
         collision,
@@ -181,9 +194,7 @@ function DislocationParameters(;
         virtualRemesh,
         parCPU,
         parGPU,
-        slipStepCritLen,
-        slipStepCritArea,
-)
+    )
 end
 
 """

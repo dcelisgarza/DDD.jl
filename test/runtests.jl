@@ -1,19 +1,19 @@
 using SafeTestsets
 
 ##
-@time @safetestset "Miscelaneous" begin
-    include("./MiscTest.jl")
-end
+# @time @safetestset "Miscelaneous" begin
+#     include("./MiscTest.jl")
+# end
 
 ##
-@time @safetestset "IO" begin
-    include("./ioTest.jl")
-end
+# @time @safetestset "IO" begin
+#     include("./ioTest.jl")
+# end
 
-##
-@time @safetestset "Construct Dln" begin
-    include("./ConstructNetworkTest.jl")
-end
+# ##
+# @time @safetestset "Construct Dln" begin
+#     include("./ConstructNetworkTest.jl")
+# end
 
 ##
 @time @safetestset "Segment Force" begin

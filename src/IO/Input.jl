@@ -211,6 +211,7 @@ function loadDislocationParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
     DislocationParams = DislocationParameters(;
         coreRad = convert(Float64, dict["coreRad"]),
         coreRadMag = convert(Float64, dict["coreRadMag"]),
+        coreEnergy = convert(Float64, dict["coreEnergy"]),
         minSegLen = convert(Float64, dict["minSegLen"]),
         maxSegLen = convert(Float64, dict["maxSegLen"]),
         minArea = convert(Float64, dict["minArea"]),

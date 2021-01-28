@@ -2,6 +2,7 @@
     "coreRad": 90.78,
     "coreRadSq": 8241.0084,
     "coreRadMag": 0,
+    "coreEnergy": 1,
     "minSegLen": 314.47,
     "maxSegLen": 1572.33,
     "minArea": 49444.25,

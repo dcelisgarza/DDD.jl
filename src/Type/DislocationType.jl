@@ -186,6 +186,7 @@ struct DislocationParameters{T1,T2,T3,T4}
     coreRad::T2
     coreRadSq::T2
     coreRadMag::T2
+    coreEnergy::T2
     minSegLen::T2
     maxSegLen::T2
     twoMinSegLen::T2
@@ -197,6 +198,8 @@ struct DislocationParameters{T1,T2,T3,T4}
     screwDrag::T2
     climbDrag::T2
     lineDrag::T2
+    slipStepCritLen::T2
+    slipStepCritArea::T2
     maxConnect::T3
     remesh::T4
     collision::T4
@@ -204,8 +207,6 @@ struct DislocationParameters{T1,T2,T3,T4}
     virtualRemesh::T4
     parCPU::T4
     parGPU::T4
-    slipStepCritLen::T2
-    slipStepCritArea::T2
 end
 
 """

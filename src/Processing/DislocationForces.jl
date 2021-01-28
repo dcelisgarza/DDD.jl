@@ -308,12 +308,12 @@ function calcSelfForce(
 
     μ = matParams.μ
     ν = matParams.ν
-    E = matParams.E
     omNuInv = matParams.omνInv
     nuOmNuInv = matParams.νomνInv
     μ4π = matParams.μ4π
     a = dlnParams.coreRad
     aSq = dlnParams.coreRadSq
+    Ec = dlnParams.coreEnergy
     bVec = network.bVec
     coord = network.coord
     segIdx = network.segIdx
@@ -371,10 +371,10 @@ function calcSelfForce(
             μ4π *
             bScrew *
             (nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) - LaMa^2 / (2 * La * L))
-        torCore = 2 * E * nuOmNuInv * bScrew
+        torCore = 2 * Ec * nuOmNuInv * bScrew
         torTot = tor + torCore
         # Longitudinal component of core self interaction.
-        lonCore = (bScrew^2 + bEdgeSq * omNuInv) * E
+        lonCore = (bScrew^2 + bEdgeSq * omNuInv) * Ec
         # Force calculation.
         selfForceNode2[:, i] = torTot * bEdgeVec - lonCore * tVecI
     end
@@ -391,12 +391,12 @@ function calcSelfForce!(
 
     μ = matParams.μ
     ν = matParams.ν
-    E = matParams.E
     omNuInv = matParams.omνInv
     nuOmNuInv = matParams.νomνInv
     μ4π = matParams.μ4π
     a = dlnParams.coreRad
     aSq = dlnParams.coreRadSq
+    Ec = dlnParams.coreEnergy
     bVec = network.bVec
     coord = network.coord
     segIdx = network.segIdx
@@ -451,10 +451,10 @@ function calcSelfForce!(
             μ4π *
             bScrew *
             (nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) - LaMa^2 / (2 * La * L))
-        torCore = 2 * E * nuOmNuInv * bScrew
+        torCore = 2 * Ec * nuOmNuInv * bScrew
         torTot = tor + torCore
         # Longitudinal component of core self interaction.
-        lonCore = (bScrew^2 + bEdgeSq * omNuInv) * E
+        lonCore = (bScrew^2 + bEdgeSq * omNuInv) * Ec
         
         selfForce = torTot * bEdgeVec - lonCore * tVecI
         

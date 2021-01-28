@@ -192,6 +192,7 @@ cd(@__DIR__)
     dlnParamsPar = DislocationParameters(;
         coreRad = dlnParams.coreRad,
         coreRadMag = dlnParams.coreRadMag,
+        coreEnergy = dlnParams.coreEnergy,
         minSegLen = dlnParams.minSegLen,
         maxSegLen = dlnParams.maxSegLen,
         minArea = dlnParams.minArea,
