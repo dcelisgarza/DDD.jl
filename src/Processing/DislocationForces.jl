@@ -71,7 +71,7 @@ calc_σHat(
 Calculate the reaction stress, ``̂σ``, from a dislocation.
 """
 function calc_σHat(
-    mesh::RegularCuboidMesh,
+    mesh::RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14} where {T1 <: LinearElement,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14},
     forceDisplacement::ForceDisplacement,
     x0::AbstractVector{T} where {T},
 )
@@ -200,7 +200,7 @@ function calcPKForce(
     forceDisplacement::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: RegularCuboidMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
+) where {T1 <: AbstractMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
     
 # Unroll constants.
     numSeg = network.numSeg[1]
@@ -247,7 +247,7 @@ function calcPKForce!(
     forceDisplacement::T2,
     network::T3,
     idx = nothing,
-) where {T1 <: RegularCuboidMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
+) where {T1 <: AbstractMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
     
 # Unroll constants.
     numSeg = network.numSeg[1]

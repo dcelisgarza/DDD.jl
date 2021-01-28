@@ -425,20 +425,11 @@ end
 
 """
 ```
-Boundaries(femParams::T1, femMesh::T2, args...; kw...) where {T1 <: FEMParameters,T2 <: AbstractMesh}
-```
-Predefined boundaries.
-"""
-function Boundaries(femParams::T1, femMesh::T2, args...; kw...) where {T1 <: FEMParameters,T2 <: AbstractMesh}
-    return Boundaries(femParams.model, femMesh, args...; kw...)
-end
-"""
-```
 Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
 ```
 Cantilever loading boundaries.
 """
-function Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
+function Boundaries(::FEMParameters{T1,T2,T3,T4,T5} where {T1,T2,T3<:CantileverLoad,T4,T5}, femMesh::RegularCuboidMesh; kw...)
     numNode = femMesh.numNode
     numNode3 = numNode * 3
     faceNorm = femMesh.faceNorm
@@ -446,8 +437,6 @@ function Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLo
     edgeNode = femMesh.edgeNode
     faceNode = femMesh.faceNode
     K = femMesh.K
-
-    # GammaLbl = (SVector{3,nodeTypeFE}(cornerFE, edgeNode, faceFE), SVector{24,Int}(1:8,1:12,1:6))
     
     if !haskey(kw, "uGamma")
         uGamma = (

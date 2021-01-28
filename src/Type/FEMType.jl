@@ -67,7 +67,7 @@ struct CantileverLoad <: AbstractCantileverBend end
 struct FEMParameters{T1,T2,T3,T4}
     type::T1    # Mesh type.
     order::T2   # Element order.
-    model::T3   # M
+    model::T3   # Model
     dx::T3      # Size in x.
     dy::T3      # Size in y.
     dz::T3      # Size in z.

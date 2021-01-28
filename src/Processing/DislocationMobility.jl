@@ -1,33 +1,14 @@
-function dlnMobility(
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
-    idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
-
-    return dlnMobility(dlnParams.mobility, dlnParams, matParams, network, idx)
-end
-function dlnMobility!(
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
-    idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
-
-    return dlnMobility!(dlnParams.mobility, dlnParams, matParams, network, idx)
-end
 """
 Original by Bruce Bromage at the Department of Materials of the University of Oxford, @brucebromage on github.
 
 This is outdated, new capabilities include rotating the frame of reference and better handling of cross-slip.
 """
 function dlnMobility(
-    ::T1,
-    dlnParams::T2,
-    matParams::T3,
-    network::T4,
+    dlnParams::DislocationParameters{T1,T2,T3,T4} where {T1 <: mobBCC,T2,T3,T4},
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: mobBCC,T2 <: DislocationParameters,T3 <: MaterialParameters,T4 <: DislocationNetwork,}
+)
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
@@ -182,12 +163,11 @@ function dlnMobility(
     return nodeForce, nodeVel
 end
 function dlnMobility!(
-    mobility::T1,
-    dlnParams::T2,
-    matParams::T3,
-    network::T4,
+    dlnParams::DislocationParameters{T1,T2,T3,T4} where {T1 <: mobBCC,T2,T3,T4},
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: mobBCC,T2 <: DislocationParameters,T3 <: MaterialParameters,T4 <: DislocationNetwork,}
+)
 
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
