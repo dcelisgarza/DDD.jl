@@ -72,4 +72,6 @@ remeshSurfaceNetwork!
 coarsenVirtualNetwork!
 shapeFunction
 shapeFunctionDeriv
+deriv!
+integrate!
 ```

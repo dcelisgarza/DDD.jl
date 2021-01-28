@@ -1,11 +1,22 @@
+"""
+```
+deriv!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
+```
+Computes the nodal velocities of a network.
+"""
 function deriv!(
-    dlnParams::T1,
-    matParams::T2,
-    mesh::T3,
-    forceDisplacement::T4,
-    network::T5,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
-
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
     calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network)
     dlnMobility!(dlnParams, matParams, network)
 
@@ -51,126 +62,30 @@ function deriv!(
 
     return nothing
 end
+
+"""
+```
+integrate!(
+    intParams::IntegrationParameters{T1,T2,T3} where {T1 <: AdaptiveEulerTrapezoid,T2,T3},
+    intVars::IntegrationTime,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
+```
+Integrates nodal velocities using a time-adaptive Euler-Trapezoid method.
+"""
 function integrate!(
-    intParams::T1,
-    intVars::T2,
-    dlnParams::T3,
-    matParams::T4,
-    mesh::T5,
-    forceDisplacement::T6,
-    network::T7,
-) where {T1 <: IntegrationParameters,T2 <: IntegrationTime,T3 <: DislocationParameters,T4 <: MaterialParameters,T5 <: AbstractMesh,T6 <: ForceDisplacement,T7 <: DislocationNetwork,}
-
-    return integrate!(
-        intParams.method,
-        intParams,
-        intVars,
-        dlnParams,
-        matParams,
-        mesh,
-        forceDisplacement,
-        network,
-    )
-end
-
-# function integrate!(
-#     ::AdaptiveEulerTrapezoid,
-#     intParams::T1,
-#     intVars::T2,
-#     dlnParams::T3,
-#     matParams::T4,
-#     mesh::T5,
-#     forceDisplacement::T6,
-#     network::T7,
-# ) where {T1 <: IntegrationParameters,T2 <: IntegrationTime,T3 <: DislocationParameters,T4 <: MaterialParameters,T5 <: AbstractMesh,T6 <: ForceDisplacement,T7 <: DislocationNetwork,}
-
-#     numNode = network.numNode[1]
-#     numNode == 0 && return network
-
-#     # Calculate current velocity.
-#     deriv!(dlnParams, matParams, mesh, forceDisplacement, network)
-
-#     # Store current position and velocity.
-#     idx = 1:numNode
-#     initCoord = network.coord[:, idx]
-#     initVel = network.nodeVel[:, idx]
-
-#     dtmin = intParams.dtmin
-#     dtmax = intParams.dtmax
-#     abstol = intParams.abstol
-#     reltol = intParams.reltol
-#     maxchange = intParams.maxchange
-#     exponent = intParams.exponent
-#     maxiter = intParams.maxiter
-
-#     dt = intVars.dt
-#     time = intVars.time
-#     step = intVars.step
-
-#     dtOld = zero(typeof(dt))
-#     dtOldGood::Bool = false
-
-#     for i in 1:maxiter
-#         # Advance coordinates with forward euler.
-#         network.coord[:, idx] = initCoord + initVel * dt
-
-#         # Calculate new velocity from new coords.
-#         deriv!(dlnParams, matParams, mesh, forceDisplacement, network)
-#         coord = network.coord
-#         nodeVel = network.nodeVel
-
-#         # Calculate the distance moved.
-#         distance = @views coord[:, idx] - initCoord
-#         maxDist = maximum(abs.(distance))
-
-#         # Calculate the error with Euler trapezoid method.
-#         err = @views distance - (nodeVel[:, idx] + initVel) / 2 * dt
-#         maxErr = maximum(abs.(err))
-
-#         # Tentative new timestep.
-#         factor =
-#             maxchange *
-#             (1 / (1 + (maxchange^exponent - 1) * (maxErr / reltol)))^(1 / exponent)
-#         dtNew = dt * factor
-
-#         # Check if errors are under the tolerances.
-#         if maxDist < abstol && maxErr < reltol
-#             # If the errors are under the tolerances, increase the time step.
-#             dtOldGood = true
-#             dtOld = dt
-#             dt = min(dtNew, dtmax)
-#         else
-#             # If the errors are over the tolerances, check if the previous time step is good.
-#             if dtOldGood
-#                 # If it was, use the previous time step.
-#                 network.coord[:, idx] = initCoord + initVel * dtOld
-#                 deriv!(dlnParams, matParams, mesh, forceDisplacement, network)
-#                 break
-#             else
-#                 # If it wasn't, make the timestep smaller.
-#                 dt = min(dtNew, dt / 2)
-#             end
-#         end
-#         # Break if dt is less than the minimum allowed.
-#         dt <= dtmin && break
-#     end
-
-#     intVars = IntegrationTime(dt, time + dt, step + 1)
-
-#     return intVars
-# end
-
-function integrate!(
-    ::AdaptiveEulerTrapezoid,
-    intParams::T1,
-    intVars::T2,
-    dlnParams::T3,
-    matParams::T4,
-    mesh::T5,
-    forceDisplacement::T6,
-    network::T7,
-) where {T1 <: IntegrationParameters,T2 <: IntegrationTime,T3 <: DislocationParameters,T4 <: MaterialParameters,T5 <: AbstractMesh,T6 <: ForceDisplacement,T7 <: DislocationNetwork,}
-
+    intParams::IntegrationParameters{T1,T2,T3} where {T1 <: AdaptiveEulerTrapezoid,T2,T3},
+    intVars::IntegrationTime,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+)
     numNode = network.numNode[1]
     numNode == 0 && return network
 
