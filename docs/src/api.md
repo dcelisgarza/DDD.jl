@@ -22,3 +22,9 @@ loadParameters
 ```@docs
 saveJSON
 ```
+
+## Misc support functions
+
+```@docs
+compStruct
+```

@@ -1,5 +1,6 @@
 using DDD
 using Test
+using DDD: makeInstanceDict, inclusiveComparison
 
 cd(@__DIR__)
 
