@@ -9,7 +9,6 @@ function dlnMobility(
     network::DislocationNetwork,
     idx = nothing,
 )
-
     # Peierls-Nabarro stress for the bcc material.
     σPN = matParams.σPN
     # Drag coefficients.

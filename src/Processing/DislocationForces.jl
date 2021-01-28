@@ -81,7 +81,7 @@ calc_σHat(
     x0,
 )
 ```
-Compute the stress, `̂σ`, on a dislocation segment `x0` as a result of body forces on a [`RegularCuboidMesh`](@ref) composed of [`LinearElement`](@ref).
+Compute the stress, `̂σ`, on a dislocation segment `x0` as a result of body forces on a [`RegularCuboidMesh`](@ref) composed of [`LinearElement`](@ref). Used by [`calcPKForce`](@ref).
 
 ## Returns
 ```
@@ -206,25 +206,25 @@ end
 """
 ```
 calcPKForce(
-    mesh::RegularCuboidMesh,
-    dlnFEM::DislocationFEMCorrective,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
     network::DislocationNetwork,
+    idx = nothing,
 )
 ```
-Calculate the Peach-Koehler force on segments.
+Compute the Peach-Koehler force on segments by using [`calc_σHat`](@ref).
 
 ``
 f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{t}
 ``
 """
 function calcPKForce(
-    mesh::T1,
-    forceDisplacement::T2,
-    network::T3,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: AbstractMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
-    
-# Unroll constants.
+)
+    # Unroll constants.
     numSeg = network.numSeg[1]
     segIdx = network.segIdx
     bVec = network.bVec
@@ -264,14 +264,28 @@ function calcPKForce(
 
     return PKForce
 end
-function calcPKForce!(
-    mesh::T1,
-    forceDisplacement::T2,
-    network::T3,
+"""
+```
+calcPKForce!(
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: AbstractMesh,T2 <: ForceDisplacement,T3 <: DislocationNetwork}
-    
-# Unroll constants.
+)
+```
+In-place computation of the Peach-Koehler force on segments by using [`calc_σHat`](@ref).
+
+``
+f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{t}
+``
+"""
+function calcPKForce!(
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+    # Unroll constants.
     numSeg = network.numSeg[1]
     segIdx = network.segIdx
     bVec = network.bVec
@@ -317,17 +331,17 @@ calcSelfForce(
     dlnParams::DislocationParameters,
     matParams::MaterialParameters,
     network::DislocationNetwork,
+    idx = nothing,
 )
 ```
-Calculates the self-interaction force felt by two nodes in a segment. Naturally the forces are equal and opposite to each other.
+Compute the self-interaction force on dislocation segments.
 """
 function calcSelfForce(
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
-
+)
     μ = matParams.μ
     ν = matParams.ν
     omNuInv = matParams.omνInv
@@ -404,13 +418,23 @@ function calcSelfForce(
 
     return selfForceNode1, selfForceNode2
 end
-function calcSelfForce!(
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
+"""
+```
+calcSelfForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
-
+)
+```
+In-place computation of the self-interaction force on dislocation segments.
+"""
+function calcSelfForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
     μ = matParams.μ
     ν = matParams.ν
     omNuInv = matParams.omνInv
@@ -490,36 +514,24 @@ function calcSelfForce!(
 end
 
 """
-!!! Note
-    This function is based on the SegSegForces function by A. Arsenlis et al. It is optimised for speed and reusability. It has also been locally parallelised.
 ```
+calcSegSegForce(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
 ```
- It implements the analytical solution of the force between two dislocation segments. Details are found in Appendix A.1. in ["Enabling Strain Hardening Simulations with Dislocation Dynamics" by A. Arsenlis et al.](https://doi.org/10.1088%2F0965-0393%2F15%2F6%2F001)
+Compute the segment-segment forces for every dislocation segment.
 
-At a high level this works by creating a local coordinate frame using the line directions of the dislocation segments and a vector orthogonal to them. The line integrals are then evaluated parametrically utilising this local coordinate. BibTex citation here:
-
-@article{Arsenlis_2007,
-	doi = {10.1088/0965-0393/15/6/001},
-	url = {https://doi.org/10.1088%2F0965-0393%2F15%2F6%2F001},
-	year = 2007,
-	month = {jul},
-	publisher = {{IOP} Publishing},
-	volume = {15},
-	number = {6},
-	pages = {553--595},
-	author = {A Arsenlis and W Cai and M Tang and M Rhee and T Oppelstrup and G Hommes and T G Pierce and V V Bulatov},
-	title = {Enabling strain hardening simulations with dislocation dynamics},
-	journal = {Modelling and Simulation in Materials Science and Engineering},
-	abstract = {Numerical algorithms for discrete dislocation dynamics simulations are investigated for the purpose of enabling strain hardening simulations of single crystals on massively parallel computers. The algorithms investigated include the calculation of forces, the equations of motion, time integration, adaptive mesh refinement, the treatment of dislocation core reactions and the dynamic distribution of data and work on parallel computers. A simulation integrating all these algorithmic elements using the Parallel Dislocation Simulator (ParaDiS) code is performed to understand their behaviour in concert and to evaluate the overall numerical performance of dislocation dynamics simulations and their ability to accumulate percent of plastic strain.}
-}
+Details found in Appendix A.1. in ["Enabling Strain Hardening Simulations with Dislocation Dynamics" by A. Arsenlis et al.](https://doi.org/10.1088%2F0965-0393%2F15%2F6%2F001)
 """
 function calcSegSegForce(
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
-
+)
     # Constants.
     μ = matParams.μ
     μ4π = matParams.μ4π
@@ -662,13 +674,25 @@ function calcSegSegForce(
     end
 end
 
-function calcSegSegForce!(
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
+"""
+```
+calcSegSegForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
+)
+```
+In-place computation of the segment-segment forces for every dislocation segment.
 
+Details found in Appendix A.1. in ["Enabling Strain Hardening Simulations with Dislocation Dynamics" by A. Arsenlis et al.](https://doi.org/10.1088%2F0965-0393%2F15%2F6%2F001)
+"""
+function calcSegSegForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
     # Constants.
     μ = matParams.μ
     μ4π = matParams.μ4π
@@ -810,21 +834,8 @@ function calcSegSegForce!(
     end
     return nothing
 end
-function calcSegSegForce(
-    aSq::T1,
-    μ4π::T1,
-    μ8π::T1,
-    μ8πaSq::T1,
-    μ4πν::T1,
-    μ4πνaSq::T1,
-    b1::T2,
-    n11::T2,
-    n12::T2,
-    b2::T2,
-    n21::T2,
-    n22::T2,
-) where {T1,T2 <: AbstractVector{T} where {T}}
 
+function calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
     t2 = n22 - n21
     t2N = 1 / norm(t2)
     t2 = t2 * t2N
@@ -1113,21 +1124,7 @@ function calcSegSegForce(
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-function calcParSegSegForce(
-    aSq::T1,
-    μ4π::T1,
-    μ8π::T1,
-    μ8πaSq::T1,
-    μ4πν::T1,
-    μ4πνaSq::T1,
-    b1::T2,
-    n11::T2,
-    n12::T2,
-    b2::T2,
-    n21::T2,
-    n22::T2,
-) where {T1,T2 <: AbstractVector{T} where {T}}
-
+function calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n11, n12, b2, n21, n22)
     flip::Bool = false
 
     t2 = n22 - n21
@@ -1391,8 +1388,7 @@ function calcParSegSegForce(
     return Fnode1, Fnode2, Fnode3, Fnode4
 end
 
-function ParSegSegInteg(aSq_dSq::T, aSq_dSqI::T, x::T, y::T) where {T}
-
+function ParSegSegInteg(aSq_dSq, aSq_dSqI, x, y)
     xpy = x + y
     xmy = x - y
     Ra = sqrt(aSq_dSq + xpy * xpy)
@@ -1428,8 +1424,7 @@ function ParSegSegInteg(aSq_dSq::T, aSq_dSqI::T, x::T, y::T) where {T}
     integ12
 end
 
-function SegSegInteg(aSq::T, d::T, c::T, cSq::T, omcSq::T, omcSqI::T, x::T, y::T) where {T}
-
+function SegSegInteg(aSq, d, c, cSq, omcSq, omcSqI, x, y)
     aSq_dSq = aSq + d^2 * omcSq
     xSq = x^2
     ySq = y^2

@@ -48,4 +48,15 @@ gausslegendre(n::Integer, a, b)
 ```@docs
 calc_σTilde
 calc_σTilde!
+calcSegForce
+calcSegForce!
+calc_σHat
+calcPKForce
+calcPKForce!
+calcSelfForce
+calcSelfForce!
+calcSegSegForce
+calcSegSegForce!
+dlnMobility
+dlnMobility!
 ```
