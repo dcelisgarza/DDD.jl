@@ -218,7 +218,6 @@ function loadDislocationParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
         maxSegLen = convert(Float64, dict["maxSegLen"]),
         minArea = convert(Float64, dict["minArea"]),
         maxArea = convert(Float64, dict["maxArea"]),
-        maxConnect = convert(Int, dict["maxConnect"]),
         remesh = dict["remesh"],
         collision = dict["collision"],
         separation = dict["separation"],

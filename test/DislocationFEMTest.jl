@@ -46,7 +46,6 @@ cd(@__DIR__)
         minArea = a + 1,
         maxArea = a + 2,
         dragCoeffs = (edge = 1., screw = 1., climb = 1., line = 1.),
-        maxConnect = 4,
         mobility = mobBCC(),
     )
     network = DislocationNetwork(;
@@ -102,7 +101,6 @@ cd(@__DIR__)
         minArea = a + 1,
         maxArea = a + 2,
         dragCoeffs = (edge = 1., screw = 1., climb = 1., line = 1.),
-        maxConnect = 4,
         mobility = mobBCC(),
     )
     network = DislocationNetwork(;

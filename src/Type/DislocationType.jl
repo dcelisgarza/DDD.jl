@@ -181,7 +181,7 @@ end
 ```
 Stores the dislocation parameters.
 """
-struct DislocationParameters{T1,T2,T3,T4,T5}
+struct DislocationParameters{T1,T2,T3,T4}
     mobility::T1
     dragCoeffs::T2
     coreRad::T3
@@ -197,13 +197,12 @@ struct DislocationParameters{T1,T2,T3,T4,T5}
     maxAreaSq::T3
     slipStepCritLen::T3
     slipStepCritArea::T3
-    maxConnect::T4
-    remesh::T5
-    collision::T5
-    separation::T5
-    virtualRemesh::T5
-    parCPU::T5
-    parGPU::T5
+    remesh::T4
+    collision::T4
+    separation::T4
+    virtualRemesh::T4
+    parCPU::T4
+    parGPU::T4
 end
 
 """

@@ -197,7 +197,6 @@ cd(@__DIR__)
         maxSegLen = dlnParams.maxSegLen,
         minArea = dlnParams.minArea,
         maxArea = dlnParams.maxArea,
-        maxConnect = dlnParams.maxConnect,
         remesh = dlnParams.remesh,
         collision = dlnParams.collision,
         separation = dlnParams.separation,

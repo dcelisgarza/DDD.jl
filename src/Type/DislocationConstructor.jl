@@ -1,11 +1,11 @@
 """
 ```
-SlipSystem(crystalStruct::T1, slipPlane::T2, bVec::T2) 
+SlipSystem(;crystalStruct::T1, slipPlane::T2, bVec::T2) 
     where {T1 <: AbstractCrystalStruct,T2}
 ```
 Constructor for [`SlipSystem`](@ref). Checks for orthogonality of the burgers vector and slip plane. It assumes each column corresponds to a slip system.
 """
-function SlipSystem(
+function SlipSystem(;
         crystalStruct::T1,
         slipPlane::T2,
         bVec::T2,
@@ -19,16 +19,6 @@ function SlipSystem(
         end
     end
 
-    return SlipSystem{T1,T2}(crystalStruct, slipPlane, bVec)
-end
-"""
-```
-SlipSystem(; crystalStruct::T1, slipPlane::T2, bVec::T2) 
-    where {T1 <: AbstractCrystalStruct,T2}
-```
-Keyword constructor for [`SlipSystem`](@ref).
-"""
-function SlipSystem(; crystalStruct::T1, slipPlane::T2, bVec::T2) where {T1 <: AbstractCrystalStruct,T2}
     return SlipSystem(crystalStruct, slipPlane, bVec)
 end
 
@@ -71,14 +61,13 @@ function DislocationParameters(;
     maxArea::T2 = 100 * minArea,
     slipStepCritLen::T2 = maxSegLen / 2,
     slipStepCritArea::T2 = 0.5 * (slipStepCritLen^2) * sind(1),
-    maxConnect::T3 = 4,
-    remesh::T4 = true,
-    collision::T4 = true,
-    separation::T4 = true,
-    virtualRemesh::T4 = true,
-    parCPU::T4 = false,
-    parGPU::T4 = false,
-) where {T1 <: AbstractMobility,T2,T3 <: Integer,T4 <: Bool}
+    remesh::T3 = true,
+    collision::T3 = true,
+    separation::T3 = true,
+    virtualRemesh::T3 = true,
+    parCPU::T3 = false,
+    parGPU::T3 = false,
+) where {T1 <: AbstractMobility,T2,T3 <: Bool}
     
     coreRad == minSegLen == maxSegLen == 0 ? nothing :
     @assert coreRad < minSegLen < maxSegLen
@@ -100,7 +89,6 @@ function DislocationParameters(;
         maxArea^2,
         slipStepCritLen,
         slipStepCritArea,
-        maxConnect,
         remesh,
         collision,
         separation,
