@@ -3,22 +3,22 @@
 calcSegForce(
     dlnParams::DislocationParameters,
     matParams::MaterialParameters,
-    network::DislocationNetwork;
-    # mesh::RegularCuboidMesh,
-    # dlnFEM::DislocationFEMCorrective;
-    parallel::Bool = true,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
 )
 ```
+Compute total force on dislocation segments.
 """
 function calcSegForce(
-    dlnParams::T1,
-    matParams::T2,
-    mesh::T3,
-    forceDisplacement::T4,
-    network::T5,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
-
+)
     isnothing(idx) ? numSeg = network.numSeg[1] : numSeg = length(idx)
 
     PKForce = calcPKForce(mesh, forceDisplacement, network, idx)
@@ -35,14 +35,27 @@ function calcSegForce(
 
     return segForce
 end
-function calcSegForce!(
-    dlnParams::T1,
-    matParams::T2,
-    mesh::T3,
-    forceDisplacement::T4,
-    network::T5,
+"""
+```
+calcSegForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: AbstractMesh,T4 <: ForceDisplacement,T5 <: DislocationNetwork,}
+)
+```
+In-plce computation of total force on dislocation segments.
+"""
+function calcSegForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+)
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
@@ -63,17 +76,26 @@ end
 """
 ```
 calc_σHat(
-    mesh::RegularCuboidMesh,
+    mesh::RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14} where {T1 <: LinearElement,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14},
     forceDisplacement::ForceDisplacement,
-    x0::AbstractVector{T} where {T},
+    x0,
 )
 ```
-Calculate the reaction stress, ``̂σ``, from a dislocation.
+Compute the stress, `̂σ`, on a dislocation segment `x0` as a result of body forces on a [`RegularCuboidMesh`](@ref) composed of [`LinearElement`](@ref).
+
+## Returns
+```
+σ = [
+        σxx σxy σxz
+        σxy σyy σyz
+        σxz σyz σzz
+    ]
+```
 """
 function calc_σHat(
     mesh::RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14} where {T1 <: LinearElement,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14},
     forceDisplacement::ForceDisplacement,
-    x0::AbstractVector{T} where {T},
+    x0,
 )
     C = mesh.C
     connectivity = mesh.connectivity

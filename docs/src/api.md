@@ -1,6 +1,6 @@
-# IO
+## IO
 
-## Input
+### Input
 
 ```@docs
 loadJSON
@@ -17,10 +17,18 @@ loadIntegrationTime
 loadParameters
 ```
 
-## Output
+### Output
 
 ```@docs
 saveJSON
+```
+
+## Post Processing
+
+```@docs
+plotNodes
+plotNodes!
+plotFEDomain
 ```
 
 ## Misc support functions
@@ -32,5 +40,12 @@ externalAngle
 rot3D
 ⊗
 linePlaneIntersect
-FastGaussQuadrature.gausslegendre(n::Integer, a, b)
+gausslegendre(n::Integer, a, b)
+```
+
+## Processing
+
+```@docs
+calc_σTilde
+calc_σTilde!
 ```

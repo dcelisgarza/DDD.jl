@@ -218,8 +218,7 @@ Tensor product.
 ```
 linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
 ```
-
-Finds the intersect between a line and a plane. `n = plane normal`, `p0 = point on a plane`, `l = line vector`, `l0 = point on the line`.
+Finds the intersect between a line and a plane. `n` is the plane normal, `p0` is a point on the plane, `l` is the line vector, `l0` is a point on a line.
 """
 function linePlaneIntersect(n, p0, l, l0)
     den = l ⋅ n
@@ -237,9 +236,9 @@ end
 
 """
 ```
-FastGaussQuadrature.gausslegendre(n::Integer, a, b)
+gausslegendre(n::Integer, a, b)
 ```
-Compute Gauss-Legendre quadrature points and weights for the interval [a, b].
+Compute Gauss-Legendre quadrature points and weights for the interval `[a, b]`.
 """
 function FastGaussQuadrature.gausslegendre(n::Integer, a, b)
     bma = (b - a) * 0.5

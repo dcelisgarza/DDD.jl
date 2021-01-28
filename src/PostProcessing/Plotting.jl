@@ -1,8 +1,8 @@
 """
 ```
-plotNodes(obj::Union{DislocationLoop, DislocationNetwork}, args...; kw...)
+plotNodes(network::DislocationNetwork, args...; kw...)
 ```
-Plots dislocation network as nodes connected by segments. Returns a new figure. See [`plotNodes!`](@ref) for mutating version.
+Plots [`DislocationNetwork`](@ref).
 """
 function plotNodes(network::DislocationNetwork, args...; kw...)
     label = network.label
@@ -25,9 +25,9 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
 end
 """
 ```
-plotNodes!(fig, obj::Union{DislocationLoop, DislocationNetwork}, args...; kw...)
+plotNodes!(fig, network::DislocationNetwork, args...; kw...)
 ```
-Updates figure to plot dislocation network as nodes connected by segments. See [`plotNodes`](@ref) for non-mutating version.
+In-place plots [`DislocationNetwork`](@ref).
 """
 function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     label = network.label
@@ -47,7 +47,13 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     return fig
 end
 
-function plotNodes(mesh::T1, network::DislocationNetwork, args...; kw...) where {T1 <: AbstractMesh}
+"""
+```
+plotNodes(mesh::AbstractMesh, network::DislocationNetwork, args...; kw...)
+```
+Plots [`DislocationNetwork`](@ref) inside [`AbstractMesh`](@ref).
+"""
+function plotNodes(mesh::AbstractMesh, network::DislocationNetwork, args...; kw...)
     label = network.label
     coord = network.coord
     links = network.links
@@ -89,6 +95,12 @@ function plotNodes(mesh::T1, network::DislocationNetwork, args...; kw...) where 
     return fig
 end
 
+"""
+```
+plotNodes!(fig, mesh::AbstractMesh, network::DislocationNetwork, args...; kw...)
+```
+In-place plots [`DislocationNetwork`](@ref) inside [`AbstractMesh`](@ref).
+"""
 function plotNodes!(fig, mesh::T1, network::DislocationNetwork, args...; kw...) where {T1 <: AbstractMesh}
     label = network.label
     coord = network.coord
@@ -131,6 +143,12 @@ function plotNodes!(fig, mesh::T1, network::DislocationNetwork, args...; kw...) 
     return fig
 end
 
+"""
+```
+plotNodes(loop::DislocationLoop, args...; kw...)
+```
+Plots [`DislocationLoop`](@ref).
+"""
 function plotNodes(loop::DislocationLoop, args...; kw...)
     idx = findall(x -> x != 0, loop.label)
     coord = loop.coord
@@ -147,6 +165,12 @@ function plotNodes(loop::DislocationLoop, args...; kw...)
     end
     return fig
 end
+"""
+```
+plotNodes!(fig, loop::DislocationLoop, args...; kw...)
+```
+In-place plots [`DislocationLoop`](@ref).
+"""
 function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     idx = findall(x -> x != 0, loop.label)
     coord = loop.coord
@@ -163,7 +187,13 @@ function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     return fig
 end
 
-function plotFEDomain(mesh::T) where {T <: AbstractMesh}
+"""
+```
+plotFEDomain(mesh::AbstractMesh)
+```
+Plots corners, edges and surfaces of [`AbstractMesh`](@ref).
+"""
+function plotFEDomain(mesh::AbstractMesh)
     cornerNode = mesh.cornerNode
     edgeNode = mesh.edgeNode
     faceNode = mesh.faceNode

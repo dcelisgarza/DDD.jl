@@ -2,15 +2,16 @@
 ```
 calc_σTilde(
     x0,
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
+)
 ```
-Calculate stress on points `x0`.
-##
-Returns
+Computes the stress tensor, `̃σ`, induced by dislocations on points `x0`.
+
+## Returns
+
 ```
 σxx = σ[1, :]
 σyy = σ[2, :]
@@ -18,16 +19,15 @@ Returns
 σxy = σ[4, :]
 σxz = σ[5, :]
 σyz = σ[6, :]
-``
+```
 """
 function calc_σTilde(
     x0,
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
-
+)
     # Constants
     μ4π = matParams.μ4π
     μ8π = matParams.μ8π
@@ -199,15 +199,38 @@ function calc_σTilde(
     return σ
 end
 
+"""
+```
+calc_σTilde!(
+    σ,
+    x0,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+```
+In-place computation of the stress tensor,`̃σ`, induced by dislocations on points `x0`.
+
+## Returns
+
+```
+σxx = σ[1, :]
+σyy = σ[2, :]
+σzz = σ[3, :]
+σxy = σ[4, :]
+σxz = σ[5, :]
+σyz = σ[6, :]
+```
+"""
 function calc_σTilde!(
     σ,
     x0,
-    dlnParams::T1,
-    matParams::T2,
-    network::T3,
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
     idx = nothing,
-) where {T1 <: DislocationParameters,T2 <: MaterialParameters,T3 <: DislocationNetwork}
-
+)
     @assert ndims(σ) == ndims(x0) && size(σ, 2) == size(x0, 2) && size(σ, 1) == 6
 
     # Constants
