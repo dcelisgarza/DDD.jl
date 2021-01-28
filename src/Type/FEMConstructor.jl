@@ -1,30 +1,5 @@
 """
 ```
-FEMParameters(
-    type::T1,
-    order::T2,
-    model::T3,
-    dx::T4,
-    dy::T4,
-    dz::T4,
-    mx::T5,
-    my::T5,
-    mz::T5
-) where {
-    T1 <: AbstractMesh,
-    T2 <: AbstractModel,
-    T3 <: AbstractElementOrder,
-    T4 <: AbstractFloat,
-    T5 <: Integer
-}
-```
-Constructor for [`FEMParameters`](@ref).
-"""
-function FEMParameters(type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4, mx::T5, my::T5, mz::T5) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3 <: AbstractModel, T4 <: AbstractFloat,T5 <: Integer}
-    FEMParameters{T1,T2,T3,T4,T5}(type, order, model, dx, dy, dz, mx, my, mz)
-end
-"""
-```
 FEMParameters(;
     type::T1,
     order::T2,
@@ -72,19 +47,10 @@ buildMesh(matParams::T1, femParams::T2)
 ```
 Internally calls another `buildMesh` that dispatches based on [`FEMParameters`](@ref).`type`.
 """
-function buildMesh(matParams::T1, femParams::T2) where {T1 <: MaterialParameters,T2 <: FEMParameters}
-    return buildMesh(femParams.type, matParams, femParams)
+function buildMesh(matParams::MaterialParameters, femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2,F3,F4,F5})
+    return RegularCuboidMesh(matParams, femParams)
 end
-"""
-```
-buildMesh(::T1, matParams::T2, femParams::T3) 
-    where {T1 <: DispatchRegularCuboidMesh,T2 <: MaterialParameters,T3 <: FEMParameters}
-```
-Builds a [`RegularCuboidMesh`](@ref) by dispatching on `femParams.type == DispatchRegularCuboidMesh()`.
-"""
-function buildMesh(::T1, matParams::T2, femParams::T3) where {T1 <: DispatchRegularCuboidMesh,T2 <: MaterialParameters,T3 <: FEMParameters}
-    return RegularCuboidMesh(femParams.order, matParams, femParams)
-end
+
 
 """
 ```
@@ -121,11 +87,12 @@ y   ^z
 !!! note
     This is rotated about the `x` axis w.r.t. to the local `(s1, s2, s3)` system. [`calc_σHat`](@ref) uses custom linear shape functions that eliminate the need for a Jacobian, speeding up the calculation. We keep the Jacobian in this function because it's only run at simulation initialisation so it's not performance critical, which lets us use standard shape functions.
 """
-function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <: LinearElement,T2 <: MaterialParameters,T3 <: FEMParameters}
+function RegularCuboidMesh(matParams::MaterialParameters, femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2<:LinearElement,F3,F4,F5})
 
     μ = matParams.μ
     ν = matParams.ν
     νomνInv = matParams.νopνInv # ν/(1+ν)
+    order = femParams.order
     dx = femParams.dx
     dy = femParams.dy
     dz = femParams.dz
@@ -454,23 +421,6 @@ function RegularCuboidMesh(order::T1, matParams::T2, femParams::T3) where {T1 <:
         globalK,
 )
     
-end
-"""
-```
-RegularCuboidMesh(;
-    order::T1, 
-    matParams::T2, 
-    femParams::T3
-) where {
-    T1 <: AbstractElementOrder,
-    T2 <: MaterialParameters,
-    T3 <: FEMParameters
-}
-```
-Keyword constructor for [`RegularCuboidMesh`](@ref).
-"""
-function RegularCuboidMesh(; order::T1, matParams::T2, femParams::T3) where {T1 <: AbstractElementOrder,T2 <: MaterialParameters,T3 <: FEMParameters}
-    return RegularCuboidMesh(order, matParams, femParams)
 end
 
 """
