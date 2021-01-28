@@ -1,14 +1,10 @@
 """
 ```
-shapeFunction(shape<:AbstractShapeFunction, x, y, z)
+shapeFunction(::LinearQuadrangle3D, x, y, z)
 ```
-Returns the shape functions of type `typeof(shape) <: AbstractShapeFunction`. If `x,y,z` are floats returns a vector of length `N`, different shape functons have different numbers of nodes. If given vectors, returns an array of size `(N, length(x))`.
-!!! note
-    All coordinate vectors must be of equal length.
-[`shapeFunctionDeriv`](@ref) are the 1st order derivatives of the shape functions.
+Computes the linear shape functions `N[1:8]` for an `(x, y, z)` point on a 3D linear quadrangle.
 """
-function shapeFunction(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
-
+function shapeFunction(::LinearQuadrangle3D, x, y, z)
     # N[n](x,y,z) := shape function n.
     omx = 1 - x
     omy = 1 - y
@@ -31,13 +27,13 @@ function shapeFunction(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
 
     return N
 end
-function shapeFunction(
-    shape::T1,
-    x::T2,
-    y::T2,
-    z::T2,
-) where {T1 <: LinearQuadrangle3D,T2 <: AbstractVector{T} where {T}}
-
+"""
+```
+shapeFunction(::LinearQuadrangle3D, x::AbstractVector, y::AbstractVector, z::AbstractVector)
+```
+Computes the linear shape functions `N[1:8][p]` for `(x, y, z)` point `p` on a 3D linear quadrangle.
+"""
+function shapeFunction(::LinearQuadrangle3D, x::AbstractVector, y::AbstractVector, z::AbstractVector)
     numPoints = length(x)
     xType = eltype(x)
     @assert numPoints == length(y) == length(z)
@@ -72,14 +68,15 @@ end
 ```
 shapeFunctionDeriv(shape<:AbstractShapeFunction, x, y, z)
 ```
-Returns the first order derivative of the shape functions, [`shapeFunction`](@ref), of type `typeof(shape) <: AbstractShapeFunction`. If `x,y,z` are floats returns a 2D array of size `(N, 3)`. If given vectors, returns a 3D array of size `(N, 3, length(x))`.
-!!! note
-    All coordinate vectors must be of equal length.
-"""
-function shapeFunctionDeriv(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
+Computes the derivatives of the linear shape functions `N[1:3, 1:8]` for an `(x, y, z)` point on a 3D linear quadrangle.
 
-    # dNdS[n, x](x,y,z) := x'th derivative of shape function n.
-    # dNdS[n, x](x,y,z) = dN[a, b] / dx
+## Returns
+```
+dNdS[x, n](x,y,z) := x'th derivative of shape function n.
+```
+"""
+function shapeFunctionDeriv(::LinearQuadrangle3D, x, y, z)
+    # dNdS[x, n](x,y,z) := x'th derivative of shape function n.
     omx = 1 - x
     omy = 1 - y
     omz = 1 - z
@@ -117,19 +114,24 @@ function shapeFunctionDeriv(shape::T, x, y, z) where {T <: LinearQuadrangle3D}
 
     return dNdS
 end
-function shapeFunctionDeriv(
-    shape::T1,
-    x::T2,
-    y::T2,
-    z::T2,
-) where {T1 <: LinearQuadrangle3D,T2 <: AbstractVector{T} where {T}}
+"""
+```
+shapeFunctionDeriv(shape<:AbstractShapeFunction, x::AbstractVector, y::AbstractVector, z::AbstractVector)
+```
+Computes the derivatives of the linear shape functions `N[1:3, 1:8]` for an `(x, y, z)` point on a 3D linear quadrangle.
 
+## Returns
+```
+dNdS[x, n, p](x,y,z) := x'th derivative of shape function n for point p.
+```
+"""
+function shapeFunctionDeriv(::LinearQuadrangle3D, x::AbstractVector, y::AbstractVector, z::AbstractVector)
     numPoints = length(x)
     xType = eltype(x)
     @assert numPoints == length(y) == length(z)
-    # dNdS[n, x, p](x,y,z) := x'th derivative of shape function n for point p.
-    # dNdS[n, x, p](x,y,z) = dN[a, b, p] / dx
-    dNdS = Array{SMatrix{3,8,xType}}(undef, numPoints)# zeros(8, 3, length(x))
+    
+    # dNdS[x, n, p](x,y,z) := x'th derivative of shape function n for point p.
+    dNdS = Array{SMatrix{3,8,xType}}(undef, numPoints)
 
     for i in eachindex(x)
         omx = 1 - x[i]

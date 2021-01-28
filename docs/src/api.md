@@ -66,4 +66,10 @@ removeConnection!
 removeLink!
 mergeNode!
 coarsenNetwork!
+findIntersectVolume
+makeSurfaceNode!
+remeshSurfaceNetwork!
+coarsenVirtualNetwork!
+shapeFunction
+shapeFunctionDeriv
 ```
