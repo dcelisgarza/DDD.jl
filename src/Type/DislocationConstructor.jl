@@ -416,6 +416,9 @@ function DislocationNetwork(;
     typeof(numSeg) <: AbstractVector ? numSegArr = numSeg : numSegArr = [numSeg]
 
     return DislocationNetwork(
+        numNodeArr,
+        numSegArr,
+        maxConnect,
         links,
         slipPlane,
         bVec,
@@ -423,9 +426,6 @@ function DislocationNetwork(;
         label,
         nodeVel,
         nodeForce,
-        numNodeArr,
-        numSegArr,
-        maxConnect,
         connectivity,
         linksConnect,
         segIdx,
@@ -504,6 +504,9 @@ function DislocationNetwork(
 
     # Create network.
     network = DislocationNetwork(
+        [numNode],
+        [numSeg],
+        maxConnect,
         links,
         slipPlane,
         bVec,
@@ -511,9 +514,6 @@ function DislocationNetwork(
         label,
         nodeVel,
         nodeForce,
-        [numNode],
-        [numSeg],
-        maxConnect,
         connectivity,
         linksConnect,
         segIdx,
@@ -530,7 +530,6 @@ end
 DislocationNetwork!(
     network::DislocationNetwork,
     sources::DislocationLoopCollection,
-    maxConnect = 4,
     args...;
     memBuffer = nothing,
     checkConsistency = true,
@@ -542,7 +541,6 @@ Adds a [`DislocationLoopCollection`](@ref) to an existing [`DislocationNetwork`]
 function DislocationNetwork!(
     network::DislocationNetwork,
     sources::DislocationLoopCollection,
-    maxConnect = 4,
     args...;
     memBuffer = nothing,
     checkConsistency = true,
@@ -552,13 +550,10 @@ function DislocationNetwork!(
     
     iszero(network) && return DislocationNetwork(
         sources,
-        maxConnect = maxConnect,
         args...;
         checkConsistency = checkConsistency,
         kw...,
     )
-    
-    @assert network.maxConnect == maxConnect "Maximum connectivity of added network must be equal to that of the existing network."
     
     nodeTotal::Int = 0
     lims = zeros(MMatrix{3,2})

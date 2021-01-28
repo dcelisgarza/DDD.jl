@@ -166,38 +166,12 @@ struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,
     maxAreaSq::T13          # Maximum area for remeshing squared
     slipStepCritLen::T14    # Critical length for slip step tracking
     slipStepCritArea::T15   # Critical area for slip slep tracking
-    remesh::T16
-    collision::T17
-    separation::T18
-    virtualRemesh::T19
-    parCPU::T20
-    parGPU::T21
-end
-struct DislocationParameters{T1,T2,T3,T4}
-    coreRad::T1         
-    coreRadSq::T1       # Square of the dislocation core radius.
-    coreRadMag::T1      # Magnitude of the core radius (real units for post-processing).
-    minSegLen::T1       # Minimum segment length.
-    maxSegLen::T1       # Maximum segment length.
-    twoMinSegLen::T1    # Twice the minimum segment length.
-    minArea::T1         # Minimum area for remeshing.
-    maxArea::T1         # Maximum area for remeshing.
-    minAreaSq::T1       # Square of the minimum area.
-    maxAreaSq::T1       # Square of the maximum area.
-    edgeDrag::T1        # Edge drag coefficient.
-    screwDrag::T1       # Screw drag coefficient.
-    climbDrag::T1       # Climb drag coefficient.
-    lineDrag::T1        # Line drag coefficient.
-    maxConnect::T2      # Maximum connectivity of nodes.
-    mobility::T3        # Dislocation mobility.
-    remesh::T4          # Remesh flag.
-    collision::T4       # Collision flag.
-    separation::T4      # Separation flag.
-    virtualRemesh::T4   # Virtual remeshing flag.
-    parCPU::T4          # Parallelise on CPU flag.
-    parGPU::T4          # Parallelise on GPU flag.
-    slipStepCritLen::T1 # Critical length for slip step tracking.
-    slipStepCritArea::T1    # Critical area for slip step tracking.
+    remesh::T16             # Flag for remeshing
+    collision::T17          # Flag for collision
+    separation::T18         # Flag for separation
+    virtualRemesh::T19      # Flag for virtual remeshing
+    parCPU::T20             # Flag for CPU parallelisation
+    parGPU::T21             # Flag for GPU parallelisation
 end
 ```
 Stores the dislocation parameters.
@@ -228,24 +202,24 @@ end
 
 """
 ```
-struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10}
+struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     loopType::T1    # Loop type.
     numSides::T2    # Number of sides in the loop.
-    nodeSide::T2    # Nodes per side of the loop.
-    numLoops::T2    # Number of loops to generate when making the network.
-    segLen::T3      # Segment lengths.
-    slipSystem::T4  # Slip system.
-    links::T5       # Links.
-    slipPlane::T6   # Slip planes.
-    bVec::T6        # Burgers vectors.
-    coord::T6       # Coordinates.
-    label::T7       # Node labels.
-    buffer::T8      # Buffer for distributions.
-    range::T9       # Range for distributions.
-    dist::T10       # Distribution.
+    nodeSide::T3    # Nodes per side of the loop.
+    numLoops::T4    # Number of loops to generate when making the network.
+    segLen::T5      # Segment lengths.
+    slipSystem::T6  # Slip system.
+    links::T7       # Links.
+    slipPlane::T8   # Slip planes.
+    bVec::T9        # Burgers vectors.
+    coord::T10      # Coordinates.
+    label::T11      # Node labels.
+    buffer::T12     # Buffer for distributions.
+    range::T13      # Range for distributions.
+    dist::T14       # Distribution.
 end
 ```
-Stores a dislocation loop and parameters used to generate a [`DislocationNetwork`](@ref).
+Stores a dislocation loop.
 """
 struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     loopType::T1
@@ -263,42 +237,48 @@ struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     range::T13
     dist::T14
 end
+"""
+```
+DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop}
+```
+Single, vector and tuple of [`DislocationLoop`](@ref).
+"""
 const DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop}
 
 """
 ```
-struct DislocationNetwork{T1,T2,T3,T4,T5,T6}
-    links::T1
-    slipPlane::T2
+struct DislocationNetwork{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13}
+    links::T1           # Links
+    slipPlane::T2       # Slip planes
     bVec::T2
-    coord::T2
-    label::T3
-    nodeVel::T2
-    nodeForce::T2
-    numNode::T4
-    numSeg::T4
-    maxConnect::T5
-    connectivity::T1
-    linksConnect::T1
-    segIdx::T1
-    segForce::T6
+    coord::T3
+    label::T4
+    nodeVel::T5
+    nodeForce::T6
+    numNode::T7
+    numSeg::T8
+    maxConnect::T9
+    connectivity::T10
+    linksConnect::T11
+    segIdx::T12
+    segForce::T13
 end
 ```
 Stores the dislocation network generated from [`DislocationLoop`](@ref).
 """
-struct DislocationNetwork{T1,T2,T3,T4,T5,T6}
-    links::T1
-    slipPlane::T2
-    bVec::T2
-    coord::T2
-    label::T3
-    nodeVel::T2
-    nodeForce::T2
-    numNode::T4
-    numSeg::T4
-    maxConnect::T5
-    connectivity::T1
-    linksConnect::T1
-    segIdx::T1
-    segForce::T6
+struct DislocationNetwork{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
+    numNode::T1
+    numSeg::T2
+    maxConnect::T3
+    links::T4
+    slipPlane::T5
+    bVec::T6
+    coord::T7
+    label::T8
+    nodeVel::T9
+    nodeForce::T10
+    connectivity::T11
+    linksConnect::T12
+    segIdx::T13
+    segForce::T14
 end

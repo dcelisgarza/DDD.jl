@@ -214,7 +214,6 @@ end
     @test iszero(networkZero)
     networkZero = DislocationNetwork!(networkZero, loops[1]; maxConnect = 0)
     @test !iszero(networkZero)
-    @test_throws AssertionError DislocationNetwork!(network, loops[1], 10)
 
     network = DislocationNetwork(loops[1], memBuffer = 1)
     numNode = network.numNode[1]
