@@ -97,7 +97,7 @@ end
 ```
 compStruct(arg1, arg2; verbose::Bool = false)
 ```
-Function that compares values of the fields of two variables `arg1` and `arg2` with the same structure. If `verbose = true`, it will print which fields are different from each other.
+Compares values of the fields of two variables `arg1` and `arg2` with the same structure. If `verbose = true`, it will print which fields are different from each other.
 
 # Examples
 
@@ -136,30 +136,25 @@ end
 
 """
 ```
-intAngle(n::Int)
+internalAngle(n::Int)
 ```
-Calculates the interior angle of a regular polygon with `n` sides.
+Compute the interior angle of a regular polygon with `n` sides.
 """
-intAngle(n::Int) = (n - 2) * π / n
+internalAngle(n::Int) = (n - 2) * π / n
 
 """
 ```
 externalAngle(n::Int)
 ```
-Calculates the exterior angle of a regular polygon with `n` sides.
+Compute the exterior angle of a regular polygon with `n` sides.
 """
-externalAngle(n::Int) = π - intAngle(n)
+externalAngle(n::Int) = π - internalAngle(n)
 
 """
 ```
-rot3D(
-    xyz::AbstractVector{T1},
-    uvw::AbstractVector{T2},
-    abc::AbstractVector{T3},
-    θ::T4,
-) where {T1, T2, T3, T4}
+rot3D(xyz, uvw, abc, θ)
 ```
-Rotate point `xyz` about the line with direction vector `uvw` that crosses the point `abc` by the angle `θ`. Further details found [here](https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions).
+Rotate point `xyz` about the vector `uvw` that crosses point `abc` by the angle `θ`. Further details found [here](https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions).
 
 # Examples
 
@@ -181,13 +176,8 @@ julia> rot3D([1;1;1],[1;0;0],[0;0;0],π)
  -0.9999999999999999
 ```
 """
-function rot3D(
-    xyz::T1,
-    uvw::T1,
-    abc::T1,
-    θ::T2,
-) where {T1 <: AbstractVector{T} where {T},T2}
-    isapprox(norm(uvw), 1) ? nothing : uvw ./= norm(uvw)
+function rot3D(xyz, uvw, abc, θ)
+    uvw = normalize(uvw)
 
     cosθ = cos(θ)
     onemcosθ = 1 - cosθ
@@ -216,21 +206,20 @@ function rot3D(
     )
 end
 
-"""⊗(::AbstractVector, ::AbstractVector)
+"""
+```
+⊗(x::AbstractVector, y::AbstractVector)
+```
 Tensor product.
 """
 ⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1,T2} = x * y'
 
 """
-n = plane normal
-p0 = plane point
-l = line vector
-l0 = line point
 ```
 linePlaneIntersect(n::T, p0::T, l::T, l0::T) where {T <: AbstractVector}
 ```
 
-Find the intersect between plane and line.
+Finds the intersect between a line and a plane. `n = plane normal`, `p0 = point on a plane`, `l = line vector`, `l0 = point on the line`.
 """
 function linePlaneIntersect(n, p0, l, l0)
     den = l ⋅ n
@@ -245,6 +234,7 @@ function linePlaneIntersect(n, p0, l, l0)
     intersect = l0 + d * l
     return intersect
 end
+
 """
 ```
 FastGaussQuadrature.gausslegendre(n::Integer, a, b)

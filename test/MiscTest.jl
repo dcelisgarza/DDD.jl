@@ -6,9 +6,9 @@ cd(@__DIR__)
 
 @testset "Geometry" begin
     arr = Int[3; 4; 6]
-    @test isapprox(intAngle(arr[1]), π / 3)
-    @test isapprox(intAngle(arr[2]), π / 2)
-    @test isapprox(intAngle(arr[3]), 2π / 3)
+    @test isapprox(internalAngle(arr[1]), π / 3)
+    @test isapprox(internalAngle(arr[2]), π / 2)
+    @test isapprox(internalAngle(arr[3]), 2π / 3)
     @test isapprox(externalAngle(arr[1]), 2π / 3)
     @test isapprox(externalAngle(arr[2]), π / 2)
     @test isapprox(externalAngle(arr[3]), π / 3)

@@ -27,4 +27,10 @@ saveJSON
 
 ```@docs
 compStruct
+internalAngle
+externalAngle
+rot3D
+⊗
+linePlaneIntersect
+FastGaussQuadrature.gausslegendre(n::Integer, a, b)
 ```

@@ -5,7 +5,7 @@ using LinearAlgebra,
 
 # Miscelaneous.
 include("./Misc/Misc.jl")
-export compStruct, intAngle, externalAngle, rot3D
+export compStruct, internalAngle, externalAngle, rot3D
 export ⊗, linePlaneIntersect, gausslegendre
 
 include("./Type/TypeBase.jl")
