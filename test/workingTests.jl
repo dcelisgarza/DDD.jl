@@ -39,6 +39,7 @@ regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 saveJSON("cantileverBC.json", cantileverBC)
 cantileverDict = loadJSON("cantileverBC.json")
+loadBoundaries(cantileverDict)
 cantileverDict["tGamma"]
 
 cantileverBC.tK[:P]

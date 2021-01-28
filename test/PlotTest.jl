@@ -9,17 +9,17 @@ cd(@__DIR__)
     fileSlipSystem = "./testData/BCC.json"
     fileDislocationLoop = "./testData/sampleDislocation.json"
     dictSlipSystem = loadJSON(fileSlipSystem)
-    slipSystems = loadSlipSystemJSON(dictSlipSystem)
+    slipSystems = loadSlipSystem(dictSlipSystem)
     # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = loadJSON(fileDislocationLoop)
     loops = zeros(DislocationLoop, length(dictDislocationLoop))
     if typeof(dictDislocationLoop) <: AbstractArray
         loops = zeros(DislocationLoop, length(dictDislocationLoop))
         for i in eachindex(loops)
-            loops[i] = loadDislocationLoopJSON(dictDislocationLoop[i], slipSystems)
+            loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
         end
     else
-        loops = loadDislocationLoopJSON(dictDislocationLoop, slipSystems)
+        loops = loadDislocationLoop(dictDislocationLoop, slipSystems)
     end
     network = DislocationNetwork(loops)
 
@@ -59,8 +59,8 @@ cd(@__DIR__)
 
     DictMaterialParameters = loadJSON("./testData/sampleMaterialParameters.json")
     DictFEMParameters = loadJSON("./testData/sampleFEMParameters.json")
-    matParams = loadMaterialParametersJSON(DictMaterialParameters)
-    femParams = loadFEMParametersJSON(DictFEMParameters)
+    matParams = loadMaterialParameters(DictMaterialParameters)
+    femParams = loadFEMParameters(DictFEMParameters)
     regularCuboidMesh = buildMesh(matParams, femParams)
 
     fig = plot()

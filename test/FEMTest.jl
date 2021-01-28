@@ -53,7 +53,7 @@ end
 
 @testset "Checking arbitrary points of the mesh and connectivity" begin
     DictMaterialParameters = loadJSON("./testData/sampleMaterialParameters.json")
-    matParams = loadMaterialParametersJSON(DictMaterialParameters)
+    matParams = loadMaterialParameters(DictMaterialParameters)
     femParams = FEMParameters(;
         type = DispatchRegularCuboidMesh(),
         order = LinearElement(),
@@ -201,7 +201,7 @@ end
 
 @testset "Boundary conditions" begin
     DictMaterialParameters = loadJSON("./testData/sampleMaterialParameters.json")
-    matParams = loadMaterialParametersJSON(DictMaterialParameters)
+    matParams = loadMaterialParameters(DictMaterialParameters)
     femParams = FEMParameters(;
         type = DispatchRegularCuboidMesh(),
         order = LinearElement(),

@@ -25,7 +25,7 @@ cd(@__DIR__)
     )
     fileSlipSystem = "./testData/BCC.json"
     dictSlipSystem = loadJSON(fileSlipSystem)
-    slipSystems = loadSlipSystemJSON(dictSlipSystem)
+    slipSystems = loadSlipSystem(dictSlipSystem)
     slipSysInt = 1
     slipPlane = slipSystems.slipPlane[:, 1]
     bVec = slipSystems.bVec[:, 1]
@@ -90,17 +90,17 @@ end
     loopfile = "./testData/samplePrismShear.json"
 
     dictSlipSystem = loadJSON(slipfile)
-    slipSystems = loadSlipSystemJSON(dictSlipSystem)
+    slipSystems = loadSlipSystem(dictSlipSystem)
 
     dictDislocationLoop = loadJSON(loopfile)
 
     if typeof(dictDislocationLoop) <: AbstractArray
         loops = zeros(DislocationLoop, length(dictDislocationLoop))
         for i in eachindex(loops)
-            loops[i] = loadDislocationLoopJSON(dictDislocationLoop[i], slipSystems)
+            loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
         end
     else
-        loops = loadDislocationLoopJSON(dictDislocationLoop, slipSystems)
+        loops = loadDislocationLoop(dictDislocationLoop, slipSystems)
     end
 
     # Check that the midpoint of the loops is at (0,0,0)

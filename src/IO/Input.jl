@@ -2,7 +2,7 @@
 ```
 loadJSON(filename::AbstractString)
 ```
-Wrapper for `JSON.parsefile(filename)`.
+Wrapper for `JSON.parsefile(filename)`. Loads a `JSON` file as a dictionary.
 """
 function loadJSON(filename::AbstractString)
     dict = JSON.parsefile(filename)
@@ -11,15 +11,11 @@ end
 
 """
 ```
-function loadDislocationLoopJSON(
-    dict::Dict{T1, T2} where {T1, T2},
-    slipSystem::SlipSystem,
-)
+loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSystem)
 ```
-Loads initial dislocation structure out of a dictionary loaded from a JSON file. Returns a variable of type [`DislocationLoop`](@ref).
+Constructs [`DislocationLoop`](@ref) out of a dictionary and [`SlipSystem`](@ref) structure.
 """
-function loadDislocationLoopJSON(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSystem)
-
+function loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSystem)
     dlnTypes = makeTypeDict(AbstractDlnStr)
     distributions = makeTypeDict(AbstractDistribution)
 
@@ -53,12 +49,11 @@ end
 
 """
 ```
-loadMaterialParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
+loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
-Loads material parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`MaterialParameters`](@ref).
+Constructs [`MaterialParameters`](@ref) out of a dictionary.
 """
-function loadMaterialParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
-
+function loadMaterialParameters(dict::Dict{T1,T2}) where {T1,T2}
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     MaterialParams = MaterialParameters(;
@@ -73,8 +68,12 @@ function loadMaterialParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
 end
 
 """
+```
+loadFEMParameters(dict::Dict{T1,T2}) where {T1,T2}
+```
+Constructs [`FEMParameters`](@ref) out of a dictionary.
 """
-function loadFEMParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
+function loadFEMParameters(dict::Dict{T1,T2}) where {T1,T2}
     meshDict = makeTypeDict(AbstractMesh)
     orderDict = makeTypeDict(AbstractElementOrder)
     modelDict = makeTypeDict(AbstractModel)
@@ -90,30 +89,40 @@ function loadFEMParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
         my = convert(Int, dict["my"]),
         mz = convert(Int, dict["mz"]),
     )
+
     return FemParams
 end
 
 """
 ```
-loadBoundaries(dict::Dict{Any,Any})
+loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
 ```
-Load FEM boundaries.
+Constructs [`Boundaries`](@ref) out of a dictionary.
+!!! note
+    `tK` may be null if it was factorised when the variable was saved.
 """
 function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
     uGammaDict = dict["uGamma"]
     mGammaDict = dict["mGamma"]
     tGammaDict = dict["tGamma"]
-    uGamma = try (type = nodeTypeFE.(uGammaDict["type"]), idx = Int.(uGammaDict["idx"]), node = Int.(uGammaDict["node"]))
+
+    uGamma = try (type = nodeTypeFE.(uGammaDict["type"]),
+                    idx = Int.(uGammaDict["idx"]),
+                    node = Int.(uGammaDict["node"]))
     catch err
         uGamma = nothing
     end
 
-    mGamma = try (type = nodeTypeFE.(mGammaDict["type"]), idx = Int.(mGammaDict["idx"]), node = Int.(mGammaDict["node"]))
+    mGamma = try (type = nodeTypeFE.(mGammaDict["type"]),
+                    idx = Int.(mGammaDict["idx"]),
+                    node = Int.(mGammaDict["node"]))
     catch err
         mGamma = nothing
     end
 
-    tGamma = try (type = nodeTypeFE.(tGammaDict["type"]), idx = Int.(tGammaDict["idx"]), node = Int.(tGammaDict["node"]))
+    tGamma = try (type = nodeTypeFE.(tGammaDict["type"]),
+                    idx = Int.(tGammaDict["idx"]),
+                    node = Int.(tGammaDict["node"]))
     catch err
         tGamma = nothing
     end
@@ -135,25 +144,30 @@ function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
         )
 end
 
+"""
+```
+loadForceDisplacement(dict::Dict{T1,T2}) where {T1,T2}
+```
+Constructs [`ForceDisplacement`](@ref) out of a dictionary. It makes the arrays sparse and drops zeros under `eps(Float64)`.
+"""
 function loadForceDisplacement(dict::Dict{T1,T2}) where {T1,T2}
     return ForceDisplacement(;
-        uTilde = sparse(Float64.(dict["uTilde"])),
-        uHat = sparse(Float64.(dict["uHat"])),
-        u = sparse(Float64.(dict["u"])),
-        fTilde = sparse(Float64.(dict["fTilde"])),
-        fHat = sparse(Float64.(dict["fHat"])),
-        f = sparse(Float64.(dict["f"])),
+        uTilde = droptol!(sparse(Float64.(dict["uTilde"])), eps()),
+        uHat = droptol!(sparse(Float64.(dict["uHat"])), eps()),
+        u = droptol!(sparse(Float64.(dict["u"])), eps()),
+        fTilde = droptol!(sparse(Float64.(dict["fTilde"])), eps()),
+        fHat = droptol!(sparse(Float64.(dict["fHat"])), eps()),
+        f = droptol!(sparse(Float64.(dict["f"])), eps()),
     )
 end
 
 """
 ```
-loadIntegrationParametersJSON(dict::Dict{T1, T2}) where {T1, T2}
+loadIntegrationParameters(dict::Dict{T1,T2}) where {T1,T2}
 ```
-Loads integration parameters out of a dictionary loaded from a JSON file. Returns a variable of type [`IntegrationParameters`](@ref).
+Constructs [`IntegrationParameters`](@ref) out of a dictionary.
 """
-function loadIntegrationParametersJSON(dict::Dict{T1,T2}) where {T1,T2}
-
+function loadIntegrationParameters(dict::Dict{T1,T2}) where {T1,T2}
     integDict = makeTypeDict(AbstractIntegrator)
 
     IntegrationParams = IntegrationParameters(;
@@ -174,12 +188,11 @@ end
 
 """
 ```
-loadSlipSystemJSON(dict::Dict{T1, T2}) where {T1, T2}
+loadSlipSystem(dict::Dict{T1,T2}) where {T1,T2}
 ```
-Loads slip systems out of a dictionary loaded from a JSON file. Returns a variable of type [`SlipSystem`](@ref).
+Constructs [`SlipSystem`](@ref) out of a dictionary.
 """
-function loadSlipSystemJSON(dict::Dict{T1,T2}) where {T1,T2}
-
+function loadSlipSystem(dict::Dict{T1,T2}) where {T1,T2}
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     lenSlipSys = length(dict["slipPlane"])
@@ -255,16 +268,16 @@ function loadParametersJSON(
     DislocationParams = loadDislocationParametersJSON(dictDislocationParameters)
 
     dictMaterialParameters = loadJSON(fileMaterialParameters)
-    MaterialParams = loadMaterialParametersJSON(dictMaterialParameters)
+    MaterialParams = loadMaterialParameters(dictMaterialParameters)
 
     dictFEMParameters = loadJSON(fileFEMParameters)
-    FemParams = loadFEMParametersJSON(dictFEMParameters)
+    FemParams = loadFEMParameters(dictFEMParameters)
 
     dictIntegrationParameters = loadJSON(fileIntegrationParameters)
-    IntegrationParams = loadIntegrationParametersJSON(dictIntegrationParameters)
+    IntegrationParams = loadIntegrationParameters(dictIntegrationParameters)
 
     dictSlipSystem = loadJSON(fileSlipSystem)
-    slipSystems = loadSlipSystemJSON(dictSlipSystem)
+    slipSystems = loadSlipSystem(dictSlipSystem)
 
     # There can be multiple dislocations per simulation parameters.
     dictDislocationLoop = loadJSON(fileDislocationLoop)
@@ -272,10 +285,10 @@ function loadParametersJSON(
         dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
         for i in eachindex(dislocationLoop)
             dislocationLoop[i] =
-                loadDislocationLoopJSON(dictDislocationLoop[i], slipSystems)
+                loadDislocationLoop(dictDislocationLoop[i], slipSystems)
         end
     else
-        dislocationLoop = loadDislocationLoopJSON(dictDislocationLoop, slipSystems)
+        dislocationLoop = loadDislocationLoop(dictDislocationLoop, slipSystems)
     end
 
     return DislocationParams,
