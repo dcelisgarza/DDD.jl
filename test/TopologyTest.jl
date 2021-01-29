@@ -1265,7 +1265,7 @@ cd(@__DIR__)
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
-        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],
+        segLen = Float64[300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
@@ -2036,7 +2036,7 @@ end
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
-        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],# ,300; 700; 1100; 1500; 1900
+        segLen = Float64[300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],# ,300; 700; 1100; 1500; 1900
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
@@ -2239,7 +2239,7 @@ end
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
-        segLen = [300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],# ,300; 700; 1100; 1500; 1900
+        segLen = Float64[300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],# ,300; 700; 1100; 1500; 1900
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
