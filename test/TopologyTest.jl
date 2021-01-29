@@ -2233,13 +2233,13 @@ end
     @test network.linksConnect[:, 1:numSeg]' == linksConnect
     @test isapprox(network.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network.segForce[:, 2, 1:numSeg]', segForce2)
-
+    
     shearDecagon = DislocationLoop(;
         loopType = loopShear(),
         numSides = 10,
         nodeSide = 1,
         numLoops = 1,
-        segLen = Float64[300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],# ,300; 700; 1100; 1500; 1900
+        segLen = Float64[300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],
         slipSystem = 4,
         _slipPlane = slipSystems.slipPlane[:, 4],
         _bVec = slipSystems.bVec[:, 4],
@@ -2249,9 +2249,9 @@ end
         dist = Zeros(),
     )
 
+    network = nothing
     network = DislocationNetwork(shearDecagon)
 
-    network = deepcopy(network)
     network.coord[:, 11] = vec(mean(network.coord, dims = 2))
     network.label[11] = 1
     network.numNode[1] = 11
@@ -2502,7 +2502,7 @@ end
     @test isapprox(network.nodeVel[:, 14:15]', nodeVel[14:15, :], rtol = 1)
     @test isapprox(network.nodeVel[:, 16:numNode]', nodeVel[16:end, :], atol = 1e-2)
     @test network.connectivity[:, 1:numNode]' == connectivity
-    network.linksConnect[:, 1:numSeg]' == linksConnect
+    @test network.linksConnect[:, 1:numSeg]' == linksConnect
     @test isapprox(network.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network.segForce[:, 2, 1:numSeg]', segForce2)
 end
