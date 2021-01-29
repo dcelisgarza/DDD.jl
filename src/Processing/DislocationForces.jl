@@ -81,7 +81,7 @@ calc_σHat(
     x0,
 )
 ```
-Compute the stress, `̂σ`, on a dislocation segment `x0` as a result of body forces on a [`RegularCuboidMesh`](@ref) composed of [`LinearElement`](@ref). Used by [`calcPKForce`](@ref).
+Compute the stress, `̂σ`, on a dislocation segment `x0` as a result of body forces on a [`RegularCuboidMesh`](@ref) composed of `LinearElement()`(@ref). Used by [`calcPKForce`](@ref).
 
 ## Returns
 ```

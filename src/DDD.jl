@@ -54,6 +54,7 @@ export nodeTypeDln,
     SlipSystem,
     DislocationParameters,
     DislocationLoop,
+    DislocationLoopCollection,
     DislocationNetwork,
     DislocationNetwork!,
     checkNetwork,
@@ -81,7 +82,7 @@ export calcSegForce,
     findIntersectVolume
 export dlnMobility, dlnMobility!
 export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!, coarsenVirtualNetwork!
-export shapeFunction, shapeFunctionDeriv
+export shapeFunction, shapeFunctionDeriv, deriv!
 
 include("./PostProcessing/Plotting.jl")
 export plotNodes, plotNodes!, plotFEDomain

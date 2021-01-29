@@ -1,6 +1,10 @@
 """
 ```
-SlipSystem(; crystalStruct::AbstractCrystalStruct, slipPlane, bVec)
+SlipSystem(;
+    crystalStruct::AbstractCrystalStruct,
+    slipPlane::AbstractArray,
+    bVec::AbstractArray
+)
 ```
 Creates a [`SlipSystem`](@ref).
 """
@@ -104,10 +108,10 @@ DislocationLoop(
     slipSystem,
     _slipPlane,
     _bVec,
-    label::AbstractVector{nodeTypeDln},
+    label,
     buffer,
     range,
-    dist::AbstractDistribution,
+    dist,
 )
 ```
 Fallback for creating a generic [`DislocationLoop`](@ref).
@@ -158,8 +162,8 @@ DislocationLoop(
     numLoops,
     segLen,
     slipSystem,
-    _slipPlane::AbstractArray{T,N} where {T,N},
-    _bVec::AbstractArray{T,N} where {T,N},
+    _slipPlane::AbstractArray,
+    _bVec::AbstractArray,
     label::AbstractVector{nodeTypeDln},
     buffer,
     range,
@@ -279,8 +283,8 @@ DislocationLoop(
     numLoops,
     segLen,
     slipSystem,
-    _slipPlane::AbstractArray{T,N} where {T,N},
-    _bVec::AbstractArray{T,N} where {T,N},
+    _slipPlane::AbstractArray,
+    _bVec::AbstractArray,
     label::AbstractVector{nodeTypeDln},
     buffer,
     range,

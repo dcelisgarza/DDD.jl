@@ -65,7 +65,7 @@ struct loopMixed <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
 const loopImpure = Union{loopMixed,loopJog,loopKink}
-const loopDefined = Union{loopPrism,loopShear,loopMixed,loopJog,loopKink}
+const loopDefined = Union{loopPure,loopImpure}
 struct loopDln <: AbstractDlnStr end
 ```
 These types are used to automatically generate dislocation loops for simulation initialisation.
@@ -241,7 +241,7 @@ end
 ```
 DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop}
 ```
-Single, vector and tuple of [`DislocationLoop`](@ref).
+Defines a single, vector, and tuple of [`DislocationLoop`](@ref) types.
 """
 const DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop}
 

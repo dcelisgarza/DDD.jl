@@ -43,8 +43,7 @@ end
 
 """
 ```
-IntegrationTime(; dt::T1, time::T1, step::T2) 
-    where {T1 <: AbstractFloat,T2 <: Integer}
+IntegrationTime(; dt = 0.0, time = 0.0, step = 0)
 ```
 Creates [`IntegrationTime`](@ref).
 """

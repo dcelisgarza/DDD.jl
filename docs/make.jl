@@ -1,4 +1,5 @@
 using Documenter, DDD
+using DDD: removeNode!, removeConnection!, removeLink!
 
 makedocs(;
     modules = [DDD],
