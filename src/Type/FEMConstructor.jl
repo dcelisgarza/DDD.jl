@@ -1,68 +1,57 @@
 """
 ```
-FEMParameters(;
-    type::T1,
-    order::T2,
-    model::T3,
-    dx::T4,
-    dy::T4,
-    dz::T4,
-    mx::T5,
-    my::T5,
-    mz::T5
-) where {
-    T1 <: AbstractMesh,
-    T2 <: AbstractModel,
-    T3 <: AbstractElementOrder,
-    T4 <: AbstractFloat,
-    T5 <: Integer
-}
+FEMParameters(; 
+    type::AbstractMesh,
+    order::AbstractElementOrder,
+    model::AbstractModel,
+    dx, dy, dz, mx, my, mz
+)
 ```
-Keyword constructor for [`FEMParameters`](@ref). Calls the positional constructor.
+Creates [`FEMParameters`](@ref).
 """
-function FEMParameters(; type::T1, order::T2, model::T3, dx::T4, dy::T4, dz::T4, mx::T5, my::T5, mz::T5) where {T1 <: AbstractMesh,T2 <: AbstractElementOrder,T3<:AbstractModel, T4 <: AbstractFloat,T5 <: Integer}
+function FEMParameters(; type::AbstractMesh, order::AbstractElementOrder, model::AbstractModel, dx, dy, dz, mx, my, mz)
     return FEMParameters(type, order, model, dx, dy, dz, mx, my, mz)
 end
+
 """
 ```
 ForceDisplacement(; uTilde, uHat, u, fTilde, fHat, f)
 ```
+Creates [`ForceDisplacement`](@ref).
 """
 function ForceDisplacement(; uTilde, uHat, u, fTilde, fHat, f)
     return ForceDisplacement(uTilde, uHat, u, fTilde, fHat, f)
 end
+
 """
 ```
 Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 ```
-Boundary condition keyword constructor.
+Creates [`Boundaries`](@ref).
 """
 function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
     return Boundaries(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 end
+
 """
 ```
-buildMesh(matParams::T1, femParams::T2) 
-    where {T1 <: MaterialParameters,T2 <: FEMParameters}
+buildMesh(
+    matParams::MaterialParameters, 
+    femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2,F3,F4,F5}
+)
 ```
-Internally calls another `buildMesh` that dispatches based on [`FEMParameters`](@ref).`type`.
+Creates a [`RegularCuboidMesh`](@ref).
 """
 function buildMesh(matParams::MaterialParameters, femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2,F3,F4,F5})
     return RegularCuboidMesh(matParams, femParams)
 end
 
-
 """
 ```
 RegularCuboidMesh(
-    order::T1, 
-    matParams::T2, 
-    femParams::T3
-) where {
-    T1 <: LinearElement,
-    T2 <: MaterialParameters,
-    T3 <: FEMParameters
-}
+    matParams::MaterialParameters,
+    femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2<:LinearElement,F3,F4,F5}
+)
 ```
 Created by: E. Tarleton `edmund.tarleton@materials.ox.ac.uk`
 
@@ -87,8 +76,10 @@ y   ^z
 !!! note
     This is rotated about the `x` axis w.r.t. to the local `(s1, s2, s3)` system. [`calc_σHat`](@ref) uses custom linear shape functions that eliminate the need for a Jacobian, speeding up the calculation. We keep the Jacobian in this function because it's only run at simulation initialisation so it's not performance critical, which lets us use standard shape functions.
 """
-function RegularCuboidMesh(matParams::MaterialParameters, femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2<:LinearElement,F3,F4,F5})
-
+function RegularCuboidMesh(
+    matParams::MaterialParameters,
+    femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2<:LinearElement,F3,F4,F5}
+)
     μ = matParams.μ
     ν = matParams.ν
     νomνInv = matParams.νopνInv # ν/(1+ν)
@@ -395,41 +386,48 @@ function RegularCuboidMesh(matParams::MaterialParameters, femParams::FEMParamete
 
 
     return RegularCuboidMesh(
-        order,
-        vertices,
-        faces,
-        faceMidPt,
-        faceNorm,
-        C,
-        dx,
-        dy,
-        dz,
-        scale,
-        mx,
-        my,
-        mz,
-        numElem,
-        numNode,
-        w,
-        h,
-        d,
-        coord,
-        connectivity,
-        cornerNode,
-        edgeNode,
-        faceNode,
-        globalK,
-)
-    
+            order,
+            dx,
+            dy,
+            dz,
+            mx,
+            my,
+            mz,
+            w,
+            h,
+            d,
+            scale,
+            numElem,
+            numNode,
+            C,
+            vertices,
+            faces,
+            faceNorm,
+            faceMidPt,
+            cornerNode,
+            edgeNode,
+            faceNode,
+            coord,
+            connectivity,
+            globalK,
+        )
 end
 
 """
 ```
-Boundaries(::T1, femMesh::T2, args...; kw...) where {T1 <: CantileverLoad,T2 <: RegularCuboidMesh}
+Boundaries(
+    ::FEMParameters{T1,T2,T3,T4,T5} where {T1,T2,T3<:CantileverLoad,T4,T5},
+    femMesh::RegularCuboidMesh; 
+    kw...
+)
 ```
-Cantilever loading boundaries.
+Creates [`Boundaries`](@ref) for loading a hexahedral cantilever.
 """
-function Boundaries(::FEMParameters{T1,T2,T3,T4,T5} where {T1,T2,T3<:CantileverLoad,T4,T5}, femMesh::RegularCuboidMesh; kw...)
+function Boundaries(
+    ::FEMParameters{T1,T2,T3,T4,T5} where {T1,T2,T3<:CantileverLoad,T4,T5},
+    femMesh::RegularCuboidMesh; 
+    kw...
+)
     numNode = femMesh.numNode
     numNode3 = numNode * 3
     faceNorm = femMesh.faceNorm

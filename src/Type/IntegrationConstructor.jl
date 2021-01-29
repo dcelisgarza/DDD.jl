@@ -1,120 +1,53 @@
 """
 ```
-IntegrationParameters(
-    method::T1,
-    tmin::T2,
-    tmax::T2,
-    dtmin::T2 = 1e-3,
-    dtmax::T2 = Inf,
-    abstol::T2 = 1e-6,
-    reltol::T2 = 1e-6,
-    maxchange::T2 = 1.2,
-    exponent::T2 = 20.0,
-    maxiter::T3 = 10,
-) where {
-    T1 <: AbstractIntegrator,
-    T2 <: AbstractFloat,
-    T3 <: Integer
-}
-```
-Constructor for [`IntegrationParameters`](@ref).
-"""
-function IntegrationParameters(
-    method::T1,
-    tmin::T2,
-    tmax::T2,
-    dtmin::T2 = 1e-3,
-    dtmax::T2 = Inf,
-    abstol::T2 = 1e-6,
-    reltol::T2 = 1e-6,
-    maxchange::T2 = 1.2,
-    exponent::T2 = 20.0,
-    maxiter::T3 = 10,
-) where {T1 <: AbstractIntegrator,T2 <: AbstractFloat,T3 <: Integer}
-    return IntegrationParameters{T1,T2,T3}(
-        method,
-        tmin,
-        tmax,
-        dtmin,
-        dtmax,
-        abstol,
-        reltol,
-        maxchange,
-        exponent,
-        maxiter,
-    )
-end
-"""
-```
 IntegrationParameters(;
-    method::T1,
-    tmin::T2,
-    tmax::T2,
-    dtmin::T2 = 1e-3,
-    dtmax::T2 = Inf,
-    abstol::T2 = 1e-6,
-    reltol::T2 = 1e-6,
-    maxchange::T2 = 1.2,
-    exponent::T2 = 20.0,
-    maxiter::T3 = 10,
-) where {
-    T1 <: AbstractIntegrator,
-    T2 <: AbstractFloat,
-    T3 <: Integer
-}
+    method::AbstractIntegrator,
+    tmin = 0.0,
+    tmax = 1e13,
+    dtmin = 1e-3,
+    dtmax = Inf,
+    abstol = 1e-6,
+    reltol = 1e-6,
+    maxchange = 1.2,
+    exponent = 20.0,
+    maxiter = 10,
+)
 ```
-Keyword constructor for [`IntegrationParameters`](@ref).
+Creates [`IntegrationParameters`](@ref).
 """
 function IntegrationParameters(;
-    method::T1,
-    tmin::T2,
-    tmax::T2,
-    dtmin::T2 = 1e-3,
-    dtmax::T2 = Inf,
-    abstol::T2 = 1e-6,
-    reltol::T2 = 1e-6,
-    maxchange::T2 = 1.2,
-    exponent::T2 = 20.0,
-    maxiter::T3 = 10,
-) where {T1 <: AbstractIntegrator,T2 <: AbstractFloat,T3 <: Integer}
+    method::AbstractIntegrator,
+    tmin = 0.0,
+    tmax = 1e13,
+    dtmin = 1e-3,
+    dtmax = Inf,
+    abstol = 1e-6,
+    reltol = 1e-6,
+    maxchange = 1.2,
+    exponent = 20.0,
+    maxiter = 10,
+)
     return IntegrationParameters(
-        method,
-        tmin,
-        tmax,
-        dtmin,
-        dtmax,
-        abstol,
-        reltol,
-        maxchange,
-        exponent,
-        maxiter,
-    )
+            method,
+            tmin,
+            tmax,
+            dtmin,
+            dtmax,
+            abstol,
+            reltol,
+            maxchange,
+            exponent,
+            maxiter,
+        )
 end
-"""
-```
-IntegrationTime(dt::T1, time::T1, step::T2) 
-    where {T1 <: AbstractFloat,T2 <: Integer}
-```
-Constructor for [`IntegrationTime`](@ref).
-"""
-function IntegrationTime(
-        dt::T1,
-        time::T1,
-        step::T2,
-    ) where {T1 <: AbstractFloat,T2 <: Integer}
-    return IntegrationTime{T1,T2}(dt, time, step)
-end
+
 """
 ```
 IntegrationTime(; dt::T1, time::T1, step::T2) 
     where {T1 <: AbstractFloat,T2 <: Integer}
 ```
-Keyword constructor for [`IntegrationTime`](@ref).
+Creates [`IntegrationTime`](@ref).
 """
-function IntegrationTime(;
-    dt::T1 = 0.0,
-    time::T1 = 0.0,
-    step::T2 = 0,
-) where {T1 <: AbstractFloat,T2 <: Integer}
+function IntegrationTime(; dt = 0.0, time = 0.0, step = 0)
     return IntegrationTime(dt, time, step)
 end

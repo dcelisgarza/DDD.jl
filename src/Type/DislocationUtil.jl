@@ -1,18 +1,10 @@
-# Overloaded functions.
 Base.:(==)(x::nodeTypeDln, y::Real) = ==(Int(x), y)
 Base.:(==)(x::Real, y::nodeTypeDln) = ==(x, Int(y))
 Base.convert(::Type{nodeTypeDln}, x::Real) = nodeTypeDln(Int(x))
 Base.zero(::Type{nodeTypeDln}) = nodeTypeDln(0)
 
-# DislocationLoop.
 Base.getindex(x::DislocationLoop, i) = i == 1 ? x : throw(BoundsError())
 Base.eachindex(x::DislocationLoop) = 1
-"""
-```
-zero(::Type{DislocationLoop})
-```
-Returns a zero instance of a [`DislocationLoop`](@ref).
-"""
 function Base.zero(::Type{DislocationLoop})
     return DislocationLoop(;
         loopType = loopDln(),
@@ -30,13 +22,6 @@ function Base.zero(::Type{DislocationLoop})
     )
 end
 
-# DislocationNetwork
-"""
-```
-zero(::Type{DislocationNetwork})
-```
-Returns a zero instance of [`DislocationNetwork`](@ref).
-"""
 function Base.zero(::Type{DislocationNetwork})
     return DislocationNetwork(;
         links = zeros(Int, 2, 0),
@@ -54,12 +39,6 @@ function Base.zero(::Type{DislocationNetwork})
         segIdx = zeros(Int, 0, 3),
     )
 end
-"""
-```
-push!(network::DislocationNetwork, n::Int)
-```
-Pushes `n` new datapoints into `network`.
-"""
 function Base.push!(network::DislocationNetwork, n)
     elemT = eltype(network.coord)
     network = DislocationNetwork(;
@@ -81,12 +60,6 @@ function Base.push!(network::DislocationNetwork, n)
 
     return network
 end
-"""
-```
-getindex(network::DislocationNetwork, i)
-```
-Returns a view of `network` at index `i`.
-"""
 function Base.getindex(network::DislocationNetwork, i)
     return @views network.links[:, i],
     network.slipPlane[:, i],
@@ -105,7 +78,6 @@ function Base.iszero(network::DislocationNetwork)
     return false
 end
 
-## Distributions
 """
 ```
 loopDistribution(::Rand, n, args...; kw...)
@@ -144,7 +116,7 @@ end
 ```
 limits!(lims, segLen, range, buffer)
 ```
-Calculate the bounding limits within which a [`DislocationLoop`](@ref) can be distributed in a [`DislocationNetwork`](@ref).
+Compute the bounding limits within which a [`DislocationLoop`](@ref) will be distributed in a [`DislocationNetwork`](@ref).
 """
 function limits!(lims, segLen, range, buffer)
     @inbounds for i in 1:size(lims, 2)
@@ -170,7 +142,6 @@ function translatePoints!(coord, lims, disp)
     return coord
 end
 
-## Segments
 """
 ```
 makeSegment(::segEdge, slipPlane, bVec)
@@ -200,7 +171,6 @@ function makeSegment(::segScrew, slipPlane, bVec)
     return bVec / norm(bVec)
 end
 
-## Auxiliary matrices.
 """
 ```
 makeConnect(links, maxConnect)
@@ -252,7 +222,6 @@ makeConnect!(network::DislocationNetwork)
 Mutates the `connectivity` and `linksConnect` matrices of `network`. Works the same as [`makeConnect`](@ref).
 """
 function makeConnect!(network::DislocationNetwork)
-
     # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
     links = network.links
     connectivity = network.connectivity
@@ -282,13 +251,16 @@ end
 ```
 getSegmentIdx(links, label)
 ```   
-Returns an `n × 3` matrix is of the form `[i, node1, node2]`. 
+Finds the indices of a link and corresponding nodes.
+
+## Returns
+
+`n × 3` matrix is of the form `[i, node1, node2]`. 
 
 * `i` can be used to find the Burgers vector, slip plane and segment forces of segment `i`, eg `bVec[:, i]`. 
 * `node1` and `node2` can be used to find the coordinate and velocity of the nodes, eg `l = coord[:, node2] - coord[:, node1]`.
 """
 function getSegmentIdx(links, label)
-    
     lenLinks = size(links, 2)
     segIdx = zeros(Int, lenLinks, 3)  # Indexing matrix.
 
@@ -319,7 +291,6 @@ getSegmentIdx!(network::DislocationNetwork)
 Mutates the `segIdx` matrix in `network`. Works the same way as [`getSegmentIdx`](@ref).
 """
 function getSegmentIdx!(network::DislocationNetwork)
-    
     links = network.links
     label = network.label
     numSeg = network.numSeg
@@ -346,7 +317,6 @@ function getSegmentIdx!(network::DislocationNetwork)
 
 end
 
-## Check integrity.
 """
 ```
 checkNetwork(network::DislocationNetwork)
@@ -362,7 +332,6 @@ Checks the validity of the dislocation network. It ensures the following conditi
 
 """
 function checkNetwork(network::DislocationNetwork)
-    
     links = network.links
     label = network.label
     connectivity = network.connectivity

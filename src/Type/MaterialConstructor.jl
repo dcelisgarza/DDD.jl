@@ -1,23 +1,22 @@
 """
 ```
 MaterialParameters(;
-    μ::T1,
-    μMag::T1,
-    ν::T1,
-    crystalStruct::T2,
-    σPN::T1 = 0,
-) where {T1,T2 <: AbstractCrystalStruct}
+    crystalStruct::AbstractCrystalStruct,
+    μ = 1.0,
+    μMag = 1.0,
+    ν = 0.5,
+    σPN = 0.0,
+)
 ```
-Keyword constructor for [`MaterialParameters`](@ref).
+Creates [`MaterialParameters`](@ref).
 """
 function MaterialParameters(;
-    crystalStruct::T1,
-    μ::T2,
-    μMag::T2,
-    ν::T2,
-    σPN::T2 = 0.0,
-) where {T1 <: AbstractCrystalStruct,T2}
-
+    crystalStruct::AbstractCrystalStruct,
+    μ = 1.0,
+    μMag = 1.0,
+    ν = 0.5,
+    σPN = 0.0,
+)
     omνInv = 1 / (1 - ν)
     opνInv = 1 / (1 + ν)
     νomνInv = ν * omνInv
