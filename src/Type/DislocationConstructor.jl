@@ -7,6 +7,8 @@ SlipSystem(;
 )
 ```
 Creates a [`SlipSystem`](@ref).
+
+Ensures `slipPlane ⟂ bVec`.
 """
 function SlipSystem(;
     crystalStruct::AbstractCrystalStruct,
@@ -47,7 +49,7 @@ DislocationParameters(;
     parGPU = false,
 )
 ```
-Creates [`DislocationParameters`](@ref).
+Creates [`DislocationParameters`](@ref). Automatically calculates derived values, asserts values are reasonable and provides sensible default values.
 """
 function DislocationParameters(;
     mobility::AbstractMobility,
@@ -94,7 +96,7 @@ function DislocationParameters(;
         virtualRemesh,
         parCPU,
         parGPU,
-    )
+)
 end
 
 """
@@ -151,7 +153,7 @@ function DislocationLoop(
         buffer,
         range,
         dist
-    )
+)
 end
 """
 ```
@@ -171,6 +173,21 @@ DislocationLoop(
 )
 ```
 Constructor for `loopPure` [`DislocationLoop`](@ref)s.
+
+# Inputs
+
+- `loopType::loopPure`: can be either `loopPrism()` or `loopShear()` to make prismatic or shear loops.
+- `numSides`: number of sides in the loop
+- `nodeSide`: nodes per side of the loop
+- `numLoops`: number of loops to generate when making the dislocation network
+- `segLen`: length of each initial dislocation segment
+- `slipSystem`: slip system from [`SlipSystem`](@ref) the loop belongs to
+- `_slipPlane`: slip plane vector
+- `_bVec`: Burgers vector
+- `label`: node labels of type [`nodeTypeDln`](@ref)
+- `buffer`: buffer for increasing the spread of the generated dislocation loops in the network
+- `range`: range on which the loops will be distributed in the network
+- `dist`: distribution used to generate the network
 """
 function DislocationLoop(
     loopType::loopPure,
@@ -272,7 +289,7 @@ function DislocationLoop(
         buffer,
         range,
         dist,
-    )
+)
 end
 """
 ```
@@ -291,7 +308,7 @@ DislocationLoop(
     dist::AbstractDistribution,
 )
 ```
-A fallback [`DislocationLoop`](@ref) constructor for other as of yet unimplemented `loopImpure`.
+Fallback [`DislocationLoop`](@ref) constructor for other as of yet unimplemented `loopImpure`.
 """
 function DislocationLoop(
     loopType::loopImpure,
@@ -321,7 +338,7 @@ function DislocationLoop(
         buffer,
         range,
         dist,
-    )
+)
 end
 """
 ```
@@ -392,7 +409,7 @@ DislocationNetwork(;
     segForce::AbstractArray = zeros(3, 2, size(links, 2)),
 )
 ```
-Create a [`DislocationNetwork`](@ref).
+Create a [`DislocationNetwork`](@ref). We recommend generating networks from [`DislocationLoop`](@ref) unless you want a special case.
 """
 function DislocationNetwork(;
     links::AbstractArray,
@@ -434,7 +451,7 @@ function DislocationNetwork(;
         nodeVel,
         nodeForce,
         segForce,
-    )
+)
 end
 """
 ```
@@ -449,11 +466,11 @@ DislocationNetwork(
 ```
 Creates a [`DislocationNetwork`](@ref) out of a [`DislocationLoopCollection`](@ref).
 
-## Arguments
+# Inputs
 
-* `args...` are optional arguments that will be passed on to the [`loopDistribution`](@ref) function which distributes the loops in `sources` according to the type of their `dist` variable.
-* `kw...` are optional keyword arguments that will also be passed to `loopDistribution`.
-* `memBuffer` is the numerical value for allocating memory in advance. The quantity, `memBuffer × N`, where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data. If no `memBuffer` is provided, the number of entries allocated will be `round(N*log2(N)).
+- `args...` are optional arguments that will be passed on to the [`loopDistribution`](@ref) function which distributes the loops in `sources` according to the type of their `dist` variable.
+- `kw...` are optional keyword arguments that will also be passed to `loopDistribution`.
+- `memBuffer` is the numerical value for allocating memory in advance. The quantity, `memBuffer × N`, where `N` is the total number of nodes in `sources`, will be the initial number of entries allocated in the matrices that keep the network's data. If no `memBuffer` is provided, the number of entries allocated will be `round(N*log2(N)).
 """
 function DislocationNetwork(
     sources::DislocationLoopCollection,

@@ -12,14 +12,14 @@ end
 ```
 Different types of nodes behave differently. There are only a finite number of them so an enumerated type provides safety and efficiency. Each value represents a different type of node and therefore its behaviour.
 
-# Meaning
-* `noneDln` are uninitialised nodes.
-* `intMobDln` are mobile nodes internal to the convex hull of the domain. They take part in tractions, displacements and dislocation interactions.
-* `intFixDln` are fixed nodes internal to the convex hull of the domain. They participate in the same way as `intMobDln` nodes except for the fact that their velocities is fixed are zero.
-* `srfMobDln` are mobile nodes that live on the surface of the convex hull of the domain, they are used to track slip steps and therefore participate in the same things as internal nodes but their velocities are restricted to the convex hull surface.
-* `srfFixDln` are fixed surface nodes and have the same characteristics as mobile surface nodes except for having zero velocity.
-* `extDln` are external nodes that do not participate in dislocation interactions or forces but are used to calculate displacements and track slip steps.
-* `tmpDln` are nodes that are temporarily flagged before they are assigned another type.
+# Instances
+- `noneDln`: uninitialised nodes.
+- `intMobDln`: mobile nodes internal to the convex hull of the domain. They take part in tractions, displacements and dislocation interactions.
+- `intFixDln`: fixed nodes internal to the convex hull of the domain. They participate in the same way as `intMobDln` nodes except for the fact that their velocities is fixed are zero.
+- `srfMobDln`: mobile nodes that live on the surface of the convex hull of the domain, they are used to track slip steps and therefore participate in the same things as internal nodes but their velocities are restricted to the convex hull surface.
+- `srfFixDln`: fixed surface nodes and have the same characteristics as mobile surface nodes except for having zero velocity.
+- `extDln`: external nodes that do not participate in dislocation interactions or forces but are used to calculate displacements and track slip steps.
+- `tmpDln`: nodes that are temporarily flagged before they are assigned another type.
 """
 @enum nodeTypeDln begin
     noneDln = 0
@@ -43,10 +43,10 @@ struct segMixed <: AbstractDlnSeg end   # Mixed segment
 
 These types are used to automatically generate segments out of Burgers vectors `b`, slip planes `n`, and/or line direction `l`.
 
-* `segEdge` have `b ⟂ t`,
-* `segEdgeN` have `b ⟂ t` and `b ∥ n` ,
-* `segScrew` have `b ∥ t` ,
-* `segMixed` have noneDln of the above.
+- `segEdge`: `b ⟂ t`,
+- `segEdgeN`: `b ⟂ t` and `b ∥ n` ,
+- `segScrew`: `b ∥ t` ,
+- `segMixed`: none of the above.
 """
 abstract type AbstractDlnSeg end
 struct segNone <: AbstractDlnSeg end
@@ -70,15 +70,14 @@ struct loopDln <: AbstractDlnStr end
 ```
 These types are used to automatically generate dislocation loops for simulation initialisation.
 
-# Meaning
-* `loopPrism` are prismatic loops, their Burgers vectors are perpendicular to the their line direction. They are idealised loops that can be automatically generated as n-gons.
-* `loopShear` are shear loops, their line direction goes through edge, screw and line segments as the loop goes round. They are idealised loops that can be automatically generated as n-gons.
-* `loopPure` are idealised loops.
-* `loopMixed` are loops with prismatic and shear character. They have to be hand-made or require a heuristic to automatically generate.
-* `loopDln` is a generic loop used for adding methods to Base functions.
-* `loopKink` and `loopJog` are structures formed by colliding dislocations. They are not currently used.
-* `loopImpure` are non-idealised loops.
-* `loopDefined` are defined loop types.
+- `loopPrism`: prismatic loops, their Burgers vectors are perpendicular to the their line direction. They are idealised loops that can be automatically generated as n-gons
+- `loopShear`: shear loops, their line direction goes through edge, screw and line segments as the loop goes round. They are idealised loops that can be automatically generated as n-gons
+- `loopPure`: idealised loops
+- `loopMixed`: loops with prismatic and shear character. They have to be hand-made or require a heuristic to automatically generate
+- `loopDln`: generic loop used for adding methods to Base functions
+- `loopKink` and `loopJog` are structures formed by colliding dislocations. They are not currently used
+- `loopImpure`: non-idealised loops
+- `loopDefined`: defined loop types
 """
 abstract type AbstractDlnStr end
 struct loopPrism <: AbstractDlnStr end
@@ -101,11 +100,10 @@ struct Regular <: AbstractDistribution end
 ```
 Spatial distributions for dislocation sources. These are used to automatically generate networks with a given distribution.
 
-# Meaning
-* `Zeros` makes the network generation functions place the center of the generated dislocation loops at the origin. This can be used to generate a network and loops can be manually or pseudo-manually distributed in the domain.
-* `Rand` makes the network generation functions uniformly distribute the dislocations according to the range and buffer values in the dislocation loop structure.
-* `Rand` makes the network generation functions normally distribute the dislocations according to the range and buffer values in the dislocation loop structure.
-* `Rand` TBA, will regularly distribute dislocations according to the range, buffer and other args given to the dislocation network generator.
+- `Zeros` makes the network generation functions place the center of the generated dislocation loops at the origin. This can be used to generate a network and loops can be manually or pseudo-manually distributed in the domain.
+- `Rand` makes the network generation functions uniformly distribute the dislocations according to the range and buffer values in the dislocation loop structure.
+- `Rand` makes the network generation functions normally distribute the dislocations according to the range and buffer values in the dislocation loop structure.
+- `Rand` TBA, will regularly distribute dislocations according to the range, buffer and other args given to the dislocation network generator.
 """
 abstract type AbstractDistribution end
 struct Zeros <: AbstractDistribution end
@@ -122,10 +120,9 @@ struct mobHCP <: AbstractMobility end
 ```
 Types to dispatch different mobility functions.
 
-# Meaning
-* `mobBCC` is used to dispatch the default BCC mobility function.
-* `mobFCC` is used to dispatch the default FCC mobility function.
-* `mobHCP` is used to dispatch the default HCP mobility function.
+- `mobBCC`: used to dispatch the default BCC mobility function.
+- `mobFCC`: used to dispatch the default FCC mobility function.
+- `mobHCP`: used to dispatch the default HCP mobility function.
 """
 abstract type AbstractMobility end
 struct mobBCC <: AbstractMobility end
@@ -151,30 +148,54 @@ end
 """
 ```
 struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21}
-    mobility::T1            # Dislocation core radius
-    dragCoeffs::T2          # Drag coefficients
-    coreRad::T3             # Dislocation core radius
-    coreRadSq::T4           # Dislocation core radius squared
-    coreRadMag::T5          # Magnitude of core radius
-    coreEnergy::T6          # Core energy
-    minSegLen::T7           # Minimum segment length
-    maxSegLen::T8           # Maximum segment length
-    twoMinSegLen::T9        # Minimum segment length times two
-    minArea::T10            # Minimum area for remeshing
-    maxArea::T11            # Maximum area for remeshing
-    minAreaSq::T12          # Minimum area for remeshing squared
-    maxAreaSq::T13          # Maximum area for remeshing squared
-    slipStepCritLen::T14    # Critical length for slip step tracking
-    slipStepCritArea::T15   # Critical area for slip slep tracking
-    remesh::T16             # Flag for remeshing
-    collision::T17          # Flag for collision
-    separation::T18         # Flag for separation
-    virtualRemesh::T19      # Flag for virtual remeshing
-    parCPU::T20             # Flag for CPU parallelisation
-    parGPU::T21             # Flag for GPU parallelisation
+    mobility::T1
+    dragCoeffs::T2
+    coreRad::T3
+    coreRadSq::T4
+    coreRadMag::T5
+    coreEnergy::T6
+    minSegLen::T7
+    maxSegLen::T8
+    twoMinSegLen::T9
+    minArea::T10
+    maxArea::T11
+    minAreaSq::T12
+    maxAreaSq::T13
+    slipStepCritLen::T14
+    slipStepCritArea::T15
+    remesh::T16
+    collision::T17
+    separation::T18
+    virtualRemesh::T19
+    parCPU::T20
+    parGPU::T21
 end
 ```
 Stores the dislocation parameters.
+
+# Fieldnames
+
+- `mobility`: mobility law
+- `dragCoeffs`: drag coefficients, use of a named tuple is recommended
+- `coreRad`: dislocation core radius
+- `coreRadSq`: square of the dislocation core radius
+- `coreRadMag`: magnitude of the dislocation core radius
+- `coreEnergy`: core energy
+- `minSegLen`: minimum segment length
+- `maxSegLen`: maximum segment length
+- `twoMinSegLen`: two times minimum segment length
+- `minArea`: minimum area
+- `maxArea`: maximum area
+- `minAreaSq`: square of the minimum area
+- `maxAreaSq`: sqare of the maximum area
+- `slipStepCritLen`: critical length for slip step tracking
+- `slipStepCritArea`: critical area for slip step tracking
+- `remesh`: remeshing flag
+- `collision`: collision flag
+- `separation`: separation flag
+- `virtualRemesh`: virtual remeshing flag
+- `parCPU`: parallelise over CPU flag
+- `parGPU`: parallelise over GPU flag
 """
 struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21}
     mobility::T1

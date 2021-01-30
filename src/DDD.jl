@@ -1,12 +1,12 @@
 module DDD
 
 using LinearAlgebra,
-    SparseArrays, SuiteSparse, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO, LazySets, FastGaussQuadrature, LazyArrays
+    SparseArrays, SuiteSparse, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO, LazySets, FastGaussQuadrature
 
 # Miscelaneous.
 include("./Misc/Misc.jl")
 export compStruct, internalAngle, externalAngle, rot3D
-export ⊗, linePlaneIntersect, gausslegendre
+export ⊗, linePlaneIntersect, gausslegendre, safeNorm
 
 include("./Type/TypeBase.jl")
 export AbstractDlnSeg,
@@ -80,7 +80,8 @@ export calcSegForce,
     calc_σTilde,
     calc_σTilde!,
     findIntersectVolume,
-    calc_uTilde!
+    calc_uTilde!,
+    calcDisplacementDislocationTriangle!
 export dlnMobility, dlnMobility!
 export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!, coarsenVirtualNetwork!
 export shapeFunction, shapeFunctionDeriv, deriv!

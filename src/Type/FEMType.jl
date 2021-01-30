@@ -1,7 +1,7 @@
 """
 ```
 @enum nodeTypeFE begin
-    noneFE = 0  # Uninitialised node
+    noneFE = 0
     corner = 1  # Corner node
     edge = 2    # Edge node
     face = 3    # Face node
@@ -9,6 +9,14 @@
 end
 ```
 Finite element node type.
+
+## Instances
+
+- `noneFE = 0`: Uninitialised
+- `corner = 1`: Corner
+- `edge = 2`: Edge
+- `face = 3`: Face
+- `intFE = 4`: Internal
 """
 @enum nodeTypeFE begin
     noneFE = 0
@@ -17,6 +25,7 @@ Finite element node type.
     faceFE = 3
     intFE = 4
 end
+
 """
 ```
 abstract type AbstractMesh end
@@ -82,6 +91,18 @@ struct FEMParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9}
 end
 ```
 Stores the finite element parameters.
+
+## Fields
+
+- `type`: Mesh type
+- `order`: Element order
+- `model`: Experimental model
+- `dx`: Dimension in x
+- `dy`: Dimension in y
+- `dz`: Dimension in z
+- `mx`: Elements in x
+- `my`: Elements in y
+- `mz`: Elements in z
 """
 struct FEMParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9}
     type::T1
@@ -94,36 +115,64 @@ struct FEMParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9}
     my::T8
     mz::T9
 end
+
 """
 ```
 struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24} <: AbstractRegularCuboidMesh
-    order::T1           # Element order
-    dx::T2              # Size in x
-    dy::T3              # Size in y
-    dz::T4              # Size in z
-    mx::T5              # Elements in x
-    my::T6              # Elements in y
-    mz::T7              # Elements in z
-    w::T8               # Width
-    h::T9               # Height
-    d::T10              # Depth
-    scale::T11          # Mesh scale
-    numElem::T12        # Number of elements
-    numNode::T13        # Number of nodes
-    C::T14              # Stiffness tensor
-    vertices::T15       # Vertices
-    faces::T16          # Faces
-    faceNorm::T17       # Face normals
-    faceMidPt::T18      # Face mid-points
-    cornerNode::T19     # Corner nodes set
-    edgeNode::T20       # Edge nodes set
-    faceNode::T21       # Face node set
-    coord::T22          # Node coordinates
-    connectivity::T23   # Node connectivity
-    K::T24              # Stiffness matrix
+    order::T1
+    dx::T2
+    dy::T3
+    dz::T4
+    mx::T5
+    my::T6
+    mz::T7
+    w::T8
+    h::T9
+    d::T10
+    scale::T11
+    numElem::T12
+    numNode::T13
+    C::T14
+    vertices::T15
+    faces::T16
+    faceNorm::T17
+    faceMidPt::T18
+    cornerNode::T19
+    edgeNode::T20
+    faceNode::T21
+    coord::T22
+    connectivity::T23
+    K::T24
 end
 ```
 Stores regular a cuboid mesh.
+
+## Fields
+
+- `order`: Element order
+- `dx`: Size in x
+- `dy`: Size in y
+- `dz`: Size in z
+- `mx`: Elements in x
+- `my`: Elements in y
+- `mz`: Elements in z
+- `w`: Width
+- `h`: Height
+- `d`: Depth
+- `scale`: Mesh scale
+- `numElem`: Number of elements
+- `numNode`: Number of nodes
+- `C`: Stiffness tensor
+- `vertices`: Vertices
+- `faces`: Faces
+- `faceNorm`: Face normals
+- `faceMidPt`: Face mid-points
+- `cornerNode`: Corner nodes set
+- `edgeNode`: Edge nodes set
+- `faceNode`: Face node set
+- `coord`: Node coordinates
+- `connectivity`: Node connectivity
+- `K`: Stiffness matrix
 """
 struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24} <: AbstractRegularCuboidMesh
     order::T1
@@ -154,16 +203,25 @@ end
 
 """
 ```
-struct ForceDisplacement{T1,T2,T3,T4}
-    uTilde::T1  # Dislocation displacements.
-    uHat::T2    # Corrective displacements.
-    u::T3       # Displacement.
-    fTilde::T4  # Dislocation tractions.
-    fHat::T5    # Corrective tractions.
-    f::T6       # Force.
+struct ForceDisplacement{T1,T2,T3,T4,T5,T6}
+    uTilde::T1
+    uHat::T2
+    u::T3
+    fTilde::T4
+    fHat::T5
+    f::T6
 end
 ```
 Stores displacements and forces applied on the FE nodes.
+
+## Fields
+
+- `uTilde`: Dislocation displacements
+- `uHat`: Corrective displacements
+- `u`: Displacements
+- `fTilde` Dislocation forces
+- `fHat`: Corrective forces
+- `f`: Forces
 """
 struct ForceDisplacement{T1,T2,T3,T4,T5,T6}
     uTilde::T1
@@ -176,17 +234,35 @@ end
 
 """
 ```
-struct Boundaries{T1,T2,T3,T4,T5,T6,T7}
-    uGamma::T1  # Nodes with displacement boundaries.
-    tGamma::T2  # Nodes with traction boundaries.
-    mGamma::T3  # Nodes with displacement and traction boundaries.
-    uDofs::T4   # Degrees of freedom with specified displacements.
-    tDofs::T5   # Degrees of feedom with specified tractions.
-    mDofs::T6   # Degrees of feedom with specified displacements and tractions.
-    tK::T7      # Stiffness matrix of traction degrees of freedom.
+struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11}
+    uGammaDln::T1
+    tGammaDln::T2
+    uDofsDln::T3
+    tDofsDln::T4
+    uGamma::T5
+    tGamma::T6
+    mGamma::T7
+    uDofs::T8
+    tDofs::T9
+    mDofs::T10
+    tK::T11
 end
 ```
 Stores the nodes and degrees of freedom upon which the different boundary conditions are applied.
+
+## Fields
+
+- `uGammaDln`: Nodes on which dislocation displacements are calculated
+- `tGammaDln`: Nodes on which dislocation tractions are calculated
+- `uDofsDln`: Degrees of freedom on which dislocation displacements are calculated
+- `tDofsDln`: Degrees of freedom on which dislocation tractions are calculated
+- `uGamma`: Nodes with displacement boundaries
+- `tGamma`: Nodes with traction boundaries
+- `mGamma`: Nodes with displacement and traction boundaries
+- `uDofs`: Degrees of freedom with specified displacements
+- `tDofs`: Degrees of feedom with specified tractions
+- `mDofs0`: Degrees of feedom with specified displacements and tractions
+- `tK1`: Stiffness matrix of traction degrees of freedom
 """
 struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11}
     uGammaDln::T1

@@ -1,6 +1,6 @@
-## IO
+# IO
 
-### Input
+## Input
 
 ```@docs
 loadJSON
@@ -17,13 +17,13 @@ loadIntegrationTime
 loadParameters
 ```
 
-### Output
+## Output
 
 ```@docs
 saveJSON
 ```
 
-## Types
+# Types
 
 ```@docs
 nodeTypeDln
@@ -31,28 +31,28 @@ AbstractDlnSeg
 AbstractDlnStr
 AbstractDistribution
 AbstractMobility
-SlipSystem{T1,T2,T3}
-DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21}
-DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
+SlipSystem
+DislocationParameters
+DislocationLoop
 DislocationLoopCollection
-DislocationNetwork{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
+DislocationNetwork
 nodeTypeFE
 AbstractMesh
 AbstractElementOrder
 AbstractShapeFunction
 AbstractModel
-FEMParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9}
-RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24}
-ForceDisplacement{T1,T2,T3,T4}
-Boundaries{T1,T2,T3,T4,T5,T6,T7}
+FEMParameters
+RegularCuboidMesh
+ForceDisplacement
+Boundaries
 AbstractIntegrator
-IntegrationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10}
-IntegrationTime{T1,T2,T3}
+IntegrationParameters
+IntegrationTime
 AbstractCrystalStruct
-MaterialParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13}
+MaterialParameters
 ```
 
-## Constructors
+# Constructors
 
 ```@docs
 SlipSystem(;
@@ -201,7 +201,7 @@ MaterialParameters(;
 )
 ```
 
-## Processing
+# Processing
 
 ```@docs
 calc_σTilde
@@ -215,6 +215,8 @@ calcSelfForce
 calcSelfForce!
 calcSegSegForce
 calcSegSegForce!
+calc_uTilde!
+calcDisplacementDislocationTriangle!
 dlnMobility
 dlnMobility!
 splitNode!
@@ -234,7 +236,7 @@ deriv!
 integrate!
 ```
 
-## Utility
+# Utility
 
 ```@docs
 loopDistribution
@@ -248,7 +250,7 @@ getSegmentIdx!
 checkNetwork
 ```
 
-## Post Processing
+# Post Processing
 
 ```@docs
 plotNodes
@@ -256,7 +258,7 @@ plotNodes!
 plotFEDomain
 ```
 
-## Misc support functions
+# Misc support functions
 
 ```@docs
 compStruct
@@ -266,4 +268,5 @@ rot3D
 ⊗
 linePlaneIntersect
 gausslegendre(n::Integer, a, b)
+safeNorm
 ```
