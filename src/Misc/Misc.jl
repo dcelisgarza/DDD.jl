@@ -250,3 +250,16 @@ function FastGaussQuadrature.gausslegendre(n::Integer, a, b)
     end
     return x, w
 end
+"""
+```
+safeNorm(x)
+```
+
+Safe normalisation.
+"""
+function safeNorm(x)
+    elemT = eltype(x)
+    xNorm = norm(x)
+    xNorm > eps(elemT) ? x = normalize(x) : zeros(typeof(x))
+    return xNorm, x
+end

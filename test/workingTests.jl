@@ -38,10 +38,16 @@ femParams = FEMParameters(
 regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 
-a = calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
+@time a = calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
+
+array = copy(forceDisplacement.uTilde)
+inPlace = copy(forceDisplacement.uTilde)
+isapprox(array,inPlace)
 
 
-forceDisplacement.uTilde
+forceDisplacement.uTilde .= 0
+array - inPlace
+
 length(a)
 size(a)
 size(b)
@@ -132,6 +138,7 @@ shearSquare = DislocationLoop(;
     dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork((shearSquare, prismSquare))
+##
 uGamma = cantileverBC.uGamma[:node]
 coord = regularCuboidMesh.coord
 nodeY = regularCuboidMesh.my + 1

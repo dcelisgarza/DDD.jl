@@ -406,12 +406,26 @@ end
 """
 Calculates displacements from dislocations.
 Bruce Bromage, bruce.bromage@materials.ox.ac.uk
+Github: @brucebromage
 
-Calculating dislocation displacements on the surface of a volume
+[Calculating dislocation displacements on the surface of a volume](https://iopscience.iop.org/article/10.1088/1361-651X/aae404/pdf)
 B Bromage and E Tarleton
 Published 29 October 2018 • © 2018 IOP Publishing Ltd
 Modelling and Simulation in Materials Science and Engineering, Volume 26,
 Number 8
+
+```latex
+@article{bromage2018calculating,
+  title={Calculating dislocation displacements on the surface of a volume},
+  author={Bromage, B and Tarleton, E},
+  journal={Modelling and Simulation in Materials Science and Engineering},
+  volume={26},
+  number={8},
+  pages={085007},
+  year={2018},
+  publisher={IOP Publishing}
+}
+```
 """
 function calc_uTilde!(
     forceDisplacement::ForceDisplacement,
@@ -455,14 +469,14 @@ function calc_uTilde!(
     end
     
     surfNodeCons = spzeros(Int, numNode)
-    for i in 1:numSeg
+    @inbounds for i in 1:numSeg
         link1 = links[1, i]
         link2 = links[2, i]
         # Find external nodes connected to a surface node, stores it and skips the virtual segment.
-        if label[link1] == srfMobDln || label[link1] == srfFixDln && label[link2] == extDln
+        if (label[link1] == srfMobDln || label[link1] == srfFixDln) && label[link2] == extDln
             surfNodeCons[link2] = link1
             continue
-        elseif label[link2] == srfMobDln || label[link2] == srfFixDln && label[link1] == extDln
+        elseif (label[link2] == srfMobDln || label[link2] == srfFixDln) && label[link1] == extDln
             surfNodeCons[link1] = link2
             continue
         end
@@ -513,20 +527,139 @@ function calc_uTilde!(
             Cprime = (A + Bprime) * 0.5
         end
 
+        # Use Barnett triangles to calculate displacements using a closure point.
         if intSeg
-            uTilde[uDofs] += calcDisplacementDislocationTriangle(A, B, C, b, uCoord, ν)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, uCoord, ν)
         else
-            # uTilde[uDofs] += calcDisplacementDislocationTriangle(Aprime, Bprime, C, b, uCoord) + calcDisplacementDislocationTriangle(Aprime, A, Cprime, b, uCoord) + calcDisplacementDislocationTriangle(A, B, Cprime, b, uCoord) + calcDisplacementDislocationTriangle(B, Bprime, Cprime, b, uCoord)
-            # calcDisplacementDislocationTriangle(Bprime, Aprime, Cprime, b, uCoord)
+            # For external loops close internal loop with a normal closure point and calculate the displacement for the external loop with an auxiliary closure point.
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, Bprime, C, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, A, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, B, Bprime, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, Bprime, Aprime, Cprime, b, uCoord) 
         end
     end
 
     return nothing
 end
 
-function calcDisplacementDislocationTriangle(A, B, C, b, uCoord, ν)
-    return ones(length(uCoord))
+"""
+```
+calcDisplacementDislocationTriangle(A, B, C, b, P, ν)
+```
+Written by F.Hofmann 9/7/09
+Routine to compute the displacement field for a triangular dislocation loop ABC at point P.
+
+Modified by F.Hofmann 5/11/18
+
+## Inputs
+- `A, B, C`: three column vectors defining the nodes of the dislocation loop.
+- `P`: column vector with coordinates of the point at which the displacement is evaluated in dimension 1. Then in dimension 2 this is a list of points at which to evaluate the field.
+- `b`: column vector with 3 burgers vector components.
+
+Translated by Daniel Celis Garza.
+"""
+function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P, ν)
+    elemT = eltype(A)
+
+    factor1 = 1 / (8 * π * (1 - ν))
+    factor2 = (1 - 2 * ν) * factor1
+
+    # Segment tangent vectors t.
+    AB = B - A
+    BC = C - B
+    CA = A - C
+    missing, AB = safeNorm(AB)
+    missing, BC = safeNorm(BC)
+    missing, CA = safeNorm(CA)
+
+    @inbounds @simd for i in 1:size(P, 2)
+        # Local R vectors.
+        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
+        
+        RA = A - Pi
+        RB = B - Pi
+        RC = C - Pi
+
+        RAn, RA = safeNorm(RA)
+        RBn, RB = safeNorm(RB)
+        RCn, RC = safeNorm(RC)  
+
+        # Compute fs
+        fAB = (b × AB) * log((RBn / RAn) * (1 + RB ⋅ AB) / (1 + RA ⋅ AB))
+        fBC = (b × BC) * log((RCn / RBn) * (1 + RC ⋅ BC) / (1 + RB ⋅ BC))
+        fCA = (b × CA) * log((RAn / RCn) * (1 + RA ⋅ CA) / (1 + RC ⋅ CA))
+
+        # Compute gs
+        RAdRB = RA ⋅ RB
+        RBdRC = RB ⋅ RC
+        RCdRA = RC ⋅ RA
+        gAB = (b ⋅ (RA × RB)) * (RA + RB) / (1 + RAdRB)
+        gBC = (b ⋅ (RB × RC)) * (RB + RC) / (1 + RBdRC)
+        gCA = (b ⋅ (RC × RA)) * (RC + RA) / (1 + RCdRA)
+
+        # Compute solid angle
+        θa = acos(RAdRB)
+        θb = acos(RBdRC)
+        θc = acos(RCdRA)
+        θ = (θa + θb + θc) / 2
+
+        ω = 4 * atan(sqrt(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2)))
+        ω = -sign(RA ⋅ (CA × AB)) * ω
+
+        u = -b * ω / (4 * π) - factor2 * (fAB + fBC + fCA) + factor1 * (gAB + gBC + gCA)
+
+        idx = 3 * i
+        uTilde[uDofs[idx-2]] += u[1]
+        uTilde[uDofs[idx-1]] += u[2]
+        uTilde[uDofs[idx]] += u[3]
+    end
+
+    return nothing
+end
+function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
+    elemT = eltype(A)
+
+    # Segment tangent vectors t.
+    AB = B - A
+    CA = A - C
+    missing, AB = safeNorm(AB)
+    missing, CA = safeNorm(CA)
+
+    for i in 1:size(P, 2)
+        # Local R vectors.
+        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
+        
+        RA = A - Pi
+        RB = B - Pi
+        RC = C - Pi
+
+        missing, RA = safeNorm(RA)
+        missing, RB = safeNorm(RB)
+        missing, RC = safeNorm(RC)  
+
+        # Compute gs
+        RAdRB = RA ⋅ RB
+        RBdRC = RB ⋅ RC
+        RCdRA = RC ⋅ RA
+
+        # Compute solid angle
+        θa = acos(RAdRB)
+        θb = acos(RBdRC)
+        θc = acos(RCdRA)
+        θ = (θa + θb + θc) / 2
+
+        ω = 4 * atan(sqrt(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2)))
+        ω = -sign(RA ⋅ (CA × AB)) * ω
+
+        u = -b * ω / (4 * π)
+
+        idx = 3 * i
+        uTilde[uDofs[idx-2]] += u[1]
+        uTilde[uDofs[idx-1]] += u[2]
+        uTilde[uDofs[idx]] += u[3]
+    end
+
+    return nothing
 end
 
-function calcDisplacementDislocationTriangle(A, B, C, b, uCoord)
-end

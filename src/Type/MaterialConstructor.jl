@@ -19,12 +19,12 @@ function MaterialParameters(;
 )
     omνInv = 1 / (1 - ν)
     opνInv = 1 / (1 + ν)
-    νomνInv = ν * omνInv
-    νopνInv = ν * opνInv
-    μ4π = μ / (4π)
-    μ8π = μ4π / 2
-    μ4πν = μ4π * omνInv
-    νμ4πν = ν * μ4πν
+    νomνInv = ν * omνInv    # ν / (1 - ν)
+    νopνInv = ν * opνInv    # ν / (1 + ν)
+    μ4π = μ / (4π)          # μ / (4π)
+    μ8π = μ4π / 2           # μ / (8π)
+    μ4πν = μ4π * omνInv     # μ / (1 - ν)
+    νμ4πν = ν * μ4πν        # νμ / (1 - ν)
 
     return MaterialParameters(
         crystalStruct,
