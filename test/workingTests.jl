@@ -36,16 +36,19 @@ femParams = FEMParameters(
                 )
 ##
 regularCuboidMesh = buildMesh(matParams, femParams)
-cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
+@time cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 
-@time a = calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
+@btime a = calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
 
 array = copy(forceDisplacement.uTilde)
 inPlace = copy(forceDisplacement.uTilde)
 isapprox(array,inPlace)
 
+array
+forceDisplacement.uTilde
 
-forceDisplacement.uTilde .= 0
+
+
 array - inPlace
 
 length(a)

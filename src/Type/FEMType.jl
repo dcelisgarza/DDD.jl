@@ -188,12 +188,16 @@ end
 ```
 Stores the nodes and degrees of freedom upon which the different boundary conditions are applied.
 """
-struct Boundaries{T1,T2,T3,T4,T5,T6,T7}
-    uGamma::T1
-    tGamma::T2
-    mGamma::T3
-    uDofs::T4
-    tDofs::T5
-    mDofs::T6
-    tK::T7
+struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11}
+    uGammaDln::T1
+    tGammaDln::T2
+    uDofsDln::T3
+    tDofsDln::T4
+    uGamma::T5
+    tGamma::T6
+    mGamma::T7
+    uDofs::T8
+    tDofs::T9
+    mDofs::T10
+    tK::T11
 end

@@ -30,7 +30,11 @@ Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 Creates [`Boundaries`](@ref).
 """
 function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
-    return Boundaries(uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
+    uGammaDln = vcat(uGamma[:node], mGamma[:node])
+    tGammaDln = vcat(tGamma[:node], mGamma[:node])
+    uDofsDln = vcat(3 * uGammaDln .- 2, 3 * uGammaDln .- 1, 3 * uGammaDln)
+    tDofsDln = vcat(3 * tGammaDln .- 2, 3 * tGammaDln .- 1, 3 * tGammaDln)
+    return Boundaries(uGammaDln, tGammaDln, uDofsDln, tDofsDln, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 end
 
 """
@@ -495,13 +499,13 @@ function Boundaries(
 
     C = cholesky(Hermitian(K[tDofs, tDofs]))
 
-    boundaries = Boundaries(; 
-        uGamma = uGamma, 
-        tGamma = tGamma, 
-        mGamma = mGamma, 
-        uDofs = uDofs, 
-        tDofs = tDofs, 
-        mDofs = mDofs, 
+    boundaries = Boundaries(;
+        uGamma = uGamma,
+        tGamma = tGamma,
+        mGamma = mGamma,
+        uDofs = uDofs,
+        tDofs = tDofs,
+        mDofs = mDofs,
         tK = C
     )
     

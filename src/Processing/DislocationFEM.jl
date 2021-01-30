@@ -443,8 +443,8 @@ function calc_uTilde!(
     coordFE = mesh.coord
 
     # FE nodes with applied displacements.
-    uNodes = ApplyArray(vcat, boundaries.uGamma[:node], boundaries.mGamma[:node])
-    uDofs = [3*uNodes .- 2; 3*uNodes .- 1; 3*uNodes]
+    uNodes = boundaries.uGammaDln
+    uDofs = boundaries.uDofsDln
 
     # Coordinates of the FE nodes with applied displacements.
     uCoord = @view coordFE[:, uNodes]
@@ -458,7 +458,7 @@ function calc_uTilde!(
     coordDln = network.coord
     elemT = eltype(coordDln)
     
-    tmpArr = zeros(elemT, 3)
+    tmpArr = MVector{3,elemT}(0, 0, 0)
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
