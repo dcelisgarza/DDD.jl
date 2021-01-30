@@ -1,7 +1,7 @@
 module DDD
 
 using LinearAlgebra,
-    SparseArrays, SuiteSparse, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO, LazySets, FastGaussQuadrature
+    SparseArrays, SuiteSparse, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO, LazySets, FastGaussQuadrature, LazyArrays
 
 # Miscelaneous.
 include("./Misc/Misc.jl")
@@ -79,7 +79,8 @@ export calcSegForce,
     remeshSurfaceNetwork!,
     calc_σTilde,
     calc_σTilde!,
-    findIntersectVolume
+    findIntersectVolume,
+    calc_uTilde!
 export dlnMobility, dlnMobility!
 export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!, coarsenVirtualNetwork!
 export shapeFunction, shapeFunctionDeriv, deriv!

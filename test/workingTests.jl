@@ -37,10 +37,19 @@ femParams = FEMParameters(
 ##
 regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
-saveJSON("cantileverBC.json", cantileverBC)
-cantileverDict = loadJSON("cantileverBC.json")
-loadBoundaries(cantileverDict)
-cantileverDict["tGamma"]
+
+a = calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
+
+
+forceDisplacement.uTilde
+length(a)
+size(a)
+size(b)
+size(c)
+# saveJSON("cantileverBC.json", cantileverBC)
+# cantileverDict = loadJSON("cantileverBC.json")
+# loadBoundaries(cantileverDict)
+# cantileverDict["tGamma"]
 
 cantileverBC.tK[:P]
 tDofs = cantileverBC.tDofs

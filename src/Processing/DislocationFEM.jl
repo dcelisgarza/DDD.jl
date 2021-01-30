@@ -402,3 +402,131 @@ function calc_σTilde!(
     end
     return σ
 end
+
+"""
+Calculates displacements from dislocations.
+Bruce Bromage, bruce.bromage@materials.ox.ac.uk
+
+Calculating dislocation displacements on the surface of a volume
+B Bromage and E Tarleton
+Published 29 October 2018 • © 2018 IOP Publishing Ltd
+Modelling and Simulation in Materials Science and Engineering, Volume 26,
+Number 8
+"""
+function calc_uTilde!(
+    forceDisplacement::ForceDisplacement,
+    mesh::AbstractMesh,
+    boundaries::Boundaries,
+    matParams::MaterialParameters,
+    network::DislocationNetwork
+)
+
+    uTilde = forceDisplacement.uTilde
+
+    C = mean(mesh.vertices.vertices)
+    faces = mesh.faces
+    faceNorm = mesh.faceNorm
+    coordFE = mesh.coord
+
+    # FE nodes with applied displacements.
+    uNodes = ApplyArray(vcat, boundaries.uGamma[:node], boundaries.mGamma[:node])
+    uDofs = [3*uNodes .- 2; 3*uNodes .- 1; 3*uNodes]
+
+    # Coordinates of the FE nodes with applied displacements.
+    uCoord = @view coordFE[:, uNodes]
+    ν = matParams.ν
+
+    numNode = network.numNode[1]
+    numSeg = network.numSeg[1]
+    label = network.label
+    links = network.links
+    bVec = network.bVec
+    coordDln = network.coord
+    elemT = eltype(coordDln)
+    
+    tmpArr = zeros(elemT, 3)
+
+    if typeof(mesh) <: AbstractRegularCuboidMesh
+        # We only need to check half the normals for a cuboid.
+        normals = faceNorm[:, 1:2:5]
+    else
+        @warn "calc_uTilde! could use fewer normals for mesh of type $(typeof(mesh)), see $(@__LINE__)"
+        normals = faceNorm
+    end
+    
+    surfNodeCons = spzeros(Int, numNode)
+    for i in 1:numSeg
+        link1 = links[1, i]
+        link2 = links[2, i]
+        # Find external nodes connected to a surface node, stores it and skips the virtual segment.
+        if label[link1] == srfMobDln || label[link1] == srfFixDln && label[link2] == extDln
+            surfNodeCons[link2] = link1
+            continue
+        elseif label[link2] == srfMobDln || label[link2] == srfFixDln && label[link1] == extDln
+            surfNodeCons[link1] = link2
+            continue
+        end
+
+        intSeg::Bool = true
+
+        # Coords of first node of the segment.
+        A = SVector{3,elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
+        # Coords of second node of the segment.
+        B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
+        # Segment's burgers vector.
+        b = SVector{3,elemT}(coordDln[1, i], coordDln[2, i], coordDln[3, i])
+
+        # Find external segments.
+        if label[link1] == extDln || label[link2] == extDln
+            intSeg = false
+            # Find the nearest intersect with the mesh to find the point on the mesh's surface the node was projected out from.
+            distMinA = Inf
+            distMinB = Inf
+            distMinTmpA = 0
+            distMinTmpB = 0
+            intersectA = SVector{3,elemT}(Inf,Inf,Inf)
+            intersectB = SVector{3,elemT}(Inf,Inf,Inf)
+            for j in 1:size(normals, 2)
+                distMinTmpA, intersectTmpA, missing = findIntersectVolume(mesh, normals[:, j], A, tmpArr)
+                distMinTmpB, intersectTmpB, missing = findIntersectVolume(mesh, normals[:, j], B, tmpArr)
+                if distMinTmpA < distMinA
+                    distMinA = distMinTmpA
+                    intersectA = intersectTmpA
+                end
+                if distMinTmpB < distMinB
+                    distMinB = distMinTmpB
+                    intersectB = intersectTmpB
+                end
+            end
+
+            Aprime = intersectA # Point where A was projected from.
+            Bprime = intersectB # Point where B was projected from.
+
+            # Check if A or B are connected to a surface point. If any of them are, change the intersect to that point.
+            surfConA = surfNodeCons[link1]
+            surfConB = surfNodeCons[link2]
+
+            surfConA != 0 ? Aprime = SVector{3,elemT}(coordDln[1, surfConA], coordDln[2, surfConA], coordDln[3, surfConA]) : nothing
+            surfConB != 0 ? Bprime = SVector{3,elemT}(coordDln[1, surfConB], coordDln[2, surfConB], coordDln[3, surfConB]) : nothing
+            
+            # Closure point for external loop.
+            Cprime = (A + Bprime) * 0.5
+        end
+
+        if intSeg
+            uTilde[uDofs] += calcDisplacementDislocationTriangle(A, B, C, b, uCoord, ν)
+        else
+            # uTilde[uDofs] += calcDisplacementDislocationTriangle(Aprime, Bprime, C, b, uCoord) + calcDisplacementDislocationTriangle(Aprime, A, Cprime, b, uCoord) + calcDisplacementDislocationTriangle(A, B, Cprime, b, uCoord) + calcDisplacementDislocationTriangle(B, Bprime, Cprime, b, uCoord)
+            # calcDisplacementDislocationTriangle(Bprime, Aprime, Cprime, b, uCoord)
+        end
+    end
+
+    return nothing
+end
+
+function calcDisplacementDislocationTriangle(A, B, C, b, uCoord, ν)
+    return ones(length(uCoord))
+end
+
+function calcDisplacementDislocationTriangle(A, B, C, b, uCoord)
+end
