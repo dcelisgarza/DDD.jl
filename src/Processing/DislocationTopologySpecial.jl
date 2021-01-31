@@ -199,6 +199,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     label = network.label
     coord = network.coord
     connectivity = network.connectivity
+    calcIdx::Bool = false
     for node1 in 1:numNode
         label[node1] == srfMobDln || label[node1] == srfFixDln ? continue : nothing
 
@@ -249,8 +250,10 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
             end
 
             label[node1] = extDln
+            calcIdx = true
         end
     end
+    calcIdx ? getSegmentIdx!(network) : nothing
 
     # Ensure surface nodes are only connected to one virtual node.
     node1 = 1
