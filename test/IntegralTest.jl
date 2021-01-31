@@ -158,4 +158,6 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     network3 = deepcopy(network2)
     remeshSurfaceNetwork!(regularCuboidMesh,  network3)
     compStruct(network3, network2)
+    coarsenVirtualNetwork!(dlnParams, network3)
+    @test compStruct(network3, network2)
 end

@@ -158,6 +158,8 @@ network3 = deepcopy(network2)
 remeshSurfaceNetwork!(regularCuboidMesh,  network3)
 compStruct(network3, network2)
 
+coarsenVirtualNetwork!(dlnParams, network3)
+compStruct(network3, network2)
 ##
 using Plots
 # plotlyjs()

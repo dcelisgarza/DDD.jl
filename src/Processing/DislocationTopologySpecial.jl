@@ -367,8 +367,8 @@ function coarsenVirtualNetwork!(dlnParams::DislocationParameters, network::Dislo
             node2 = connectivity[4, i] # Link where node i appears second.
             linkCol2 = 3 - connectivity[5, i] # Column of links where it appears.
 
-            linkNode1 = links[node1, linkCol1] # First node connected to target node.
-            linkNode2 = links[node2, linkCol2] # Second node connected to target node.
+            linkNode1 = links[linkCol1, node1] # First node connected to target node.
+            linkNode2 = links[linkCol2, node2] # Second node connected to target node.
 
             # Only if both nodes are virtual.
             if label[linkNode1] == label[linkNode2] == extDln
