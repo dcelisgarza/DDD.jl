@@ -116,4 +116,38 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     @test length(ext) == 5
     @test length(surf) == 2
     @test compStruct(network2, network) == false
+
+    numSeg = network2.numSeg[1]
+    segForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    @test isapprox(segForce, network2.segForce[:,:,1:numSeg])
+
+    idx = 1:2:16
+    segForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
+    @test isapprox(segForceIdx, network2.segForce[:,:,idx])
+
+    σTilde = calc_σTilde(coordFE[:, uGamma], dlnParams, matParams, network2)
+    σTilde2 = zeros(size(σTilde))
+    calc_σTilde!(σTilde2, coordFE[:, uGamma], dlnParams, matParams, network2)
+    @test isapprox(σTilde, σTilde2)
+
+    uTilde = calc_uTilde(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network2)
+    calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network2)
+    @test isapprox(uTilde, forceDisplacement.uTilde[uDofsDln])
+
+    idx = [5771;6852;7419;7436;6903;5822;5255;5238;7442;6852;6298;5213;5232;5822;6376;7461]
+    uHatIdx = unique(regularCuboidMesh.connectivity[:, idx]) * 3
+    uHatDofs = [uHatIdx .- 2; uHatIdx .- 1; uHatIdx]
+    randUHat = sprand(length(uHatDofs), 0.5) * 10
+    forceDisplacement.uHat[uHatDofs] = randUHat
+
+    segForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    @test isapprox(segForce, network2.segForce[:,:,1:numSeg])
+
+    idx = 1:2:16
+    segForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
+    calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
+    @test isapprox(segForceIdx, network2.segForce[:,:,idx])
 end

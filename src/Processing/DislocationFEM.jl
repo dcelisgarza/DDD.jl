@@ -458,7 +458,7 @@ function calc_uTilde!(
     coordDln = network.coord
     elemT = eltype(coordDln)
     
-    tmpArr = MVector{3,elemT}(0, 0, 0)
+    tmpArr = zeros(elemT, 3)
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
@@ -572,7 +572,7 @@ function calc_uTilde(
     coordDln = network.coord
     elemT = eltype(coordDln)
     
-    tmpArr = MVector{3,elemT}(0, 0, 0)
+    tmpArr = zeros(elemT, 3)
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
@@ -719,7 +719,8 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
         θc = acos(RCdRA)
         θ = (θa + θb + θc) / 2
 
-        ω = 4 * atan(sqrt(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2)))
+        factor = max(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2), 0)
+        ω = 4 * atan(sqrt(factor))
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
         u = -b * ω / (4 * π) - om2νomνInv8π * (fAB + fBC + fCA) + omνInv8π * (gAB + gBC + gCA)
@@ -764,7 +765,8 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
         θc = acos(RCdRA)
         θ = (θa + θb + θc) / 2
 
-        ω = 4 * atan(sqrt(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2)))
+        factor = max(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2), 0)
+        ω = 4 * atan(sqrt(factor))
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
         u = -b * ω / (4 * π)
