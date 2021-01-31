@@ -163,11 +163,11 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     connectivity = network.connectivity
     node1 = 1
     while node1 < numNode
-        if label[node1] != srfMobDln || label[node1] != srfFixDln
+        if !(label[node1] == srfMobDln || label[node1] == srfFixDln)
             node1 += 1
             continue
         end
-
+        
         # Find number of connections to node.
         check::Bool = false
         numCon = connectivity[1, node1]
@@ -201,7 +201,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     connectivity = network.connectivity
     calcIdx::Bool = false
     for node1 in 1:numNode
-        label[node1] == srfMobDln || label[node1] == srfFixDln ? continue : nothing
+        label[node1] == srfMobDln || label[node1] == srfFixDln ? nothing : continue
 
         # Number of external connections.
         numExtCon = 0
@@ -259,7 +259,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     node1 = 1
     while node1 < numNode
         # Only check surface nodes.
-        if label[node1] != srfMobDln || label[node1] != srfFixDln
+        if !(label[node1] == srfMobDln || label[node1] == srfFixDln)
             node1 += 1
             continue
         end

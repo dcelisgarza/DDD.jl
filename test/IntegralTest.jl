@@ -154,4 +154,8 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     segForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
     @test isapprox(segForceIdx, network2.segForce[:,:,idx])
+
+    network3 = deepcopy(network2)
+    remeshSurfaceNetwork!(regularCuboidMesh,  network3)
+    compStruct(network3, network2)
 end
