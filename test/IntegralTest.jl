@@ -42,7 +42,7 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
         range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
         dist = Zeros(),  # Loop distribution.
     )
-    network = DislocationNetwork((prismLoop, shearLoop))
+    network = DislocationNetwork([prismLoop, shearLoop])
     regularCuboidMesh = buildMesh(matParams, femParams)
     cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 
