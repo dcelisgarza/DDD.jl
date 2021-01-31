@@ -53,7 +53,7 @@ function makeSurfaceNode!(mesh::AbstractMesh,  network::DislocationNetwork, node
     coordNode1 = SVector{3,elemT}(coord[1, node1], coord[2, node1], coord[3, node1])
     coordNode2 = SVector{3,elemT}(coord[1, node2], coord[2, node2], coord[3, node2])
     t = coordNode2 - coordNode1
-    intersectArr = MVector{3,elemT}(0, 0, 0)
+    intersectArr = zeros(elemT, 3)
     distMin, newNode, missing = findIntersectVolume(mesh, t, coordNode1, intersectArr)
 
     isinf(distMin) && return network
@@ -89,7 +89,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     idx = findall(x -> x == intMobDln, label)
     numInt = length(idx)
     # Find the location of the nodes that are newly outside the domain, P.
-    nodeCoord = MVector{3,elemT}(0, 0, 0)
+    nodeCoord = zeros(elemT, 3)
     @inbounds @simd for i in 1:numInt
         idxi = idx[i]
         for j in 1:3
@@ -126,7 +126,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     coord = network.coord
     nodeVel = network.nodeVel
     numNode = network.numNode[1]
-    intersectArr = MVector{3,elemT}(0, 0, 0)
+    intersectArr = zeros(elemT, 3)
 
     for i in 1:numNode
         # We only want to change the temporary nodes.

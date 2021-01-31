@@ -232,7 +232,6 @@ function calc_σTilde!(
     idx = nothing,
 )
     @assert ndims(σ) == ndims(x0) && size(σ, 2) == size(x0, 2) && size(σ, 1) == 6
-
     # Constants
     μ4π = matParams.μ4π
     μ8π = matParams.μ8π
@@ -245,6 +244,7 @@ function calc_σTilde!(
     coord = network.coord
     segIdx = network.segIdx
     elemT = eltype(network.bVec)
+    σ .= zero(elemT)
 
     if isnothing(idx)
         numSeg = network.numSeg[1]
@@ -436,6 +436,7 @@ function calc_uTilde!(
 )
 
     uTilde = forceDisplacement.uTilde
+    uTilde .= zero(eltype(uTilde))
 
     C = mean(mesh.vertices.vertices)
     faces = mesh.faces
@@ -448,7 +449,6 @@ function calc_uTilde!(
 
     # Coordinates of the FE nodes with applied displacements.
     uCoord = @view coordFE[:, uNodes]
-    ν = matParams.ν
 
     numNode = network.numNode[1]
     numSeg = network.numSeg[1]
@@ -529,7 +529,7 @@ function calc_uTilde!(
 
         # Use Barnett triangles to calculate displacements using a closure point.
         if intSeg
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, uCoord, ν)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C, b, uCoord)
         else
             # For external loops close internal loop with a normal closure point and calculate the displacement for the external loop with an auxiliary closure point.
             calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, Bprime, C, b, uCoord)
@@ -542,28 +542,143 @@ function calc_uTilde!(
 
     return nothing
 end
+function calc_uTilde(
+    forceDisplacement::ForceDisplacement,
+    mesh::AbstractMesh,
+    boundaries::Boundaries,
+    matParams::MaterialParameters,
+    network::DislocationNetwork
+)
+
+    C = mean(mesh.vertices.vertices)
+    faces = mesh.faces
+    faceNorm = mesh.faceNorm
+    coordFE = mesh.coord
+
+    # FE nodes with applied displacements.
+    uNodes = boundaries.uGammaDln
+    uDofs = 1:length(boundaries.uDofsDln)
+    uTilde = zeros(length(uDofs))
+
+
+    # Coordinates of the FE nodes with applied displacements.
+    uCoord = @view coordFE[:, uNodes]
+
+    numNode = network.numNode[1]
+    numSeg = network.numSeg[1]
+    label = network.label
+    links = network.links
+    bVec = network.bVec
+    coordDln = network.coord
+    elemT = eltype(coordDln)
+    
+    tmpArr = MVector{3,elemT}(0, 0, 0)
+
+    if typeof(mesh) <: AbstractRegularCuboidMesh
+        # We only need to check half the normals for a cuboid.
+        normals = faceNorm[:, 1:2:5]
+    else
+        @warn "calc_uTilde! could use fewer normals for mesh of type $(typeof(mesh)), see $(@__LINE__)"
+        normals = faceNorm
+    end
+    
+    surfNodeCons = spzeros(Int, numNode)
+    @inbounds for i in 1:numSeg
+        link1 = links[1, i]
+        link2 = links[2, i]
+        # Find external nodes connected to a surface node, stores it and skips the virtual segment.
+        if (label[link1] == srfMobDln || label[link1] == srfFixDln) && label[link2] == extDln
+            surfNodeCons[link2] = link1
+            continue
+        elseif (label[link2] == srfMobDln || label[link2] == srfFixDln) && label[link1] == extDln
+            surfNodeCons[link1] = link2
+            continue
+        end
+
+        intSeg::Bool = true
+
+        # Coords of first node of the segment.
+        A = SVector{3,elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
+        # Coords of second node of the segment.
+        B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
+        # Segment's burgers vector.
+        b = SVector{3,elemT}(coordDln[1, i], coordDln[2, i], coordDln[3, i])
+
+        # Find external segments.
+        if label[link1] == extDln || label[link2] == extDln
+            intSeg = false
+            # Find the nearest intersect with the mesh to find the point on the mesh's surface the node was projected out from.
+            distMinA = Inf
+            distMinB = Inf
+            distMinTmpA = 0
+            distMinTmpB = 0
+            intersectA = SVector{3,elemT}(Inf,Inf,Inf)
+            intersectB = SVector{3,elemT}(Inf,Inf,Inf)
+            for j in 1:size(normals, 2)
+                distMinTmpA, intersectTmpA, missing = findIntersectVolume(mesh, normals[:, j], A, tmpArr)
+                distMinTmpB, intersectTmpB, missing = findIntersectVolume(mesh, normals[:, j], B, tmpArr)
+                if distMinTmpA < distMinA
+                    distMinA = distMinTmpA
+                    intersectA = intersectTmpA
+                end
+                if distMinTmpB < distMinB
+                    distMinB = distMinTmpB
+                    intersectB = intersectTmpB
+                end
+            end
+
+            Aprime = intersectA # Point where A was projected from.
+            Bprime = intersectB # Point where B was projected from.
+
+            # Check if A or B are connected to a surface point. If any of them are, change the intersect to that point.
+            surfConA = surfNodeCons[link1]
+            surfConB = surfNodeCons[link2]
+
+            surfConA != 0 ? Aprime = SVector{3,elemT}(coordDln[1, surfConA], coordDln[2, surfConA], coordDln[3, surfConA]) : nothing
+            surfConB != 0 ? Bprime = SVector{3,elemT}(coordDln[1, surfConB], coordDln[2, surfConB], coordDln[3, surfConB]) : nothing
+            
+            # Closure point for external loop.
+            Cprime = (A + Bprime) * 0.5
+        end
+
+        # Use Barnett triangles to calculate displacements using a closure point.
+        if intSeg
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C, b, uCoord)
+        else
+            # For external loops close internal loop with a normal closure point and calculate the displacement for the external loop with an auxiliary closure point.
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, Bprime, C, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, A, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, B, Bprime, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, Bprime, Aprime, Cprime, b, uCoord) 
+        end
+    end
+
+    return uTilde
+end
 
 """
 ```
-calcDisplacementDislocationTriangle(A, B, C, b, P, ν)
+calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C, b, P)
 ```
 Written by F.Hofmann 9/7/09
 Routine to compute the displacement field for a triangular dislocation loop ABC at point P.
 
 Modified by F.Hofmann 5/11/18
 
-## Inputs
+# Inputs
+
 - `A, B, C`: three column vectors defining the nodes of the dislocation loop.
 - `P`: column vector with coordinates of the point at which the displacement is evaluated in dimension 1. Then in dimension 2 this is a list of points at which to evaluate the field.
 - `b`: column vector with 3 burgers vector components.
 
 Translated by Daniel Celis Garza.
 """
-function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P, ν)
+function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C, b, P)
     elemT = eltype(A)
 
-    factor1 = 1 / (8 * π * (1 - ν))
-    factor2 = (1 - 2 * ν) * factor1
+    omνInv8π = matParams.omνInv8π
+    om2νomνInv8π = matParams.om2νomνInv8π
 
     # Segment tangent vectors t.
     AB = B - A
@@ -607,7 +722,7 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P, ν)
         ω = 4 * atan(sqrt(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2)))
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
-        u = -b * ω / (4 * π) - factor2 * (fAB + fBC + fCA) + factor1 * (gAB + gBC + gCA)
+        u = -b * ω / (4 * π) - om2νomνInv8π * (fAB + fBC + fCA) + omνInv8π * (gAB + gBC + gCA)
 
         idx = 3 * i
         uTilde[uDofs[idx-2]] += u[1]

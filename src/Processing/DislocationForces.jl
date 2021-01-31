@@ -102,9 +102,9 @@ function calc_σHat(
     coord = mesh.coord
     elemT = eltype(coord)
     uHat = forceDisplacement.uHat
-
+    
     # If the node is outside the domain, return zero.
-    if Array(x0) ∉ mesh.vertices
+    if Vector(x0) ∉ mesh.vertices
         σ = SMatrix{3,3,elemT}(zeros(3, 3))
         return σ
     end

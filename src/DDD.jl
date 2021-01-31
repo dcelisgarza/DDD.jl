@@ -80,6 +80,7 @@ export calcSegForce,
     calc_σTilde,
     calc_σTilde!,
     findIntersectVolume,
+    calc_uTilde,
     calc_uTilde!,
     calcDisplacementDislocationTriangle!
 export dlnMobility, dlnMobility!

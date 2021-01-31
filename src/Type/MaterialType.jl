@@ -14,7 +14,7 @@ struct HCP <: AbstractCrystalStruct end
 
 """
 ```
-struct MaterialParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13}
+struct MaterialParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15}
     crystalStruct::T1   # Crystal structure.
     μ::T2               # Shear modulus.
     μMag::3             # Magnitude of shear modulus.
@@ -27,12 +27,14 @@ struct MaterialParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13}
     μ4π::T10            # μ / (4π)
     μ8π::T11            # μ / (8π)
     μ4πν::T12           # μ / (4π (1 - ν))
-    σPN::T13            # Peierls-Nabarro stress.
+    omνInv8π::T13       # 1 / (8π (1 - ν))
+    om2νomνInv8π::T14   # (1 - 2 * ν) / (8π (1 - ν))
+    σPN::T15            # Peierls-Nabarro stress.
 end
 ```
 Store material parameters.
 """
-struct MaterialParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13}
+struct MaterialParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15}
     crystalStruct::T1
     μ::T2
     μMag::T3
@@ -45,5 +47,7 @@ struct MaterialParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13}
     μ8π::T10
     μ4πν::T11
     νμ4πν::T12
-    σPN::T13
+    omνInv8π::T13
+    om2νomνInv8π::T14
+    σPN::T15
 end

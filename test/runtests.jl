@@ -44,3 +44,7 @@ end
 @time @safetestset "Post-process" begin
     include("./PlotTest.jl")
 end
+
+@time @safetestset "Integral tests" begin
+    include("./IntegralTest.jl")
+end
