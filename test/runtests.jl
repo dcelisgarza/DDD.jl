@@ -45,6 +45,7 @@ end
     include("./PlotTest.jl")
 end
 
+##
 @time @safetestset "Integral tests" begin
     include("./IntegralTest.jl")
 end

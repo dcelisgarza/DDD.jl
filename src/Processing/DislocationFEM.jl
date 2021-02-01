@@ -57,7 +57,7 @@ function calc_σTilde(
     numPoints == 1 ? σ = zeros(6) : σ = zeros(6, numPoints)
     
     # Loop over segments.
-    @inbounds @simd for i in eachindex(idx)
+    for i in eachindex(idx)
         b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
         n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])

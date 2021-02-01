@@ -1,182 +1,86 @@
 ##
-using DDD, StaticArrays, SparseArrays
-dlnParams = DislocationParameters(; mobility = mobBCC())
-matParams = MaterialParameters(; crystalStruct = BCC())
-femParams = FEMParameters(; 
-                        type = DispatchRegularCuboidMesh(), 
-                        order = LinearElement(), 
-                        model = CantileverLoad(), 
-                        dx = 1013.0, dy = 1987.0, dz = 2999.0,
-                        mx = 19, my = 23, mz = 29
-                    )
-intParams = IntegrationParameters(; method = AdaptiveEulerTrapezoid())
-slipSystem = SlipSystem(; crystalStruct = BCC(), slipPlane = Float64[-1;1;0], bVec = Float64[1;1;1])
-dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
-segLen = (dx + dy + dz) / 30
-prismLoop = DislocationLoop(;
-    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
-    numSides = 8,   # 8-sided loop.
-    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-    numLoops = 1,   # Number of loops of this type to generate when making a network.
-    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
-    buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
-    dist = Zeros(),  # Loop distribution.
-)
-shearLoop = DislocationLoop(;
-    loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
-    numSides = 8,   # 8-sided loop.
-    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-    numLoops = 1,   # Number of loops of this type to generate when making a network.
-    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
-    buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
-    dist = Zeros(),  # Loop distribution.
-)
-network = DislocationNetwork([prismLoop, shearLoop])
-regularCuboidMesh = buildMesh(matParams, femParams)
-cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
+using DDD, StaticArrays, SparseArrays, LinearAlgebra
 
-coordFE = regularCuboidMesh.coord
-uGamma = cantileverBC.uGamma[:node]
-uDofsDln = cantileverBC.uDofsDln
-numSeg = network.numSeg[1]
+numNode = 2
+numSeg = numNode - 1
+len = numNode + 1
+xrange = range(-300, 300, length = len)
+yrange = range(-300, 300, length = len)
 
-segForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-isapprox(segForce, network.segForce[:,:,1:numSeg])
+X = ones(length(yrange)) .* xrange'
+Y = ones(length(xrange))' .* yrange
+Z = zeros(length(xrange))' .* zeros(len)
+points = [X[:]'; Y[:]'; Z[:]']
 
-idx = 1:2:16
-segForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-isapprox(segForceIdx, network.segForce[:,:,idx])
+l = Float64[0; 0; 1]
+b = Float64[0; 0; 1]
+n = b × l
+a = 5 * norm(b)
 
-σTilde = calc_σTilde(coordFE[:, uGamma], dlnParams, matParams, network)
-σTilde2 = zeros(size(σTilde))
-calc_σTilde!(σTilde2, coordFE[:, uGamma], dlnParams, matParams, network)
-isapprox(σTilde, σTilde2)
-
-i = 1
-while i < 10
-    for j in 1:10
-        for k = 1:20
-            if rand(1:20) == 5
-                i = 0
-                break
-            end
-        end
-        println(i, " ", j)
-        break
-    end
-    i += 1
-    
+links = zeros(Int, 2, numSeg)
+slipPlane = zeros(3, numSeg)
+bVec = zeros(3, numSeg)
+coord = [zeros(len)'; zeros(len)'; xrange']
+label = zeros(nodeTypeDln, len)
+nodeVel = similar(coord)
+nodeForce = similar(coord)
+for i in 1:numSeg
+    links[:, i] .= (i, i + 1)
+    slipPlane[:, i] = n
+    bVec[:, i] = b
 end
 
-
-idx = [5771;6852;7419;7436;6903;5822;5255;5238;7442;6852;6298;5213;5232;5822;6376;7461]
-uHatIdx = unique(regularCuboidMesh.connectivity[:, idx]) * 3
-uHatDofs = [uHatIdx .- 2; uHatIdx .- 1; uHatIdx]
-randUHat = sprand(length(uHatDofs), 0.5)
-randIdx = findall(!iszero, randUHat)
-randUHat[randIdx] .= 1:length(randIdx) * 0.01
-forceDisplacement.uHat[uHatDofs] = randUHat
-
-uTilde = calc_uTilde(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
-calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
-isapprox(uTilde, forceDisplacement.uTilde[uDofsDln])
-
-segForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-isapprox(segForce, network.segForce[:,:,1:numSeg])
-
-idx = 1:2:16
-segForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-isapprox(segForceIdx, network.segForce[:,:,idx])
-
-network2 = deepcopy(network)
-remeshSurfaceNetwork!(regularCuboidMesh, network2)
-compStruct(network2, network)
-
-prismLoopIntersect = DislocationLoop(;
-loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
-numSides = 8,   # 8-sided loop.
-nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-numLoops = 1,   # Number of loops of this type to generate when making a network.
-segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-_slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-_bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
-label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
-buffer = 0,   # Buffer to increase the dislocation spread.
-range = SMatrix{3,2,Float64}(segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2),  # Distribution range
-dist = Zeros(),  # Loop distribution.
+matParams = MaterialParameters(;
+    crystalStruct = BCC(),
+    μ = 1.0,
+    μMag = 1.0,
+    ν = 0.28,
 )
-DislocationNetwork!(network2, prismLoopIntersect)
-numNode = network2.numNode[1]
+dlnParams = DislocationParameters(;
+    coreRad = a,
+    coreRadMag = 1.,
+    minSegLen = a + 2,
+    maxSegLen = a + 3,
+    minArea = a + 1,
+    maxArea = a + 2,
+    dragCoeffs = (edge = 1., screw = 1., climb = 1., line = 1.),
+    mobility = mobBCC(),
+)
+network = DislocationNetwork(;
+    links = links,
+    slipPlane = slipPlane,
+    bVec = bVec,
+    coord = coord,
+    label = label,
+    nodeVel = nodeVel,
+    nodeForce = nodeForce,
+)
+makeConnect!(network)
+getSegmentIdx!(network)
 
-network2.nodeVel[:, 1:numNode] .= rand(3, numNode)
+σTilde = calc_σTilde(points, dlnParams, matParams, network)'
 
-remeshSurfaceNetwork!(regularCuboidMesh,  network2)
+test_σTilde = 1.0e-03 * [
+                   0                   0                   0                   0  -0.076573455482457   0.076573455482457
+                   0                   0                   0                   0  -0.187565879762850                   0
+                   0                   0                   0                   0  -0.076573455482457  -0.076573455482457
+                   0                   0                   0                   0                   0   0.187565879762850
+                   0                   0                   0                   0                   0                   0
+                   0                   0                   0                   0                   0  -0.187565879762850
+                   0                   0                   0                   0   0.076573455482457   0.076573455482457
+                   0                   0                   0                   0   0.187565879762850                   0
+                   0                   0                   0                   0   0.076573455482457  -0.076573455482457]
 
-network2.numNode[1] == numNode + 2
-label = network2.label
-ext = findall(x -> x == 5, label)
-surf = findall(x -> x == 3, label)
-length(ext) == 5
-length(surf) == 2
-compStruct(network2, network) == false
+isapprox(σTilde[:, 1:4], test_σTilde[:, 1:4])
+isapprox(σTilde[:, 6], test_σTilde[:, 5])
+isapprox(σTilde[:, 5], test_σTilde[:, 6])
 
-numSeg = network2.numSeg[1]
-segForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
-isapprox(segForce, network2.segForce[:,:,1:numSeg])
+σ = zeros(6, size(points, 2))
+calc_σTilde!(σ, points, dlnParams, matParams, network)
+isequal(σ', σTilde)
 
-idx = 1:2:16
-segForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
-isapprox(segForceIdx, network2.segForce[:,:,idx])
 
-σTilde = calc_σTilde(coordFE[:, uGamma], dlnParams, matParams, network2)
-σTilde2 = zeros(size(σTilde))
-calc_σTilde!(σTilde2, coordFE[:, uGamma], dlnParams, matParams, network2)
-isapprox(σTilde, σTilde2)
 
-uTilde = calc_uTilde(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network2)
-calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network2)
-isapprox(uTilde, forceDisplacement.uTilde[uDofsDln])
-
-idx = [5771;6852;7419;7436;6903;5822;5255;5238;7442;6852;6298;5213;5232;5822;6376;7461]
-uHatIdx = unique(regularCuboidMesh.connectivity[:, idx]) * 3
-uHatDofs = [uHatIdx .- 2; uHatIdx .- 1; uHatIdx]
-randUHat = sprand(length(uHatDofs), 0.5)
-randIdx = findall(!iszero, randUHat)
-randUHat[randIdx] .= 1:length(randIdx) * 0.01
-forceDisplacement.uHat[uHatDofs] = randUHat
-
-segForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
-isapprox(segForce, network2.segForce[:,:,1:numSeg])
-
-idx = 1:2:16
-segForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
-calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2, idx)
-isapprox(segForceIdx, network2.segForce[:,:,idx])
-
-network3 = deepcopy(network2)
-remeshSurfaceNetwork!(regularCuboidMesh,  network3)
-compStruct(network3, network2)
-
-coarsenVirtualNetwork!(dlnParams, network3)
-compStruct(network3, network2)
 ##
 using Plots
 # plotlyjs()
