@@ -88,6 +88,7 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
 
     network2 = deepcopy(network)
     remeshSurfaceNetwork!(regularCuboidMesh, network2)
+    getSegmentIdx!(network2)
     @test compStruct(network2, network)
 
     prismLoopIntersect = DislocationLoop(;
@@ -110,6 +111,7 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     network2.nodeVel[:, 1:numNode] .= rand(3, numNode)
 
     remeshSurfaceNetwork!(regularCuboidMesh,  network2)
+    getSegmentIdx!(network2)
 
     network2.numNode[1] == numNode + 2
     label = network2.label
@@ -157,6 +159,8 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
 
     network3 = deepcopy(network2)
     remeshSurfaceNetwork!(regularCuboidMesh,  network3)
+    getSegmentIdx!(network3)
+
     compStruct(network3, network2)
     coarsenVirtualNetwork!(dlnParams, network3)
     @test compStruct(network3, network2)
