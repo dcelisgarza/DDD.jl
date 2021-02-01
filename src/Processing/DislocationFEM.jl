@@ -207,7 +207,7 @@ calc_σTilde!(
     dlnParams::DislocationParameters,
     matParams::MaterialParameters,
     network::DislocationNetwork,
-    idx = nothing,
+idx = nothing,
 )
 ```
 In-place computation of the stress tensor,`̃σ`, induced by dislocations on points `x0`.
@@ -239,7 +239,7 @@ function calc_σTilde!(
     νμ4πν = matParams.νμ4πν
     a2 = dlnParams.coreRadSq
     a2μ8π = a2 * μ8π
-
+    
     bVec = network.bVec
     coord = network.coord
     segIdx = network.segIdx
@@ -248,7 +248,7 @@ function calc_σTilde!(
 
     if isnothing(idx)
         numSeg = network.numSeg[1]
-        idx = 1:numSeg
+    idx = 1:numSeg
     end
 
     idxBvec = @view segIdx[idx, 1]
@@ -399,7 +399,7 @@ function calc_σTilde!(
             σ[5, j] += I_03xz * s_03 + I_13xz * s_13 + I_05xz * s_05 + I_15xz * s_15 + I_25xz * s_25      
             σ[6, j] += I_03yz * s_03 + I_13yz * s_13 + I_05yz * s_05 + I_15yz * s_15 + I_25yz * s_25
         end
-    end
+end
     return σ
 end
 
@@ -421,7 +421,7 @@ Number 8
   journal={Modelling and Simulation in Materials Science and Engineering},
   volume={26},
   number={8},
-  pages={085007},
+pages={085007},
   year={2018},
   publisher={IOP Publishing}
 }
@@ -441,6 +441,7 @@ function calc_uTilde!(
     C = mean(mesh.vertices.vertices)
     faces = mesh.faces
     faceNorm = mesh.faceNorm
+    faceMidPt = mesh.faceMidPt
     coordFE = mesh.coord
 
     # FE nodes with applied displacements.
@@ -462,7 +463,7 @@ function calc_uTilde!(
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
-        normals = faceNorm[:, 1:2:5]
+    normals = faceNorm[:, 1:2:5]
     else
         @warn "calc_uTilde! could use fewer normals for mesh of type $(typeof(mesh)), see $(@__LINE__)"
         normals = faceNorm
@@ -494,12 +495,13 @@ function calc_uTilde!(
         if label[link1] == extDln || label[link2] == extDln
             intSeg = false
             # Find the nearest intersect with the mesh to find the point on the mesh's surface the node was projected out from.
-            distMinA = Inf
-            distMinB = Inf
-            distMinTmpA = 0
-            distMinTmpB = 0
-            intersectA = SVector{3,elemT}(Inf,Inf,Inf)
-            intersectB = SVector{3,elemT}(Inf,Inf,Inf)
+            distMinA::elemT = Inf
+            distMinB::elemT = Inf
+            distMinC::elemT = Inf
+            distMinTmpA::elemT = 0
+            distMinTmpB::elemT = 0
+            intersectA = SVector{3,elemT}(Inf, Inf, Inf)
+            intersectB = SVector{3,elemT}(Inf, Inf, Inf)
             for j in 1:size(normals, 2)
                 distMinTmpA, intersectTmpA, missing = findIntersectVolume(mesh, normals[:, j], A, tmpArr)
                 distMinTmpB, intersectTmpB, missing = findIntersectVolume(mesh, normals[:, j], B, tmpArr)
@@ -511,6 +513,43 @@ function calc_uTilde!(
                     distMinB = distMinTmpB
                     intersectB = intersectTmpB
                 end
+            end
+
+            # In case the projection was out of a corner or edge, there will be no intersect so we have to find it iteratively using the planes of the surfaces.
+            # We find the intersects with the planes that get us closer to the centre of the domain.
+            if isinf(distMinA)
+                Atmp = A
+                # Loop through the faces of the solid.
+                for i in 1:size(faceNorm, 2)
+                    # Calculate the distance from the node to the plane of face i.
+                    distAtmp = ((Atmp + faceMidPt[:, i]) ⋅ faceNorm[:, i])^2
+                    # Find the intersect of the node with the plane of face i (nodes are external so we have to flip the sign of the face normal)
+                    intersectATmp = Atmp - faceNorm[:, i] * sqrt(distAtmp)
+                    # Calculate the distance from the domain's centroid.
+                    distTmpC = norm(intersectATmp - C)
+                    # If the distance from the intersect and the centroid is smaller than the minimum, we move the coordinate to the intersect. This ensures we get closer to the centroid after every iteration, eventually we will intersect the domain.
+                    if distTmpC <= distMinC
+                        distMinC = distTmpC
+                        Atmp = intersectATmp
+                    end
+                end
+                intersectA = Atmp
+
+            end
+
+            if isinf(distMinB)
+                Btmp = B
+                for i in 1:size(faceNorm, 2)
+                    distBtmp = ((Btmp + faceMidPt[:, i]) ⋅ faceNorm[:, i])^2
+                    intersectBTmp = Btmp - faceNorm[:, i] * sqrt(distBtmp)
+                    distTmpC = norm(intersectBTmp - C)
+                    if distTmpC <= distMinC
+                        distMinC = distTmpC
+                        Btmp = intersectBTmp
+                    end
+                end
+                intersectB = Btmp
+
             end
 
             Aprime = intersectA # Point where A was projected from.
@@ -551,8 +590,10 @@ function calc_uTilde(
 )
 
     C = mean(mesh.vertices.vertices)
+    scale = mesh.scale
     faces = mesh.faces
     faceNorm = mesh.faceNorm
+    faceMidPt = mesh.faceMidPt
     coordFE = mesh.coord
 
     # FE nodes with applied displacements.
@@ -576,7 +617,7 @@ function calc_uTilde(
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
-        normals = faceNorm[:, 1:2:5]
+    normals = faceNorm[:, 1:2:5]
     else
         @warn "calc_uTilde! could use fewer normals for mesh of type $(typeof(mesh)), see $(@__LINE__)"
         normals = faceNorm
@@ -605,18 +646,24 @@ function calc_uTilde(
         b = SVector{3,elemT}(coordDln[1, i], coordDln[2, i], coordDln[3, i])
 
         # Find external segments.
+        faceA = 0
+        faceB = 0
         if label[link1] == extDln || label[link2] == extDln
             intSeg = false
+
             # Find the nearest intersect with the mesh to find the point on the mesh's surface the node was projected out from.
-            distMinA = Inf
-            distMinB = Inf
-            distMinTmpA = 0
-            distMinTmpB = 0
-            intersectA = SVector{3,elemT}(Inf,Inf,Inf)
-            intersectB = SVector{3,elemT}(Inf,Inf,Inf)
+            distMinA::elemT = Inf
+            distMinB::elemT = Inf
+            distMinC::elemT = Inf
+
+            distMinTmpA::elemT = 0
+            distMinTmpB::elemT = 0
+
+            intersectA = SVector{3,elemT}(Inf, Inf, Inf)
+            intersectB = SVector{3,elemT}(Inf, Inf, Inf)
             for j in 1:size(normals, 2)
-                distMinTmpA, intersectTmpA, missing = findIntersectVolume(mesh, normals[:, j], A, tmpArr)
-                distMinTmpB, intersectTmpB, missing = findIntersectVolume(mesh, normals[:, j], B, tmpArr)
+                distMinTmpA, intersectTmpA, faceA = findIntersectVolume(mesh, normals[:, j], A, tmpArr)
+                distMinTmpB, intersectTmpB, faceB = findIntersectVolume(mesh, normals[:, j], B, tmpArr)
                 if distMinTmpA < distMinA
                     distMinA = distMinTmpA
                     intersectA = intersectTmpA
@@ -625,6 +672,43 @@ function calc_uTilde(
                     distMinB = distMinTmpB
                     intersectB = intersectTmpB
                 end
+            end
+
+            # In case the projection was out of a corner or edge, there will be no intersect so we have to find it iteratively using the planes of the surfaces.
+            # We find the intersects with the planes that get us closer to the centre of the domain.
+            if isinf(distMinA)
+                Atmp = A
+                # Loop through the faces of the solid.
+                for i in 1:size(faceNorm, 2)
+                    # Calculate the distance from the node to the plane of face i.
+                    distAtmp = ((Atmp + faceMidPt[:, i]) ⋅ faceNorm[:, i])^2
+                    # Find the intersect of the node with the plane of face i (nodes are external so we have to flip the sign of the face normal)
+                    intersectATmp = Atmp - faceNorm[:, i] * sqrt(distAtmp)
+                    # Calculate the distance from the domain's centroid.
+                    distTmpC = norm(intersectATmp - C)
+                    # If the distance from the intersect and the centroid is smaller than the minimum, we move the coordinate to the intersect. This ensures we get closer to the centroid after every iteration, eventually we will intersect the domain.
+                    if distTmpC <= distMinC
+                        distMinC = distTmpC
+                        Atmp = intersectATmp
+                    end
+                end
+                intersectA = Atmp
+
+            end
+
+            if isinf(distMinB)
+                Btmp = B
+                for i in 1:size(faceNorm, 2)
+                    distBtmp = ((Btmp + faceMidPt[:, i]) ⋅ faceNorm[:, i])^2
+                    intersectBTmp = Btmp - faceNorm[:, i] * sqrt(distBtmp)
+                    distTmpC = norm(intersectBTmp - C)
+                    if distTmpC <= distMinC
+                        distMinC = distTmpC
+                        Btmp = intersectBTmp
+                    end
+                end
+                intersectB = Btmp
+
             end
 
             Aprime = intersectA # Point where A was projected from.
@@ -650,10 +734,9 @@ function calc_uTilde(
             calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, A, Cprime, b, uCoord)
             calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, Cprime, b, uCoord)
             calcDisplacementDislocationTriangle!(uTilde, uDofs, B, Bprime, Cprime, b, uCoord)
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, Bprime, Aprime, Cprime, b, uCoord) 
+            calcDisplacementDislocationTriangle!(uTilde, uDofs, Bprime, Aprime, Cprime, b, uCoord)
         end
     end
-
     return uTilde
 end
 
@@ -690,7 +773,7 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
 
     @inbounds @simd for i in 1:size(P, 2)
         # Local R vectors.
-        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
+        Pi = SVector{3,elemT}(P[1, i], P[2, i], P[3, i])
         
         RA = A - Pi
         RB = B - Pi
@@ -706,9 +789,9 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
         fCA = (b × CA) * log((RAn / RCn) * (1 + RA ⋅ CA) / (1 + RC ⋅ CA))
 
         # Compute gs
-        RAdRB = RA ⋅ RB
-        RBdRC = RB ⋅ RC
-        RCdRA = RC ⋅ RA
+        RAdRB = clamp(RA ⋅ RB, -1, 1)
+        RBdRC = clamp(RB ⋅ RC, -1, 1)
+        RCdRA = clamp(RC ⋅ RA, -1, 1)
         gAB = (b ⋅ (RA × RB)) * (RA + RB) / (1 + RAdRB)
         gBC = (b ⋅ (RB × RC)) * (RB + RC) / (1 + RBdRC)
         gCA = (b ⋅ (RC × RA)) * (RC + RA) / (1 + RCdRA)
@@ -719,15 +802,15 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
         θc = acos(RCdRA)
         θ = (θa + θb + θc) / 2
 
-        factor = max(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2), 0)
+        factor = max(tan(θ / 2) * tan((θ - θa) / 2) * tan((θ - θb) / 2)  * tan((θ - θc) / 2), 0)
         ω = 4 * atan(sqrt(factor))
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
         u = -b * ω / (4 * π) - om2νomνInv8π * (fAB + fBC + fCA) + omνInv8π * (gAB + gBC + gCA)
-
+        any(x -> isnan(x), u) ? println(i, "b = ", b, " ") : nothing
         idx = 3 * i
-        uTilde[uDofs[idx-2]] += u[1]
-        uTilde[uDofs[idx-1]] += u[2]
+        uTilde[uDofs[idx - 2]] += u[1]
+        uTilde[uDofs[idx - 1]] += u[2]
         uTilde[uDofs[idx]] += u[3]
     end
 
@@ -744,7 +827,7 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
 
     for i in 1:size(P, 2)
         # Local R vectors.
-        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
+        Pi = SVector{3,elemT}(P[1, i], P[2, i], P[3, i])
         
         RA = A - Pi
         RB = B - Pi
@@ -755,9 +838,9 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
         missing, RC = safeNorm(RC)  
 
         # Compute gs
-        RAdRB = RA ⋅ RB
-        RBdRC = RB ⋅ RC
-        RCdRA = RC ⋅ RA
+        RAdRB = clamp(RA ⋅ RB, -1, 1)
+        RBdRC = clamp(RB ⋅ RC, -1, 1)
+        RCdRA = clamp(RC ⋅ RA, -1, 1)
 
         # Compute solid angle
         θa = acos(RAdRB)
@@ -765,17 +848,17 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
         θc = acos(RCdRA)
         θ = (θa + θb + θc) / 2
 
-        factor = max(tan(θ / 2) * tan((θ - θa) /2) * tan((θ - θb) /2)  * tan((θ - θc) /2), 0)
+        factor = max(tan(θ / 2) * tan((θ - θa) / 2) * tan((θ - θb) / 2)  * tan((θ - θc) / 2), 0)
         ω = 4 * atan(sqrt(factor))
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
         u = -b * ω / (4 * π)
 
         idx = 3 * i
-        uTilde[uDofs[idx-2]] += u[1]
-        uTilde[uDofs[idx-1]] += u[2]
+        uTilde[uDofs[idx - 2]] += u[1]
+        uTilde[uDofs[idx - 1]] += u[2]
         uTilde[uDofs[idx]] += u[3]
-    end
+end
 
     return nothing
 end

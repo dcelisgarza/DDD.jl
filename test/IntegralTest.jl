@@ -4,44 +4,44 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     dlnParams = DislocationParameters(; mobility = mobBCC())
     matParams = MaterialParameters(; crystalStruct = BCC())
     femParams = FEMParameters(; 
-                            type = DispatchRegularCuboidMesh(), 
-                            order = LinearElement(), 
-                            model = CantileverLoad(), 
-                            dx = 1013.0, dy = 1987.0, dz = 2999.0,
-                            mx = 19, my = 23, mz = 29
-                        )
+                        type = DispatchRegularCuboidMesh(), 
+                        order = LinearElement(), 
+                        model = CantileverLoad(), 
+                        dx = 1013.0, dy = 1987.0, dz = 2999.0,
+                        mx = 19, my = 23, mz = 29
+                    )
     intParams = IntegrationParameters(; method = AdaptiveEulerTrapezoid())
     slipSystem = SlipSystem(; crystalStruct = BCC(), slipPlane = Float64[-1;1;0], bVec = Float64[1;1;1])
     dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
     segLen = (dx + dy + dz) / 30
     prismLoop = DislocationLoop(;
-        loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
-        numSides = 8,   # 8-sided loop.
-        nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-        numLoops = 1,   # Number of loops of this type to generate when making a network.
-        segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-        slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-        _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-        _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
-        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
-        buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
-        dist = Zeros(),  # Loop distribution.
-    )
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 8,   # 8-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 1,   # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
+    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
+    dist = Zeros(),  # Loop distribution.
+)
     shearLoop = DislocationLoop(;
-        loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
-        numSides = 8,   # 8-sided loop.
-        nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-        numLoops = 1,   # Number of loops of this type to generate when making a network.
-        segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-        slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-        _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-        _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
-        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
-        buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
-        dist = Zeros(),  # Loop distribution.
-    )
+    loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
+    numSides = 8,   # 8-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 1,   # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
+    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
+    dist = Zeros(),  # Loop distribution.
+)
     network = DislocationNetwork([prismLoop, shearLoop])
     regularCuboidMesh = buildMesh(matParams, femParams)
     cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
@@ -91,19 +91,19 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     @test compStruct(network2, network)
 
     prismLoopIntersect = DislocationLoop(;
-        loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
-        numSides = 8,   # 8-sided loop.
-        nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-        numLoops = 1,   # Number of loops of this type to generate when making a network.
-        segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-        slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-        _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-        _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
-        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
-        buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3,2,Float64}(segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2),  # Distribution range
-        dist = Zeros(),  # Loop distribution.
-    )
+    loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
+    numSides = 8,   # 8-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 1,   # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
+    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2),  # Distribution range
+    dist = Zeros(),  # Loop distribution.
+)
     DislocationNetwork!(network2, prismLoopIntersect)
     numNode = network2.numNode[1]
 

@@ -85,27 +85,19 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     numNode = network.numNode[1]
     connectivity = network.connectivity
 
-    # Findall internal nodes.
-    idx = findall(x -> x == intMobDln, label)
-    numInt = length(idx)
-    # Find the location of the nodes that are newly outside the domain, P.
-    nodeCoord = zeros(elemT, 3)
-    @inbounds @simd for i in 1:numInt
-        idxi = idx[i]
-        for j in 1:3
-            nodeCoord[j] = coord[j, idxi]
-        end
-        if nodeCoord ∉ vertices
-            label[i] = tmpDln
-        end
+    # Find internal nodes that are newly exited and mark them as such.
+    for i in 1:numNode
+        label[i] == intMobDln || label[i] == intFixDln ? nothing : continue
+        coord[:, i] ∉ vertices ? label[i] = tmpDln : continue
     end
 
+    # Generate surface nodes by finding which internal nodes are connected to newly exited nodes.
     for node1 in 1:numNode
-        # We only want to check connections of mobile internal or external nodes.
-        label[node1] == intMobDln || label[node1] == extDln ? nothing : continue
+        # Only look for nodes that are internal.
+        label[node1] == intMobDln || label[node1] == intFixDln ? nothing : continue
         # Find the number of connections to the node.
         numCon = connectivity[1, node1]
-        # Loop through all connections of node1.
+        # Loop through all connections of node1 to see if it is connected to a newly exited node.
         for j in 1:numCon
             idx = 2 * j
             # Link where node1 appears for its connection j.
@@ -115,9 +107,9 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
             # Neigbour node from j'th link node1 appears.
             node2 = links[3 - colLink, linkId]
 
+            # If node1 is connected to a newly exited node 2, create surface node.
             if label[node2] == tmpDln
                 network = makeSurfaceNode!(mesh, network, node1, node2, j)
-                getSegmentIdx!(network)
             end
         end
     end
@@ -128,11 +120,12 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     numNode = network.numNode[1]
     intersectArr = zeros(elemT, 3)
 
+    # Project newly exited nodes out to pseudo-infinity.
     for i in 1:numNode
-        # We only want to change the temporary nodes.
+        # We only want to change nodes flagged as having just exited.
         label[i] != tmpDln ? continue : nothing
 
-        # Assume nodes moved with linear velocity and crossed the surface. We use this velocity as the vector to move them back.
+        # Assume nodes moved with linear velocity and crossed the surface. We use this velocity as the vector to move them back onto the surface and project from there.
         vel = SVector{3,elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
         velN = norm(vel)
         iszero(velN) ? throw(ErrorException("norm of the nodal velocity must be greater than zero")) : nothing
@@ -141,7 +134,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
         
         distMin, newNode, face = findIntersectVolume(mesh, vel, l0, intersectArr)
 
-        # If there is no intersect find the nearest plane to project it out of.
+        # If there is no intersect, find the nearest plane to project it out of.
         if isinf(distMin)
             # D = |(x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
             distances = ((l0[1] .+ faceMidPt[1, :]) .* faceNorm[1, :] .+ (l0[2] .+ faceMidPt[2, :]) .* faceNorm[2, :] .+ (l0[3] .+ faceMidPt[3, :]) .* faceNorm[3, :]).^2
@@ -180,7 +173,6 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
             # Check if the node connected is a surface node aso we can merge node1 into node2.
             if label[node2] == srfMobDln || label[node2] == srfFixDln
                 missing, network = mergeNode!(network, node2, node1)
-                getSegmentIdx!(network)
                 links = network.links
                 label = network.label
                 numNode = network.numNode[1]
@@ -190,8 +182,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
                 break
             end
         end
-        check ? continue : nothing
-        node1 += 1
+        check ? continue : node1 += 1
     end
 
     # Find surface nodes that are only connected to virtual nodes and project them to be external too.
@@ -199,7 +190,6 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     label = network.label
     coord = network.coord
     connectivity = network.connectivity
-    calcIdx::Bool = false
     for node1 in 1:numNode
         label[node1] == srfMobDln || label[node1] == srfFixDln ? nothing : continue
 
@@ -207,6 +197,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
         numExtCon = 0
         numCon = connectivity[1, node1]
         for j in 1:numCon
+            idx = 2 * j
             linkId = connectivity[idx, node1]
             colLink = connectivity[idx + 1, node1]
             node2 = links[3 - colLink, linkId]
@@ -250,22 +241,14 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
             end
 
             label[node1] = extDln
-            calcIdx = true
         end
     end
-    calcIdx ? getSegmentIdx!(network) : nothing
 
     # Ensure surface nodes are only connected to one virtual node.
     node1 = 1
     while node1 < numNode
-        # Only check surface nodes.
-        if !(label[node1] == srfMobDln || label[node1] == srfFixDln)
-            node1 += 1
-            continue
-        end
-
-        # Only check surface nodes connected to more than 2 node.
-        if connectivity[1, node1] <= 2
+        # Only check surface nodes with more than two connections.
+        if !(label[node1] == srfMobDln || label[node1] == srfFixDln) || connectivity[1, node1] <= 2
             node1 += 1
             continue
         end
@@ -285,17 +268,17 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
                 linkId2 = connectivity[idx2, node1]
                 colLink2 = connectivity[idx2 + 1, node1]
                 node3 = links[3 - colLink2, linkId2]
+                
                 # If the next connection is not external go to the next iteration.
                 label[node2] != extDln ? continue : nothing
 
                 missing, network = mergeNode!(network, node3, node1)
-                getSegmentIdx!(network)
                 links = network.links
                 label = network.label
                 numNode = network.numNode[1]
                 connectivity = network.connectivity
                 # We merged a node, so we want to repeat the outer loop.
-                node1 = 1
+                node1 = 0
                 break
             end
             # If we get here it means the inner loop found one external connection to an external node but the inner loop didn't find another, so we can cut the outer loop as it would just retread the steps of the inner one.
@@ -321,9 +304,9 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
             # Neigbour node from j'th link node1 appears.
             node2 = links[3 - colLink, linkId]
 
+            # If the node2 internal, create a surface node where the segment intersects the mesh.
             if label[node2] == intMobDln || label[node2] == intFixDln
                 network = makeSurfaceNode!(mesh, network, node1, node2, j)
-                getSegmentIdx!(network)
             end
         end    
     end

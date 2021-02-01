@@ -64,9 +64,22 @@ isapprox(segForceIdx, network.segForce[:,:,idx])
 calc_σTilde!(σTilde2, coordFE[:, uGamma], dlnParams, matParams, network)
 isapprox(σTilde, σTilde2)
 
-uTilde = calc_uTilde(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
-calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
-isapprox(uTilde, forceDisplacement.uTilde[uDofsDln])
+i = 1
+while i < 10
+    for j in 1:10
+        for k = 1:20
+            if rand(1:20) == 5
+                i = 0
+                break
+            end
+        end
+        println(i, " ", j)
+        break
+    end
+    i += 1
+    
+end
+
 
 idx = [5771;6852;7419;7436;6903;5822;5255;5238;7442;6852;6298;5213;5232;5822;6376;7461]
 uHatIdx = unique(regularCuboidMesh.connectivity[:, idx]) * 3
@@ -75,6 +88,10 @@ randUHat = sprand(length(uHatDofs), 0.5)
 randIdx = findall(!iszero, randUHat)
 randUHat[randIdx] .= 1:length(randIdx) * 0.01
 forceDisplacement.uHat[uHatDofs] = randUHat
+
+uTilde = calc_uTilde(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
+calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
+isapprox(uTilde, forceDisplacement.uTilde[uDofsDln])
 
 segForce = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
 calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
