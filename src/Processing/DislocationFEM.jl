@@ -57,7 +57,7 @@ function calc_σTilde(
     numPoints == 1 ? σ = zeros(6) : σ = zeros(6, numPoints)
     
     # Loop over segments.
-    for i in eachindex(idx)
+    @inbounds @simd for i in eachindex(idx)
         b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
         n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
@@ -439,6 +439,7 @@ function calc_uTilde!(
     uTilde .= zero(eltype(uTilde))
 
     C = mean(mesh.vertices.vertices)
+
     faces = mesh.faces
     faceNorm = mesh.faceNorm
     faceMidPt = mesh.faceMidPt
@@ -489,7 +490,7 @@ function calc_uTilde!(
         # Coords of second node of the segment.
         B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
         # Segment's burgers vector.
-        b = SVector{3,elemT}(coordDln[1, i], coordDln[2, i], coordDln[3, i])
+        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
 
         # Find external segments.
         if label[link1] == extDln || label[link2] == extDln
@@ -590,6 +591,7 @@ function calc_uTilde(
 )
 
     C = mean(mesh.vertices.vertices)
+
     scale = mesh.scale
     faces = mesh.faces
     faceNorm = mesh.faceNorm
@@ -643,7 +645,7 @@ function calc_uTilde(
         # Coords of second node of the segment.
         B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
         # Segment's burgers vector.
-        b = SVector{3,elemT}(coordDln[1, i], coordDln[2, i], coordDln[3, i])
+        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
 
         # Find external segments.
         faceA = 0
@@ -807,7 +809,6 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
         u = -b * ω / (4 * π) - om2νomνInv8π * (fAB + fBC + fCA) + omνInv8π * (gAB + gBC + gCA)
-        any(x -> isnan(x), u) ? println(i, "b = ", b, " ") : nothing
         idx = 3 * i
         uTilde[uDofs[idx - 2]] += u[1]
         uTilde[uDofs[idx - 1]] += u[2]
@@ -825,7 +826,7 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
     missing, AB = safeNorm(AB)
     missing, CA = safeNorm(CA)
 
-    for i in 1:size(P, 2)
+    @inbounds @simd for i in 1:size(P, 2)
         # Local R vectors.
         Pi = SVector{3,elemT}(P[1, i], P[2, i], P[3, i])
         

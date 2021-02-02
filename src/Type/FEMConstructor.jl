@@ -32,8 +32,9 @@ Creates [`Boundaries`](@ref).
 function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
     uGammaDln = vcat(uGamma[:node], mGamma[:node])
     tGammaDln = vcat(tGamma[:node], mGamma[:node])
-    uDofsDln = vcat(3 * uGammaDln .- 2, 3 * uGammaDln .- 1, 3 * uGammaDln)
-    tDofsDln = vcat(3 * tGammaDln .- 2, 3 * tGammaDln .- 1, 3 * tGammaDln)
+    
+    uDofsDln = copy(reshape(reshape([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln], :, 3)', :))
+    tDofsDln = copy(reshape(reshape([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln], :, 3)', :))
     return Boundaries(uGammaDln, tGammaDln, uDofsDln, tDofsDln, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 end
 
@@ -491,7 +492,8 @@ function Boundaries(
     
     uGammaNode = uGamma[:node]
     mGammaNode = mGamma[:node]
-    !haskey(kw, "uDofs") ? uDofs = [3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode] : uDofs = kw["uDofs"]
+    
+    !haskey(kw, "uDofs") ? uDofs = copy(reshape(reshape([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode], :, 3)', :)) : uDofs = kw["uDofs"]
     
     !haskey(kw, "tDofs") ? tDofs = setdiff(1:numNode, uDofs) : tDofs = kw["tDofs"]
 
