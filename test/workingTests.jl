@@ -9,10 +9,18 @@ femParams = FEMParameters(;
                         dx = 1013.0, dy = 1987.0, dz = 2999.0,
                         mx = 3, my = 5, mz = 7
                     )
+slipSystem = SlipSystem(; crystalStruct = BCC(), slipPlane = Float64[-1;1;0], bVec = Float64[1;1;1])
 intParams = IntegrationParameters(; method = AdaptiveEulerTrapezoid())
 intTime = IntegrationTime()
-slipSystem = SlipSystem(; crystalStruct = BCC(), slipPlane = Float64[-1;1;0], bVec = Float64[1;1;1])
 
+
+length(fieldnames(typeof(dlnParams)))
+length(fieldnames(typeof(matParams)))
+length(fieldnames(typeof(femParams)))
+length(fieldnames(typeof(slipSystem)))
+length(fieldnames(typeof(intParams)))
+
+nodeTypeDln.(ones(Int, 8))
 dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
 segLen = (dx + dy + dz) / 30
 prismLoop = DislocationLoop(;
@@ -32,18 +40,47 @@ shearLoop = DislocationLoop(;
     loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
     numSides = 8,   # 8-sided loop.
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
-    numLoops = 1,   # Number of loops of this type to generate when making a network.
+    numLoops = 10,   # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
     slipSystemIdx = 1, # Slip System index (assuming slip systems are stored in a file, this is the index).
     slipSystem = slipSystem,  # Slip system.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
-    dist = Zeros(),  # Loop distribution.
+    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork([prismLoop, shearLoop])
 regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
+
+fig = plotNodes(
+    regularCuboidMesh,
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+    dpi = 480,
+)
+savefig("remeshed.pdf")
+plotNodes!(
+    fig,
+    shearLoop,
+    m = 1,
+    l = 3,
+    linecolor = :red,
+    marker = :star,
+    markercolor = :red,
+    legend = false,
+    dpi = 480,
+)
+savefig("shearOct.pdf")
+
+plotFEDomain(regularCuboidMesh, dpi = 480)
+savefig("fenodeset.pdf")
+
 
 uGammaTest = [1
      5
@@ -102,7 +139,8 @@ uGammaTest = [1
 
 isempty(setdiff(uGammaTest, cantileverBC.uGammaDln))
 
-
+using Plots
+plotlyjs()
 
 
 
@@ -923,6 +961,10 @@ isequal(old,forceDisplacement.uTilde)
 
 array
 forceDisplacement.uTilde
+
+numSeg = network.numSeg[1]
+network.nodeVel[:, 1:numSeg] = rand(3, numSeg)
+network = remeshSurfaceNetwork!(regularCuboidMesh,  network)
 
 
 

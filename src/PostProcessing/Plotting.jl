@@ -193,18 +193,18 @@ plotFEDomain(mesh::AbstractMesh)
 ```
 Plots corners, edges and surfaces of [`AbstractMesh`](@ref).
 """
-function plotFEDomain(mesh::AbstractMesh)
+function plotFEDomain(mesh::AbstractMesh, args...; kw...)
     cornerNode = mesh.cornerNode
     edgeNode = mesh.edgeNode
     faceNode = mesh.faceNode
     coord = mesh.coord
 
-    fig = scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3, label = "Corners")
+    fig = scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3, label = "Corners", args...; kw...)
     @inbounds for i in 1:length(edgeNode)
-        scatter!(fig, coord[1, edgeNode[i]], coord[2, edgeNode[i]], coord[3, edgeNode[i]], markershape = :circle, markersize = 3, label = "Edge $i")
+        scatter!(fig, coord[1, edgeNode[i]], coord[2, edgeNode[i]], coord[3, edgeNode[i]], markershape = :circle, markersize = 3, label = "Edge $i", args...; kw...)
     end
     @inbounds for i in 1:length(faceNode)
-        scatter!(fig, coord[1, faceNode[i]], coord[2, faceNode[i]], coord[3, faceNode[i]], markershape = :square, markersize = 3, label = "Face $i")
+        scatter!(fig, coord[1, faceNode[i]], coord[2, faceNode[i]], coord[3, faceNode[i]], markershape = :square, markersize = 3, label = "Face $i", args...; kw...)
     end
     return fig
 end
