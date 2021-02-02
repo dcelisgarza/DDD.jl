@@ -77,6 +77,7 @@ cd(@__DIR__)
     intParams2 = loadIntegrationParameters(simulationJSON[4])
     slipSystems2 = loadSlipSystem(simulationJSON[5])
     dislocationLoop2 = zeros(DislocationLoop, length(simulationJSON[6]))
+    simulationJSON[6][1]
     for i in eachindex(dislocationLoop2)
         dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
     end

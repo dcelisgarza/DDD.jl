@@ -20,9 +20,8 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 1,   # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystem,  # Slip plane of the segments.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
     range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
@@ -34,9 +33,8 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 1,   # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystem,  # Slip plane of the segments.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
     range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
@@ -97,9 +95,8 @@ using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 1,   # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystem,  # Slip plane of the segments.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
     range = SMatrix{3,2,Float64}(segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2, segLen / 2),  # Distribution range

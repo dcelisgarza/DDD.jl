@@ -5,6 +5,7 @@ Base.zero(::Type{nodeTypeDln}) = nodeTypeDln(0)
 
 Base.getindex(x::DislocationLoop, i) = i == 1 ? x : throw(BoundsError())
 Base.eachindex(x::DislocationLoop) = 1
+
 function Base.zero(::Type{DislocationLoop})
     return DislocationLoop(;
         loopType = loopDln(),
@@ -12,9 +13,8 @@ function Base.zero(::Type{DislocationLoop})
         nodeSide = convert(Int, 0),
         numLoops = convert(Int, 0),
         segLen = convert(Float64, 0),
-        slipSystem = convert(Int, 0),
-        _slipPlane = zeros(3, 0),
-        _bVec = zeros(3, 0),
+        slipSystemIdx = convert(Int, 0),
+        slipSystem = SlipSystem(nothing, zeros(3), zeros(3)),
         label = zeros(nodeTypeDln, 0),
         buffer = convert(Float64, 0),
         range = zeros(3, 0),

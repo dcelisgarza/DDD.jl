@@ -30,7 +30,7 @@
             2,
             3
         ],
-        "slipSystem": 1,
+        "slipSystemIdx": 1,
         "label": [
             2,
             1,
@@ -103,7 +103,7 @@
             2,
             3
         ],
-        "slipSystem": 1,
+        "slipSystemIdx": 1,
         "label": [
             2,
             1,

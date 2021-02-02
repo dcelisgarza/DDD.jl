@@ -224,20 +224,20 @@ end
 """
 ```
 struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
-    loopType::T1    # Loop type.
-    numSides::T2    # Number of sides in the loop.
-    nodeSide::T3    # Nodes per side of the loop.
-    numLoops::T4    # Number of loops to generate when making the network.
-    segLen::T5      # Segment lengths.
-    slipSystem::T6  # Slip system.
-    label::T7       # Node labels.
-    links::T8       # Links.
-    slipPlane::T9   # Slip planes.
-    bVec::T10       # Burgers vectors.
-    coord::T11      # Coordinates.
-    buffer::T12     # Buffer for distributions.
-    range::T13      # Range for distributions.
-    dist::T14       # Distribution.
+    loopType::T1        # Loop type.
+    numSides::T2        # Number of sides in the loop.
+    nodeSide::T3        # Nodes per side of the loop.
+    numLoops::T4        # Number of loops to generate when making the network.
+    segLen::T5          # Segment lengths.
+    slipSystemIdx::T6   # Slip system.
+    label::T7           # Node labels.
+    links::T8           # Links.
+    slipPlane::T9       # Slip planes.
+    bVec::T10           # Burgers vectors.
+    coord::T11          # Coordinates.
+    buffer::T12         # Buffer for distributions.
+    range::T13          # Range for distributions.
+    dist::T14           # Distribution.
 end
 ```
 Stores a dislocation loop.
@@ -248,7 +248,7 @@ struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
     nodeSide::T3
     numLoops::T4
     segLen::T5
-    slipSystem::T6
+    slipSystemIdx::T6
     label::T7
     links::T8
     slipPlane::T9

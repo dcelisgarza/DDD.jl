@@ -19,9 +19,6 @@ function loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSy
     dlnTypes = makeTypeDict(AbstractDlnStr)
     distributions = makeTypeDict(AbstractDistribution)
 
-    slipPlane = slipSystem.slipPlane
-    bVec = slipSystem.bVec
-
     range = SMatrix{3,2}(convert.(Float64, vcat(dict["range"]...)))
 
     numSides = convert(Int, dict["numSides"])
@@ -35,9 +32,8 @@ function loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSy
         nodeSide = nodeSide,
         numLoops = numLoops,
         segLen = SVector{length(dict["segLen"]),Float64}(dict["segLen"]),
-        slipSystem = convert.(Int, dict["slipSystem"]),
-        _slipPlane = convert.(Float64, slipPlane[:, dict["slipSystem"]]),
-        _bVec = convert.(Float64, bVec[:, dict["slipSystem"]]),
+        slipSystemIdx = convert.(Int, dict["slipSystemIdx"]),
+        slipSystem = slipSystem,
         label = SVector{nodeLoop,nodeTypeDln}(vcat(dict["label"]...)),
         buffer = convert(Float64, dict["buffer"]),
         range = range,

@@ -1,7 +1,7 @@
 ##
 using DDD, StaticArrays, SparseArrays, LinearAlgebra
 dlnParams = DislocationParameters(; mobility = mobBCC())
-matParams = MaterialParameters(; crystalStruct = BCC(), ν = 0.28)
+matParams = MaterialParameters(; crystalStruct = BCC())
 femParams = FEMParameters(; 
                         type = DispatchRegularCuboidMesh(), 
                         order = LinearElement(), 
@@ -10,7 +10,9 @@ femParams = FEMParameters(;
                         mx = 3, my = 5, mz = 7
                     )
 intParams = IntegrationParameters(; method = AdaptiveEulerTrapezoid())
+intTime = IntegrationTime()
 slipSystem = SlipSystem(; crystalStruct = BCC(), slipPlane = Float64[-1;1;0], bVec = Float64[1;1;1])
+
 dx, dy, dz = femParams.dx, femParams.dy, femParams.dz
 segLen = (dx + dy + dz) / 30
 prismLoop = DislocationLoop(;
@@ -19,9 +21,8 @@ prismLoop = DislocationLoop(;
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 1,   # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    slipSystemIdx = 1, # Slip System index (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystem,  # Slip system.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
     range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
@@ -33,9 +34,8 @@ shearLoop = DislocationLoop(;
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 1,   # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystem.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystem.bVec[:, 1],            # Burgers vector of the segments.
+    slipSystemIdx = 1, # Slip System index (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystem,  # Slip system.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
     range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
