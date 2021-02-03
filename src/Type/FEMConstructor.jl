@@ -159,8 +159,17 @@ function RegularCuboidMesh(
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
     
     # Nodes corresponding to the vertices.
-    cornerNode = (x0y0z0 = 1, x1y0z0 = mx1, x0y1z0 = 1 + mymx1mz1, x1y1z0 = mx1 + mymx1mz1, x0y0z1 = 1 + mzmx1, x1y0z1 = mx1mz1, 
-                                    x0y1z1 = 1 + mymx1mz1 + mzmx1, x1y1z1 = mx1 + mymx1mz1 + mzmx1)
+    cornerNode = (
+                x0y0z0 = 1,
+                x1y0z0 = mx1,
+                x0y1z0 = 1 + mymx1mz1,
+                x1y1z0 = mx1 + mymx1mz1,
+                x0y0z1 = 1 + mzmx1,
+                x1y0z1 = mx1mz1,
+                x0y1z1 = 1 + mymx1mz1 + mzmx1,
+                x1y1z1 = mx1 + mymx1mz1 + mzmx1
+            )
+
     # Nodes corresponding to the edges.
     edgeNode = (x_y0z0 = zeros(mxType, mxm1), x_y1z0 = zeros(mxType, mxm1), x_y0z1 = zeros(mxType, mxm1), x_y1z1 = zeros(mxType, mxm1), 
                 y_x0z0 = zeros(mxType, mym1), y_x1z0 = zeros(mxType, mym1), y_x0z1 = zeros(mxType, mym1), y_x1z1 = zeros(mxType, mym1),
