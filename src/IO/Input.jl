@@ -102,33 +102,49 @@ function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
     mGammaDict = dict["mGamma"]
     tGammaDict = dict["tGamma"]
 
+    idxU = try 
+        Int.(uGammaDict["idx"])
+    catch err
+        Symbol.(uGammaDict["idx"])
+    end
+
     uGamma = try (type = nodeTypeFE.(uGammaDict["type"]),
-                    idx = Int.(uGammaDict["idx"]),
+                    idx = idxU,
                     node = Int.(uGammaDict["node"]))
     catch err
-        uGamma = nothing
+        uGamma = []
+    end
+
+    idxM = try 
+        Int.(mGammaDict["idx"])
+    catch err
+        Symbol.(mGammaDict["idx"])
     end
 
     mGamma = try (type = nodeTypeFE.(mGammaDict["type"]),
-                    idx = Int.(mGammaDict["idx"]),
+                    idx = idxM,
                     node = Int.(mGammaDict["node"]))
     catch err
-        mGamma = nothing
+        mGamma = []
     end
 
+    idxT = try 
+        Int.(tGammaDict["idx"])
+    catch err
+        Symbol.(tGammaDict["idx"])
+    end
     tGamma = try (type = nodeTypeFE.(tGammaDict["type"]),
-                    idx = Int.(tGammaDict["idx"]),
+                    idx = idxT,
                     node = Int.(tGammaDict["node"]))
     catch err
-        tGamma = nothing
+        tGamma = []
     end
 
-    uDofs = try Int.(dict["uDofs"]); catch err; nothing end
-    mDofs = try Int.(dict["mDofs"]); catch err; nothing end
-    tDofs = try Int.(dict["tDofs"]); catch err; nothing end
+    uDofs = try Int.(dict["uDofs"]); catch err; [] end
+    mDofs = try Int.(dict["mDofs"]); catch err; [] end
+    tDofs = try Int.(dict["tDofs"]); catch err; [] end
 
     typeof(dict["tK"]) <: AbstractArray ? tK = Float64.(dict["tK"]) : tK = nothing
-
     return Boundaries(; 
             uGamma = uGamma,
             tGamma = tGamma,
@@ -246,57 +262,7 @@ Constructs [`DislocationNetwork`](@ref) from a `JSON` file.
 function loadNetwork(fileDislocationNetwork::AbstractString)
     dict = loadJSON(fileDislocationNetwork)
 
-    lenLinks = length(dict["links"])
-    lenCoord = length(dict["coord"])
-    numNode = [convert(Int, dict["numNode"][1])]
-    numSeg = [convert(Int, dict["numSeg"][1])]
-    maxConnect = convert(Int, dict["maxConnect"])
-    links = zeros(Int, 2, lenLinks)
-    slipPlane = zeros(3, lenLinks)
-    bVec = zeros(3, lenLinks)
-    coord = zeros(3, lenCoord)
-    connectivity = zeros(Int, 2 * maxConnect[1] + 1, lenLinks)
-    linksConnect = zeros(Int, 2, lenLinks)
-    segIdx = zeros(Int, lenLinks, 3)
-    segForce = zeros(3, 2, lenLinks)
-    nodeVel = zeros(3, lenLinks)
-    nodeForce = zeros(3, lenLinks)
-
-    for i in 1:lenLinks
-        links[:, i] = dict["links"][i]
-        linksConnect[:, i] = dict["linksConnect"][i]
-        segForce[:, 1, i] = dict["segForce"][i][1]
-        segForce[:, 2, i] = dict["segForce"][i][2]
-    end
-    for i in 1:lenCoord
-        slipPlane[:, i] = dict["slipPlane"][i]
-        bVec[:, i] = dict["bVec"][i]
-        coord[:, i] = dict["coord"][i]
-        nodeVel[:, i] = dict["nodeVel"][i]
-        nodeForce[:, i] = dict["nodeForce"][i]
-        connectivity[:, i] = dict["connectivity"][i]
-    end
-
-    for i in 1:3
-        segIdx[:, i] = dict["segIdx"][i]
-    end
-
-    dislocationNetwork = DislocationNetwork(;
-        links = links,
-        slipPlane = slipPlane,
-        bVec = bVec,
-        coord = coord,
-        label = nodeTypeDln.(dict["label"]),
-        segForce = segForce,
-        nodeVel = nodeVel,
-        nodeForce = nodeForce,
-        numNode = numNode,
-        numSeg = numSeg,
-        maxConnect = maxConnect,
-        linksConnect = linksConnect,
-        connectivity = connectivity,
-        segIdx = segIdx,
-    )
+    dislocationNetwork = loadNetwork(dict)
 
     return dislocationNetwork
 end

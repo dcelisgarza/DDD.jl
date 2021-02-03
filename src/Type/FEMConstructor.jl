@@ -25,21 +25,6 @@ end
 
 """
 ```
-Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
-```
-Creates [`Boundaries`](@ref).
-"""
-function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
-    uGammaDln = vcat(uGamma[:node], mGamma[:node])
-    tGammaDln = vcat(tGamma[:node], mGamma[:node])
-    
-    uDofsDln = copy(reshape(reshape([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln], :, 3)', :))
-    tDofsDln = copy(reshape(reshape([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln], :, 3)', :))
-    return Boundaries(uGammaDln, tGammaDln, uDofsDln, tDofsDln, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
-end
-
-"""
-```
 buildMesh(
     matParams::MaterialParameters, 
     femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2,F3,F4,F5}
@@ -451,27 +436,27 @@ function Boundaries(
     faceNode = femMesh.faceNode
     K = femMesh.K
     
-    if !haskey(kw, "uGamma")
+    if !haskey(kw, :uGamma)
         uGamma = (
             type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
             idx = [:x0y0z0; :x0y1z0; :x0y0z1; :x0y1z1; :y_x0z0; :y_x0z1; :z_x0y0; :z_x0y1; :yz_x0], # Index
             node = [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[:y_x0z0]; edgeNode[:y_x0z1]; edgeNode[:z_x0y0]; edgeNode[:z_x0y1]; faceNode[:yz_x0]]
         ) 
     else
-        uGamma = kw["uGamma"]
+        uGamma = kw[:uGamma]
     end
 
-    if !haskey(kw, "mGamma")
+    if !haskey(kw, :mGamma)
         mGamma = (
             type = [cornerFE; cornerFE; edgeFE],# Type
             idx = [:x1y0z1; :x1y1z1; :y_x1z1], # Index
             node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[:y_x1z1]]
         )
     else
-        mGamma = kw["mGamma"]
+        mGamma = kw[:mGamma]
     end
 
-    if !haskey(kw, "tGamma")
+    if !haskey(kw, :tGamma)
         # Indices
         uGammaLbl = uGamma[:type]
         mGammaLbl = mGamma[:type]
@@ -497,7 +482,7 @@ function Boundaries(
             node = setdiff([cornerNode...; collect(Iterators.flatten(edgeNode)); collect(Iterators.flatten(faceNode))], [uGamma[:node]; mGamma[:node]])
         )
     else 
-        tGamma = kw["tGamma"]
+        tGamma = kw[:tGamma]
     end
     
     uGammaNode = uGamma[:node]
@@ -507,7 +492,7 @@ function Boundaries(
     
     !haskey(kw, "tDofs") ? tDofs = setdiff(1:numNode, uDofs) : tDofs = kw["tDofs"]
 
-    !haskey(kw, "mDofs") ? mDofs = nothing : mDofs = setdiff(1:numNode, (uDofs, tDofs))
+    !haskey(kw, "mDofs") ? mDofs = [] : mDofs = setdiff(1:numNode, (uDofs, tDofs))
 
     C = cholesky(Hermitian(K[tDofs, tDofs]))
 
@@ -530,4 +515,18 @@ function Boundaries(
         f = spzeros(numNode3)
     )
     return boundaries, forceDisplacement
+end
+
+"""
+```
+Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
+```
+Creates [`Boundaries`](@ref).
+"""
+function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
+    uGammaDln = collect(Iterators.flatten(vcat(uGamma[:node], mGamma[:node])))
+    tGammaDln = collect(Iterators.flatten(vcat(tGamma[:node], mGamma[:node])))
+    uDofsDln = copy(reshape(reshape([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln], :, 3)', :))
+    tDofsDln = copy(reshape(reshape([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln], :, 3)', :))
+    return Boundaries(uGammaDln, tGammaDln, uDofsDln, tDofsDln, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 end

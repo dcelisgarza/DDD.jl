@@ -53,6 +53,32 @@ network = DislocationNetwork([prismLoop, shearLoop])
 regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 
+cornerNode = regularCuboidMesh.cornerNode
+edgeNode = regularCuboidMesh.edgeNode
+faceNode = regularCuboidMesh.faceNode
+uGamma = (type = nodeTypeFE(1),# Type
+                idx = :x0y0z0, # Index
+                node = cornerNode[:x0y0z0])
+tGamma = (type = [nodeTypeFE(2)],# Type
+                idx = :x_y0z1, # Index
+                node = edgeNode[:x_y0z1]) 
+mGamma = (type = [nodeTypeFE(3)],# Type
+                idx = :xy_z0, # Index
+                node = faceNode[:xy_z0])
+testGamma, testForceDisp = Boundaries(femParams, regularCuboidMesh; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma)
+testGamma.tGamma
+saveJSON("test.json", testGamma)
+testGammaDict = loadJSON("test.json")
+testGamma2 = loadBoundaries(testGammaDict)
+for i in fieldnames(typeof(testGamma2))
+    isnothing(getproperty(testGamma2, i)) ? continue : nothing
+    println(isequal(getproperty(testGamma2, i), getproperty(testGamma, i)))
+end
+
+
+
+testGamma.uGamma
+
 fig = plotNodes(
     regularCuboidMesh,
     network,

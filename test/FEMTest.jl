@@ -225,6 +225,22 @@ end
     faceNode = regularCuboidMesh.faceNode
     coord = regularCuboidMesh.coord
 
+    numNode = regularCuboidMesh.numNode
+    numNode3 = numNode * 3
+    uGamma = (type = nodeTypeFE(1),# Type
+                idx = :x0y0z0, # Index
+                node = cornerNode[:x0y0z0])
+    tGamma = (type = nodeTypeFE(2),# Type
+                idx = :x_y0z1, # Index
+                node = edgeNode[:x_y0z1]) 
+    mGamma = (type = nodeTypeFE(3),# Type
+                idx = :xy_z0, # Index
+                node = faceNode[:xy_z0])
+    testGamma, missing = Boundaries(femParams, regularCuboidMesh; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma)
+    @test isequal(uGamma, testGamma.uGamma)
+    @test isequal(tGamma, testGamma.tGamma)
+    @test isequal(mGamma, testGamma.mGamma)
+
     cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
     uGamma = cantileverBC.uGamma[:node]
     mGamma = cantileverBC.mGamma[:node]

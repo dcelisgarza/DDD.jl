@@ -1,5 +1,5 @@
 using DDD
-using Test, FileIO
+using Test, FileIO, JSON, SparseArrays, LinearAlgebra
 
 cd(@__DIR__)
 @testset "Compare loading input and output parameters" begin
@@ -31,6 +31,21 @@ cd(@__DIR__)
 
     @test typeof(dislocationLoop2) <: DislocationLoop
 
+    regularCuboidMesh = buildMesh(matParams, femParams)
+    cornerNode = regularCuboidMesh.cornerNode
+    edgeNode = regularCuboidMesh.edgeNode
+    faceNode = regularCuboidMesh.faceNode
+    uGamma = (type = nodeTypeFE(1),# Type
+                idx = :x0y0z0, # Index
+                node = cornerNode[:x0y0z0])
+    tGamma = (type = [nodeTypeFE(2)],# Type
+                idx = :x_y0z1, # Index
+                node = edgeNode[:x_y0z1]) 
+    mGamma = (type = [nodeTypeFE(3)],# Type
+                idx = :xy_z0, # Index
+                node = faceNode[:xy_z0])
+    testGamma, testForceDisp = Boundaries(femParams, regularCuboidMesh; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma)
+
     fileDislocationLoop = "./testData/samplePrismShear.json"
     fileIntegTime = "./testData/sampleIntegrationTime.json"
     integTime = loadIntegrationTime(fileIntegTime)
@@ -47,6 +62,8 @@ cd(@__DIR__)
         slipSystems,
         dislocationLoop,
         integTime,
+        testGamma,
+        testForceDisp,
     )
     save(
         paramDumpJLD2,
@@ -64,6 +81,8 @@ cd(@__DIR__)
         dislocationLoop,
         "integTime",
         integTime,
+        "testForceDisp",
+        testForceDisp,
     )
     networkDumpJSON = "./testData/sampleNetwork.json"
     networkDumpJLD2 = "./testData/sampleNetwork.jld2"
@@ -81,6 +100,8 @@ cd(@__DIR__)
     for i in eachindex(dislocationLoop2)
         dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
     end
+    testBoundaries2 = loadBoundaries(simulationJSON[8])
+    testForceDisp2 = loadForceDisplacement(simulationJSON[9])
     network2 = loadNetwork(networkDumpJSON)
     integTime2 = loadIntegrationTime(simulationJSON[7])
     # Reload simulationJLD2.
@@ -90,7 +111,8 @@ cd(@__DIR__)
     intParams3,
     slipSystems3,
     dislocationLoop3,
-    integTime3 = load(
+    integTime3,
+    testForceDisp3 = load(
         paramDumpJLD2,
         "dlnParams",
         "matParams",
@@ -99,6 +121,7 @@ cd(@__DIR__)
         "slipSystems",
         "dislocationLoop",
         "integTime",
+        "testForceDisp"
     )
     network3 = load(networkDumpJLD2, "network")
     # Ensure the data is all the same.
@@ -110,6 +133,11 @@ cd(@__DIR__)
     @test compStruct(dislocationLoop, dislocationLoop2; verbose = true)
     @test compStruct(network, network2; verbose = true)
     @test compStruct(integTime, integTime2; verbose = true)
+    @test compStruct(testForceDisp, testForceDisp2; verbose = true)
+    for i in fieldnames(typeof(testBoundaries2))
+        isnothing(getproperty(testBoundaries2, i)) ? continue : nothing
+        @test isequal(getproperty(testBoundaries2, i), getproperty(testBoundaries2, i))
+    end
 
     @test compStruct(dlnParams, dlnParams3; verbose = true)
     @test compStruct(matParams, matParams3; verbose = true)
@@ -119,13 +147,15 @@ cd(@__DIR__)
     @test compStruct(dislocationLoop, dislocationLoop3; verbose = true)
     @test compStruct(network, network3; verbose = true)
     @test compStruct(integTime, integTime3; verbose = true)
+    @test compStruct(testForceDisp, testForceDisp3; verbose = true)
 
     sampleRegCubMeshDump = "./testData/sampleRegCubMesh.jld2"
     regularCuboidMesh = buildMesh(matParams, femParams)
     save(sampleRegCubMeshDump, "mesh", regularCuboidMesh)
     regularCuboidMesh2 = load(sampleRegCubMeshDump, "mesh")
     @test compStruct(regularCuboidMesh, regularCuboidMesh2; verbose = true)
-
+    @test JSON.lower(nodeTypeFE(1)) == 1
+    
     rm(paramDumpJSON; force = true)
     rm(paramDumpJLD2; force = true)
     rm(networkDumpJSON; force = true)
