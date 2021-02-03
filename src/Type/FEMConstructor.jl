@@ -444,11 +444,16 @@ function Boundaries(
     faceNode = femMesh.faceNode
     K = femMesh.K
     
+    # (
+    #     x_y0z0 = zeros(mxType, mxm1), y_x0z0 = zeros(mxType, mym1), x_y1z0 = zeros(mxType, mxm1), y_x1z0 = zeros(mxType, mym1), 
+    #     x_y0z1 = zeros(mxType, mxm1), y_x0z1 = zeros(mxType, mym1), x_y1z1 = zeros(mxType, mxm1), y_x1z1 = zeros(mxType, mym1),
+    #     z_x0y0 = zeros(mxType, mzm1), z_x1y0 = zeros(mxType, mzm1), z_x0y1 = zeros(mxType, mzm1), z_x1y1 = zeros(mxType, mzm1)
+    # )
     if !haskey(kw, "uGamma")
         uGamma = (
             type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
             idx = [1; 3; 5; 7; 2; 6; 9; 11; 5], # Index
-            node = [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]]
+            node = [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[:y_x0z0]; edgeNode[:y_x0z1]; edgeNode[:z_x0y0]; edgeNode[:z_x0y1]; faceNode[:yz_x0]]
         ) 
     else
         uGamma = kw["uGamma"]
@@ -466,7 +471,7 @@ function Boundaries(
         mGamma = (
             type = [cornerFE; cornerFE; edgeFE],# Type
             idx = [6; 8; 8], # Index
-            node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[8]]
+            node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[:y_x1z1]]
         )
     else
         mGamma = kw["mGamma"]
