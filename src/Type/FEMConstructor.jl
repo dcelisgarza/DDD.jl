@@ -120,8 +120,8 @@ function RegularCuboidMesh(
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
     
     # Nodes corresponding to the vertices.
-    cornerNode = SVector{8,mxType}(1, mx1, 1 + mymx1mz1, mx1 + mymx1mz1, 1 + mzmx1, mx1mz1, 
-                                    1 + mymx1mz1 + mzmx1, mx1 + mymx1mz1 + mzmx1)
+    cornerNode = (x0y0z0 = 1, x1y0z0 = mx1, x0y1z0 = 1 + mymx1mz1, x1y1z0 = mx1 + mymx1mz1, x0y0z1 = 1 + mzmx1, x1y0z1 = mx1mz1, 
+                                    x0y1z1 = 1 + mymx1mz1 + mzmx1, x1y1z1 = mx1 + mymx1mz1 + mzmx1)
     # cornerNode = (x0y0z0 = 1, x1y0z0 = mx1, x0y1z0 = 1 + mymx1mz1, x1y1z0 = mx1 + mymx1mz1, x0y0z1 = 1 + mzmx1, x1y0z1 = mx1mz1, 
     # x0y1z1 = 1 + mymx1mz1 + mzmx1, xy1z1 = mx1 + mymx1mz1 + mzmx1)
     # Nodes corresponding to the edges.
@@ -487,7 +487,7 @@ function Boundaries(
         tGamma = (
             type = [fill(cornerFE, length(tCorner)); fill(edgeFE, length(tEdge)); fill(faceFE, length(tFace))],
             idx = [tCorner; tEdge; tFace],
-            node = setdiff([cornerNode; collect(Iterators.flatten(edgeNode)); collect(Iterators.flatten(faceNode))], [uGamma[:node]; mGamma[:node]])
+            node = setdiff([cornerNode...; collect(Iterators.flatten(edgeNode)); collect(Iterators.flatten(faceNode))], [uGamma[:node]; mGamma[:node]])
         )
     else 
         tGamma = kw["tGamma"]

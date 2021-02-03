@@ -199,7 +199,7 @@ function plotFEDomain(mesh::AbstractMesh, args...; kw...)
     faceNode = mesh.faceNode
     coord = mesh.coord
 
-    fig = scatter(coord[1, cornerNode], coord[2, cornerNode], coord[3, cornerNode], markershape = :diamond, markersize = 3, label = "Corners", args...; kw...)
+    fig = scatter(coord[1, [cornerNode...]], coord[2, [cornerNode...]], coord[3, [cornerNode...]], markershape = :diamond, markersize = 3, label = "Corners", args...; kw...)
     @inbounds for i in 1:length(edgeNode)
         scatter!(fig, coord[1, edgeNode[i]], coord[2, edgeNode[i]], coord[3, edgeNode[i]], markershape = :circle, markersize = 3, label = "Edge $i", args...; kw...)
     end
