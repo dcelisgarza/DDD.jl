@@ -116,32 +116,6 @@ function RegularCuboidMesh(
     mzmx1 = mz * mx1
     numNode = mx1 * my1 * mz1
 
-    coord = zeros(dxType, 3, numNode)           # Node coordinates.
-    connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
-    
-    # Nodes corresponding to the vertices.
-    cornerNode = (x0y0z0 = 1, x1y0z0 = mx1, x0y1z0 = 1 + mymx1mz1, x1y1z0 = mx1 + mymx1mz1, x0y0z1 = 1 + mzmx1, x1y0z1 = mx1mz1, 
-                                    x0y1z1 = 1 + mymx1mz1 + mzmx1, x1y1z1 = mx1 + mymx1mz1 + mzmx1)
-    # Nodes corresponding to the edges.
-    edgeNode = (x_y0z0 = zeros(mxType, mxm1), x_y1z0 = zeros(mxType, mxm1), x_y0z1 = zeros(mxType, mxm1), x_y1z1 = zeros(mxType, mxm1), 
-                y_x0z0 = zeros(mxType, mym1), y_x1z0 = zeros(mxType, mym1), y_x0z1 = zeros(mxType, mym1), y_x1z1 = zeros(mxType, mym1),
-                z_x0y0 = zeros(mxType, mzm1), z_x1y0 = zeros(mxType, mzm1), z_x0y1 = zeros(mxType, mzm1), z_x1y1 = zeros(mxType, mzm1))
-    # Nodes corresponding to the faces.
-    faceNode = (xy_z0 = zeros(mxType, mxm1 * mym1), xy_z1 = zeros(mxType, mxm1 * mym1),
-                xz_y0 = zeros(mxType, mxm1 * mzm1), xz_y1 = zeros(mxType, mxm1 * mzm1),
-                yz_x0 = zeros(mxType, mym1 * mzm1), yz_x1 = zeros(mxType, mym1 * mzm1))
-
-    localK = zeros(dxType, 24, 24)  # K for an element.
-    B = zeros(dxType, 6, 24, 8)     # Jacobian matrix.
-
-    nodeEl = 1:8 # Local node numbers.
-    dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
-    
-    # TODO
-    V1 = zeros(dxType, numElem * 24^2)
-    V2 = zeros(dxType, numElem * 24^2)
-    V3 = zeros(dxType, numElem * 24^2)
-
     # Length scale.
     scale = SVector{3,dxType}(dx, dy, dz) * cbrt(dx * dy * dz)
 
@@ -180,6 +154,32 @@ function RegularCuboidMesh(
         -1,  0,  0,
          1,  0,  0,
     )
+
+    coord = zeros(dxType, 3, numNode)           # Node coordinates.
+    connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
+    
+    # Nodes corresponding to the vertices.
+    cornerNode = (x0y0z0 = 1, x1y0z0 = mx1, x0y1z0 = 1 + mymx1mz1, x1y1z0 = mx1 + mymx1mz1, x0y0z1 = 1 + mzmx1, x1y0z1 = mx1mz1, 
+                                    x0y1z1 = 1 + mymx1mz1 + mzmx1, x1y1z1 = mx1 + mymx1mz1 + mzmx1)
+    # Nodes corresponding to the edges.
+    edgeNode = (x_y0z0 = zeros(mxType, mxm1), x_y1z0 = zeros(mxType, mxm1), x_y0z1 = zeros(mxType, mxm1), x_y1z1 = zeros(mxType, mxm1), 
+                y_x0z0 = zeros(mxType, mym1), y_x1z0 = zeros(mxType, mym1), y_x0z1 = zeros(mxType, mym1), y_x1z1 = zeros(mxType, mym1),
+                z_x0y0 = zeros(mxType, mzm1), z_x1y0 = zeros(mxType, mzm1), z_x0y1 = zeros(mxType, mzm1), z_x1y1 = zeros(mxType, mzm1))
+    # Nodes corresponding to the faces.
+    faceNode = (xy_z0 = zeros(mxType, mxm1 * mym1), xy_z1 = zeros(mxType, mxm1 * mym1),
+                xz_y0 = zeros(mxType, mxm1 * mzm1), xz_y1 = zeros(mxType, mxm1 * mzm1),
+                yz_x0 = zeros(mxType, mym1 * mzm1), yz_x1 = zeros(mxType, mym1 * mzm1))
+
+    localK = zeros(dxType, 24, 24)  # K for an element.
+    B = zeros(dxType, 6, 24, 8)     # Jacobian matrix.
+
+    nodeEl = 1:8 # Local node numbers.
+    dofLocal = Tuple(Iterators.flatten((3 * (nodeEl .- 1) .+ 1, 3 * (nodeEl .- 1) .+ 2, 3 * (nodeEl .- 1) .+ 3)))
+    
+    # TODO
+    V1 = zeros(dxType, numElem * 24^2)
+    V2 = zeros(dxType, numElem * 24^2)
+    V3 = zeros(dxType, numElem * 24^2)
 
     E = 2 * μ * (1 + ν)                 # Young's modulus
     Lame = E * νomνInv / (1 - 2 * ν)    # Lamé's relation
