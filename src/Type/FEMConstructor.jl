@@ -448,17 +448,25 @@ function Boundaries(
         uGamma = (
             type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
             idx = [1; 3; 5; 7; 2; 6; 9; 11; 5], # Index
-            node = [cornerNode[1]; cornerNode[3]; cornerNode[5]; cornerNode[7]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]]
+            node = [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[2]; edgeNode[6]; edgeNode[9]; edgeNode[11]; faceNode[5]]
         ) 
     else
         uGamma = kw["uGamma"]
     end
 
+    # ( = 1, 
+    # x1y0z0 = mx1,  
+    # = 1 + mymx1mz1, 
+    # x1y1z0 = mx1 + mymx1mz1, 
+    #  = 1 + mzmx1, 
+    #  = mx1mz1, 
+    #  = 1 + mymx1mz1 + mzmx1, 
+    #  = mx1 + mymx1mz1 + mzmx1)
     if !haskey(kw, "mGamma")
         mGamma = (
             type = [cornerFE; cornerFE; edgeFE],# Type
             idx = [6; 8; 8], # Index
-            node = [cornerNode[6]; cornerNode[8]; edgeNode[8]]
+            node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[8]]
         )
     else
         mGamma = kw["mGamma"]
