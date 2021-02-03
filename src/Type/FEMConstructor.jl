@@ -444,33 +444,20 @@ function Boundaries(
     faceNode = femMesh.faceNode
     K = femMesh.K
     
-    # (
-    #     x_y0z0 = zeros(mxType, mxm1), y_x0z0 = zeros(mxType, mym1), x_y1z0 = zeros(mxType, mxm1), y_x1z0 = zeros(mxType, mym1), 
-    #     x_y0z1 = zeros(mxType, mxm1), y_x0z1 = zeros(mxType, mym1), x_y1z1 = zeros(mxType, mxm1), y_x1z1 = zeros(mxType, mym1),
-    #     z_x0y0 = zeros(mxType, mzm1), z_x1y0 = zeros(mxType, mzm1), z_x0y1 = zeros(mxType, mzm1), z_x1y1 = zeros(mxType, mzm1)
-    # )
     if !haskey(kw, "uGamma")
         uGamma = (
             type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
-            idx = [1; 3; 5; 7; 2; 6; 9; 11; 5], # Index
+            idx = [:x0y0z0; :x0y1z0; :x0y0z1; :x0y1z1; :y_x0z0; :y_x0z1; :z_x0y0; :z_x0y1; :yz_x0], # Index
             node = [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[:y_x0z0]; edgeNode[:y_x0z1]; edgeNode[:z_x0y0]; edgeNode[:z_x0y1]; faceNode[:yz_x0]]
         ) 
     else
         uGamma = kw["uGamma"]
     end
 
-    # ( = 1, 
-    # x1y0z0 = mx1,  
-    # = 1 + mymx1mz1, 
-    # x1y1z0 = mx1 + mymx1mz1, 
-    #  = 1 + mzmx1, 
-    #  = mx1mz1, 
-    #  = 1 + mymx1mz1 + mzmx1, 
-    #  = mx1 + mymx1mz1 + mzmx1)
     if !haskey(kw, "mGamma")
         mGamma = (
             type = [cornerFE; cornerFE; edgeFE],# Type
-            idx = [6; 8; 8], # Index
+            idx = [:x1y0z1; :x1y1z1; :y_x1z1], # Index
             node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[:y_x1z1]]
         )
     else
@@ -494,9 +481,9 @@ function Boundaries(
         muEdge = union(uGamma[:idx][uEdge], mGamma[:idx][mEdge])
         muFace = union(uGamma[:idx][uFace], mGamma[:idx][mFace])
 
-        tCorner = setdiff(1:8, muCorner)
-        tEdge = setdiff(1:12, muEdge)
-        tFace = setdiff(1:6, muFace)
+        tCorner = setdiff(keys(cornerNode), muCorner)
+        tEdge = setdiff(keys(edgeNode), muEdge)
+        tFace = setdiff(keys(faceNode), muFace)
         tGamma = (
             type = [fill(cornerFE, length(tCorner)); fill(edgeFE, length(tEdge)); fill(faceFE, length(tFace))],
             idx = [tCorner; tEdge; tFace],
