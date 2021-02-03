@@ -122,14 +122,16 @@ function RegularCuboidMesh(
     # Nodes corresponding to the vertices.
     cornerNode = SVector{8,mxType}(1, mx1, 1 + mymx1mz1, mx1 + mymx1mz1, 1 + mzmx1, mx1mz1, 
                                     1 + mymx1mz1 + mzmx1, mx1 + mymx1mz1 + mzmx1)
+    # cornerNode = (x0y0z0 = 1, x1y0z0 = mx1, x0y1z0 = 1 + mymx1mz1, x1y1z0 = mx1 + mymx1mz1, x0y0z1 = 1 + mzmx1, x1y0z1 = mx1mz1, 
+    # x0y1z1 = 1 + mymx1mz1 + mzmx1, xy1z1 = mx1 + mymx1mz1 + mzmx1)
     # Nodes corresponding to the edges.
-    edgeNode = (zeros(mxType, mxm1), zeros(mxType, mym1), zeros(mxType, mxm1), zeros(mxType, mym1), 
-                zeros(mxType, mxm1), zeros(mxType, mym1), zeros(mxType, mxm1), zeros(mxType, mym1),
-                zeros(mxType, mzm1), zeros(mxType, mzm1), zeros(mxType, mzm1), zeros(mxType, mzm1))
+    edgeNode = (x_y0z0 = zeros(mxType, mxm1), y_x0z0 = zeros(mxType, mym1), x_y1z0 = zeros(mxType, mxm1), y_x1z0 = zeros(mxType, mym1), 
+                x_y0z1 = zeros(mxType, mxm1), y_x0z1 = zeros(mxType, mym1), x_y1z1 = zeros(mxType, mxm1), y_x1z1 = zeros(mxType, mym1),
+                z_x0y0 = zeros(mxType, mzm1), z_x1y0 = zeros(mxType, mzm1), z_x0y1 = zeros(mxType, mzm1), z_x1y1 = zeros(mxType, mzm1))
     # Nodes corresponding to the faces.
-    faceNode = (zeros(mxType, mxm1 * mym1), zeros(mxType, mxm1 * mym1),
-                zeros(mxType, mxm1 * mzm1), zeros(mxType, mxm1 * mzm1),
-                zeros(mxType, mym1 * mzm1), zeros(mxType, mym1 * mzm1))
+    faceNode = (xy_z0 = zeros(mxType, mxm1 * mym1), xy_z1 = zeros(mxType, mxm1 * mym1),
+                xz_y0 = zeros(mxType, mxm1 * mzm1), xz_y1 = zeros(mxType, mxm1 * mzm1),
+                yz_x0 = zeros(mxType, mym1 * mzm1), yz_x1 = zeros(mxType, mym1 * mzm1))
 
     localK = zeros(dxType, 24, 24)  # K for an element.
     B = zeros(dxType, 6, 24, 8)     # Jacobian matrix.
@@ -252,28 +254,28 @@ function RegularCuboidMesh(
     # Edge node along x
     @inbounds @simd for i in 1:mxm1
         ip1 = i + 1
-        edgeNode[1][i] = ip1
-        edgeNode[3][i] = ip1 + mymx1mz1
-        edgeNode[5][i] = ip1 + mzmx1
-        edgeNode[7][i] = ip1 + mzmx1 + mymx1mz1
+        edgeNode[:x_y0z0][i] = ip1            # x_y0z0
+        edgeNode[:x_y1z0][i] = ip1 + mymx1mz1 # x_y1z0
+        edgeNode[:x_y0z1][i] = ip1 + mzmx1    # x_y0z1
+        edgeNode[:x_y1z1][i] = ip1 + mzmx1 + mymx1mz1 # x_y1z1
     end
     # Edge node along y
     @inbounds @simd for i in 1:mym1
         imx1mz1 = i * mx1mz1
-        edgeNode[2][i] = 1 + imx1mz1
-        edgeNode[4][i] = mx1 + imx1mz1
-        edgeNode[6][i] = 1 + imx1mz1 + mzmx1
-        edgeNode[8][i] = mx1 + imx1mz1 + mzmx1
+        edgeNode[:y_x0z0][i] = 1 + imx1mz1    # y_x0z0
+        edgeNode[:y_x1z0][i] = mx1 + imx1mz1  # y_x1z0
+        edgeNode[:y_x0z1][i] = 1 + imx1mz1 + mzmx1    # y_x0z1
+        edgeNode[:y_x1z1][i] = mx1 + imx1mz1 + mzmx1  # y_x1z1
     end
     # Edge node along z
     @inbounds @simd for i in 1:mzm1
         ip1 = i + 1
         ip1mx1 = ip1 * mx1
         imx1 = i * mx1
-        edgeNode[9][i] = 1 + imx1
-        edgeNode[10][i] = ip1mx1
-        edgeNode[11][i] = 1 + mymx1mz1 + imx1
-        edgeNode[12][i] = mymx1mz1 + ip1mx1
+        edgeNode[:z_x0y0][i] = 1 + imx1 # z_x0y0
+        edgeNode[:z_x1y0][i] = ip1mx1   # z_x1y0
+        edgeNode[:z_x0y1][i] = 1 + mymx1mz1 + imx1   # z_x0y1
+        edgeNode[:z_x1y1][i] = mymx1mz1 + ip1mx1 # z_x1y1
     end
     # Face node xy
     @inbounds @simd for j in 1:mym1
@@ -283,8 +285,8 @@ function RegularCuboidMesh(
         jmx1mz1p1 = jmx1mz1 + 1
         for i in 1:mxm1
             ipmxm1jm1 = i + mxm1jm1
-            faceNode[1][ipmxm1jm1] = jmx1mz1p1 + i
-            faceNode[2][ipmxm1jm1] = jmx1mz1p1 + i + mzmx1
+            faceNode[:xy_z0][ipmxm1jm1] = jmx1mz1p1 + i  # xy_z0
+            faceNode[:xy_z1][ipmxm1jm1] = jmx1mz1p1 + i + mzmx1  # xy_z1
         end
     end
     # Face node xz
@@ -295,20 +297,20 @@ function RegularCuboidMesh(
         jmx1p1 = 1 + jmx1
         for i in 1:mxm1
             ipmxm1jm1 = i + mxm1jm1
-            faceNode[3][ipmxm1jm1] = jmx1p1 + i
-            faceNode[4][ipmxm1jm1] = jmx1p1 + i + mymx1mz1
+            faceNode[:xz_y0][ipmxm1jm1] = jmx1p1 + i # xz_y0
+            faceNode[:xz_y1][ipmxm1jm1] = jmx1p1 + i + mymx1mz1 # xz_y1
         end
     end
-
+    # Face node yz
     @inbounds @simd for j in 1:mym1
         jm1 = j - 1
         jmx1mz1 = j * mx1mz1
         for i in 1:mzm1
             imx1 = i * mx1
             jmx1mz1pimx1 = jmx1mz1 + imx1
-            faceNode[5][i + jm1*mzm1] = 1 + jmx1mz1pimx1
-            faceNode[6][i + jm1*mzm1] = mx1 + jmx1mz1pimx1
-    end
+            faceNode[:yz_x0][i + jm1*mzm1] = 1 + jmx1mz1pimx1    # yz_x0
+            faceNode[:yz_x1][i + jm1*mzm1] = mx1 + jmx1mz1pimx1  # yz_x1
+        end
     end
 
     localCoord = SMatrix{3,8,dxType}(

@@ -1,4 +1,5 @@
 using DDD, Test, SparseArrays, LinearAlgebra, StaticArrays
+cd(@__DIR__)
 
 @testset "Integral tests" begin
     dlnParams = DislocationParameters(; mobility = mobBCC())
