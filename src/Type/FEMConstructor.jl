@@ -437,6 +437,10 @@ function Boundaries(
     K = femMesh.K
     
     if !haskey(kw, :uGamma)
+        # TODO #12
+        # BoundaryNode([cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],
+        #     [:x0y0z0; :x0y1z0; :x0y0z1; :x0y1z1; :y_x0z0; :y_x0z1; :z_x0y0; :z_x0y1; :yz_x0],
+        #     [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[:y_x0z0]; edgeNode[:y_x0z1]; edgeNode[:z_x0y0]; edgeNode[:z_x0y1]; faceNode[:yz_x0]])
         uGamma = (
             type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
             idx = [:x0y0z0; :x0y1z0; :x0y0z1; :x0y1z1; :y_x0z0; :y_x0z1; :z_x0y0; :z_x0y1; :yz_x0], # Index
