@@ -44,7 +44,9 @@ AbstractModel
 FEMParameters
 RegularCuboidMesh
 ForceDisplacement
+ForceDisplacementDot
 Boundaries
+BoundaryNode
 AbstractIntegrator
 IntegrationParameters
 IntegrationTime
@@ -174,6 +176,7 @@ Boundaries(
     femMesh::RegularCuboidMesh; 
     kw...
 )
+BoundaryNode(; type, index, node)
 buildMesh
 RegularCuboidMesh(
     matParams::MaterialParameters,

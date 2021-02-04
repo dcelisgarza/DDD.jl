@@ -234,6 +234,31 @@ end
 
 """
 ```
+struct ForceDisplacementDot{T1,T2,T3,T4}
+    uDotDofs::T1
+    uDot::T2
+    fDotDofs::T3
+    fDot::T4
+end
+```
+Loading and displacement rate. Stores the degrees of freedom on which the loading is applied as well as the loading values.
+
+## Fields
+
+- `uDotDofs`: degrees of freedom on which a displacement is applied
+- `uDot`: displacement rate
+- `fDotDofs`: degrees of freedom on which a load is applied
+- `fDot`: loading rate
+"""
+struct ForceDisplacementDot{T1,T2,T3,T4}
+    uDotDofs::T1
+    uDot::T2
+    fDotDofs::T3
+    fDot::T4
+end
+
+"""
+```
 struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11}
     uGammaDln::T1
     tGammaDln::T2
