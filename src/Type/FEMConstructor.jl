@@ -413,6 +413,12 @@ function RegularCuboidMesh(
         )
 end
 
+"""
+```
+BoundaryNode(; type, index, node)
+```
+Create [`BoundaryNode`](@ref).
+"""
 function BoundaryNode(; type, index, node)
     return BoundaryNode(type, index, node)
 end
