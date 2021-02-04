@@ -278,6 +278,16 @@ struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11}
     tK::T11
 end
 
+"""
+```
+struct BoundaryNode{T1,T2,T3}
+    type::T1
+    index::T2
+    node::T3
+end
+```
+Stores corresponding type, indices and node number of boundary nodes.
+"""
 struct BoundaryNode{T1,T2,T3}
     type::T1
     index::T2

@@ -227,23 +227,23 @@ end
 
     numNode = regularCuboidMesh.numNode
     numNode3 = numNode * 3
-    uGamma = (type = nodeTypeFE(1),# Type
-                idx = :x0y0z0, # Index
-                node = cornerNode[:x0y0z0])
-    tGamma = (type = nodeTypeFE(2),# Type
-                idx = :x_y0z1, # Index
-                node = edgeNode[:x_y0z1]) 
-    mGamma = (type = nodeTypeFE(3),# Type
-                idx = :xy_z0, # Index
-                node = faceNode[:xy_z0])
-    testGamma, missing = Boundaries(femParams, regularCuboidMesh; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma)
-    @test isequal(uGamma, testGamma.uGamma)
-    @test isequal(tGamma, testGamma.tGamma)
-    @test isequal(mGamma, testGamma.mGamma)
+    uGamma = BoundaryNode(type = nodeTypeFE(1),# Type
+                    index = :x0y0z0, # Index
+                    node = cornerNode[:x0y0z0])
+    tGamma = BoundaryNode(type = nodeTypeFE(2),# Type
+                    index = :x_y0z1, # Index
+                    node = edgeNode[:x_y0z1]) 
+    mGamma = BoundaryNode(type = nodeTypeFE(3),# Type
+                    index = :xy_z0, # Index
+                    node = faceNode[:xy_z0])
+    testGamma, testForceDisp = Boundaries(femParams, regularCuboidMesh; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma)
+    @test compStruct(uGamma, testGamma.uGamma; verbose = true)
+    @test compStruct(tGamma, testGamma.tGamma; verbose = true)
+    @test compStruct(mGamma, testGamma.mGamma; verbose = true)
 
     cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
-    uGamma = cantileverBC.uGamma[:node]
-    mGamma = cantileverBC.mGamma[:node]
+    uGamma = cantileverBC.uGamma.node
+    mGamma = cantileverBC.mGamma.node
     left = findall(x -> x == 0, coord[1, :])
 
     loadEdge1 = findall(x -> x ≈ dx, coord[1, :])

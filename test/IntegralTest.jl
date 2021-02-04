@@ -46,7 +46,7 @@ cd(@__DIR__)
     cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 
     coordFE = regularCuboidMesh.coord
-    uGamma = cantileverBC.uGamma[:node]
+    uGamma = cantileverBC.uGamma.node
     uDofsDln = cantileverBC.uDofsDln
     numSeg = network.numSeg[1]
 

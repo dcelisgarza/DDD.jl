@@ -413,6 +413,10 @@ function RegularCuboidMesh(
         )
 end
 
+function BoundaryNode(; type, index, node)
+    return BoundaryNode(type, index, node)
+end
+
 """
 ```
 Boundaries(
@@ -437,33 +441,29 @@ function Boundaries(
     K = femMesh.K
     
     if !haskey(kw, :uGamma)
-        # TODO #12
-        # BoundaryNode([cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],
-        #     [:x0y0z0; :x0y1z0; :x0y0z1; :x0y1z1; :y_x0z0; :y_x0z1; :z_x0y0; :z_x0y1; :yz_x0],
-        #     [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[:y_x0z0]; edgeNode[:y_x0z1]; edgeNode[:z_x0y0]; edgeNode[:z_x0y1]; faceNode[:yz_x0]])
-        uGamma = (
-            type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],# Type
-            idx = [:x0y0z0; :x0y1z0; :x0y0z1; :x0y1z1; :y_x0z0; :y_x0z1; :z_x0y0; :z_x0y1; :yz_x0], # Index
-            node = [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[:y_x0z0]; edgeNode[:y_x0z1]; edgeNode[:z_x0y0]; edgeNode[:z_x0y1]; faceNode[:yz_x0]]
-        ) 
+        uGamma = BoundaryNode(;
+                type = [cornerFE; cornerFE; cornerFE; cornerFE; edgeFE; edgeFE; edgeFE; edgeFE; faceFE],
+                index = [:x0y0z0; :x0y1z0; :x0y0z1; :x0y1z1; :y_x0z0; :y_x0z1; :z_x0y0; :z_x0y1; :yz_x0],
+                node = [cornerNode[:x0y0z0]; cornerNode[:x0y1z0]; cornerNode[:x0y0z1]; cornerNode[:x0y1z1]; edgeNode[:y_x0z0]; edgeNode[:y_x0z1]; edgeNode[:z_x0y0]; edgeNode[:z_x0y1]; faceNode[:yz_x0]]
+            )
     else
         uGamma = kw[:uGamma]
     end
 
     if !haskey(kw, :mGamma)
-        mGamma = (
-            type = [cornerFE; cornerFE; edgeFE],# Type
-            idx = [:x1y0z1; :x1y1z1; :y_x1z1], # Index
-            node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[:y_x1z1]]
-        )
+        mGamma = BoundaryNode(;
+                type = [cornerFE; cornerFE; edgeFE],
+                index = [:x1y0z1; :x1y1z1; :y_x1z1],
+                node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[:y_x1z1]]
+            )
     else
         mGamma = kw[:mGamma]
     end
 
     if !haskey(kw, :tGamma)
         # Indices
-        uGammaLbl = uGamma[:type]
-        mGammaLbl = mGamma[:type]
+        uGammaLbl = uGamma.type
+        mGammaLbl = mGamma.type
         uCorner = findall(x -> x == cornerFE, uGammaLbl)
         uEdge = findall(x -> x == edgeFE, uGammaLbl)
         uFace = findall(x -> x == faceFE, uGammaLbl)
@@ -471,26 +471,26 @@ function Boundaries(
         mEdge = findall(x -> x == edgeFE, mGammaLbl)
         mFace = findall(x -> x == faceFE, mGammaLbl)
 
-        uGammaIdx = uGamma[:idx]
-        mGammaIdx = mGamma[:idx]
-        muCorner = union(uGamma[:idx][uCorner], mGamma[:idx][mCorner])
-        muEdge = union(uGamma[:idx][uEdge], mGamma[:idx][mEdge])
-        muFace = union(uGamma[:idx][uFace], mGamma[:idx][mFace])
+        uGammaIdx = uGamma.index
+        mGammaIdx = mGamma.index
+        muCorner = union(uGamma.index[uCorner], mGamma.index[mCorner])
+        muEdge = union(uGamma.index[uEdge], mGamma.index[mEdge])
+        muFace = union(uGamma.index[uFace], mGamma.index[mFace])
 
         tCorner = setdiff(keys(cornerNode), muCorner)
         tEdge = setdiff(keys(edgeNode), muEdge)
         tFace = setdiff(keys(faceNode), muFace)
-        tGamma = (
+        tGamma = BoundaryNode(;
             type = [fill(cornerFE, length(tCorner)); fill(edgeFE, length(tEdge)); fill(faceFE, length(tFace))],
-            idx = [tCorner; tEdge; tFace],
-            node = setdiff([cornerNode...; collect(Iterators.flatten(edgeNode)); collect(Iterators.flatten(faceNode))], [uGamma[:node]; mGamma[:node]])
+            index = [tCorner; tEdge; tFace],
+            node = setdiff([cornerNode...; collect(Iterators.flatten(edgeNode)); collect(Iterators.flatten(faceNode))], [uGamma.node; mGamma.node])
         )
     else 
         tGamma = kw[:tGamma]
     end
     
-    uGammaNode = uGamma[:node]
-    mGammaNode = mGamma[:node]
+    uGammaNode = uGamma.node
+    mGammaNode = mGamma.node
     
     !haskey(kw, "uDofs") ? uDofs = copy(reshape(reshape([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode], :, 3)', :)) : uDofs = kw["uDofs"]
     
@@ -528,8 +528,8 @@ Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 Creates [`Boundaries`](@ref).
 """
 function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
-    uGammaDln = collect(Iterators.flatten(vcat(uGamma[:node], mGamma[:node])))
-    tGammaDln = collect(Iterators.flatten(vcat(tGamma[:node], mGamma[:node])))
+    uGammaDln = collect(Iterators.flatten(vcat(uGamma.node, mGamma.node)))
+    tGammaDln = collect(Iterators.flatten(vcat(tGamma.node, mGamma.node)))
     uDofsDln = copy(reshape(reshape([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln], :, 3)', :))
     tDofsDln = copy(reshape(reshape([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln], :, 3)', :))
     return Boundaries(uGammaDln, tGammaDln, uDofsDln, tDofsDln, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)

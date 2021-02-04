@@ -103,38 +103,38 @@ function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
     tGammaDict = dict["tGamma"]
 
     idxU = try 
-        Int.(uGammaDict["idx"])
+        Int.(uGammaDict["index"])
     catch err
-        Symbol.(uGammaDict["idx"])
+        Symbol.(uGammaDict["index"])
     end
 
-    uGamma = try (type = nodeTypeFE.(uGammaDict["type"]),
-                    idx = idxU,
+    uGamma = try BoundaryNode(type = nodeTypeFE.(uGammaDict["type"]),
+                    index = idxU,
                     node = Int.(uGammaDict["node"]))
     catch err
         uGamma = []
     end
 
     idxM = try 
-        Int.(mGammaDict["idx"])
+        Int.(mGammaDict["index"])
     catch err
-        Symbol.(mGammaDict["idx"])
+        Symbol.(mGammaDict["index"])
     end
 
-    mGamma = try (type = nodeTypeFE.(mGammaDict["type"]),
-                    idx = idxM,
+    mGamma = try BoundaryNode(type = nodeTypeFE.(mGammaDict["type"]),
+                    index = idxM,
                     node = Int.(mGammaDict["node"]))
     catch err
         mGamma = []
     end
 
     idxT = try 
-        Int.(tGammaDict["idx"])
+        Int.(tGammaDict["index"])
     catch err
-        Symbol.(tGammaDict["idx"])
+        Symbol.(tGammaDict["index"])
     end
-    tGamma = try (type = nodeTypeFE.(tGammaDict["type"]),
-                    idx = idxT,
+    tGamma = try BoundaryNode(type = nodeTypeFE.(tGammaDict["type"]),
+                    index = idxT,
                     node = Int.(tGammaDict["node"]))
     catch err
         tGamma = []
