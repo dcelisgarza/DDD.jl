@@ -13,6 +13,97 @@ slipSystem = SlipSystem(; crystalStruct = BCC(), slipPlane = Float64[-1;1;0], bV
 intParams = IntegrationParameters(; method = AdaptiveEulerTrapezoid())
 intTime = IntegrationTime()
 
+fcc = loadJSON("./data/slipSystems/FCC.json")
+fccSlipsys = loadSlipSystem(fcc)
+
+prismatics = zeros(DislocationLoop, 12)
+shears = zeros(DislocationLoop, 12)
+
+for i in 1:12
+    prismatics[i] = DislocationLoop(
+        loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+        numSides = 4,   # 8-sided loop.
+        nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
+        numLoops = 1,   # Number of loops of this type to generate when making a network.
+        segLen = SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+        slipSystemIdx = i, # Slip System index (assuming slip systems are stored in a file, this is the index).
+        slipSystem = fccSlipsys,  # Slip system.
+        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        buffer = 0,   # Buffer to increase the dislocation spread.
+        range = SMatrix{3,2,Float64}(0, 0, 0, 0, 0, 0),  # Distribution range
+        dist = Zeros(),  # Loop distribution.
+    )
+end
+
+for i in 1:12
+    shears[i] = DislocationLoop(
+        loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
+        numSides = 4,   # 8-sided loop.
+        nodeSide = 2,   # One node per side, if 1 nodes will be in the corners.
+        numLoops = 1,   # Number of loops of this type to generate when making a network.
+        segLen = SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+        slipSystemIdx = i, # Slip System index (assuming slip systems are stored in a file, this is the index).
+        slipSystem = fccSlipsys,  # Slip system.
+        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        buffer = 0,   # Buffer to increase the dislocation spread.
+        range = SMatrix{3,2,Float64}(0, 0, 0, 0, 0, 0),  # Distribution range
+        dist = Zeros(),  # Loop distribution.
+    )
+end
+
+for i in 1:12
+    println("prismLinks[$i] = ", prismatics[i].links')
+    println("prismbVec[$i] = ", prismatics[i].bVec')
+    println("prismSlipPlane[$i] = ", prismatics[i].slipPlane')
+    println("prismCoord[$i] = ", prismatics[i].coord')
+
+    println("shearLinks[$i] = ", shears[i].links')
+    println("shearbVec[$i] = ", shears[i].bVec')
+    println("shearSlipPlane[$i] = ", shears[i].slipPlane')
+    println("shearCoord[$i] = ", shears[i].coord')
+end
+
+open("fccLoops.m", "w") do io
+    l1, l2 = size(prismatics[1].links')
+    b1, b2 = size(prismatics[1].bVec')
+    n1, n2 = size(prismatics[1].slipPlane')
+    c1, c2 = size(prismatics[1].coord')
+
+    l1 *= 12
+    b1 *= 12
+    n1 *= 12
+    c1 *= 12
+
+    println(io, "prismLinks = zeros($l1, $l2);")
+    println(io, "prismbVec = zeros($b1, $b2);")
+    println(io, "prismSlipPlane = zeros($n1, $n2);")
+    println(io, "prismCoord = zeros($c1, $c2);")
+
+    println(io, "shearLinks = zeros($l1, $l2);")
+    println(io, "shearbVec = zeros($b1, $b2);")
+    println(io, "shearSlipPlane = zeros($n1, $n2);")
+    println(io, "shearCoord = zeros($c1, $c2);")
+
+    for i in 1:12
+        idxi = (i - 1) * 8 + 1
+        idxf = (i - 1) * 8 + 8
+        println(io, "prismLinks($idxi:$idxf,:) = ", prismatics[i].links', ";")
+        println(io, "prismbVec($idxi:$idxf,:) = ", prismatics[i].bVec', ";")
+        println(io, "prismSlipPlane($idxi:$idxf,:) = ", prismatics[i].slipPlane', ";")
+        println(io, "prismCoord($idxi:$idxf,:) = ", prismatics[i].coord', ";")
+
+        println(io, "shearLinks($idxi:$idxf,:) = ", shears[i].links', ";")
+        println(io, "shearbVec($idxi:$idxf,:) = ", shears[i].bVec', ";")
+        println(io, "shearSlipPlane($idxi:$idxf,:) = ", shears[i].slipPlane', ";")
+        println(io, "shearCoord($idxi:$idxf,:) = ", shears[i].coord', ";")
+    end
+end
+
+
+network = DislocationNetwork([prismatics..., shears...], memBuffer = 1)
+
+
+
 
 length(fieldnames(typeof(dlnParams)))
 length(fieldnames(typeof(matParams)))
