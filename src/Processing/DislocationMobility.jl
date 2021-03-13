@@ -159,7 +159,7 @@ function dlnMobility(
                 try
                     totalDrag += I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))
                     iNodeVel = totalDrag \ iNodeForce
-                    break
+break
                 catch SingularSystem
                 end
             end
@@ -237,7 +237,7 @@ function dlnMobility!(
             # Line direction, continue to next iteration if norm is 0 and normalise line direction.
             t = SVector{3,elemT}(
                 coord[1, node2] - coord[1, node1],
-                coord[2, node2] - coord[2, node1],
+            coord[2, node2] - coord[2, node1],
                 coord[3, node2] - coord[3, node1],
             )
             nT = norm(t)
@@ -282,7 +282,7 @@ function dlnMobility!(
                 bType1 == 2 && bType2 == 1 && screw ||
                 bType1 == 1 && bType2 == 1 && bType3 == 1 && screw
             )
-                # ξ += |b|| * ||t||/2 * (ξ_climb * I + (ξ_line - ξ_climb) * t ⊗ t)
+            # ξ += |b|| * ||t||/2 * (ξ_climb * I + (ξ_line - ξ_climb) * t ⊗ t)
                 totalDrag += nBnT_2 * (climbDrag * I3 + (lineDrag - climbDrag) * t ⊗ t)
                 continue
             end
@@ -327,7 +327,7 @@ function dlnMobility!(
         try
             iNodeVel = totalDrag \ iNodeForce
         catch SingularSystem
-            origTotalDrag = totalDrag
+    origTotalDrag = totalDrag
             while true
                 try
                     totalDrag += I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))

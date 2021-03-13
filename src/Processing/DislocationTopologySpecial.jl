@@ -99,13 +99,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
         numCon = connectivity[1, node1]
         # Loop through all connections of node1 to see if it is connected to a newly exited node.
         for j in 1:numCon
-            idx = 2 * j
-            # Link where node1 appears for its connection j.
-            linkId = connectivity[idx, node1]
-            # Column where node1 appears.
-            colLink = connectivity[idx + 1, node1]
-            # Neigbour node from j'th link node1 appears.
-            node2 = links[3 - colLink, linkId]
+            missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
             # If node1 is connected to a newly exited node 2, create surface node.
             if label[node2] == tmpDln
@@ -166,10 +160,8 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
         numCon = connectivity[1, node1]
         # Loop through the number of connections.
         for j in 1:numCon
-            idx = 2 * j
-            linkId = connectivity[idx, node1]
-            colLink = connectivity[idx + 1, node1]
-            node2 = links[3 - colLink, linkId]
+            missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
+            
             # Check if the node connected is a surface node aso we can merge node1 into node2.
             if label[node2] == srfMobDln || label[node2] == srfFixDln
                 missing, network = mergeNode!(network, node2, node1)
@@ -185,26 +177,21 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
         check ? continue : node1 += 1
     end
 
-    # Find surface nodes that are only connected to virtual nodes and project them to be external too.
+        # Find surface nodes that are only connected to virtual nodes and project them to be external too.
     numNode = network.numNode[1]
     label = network.label
     coord = network.coord
     connectivity = network.connectivity
     for node1 in 1:numNode
         label[node1] == srfMobDln || label[node1] == srfFixDln ? nothing : continue
-
+            
         # Number of external connections.
         numExtCon = 0
         numCon = connectivity[1, node1]
         for j in 1:numCon
-            idx = 2 * j
-            linkId = connectivity[idx, node1]
-            colLink = connectivity[idx + 1, node1]
-            node2 = links[3 - colLink, linkId]
+            missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
-            if label[node2] == extDln
-                numExtCon += 1
-            end
+            label[node2] == extDln ? numExtCon += 1 : nothing
         end
 
         # If the surface node is only connected to external nodes move away from the surface.
@@ -253,24 +240,18 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
             continue
         end
 
-        # Go through the connections checking if there is more than one connection to an external node.
+            # Go through the connections checking if there is more than one connection to an external node.
         for j in 1:connectivity[1, node1] - 1
-            idx1 = 2 * j
-            linkId1 = connectivity[idx1, node1]
-            colLink1 = connectivity[idx1 + 1, node1]
-            node2 = links[3 - colLink1, linkId1]
+            missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
             # If the first connection is not external go to the next iteration.
             label[node2] != extDln ? continue : nothing
 
             for k in j + 1:connectivity[1, node1]
-                idx2 = 2 * k
-                linkId2 = connectivity[idx2, node1]
-                colLink2 = connectivity[idx2 + 1, node1]
-                node3 = links[3 - colLink2, linkId2]
+                missing, missing, node3 = findConnectedNode(network, node1, k) # k connection.
                 
                 # If the next connection is not external go to the next iteration.
-                label[node2] != extDln ? continue : nothing
+                label[node3] != extDln ? continue : nothing
 
                 missing, network = mergeNode!(network, node3, node1)
                 links = network.links
@@ -296,13 +277,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
 
         numCon = connectivity[1, node1]
         for j in 1:numCon
-            idx = 2 * j
-            # Link where node1 appears for its connection j.
-            linkId = connectivity[idx, node1]
-            # Column where node1 appears.
-            colLink = connectivity[idx + 1, node1]
-            # Neigbour node from j'th link node1 appears.
-            node2 = links[3 - colLink, linkId]
+            missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
             # If the node2 internal, create a surface node where the segment intersects the mesh.
             if label[node2] == intMobDln || label[node2] == intFixDln
@@ -342,16 +317,10 @@ function coarsenVirtualNetwork!(dlnParams::DislocationParameters, network::Dislo
 
     i = 1
     while i <= numNode
-        # Only find virtual nodes with two connections.
+            # Only find virtual nodes with two connections.
         if label[i] == extDln && connectivity[1, i] == 2
-            # This is where node i appears in connectivity.
-            node1 = connectivity[2, i] # Link where node i appears first.
-            linkCol1 = 3 - connectivity[3, i] # Column of links where it appears.
-            node2 = connectivity[4, i] # Link where node i appears second.
-            linkCol2 = 3 - connectivity[5, i] # Column of links where it appears.
-
-            linkNode1 = links[linkCol1, node1] # First node connected to target node.
-            linkNode2 = links[linkCol2, node2] # Second node connected to target node.
+            missing, missing, linkNode1 = findConnectedNode(network, i, 1) # 1st connection.
+            missing, missing, linkNode2 = findConnectedNode(network, i, 2) # 2nd connection.
 
             # Only if both nodes are virtual.
             if label[linkNode1] == label[linkNode2] == extDln

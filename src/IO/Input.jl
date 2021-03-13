@@ -304,7 +304,7 @@ function loadNetwork(dict::Dict{T1,T2}) where {T1,T2}
         connectivity[:, i] = dict["connectivity"][i]
     end
 
-    for i in 1:3
+        for i in 1:3
         segIdx[:, i] = dict["segIdx"][i]
     end
 

@@ -56,7 +56,7 @@ function deriv!(
                 normalize!(conNodes)
             end
             # Vector rejection to remove velocity in the direction of the surface normal.
-            nodeVel[:, node] -= @views (nodeVel[:, node] ⋅ conNodes) * conNodes
+        nodeVel[:, node] -= @views (nodeVel[:, node] ⋅ conNodes) * conNodes
         end
     end
 
