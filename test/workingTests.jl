@@ -13,6 +13,8 @@ slipSystem = SlipSystem(; crystalStruct = BCC(), slipPlane = Float64[-1;1;0], bV
 intParams = IntegrationParameters(; method = AdaptiveEulerTrapezoid())
 intTime = IntegrationTime()
 
+
+
 fcc = loadJSON("./data/slipSystems/FCC.json")
 fccSlipsys = loadSlipSystem(fcc)
 

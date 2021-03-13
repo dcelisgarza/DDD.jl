@@ -200,14 +200,8 @@ function refineNetwork!(
 
     @inbounds for i in 1:numNode
         if connectivity[1, i] == 2 && label[i] == intMobDln
-            link1 = connectivity[2, i]  # First connection.
-            link2 = connectivity[4, i]  # Second connection.
-            colLink1 = connectivity[3, i]   # Column where node i is in links of the first connection.
-            colLink2 = connectivity[5, i]   # Column where node i is in links of the second connection.
-            oppColLink1 = 3 - colLink1 # Node i is connected via link 1 to the node that is in this column in links.
-            oppColLink2 = 3 - colLink2 # Node i is connected via link 2 to the node that is in this column in links.
-            link1_nodeOppI = links[oppColLink1, link1] # Node i is connected to this node as part of link 1.
-            link2_nodeOppI = links[oppColLink2, link2] # Node i is connected to this node as part of link 2.
+            link1, missing, link1_nodeOppI = findConnectedNode(network, i, 1) # First connection.
+            link2, missing, link2_nodeOppI = findConnectedNode(network, i, 2) # Second connection.
 
             # Create triangle formed by the node and its two links.
             iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
@@ -282,10 +276,8 @@ function refineNetwork!(
 
                 # Calculate force and mobility for the new node's connectivity.
                 j = 1:connectivity[1, newNode]
-                link = connectivity[2 * j, newNode]
-                colLink = connectivity[2 * j .+ 1, newNode]
-                oppColLink = 3 .- colLink
-                oldNode = links[oppColLink, link]
+                link, missing, oldNode = findConnectedNode(network, newNode, j) # j connections.
+
                 # Calculate segment force for segment link.
                 calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, link)
 
@@ -343,12 +335,11 @@ function refineNetwork!(
 
                 # Calculate force and mobility for the new node's connectivity.
                 j = 1:connectivity[1, newNode]
-                link = connectivity[2 * j, newNode]
-                colLink = connectivity[2 * j .+ 1, newNode]
-                oppColLink = 3 .- colLink
-                oldNode = links[oppColLink, link]
+                link, oldNode = findConnectedNode(network, newNode, j) # j connections.
+
                 # Calculate segment force for segment link.
                 calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, link)
+
                 # Calculate old node velocity.
                 dlnMobility!(dlnParams, matParams, network, oldNode)
                 nodeVel = network.nodeVel
@@ -361,11 +352,8 @@ function refineNetwork!(
         elseif connectivity[1, i] > 2 && label[i] == intMobDln
             # Loop through the connections of node i.
             for j in 1:connectivity[1, i]
-                # Find the line direction of the link.
-                link = connectivity[2 * j, i]
-                colLink = connectivity[2 * j + 1, i]
-                colOppLink = 3 - colLink
-                link_nodeOpp = links[colOppLink, link]
+                link, missing, link_nodeOpp = findConnectedNode(network, i, j) # j connection.
+
                 t = SVector{3,elemT}(
                     coord[1, link_nodeOpp] - coord[1, i],
                     coord[2, link_nodeOpp] - coord[2, i],
@@ -408,10 +396,9 @@ function refineNetwork!(
 
                 # Calculate force and mobility for the new node's connectivity.
                 k = 1:connectivity[1, newNode]
-                link = connectivity[2 * k, newNode]
-                colLink = connectivity[2 * k .+ 1, newNode]
-                colOppLink = 3 .- colLink
-                oldNode = links[colOppLink, link]
+                link, missing, oldNode = findConnectedNode(network, newNode, k) # k connections.
+
+                
                 # Calculate segment force for segment link.
                 calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, link)
                 # Calculate old node velocity.
