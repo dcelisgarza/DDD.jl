@@ -74,10 +74,10 @@ function removeConnection!(network::DislocationNetwork, nodeKept, connectGone)
 
     # Change connectivity to reflect that nodeKept has one less connection.
     # Remove the last connection since lastConnect was either replaced by connectGone above, or already was the last connection.
-    connectivity[1, nodeKept] -= 1
+connectivity[1, nodeKept] -= 1
     connectivity[lst:(lst + 1), nodeKept] .= 0
 
-    return network
+return network
 end
 
 """
@@ -138,7 +138,7 @@ function removeLink!(network::DislocationNetwork, linkGone, lastLink = nothing)
     links[:, lastLink] .= 0
     slipPlane[:, lastLink] .= 0
     bVec[:, lastLink] .= 0
-    segForce[:, :, lastLink] .= 0
+segForce[:, :, lastLink] .= 0
     network.numSeg[1] -= 1
     linksConnect[:, lastLink] .= 0
 
@@ -225,10 +225,8 @@ function mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
     # Delete self links of nodeKept.
     i = 1
     @inbounds while i < connectivity[1, nodeKept]
-        link = connectivity[2 * i, nodeKept]      # Link id for nodeKept
-        colLink = connectivity[2 * i + 1, nodeKept] # Position of links where link appears.
-        colNotLink = 3 - colLink # The column of the other node in the position of link in links.
-        nodeNotLink = links[colNotLink, link]   # Other node in the link.
+        link, missing, nodeNotLink = findConnectedNode(network, nodeKept, i) # i connection.
+
         # If nodeKept and nodeNotLink are the same, this is a self-link, therefore delete. Else increase counter.
         nodeKept == nodeNotLink ? removeLink!(network, link) : i += 1
         links = network.links
@@ -239,18 +237,13 @@ function mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
     # Delete duplicate links.
     i = 1
     @inbounds while i < connectivity[1, nodeKept]
-        link1 = connectivity[2 * i, nodeKept]         # Link id for nodeKept
-        colLink1 = connectivity[2 * i + 1, nodeKept]    # Position of links where link appears.
-        colNotLink1 = 3 - colLink1 # The column of the other node in the position of link in links.
-        nodeNotLink1 = links[colNotLink1, link1]    # Other node in the link.
+        link1, colNotLink1, nodeNotLink1 = findConnectedNode(network, nodeKept, i) # i connection.
+
         # Same but for the next link.
         j = i + 1
-        while j <= connectivity[1, nodeKept]
-            link2 = connectivity[2 * j, nodeKept]
-            colLink2 = connectivity[2 * j + 1, nodeKept]
-            colNotLink2 = 3 - colLink2
-            nodeNotLink2 = links[colNotLink2, link2]
-
+            while j <= connectivity[1, nodeKept]
+            link2, colNotLink2, nodeNotLink2 = findConnectedNode(network, nodeKept, j) # i connection.
+            
             # Continue to next iteration if no duplicate links are found.
             if nodeNotLink1 != nodeNotLink2
                 j += 1
@@ -372,17 +365,9 @@ function coarsenNetwork!(
             i += 1
             continue
         end
-        link1 = connectivity[2, i]  # Node i in link 1
-        link2 = connectivity[4, i]  # Node i in link 2
 
-        colInLink1 = connectivity[3, i] # Column of node i in link 1
-        colInLink2 = connectivity[5, i] # Column of node i in link 2
-
-        oppColLink1 = 3 - colInLink1 # Node i is connected via link 1 to the node that is in this column in links.
-        oppColLink2 = 3 - colInLink2 # Node i is connected via link 2 to the node that is in this column in links.
-
-        link1_nodeOppI = links[oppColLink1, link1] # Node i is connected to this node as part of link 1.
-        link2_nodeOppI = links[oppColLink2, link2] # Node i is connected to this node as part of link 2.
+        missing, missing, link1_nodeOppI = findConnectedNode(network, i, 1) # 1st connection.
+        missing, missing, link2_nodeOppI = findConnectedNode(network, i, 2) # 2nd connection.
 
         # We don't want to remesh out segments between two fixed nodes because the nodes by definition do not move and act as a source, thus we skip to the next node.
         if label[link1_nodeOppI] == intFixDln && label[link2_nodeOppI] == intFixDln
