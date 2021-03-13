@@ -4,7 +4,7 @@ findIntersectVolume(mesh::AbstractMesh, l, l0, tmpArr)
 ```
 Find the shortest intersecting distance between a vector `l` passing through the point `l0` and an [`AbstractMesh`](@ref).
 """
-function findIntersectVolume(mesh::AbstractMesh, l, l0, tmpArr)
+function findIntersectVolume(mesh::AbstractMesh, l, l0)
     vertices = mesh.vertices
     faceMidPt = mesh.faceMidPt
     faceNorm = mesh.faceNorm
@@ -18,11 +18,10 @@ function findIntersectVolume(mesh::AbstractMesh, l, l0, tmpArr)
     for i in 1:numFaces
         oldMin = distMin
         intersect = linePlaneIntersect(faceNorm[:, i], faceMidPt[:, i], l, l0)
-        if isnothing(intersect)
+        if isnothing(intersect) || any(isinf.(intersect))
             continue
         else
-            tmpArr[:] = intersect[:]
-            if tmpArr ∉ vertices
+            if Array(intersect) ∉ vertices
                 continue
             end
         end
@@ -53,8 +52,7 @@ function makeSurfaceNode!(mesh::AbstractMesh,  network::DislocationNetwork, node
     coordNode1 = SVector{3,elemT}(coord[1, node1], coord[2, node1], coord[3, node1])
     coordNode2 = SVector{3,elemT}(coord[1, node2], coord[2, node2], coord[3, node2])
     t = coordNode2 - coordNode1
-    intersectArr = zeros(elemT, 3)
-    distMin, newNode, missing = findIntersectVolume(mesh, t, coordNode1, intersectArr)
+    distMin, newNode, missing = findIntersectVolume(mesh, t, coordNode1)
 
     isinf(distMin) && return network
     # We set the surface node velocity to zero. It will be calculated later.
@@ -67,11 +65,11 @@ end
 
 """
 ```
-remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
+remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, network::DislocationNetwork)
 ```
 Remeshes a [`DislocationNetwork`](@ref)'s nodes on the surface of an [`AbstractMesh`](@ref).
 """
-function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
+function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, network::DislocationNetwork)
     scale = mesh.scale
     vertices = mesh.vertices
     faceMidPt = mesh.faceMidPt
@@ -112,7 +110,6 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
     coord = network.coord
     nodeVel = network.nodeVel
     numNode = network.numNode[1]
-    intersectArr = zeros(elemT, 3)
 
     # Project newly exited nodes out to pseudo-infinity.
     for i in 1:numNode
@@ -126,7 +123,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
         vel = vel / velN
         l0 = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
         
-        distMin, newNode, face = findIntersectVolume(mesh, vel, l0, intersectArr)
+        distMin, newNode, face = findIntersectVolume(mesh, vel, l0)
 
         # If there is no intersect, find the nearest plane to project it out of.
         if isinf(distMin)
@@ -138,11 +135,15 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
         # If there is an intersect, move the node to the intersect and we will project it out of the face it intersected.
         coord[:, i] = newNode
 
-        for j in 1:3
-            coord[j, i] = coord[j, i] + faceNorm[j, face] * scale[j]
+        if face ∉ boundaries.noExit
+            for j in 1:3
+                coord[j, i] = coord[j, i] + faceNorm[j, face] * scale[j]
+            end
+            
+            label[i] = extDln
+        else
+            label[i] = srfFixDln
         end
-        
-        label[i] = extDln
     end
 
     # Find connected surface nodes and merge them.
@@ -203,7 +204,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, network::DislocationNetwork)
             newNode = SVector{3,elemT}(0, 0, 0)
             for j in 1:numFaces
                 oldDist = distMin
-                distMin, newNodeMin, faceMin = findIntersectVolume(mesh, faceNorm[:, j], l0, intersectArr)
+                distMin, newNodeMin, faceMin = findIntersectVolume(mesh, faceNorm[:, j], l0)
                 distMin = min(distMin, oldDist)
                 if distMin < oldDist
                     face = faceMin

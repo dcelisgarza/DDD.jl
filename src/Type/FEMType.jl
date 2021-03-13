@@ -259,24 +259,26 @@ end
 
 """
 ```
-struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11}
-    uGammaDln::T1
-    tGammaDln::T2
-    uDofsDln::T3
-    tDofsDln::T4
-    uGamma::T5
-    tGamma::T6
-    mGamma::T7
-    uDofs::T8
-    tDofs::T9
-    mDofs::T10
-    tK::T11
+struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12}
+    noExit::T1
+    uGammaDln::T2
+    tGammaDln::T3
+    uDofsDln::T4
+    tDofsDln::T5
+    uGamma::T6
+    tGamma::T7
+    mGamma::T8
+    uDofs::T9
+    tDofs::T10
+    mDofs::T11
+    tK::T12
 end
 ```
 Stores the nodes and degrees of freedom upon which the different boundary conditions are applied.
 
 ## Fields
 
+- `noExit`: Faces that are impenetrable to dislocations
 - `uGammaDln`: Nodes on which dislocation displacements are calculated
 - `tGammaDln`: Nodes on which dislocation tractions are calculated
 - `uDofsDln`: Degrees of freedom on which dislocation displacements are calculated
@@ -289,18 +291,19 @@ Stores the nodes and degrees of freedom upon which the different boundary condit
 - `mDofs0`: Degrees of feedom with specified displacements and tractions
 - `tK1`: Stiffness matrix of traction degrees of freedom
 """
-struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11}
-    uGammaDln::T1
-    tGammaDln::T2
-    uDofsDln::T3
-    tDofsDln::T4
-    uGamma::T5
-    tGamma::T6
-    mGamma::T7
-    uDofs::T8
-    tDofs::T9
-    mDofs::T10
-    tK::T11
+struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12}
+    noExit::T1
+    uGammaDln::T2
+    tGammaDln::T3
+    uDofsDln::T4
+    tDofsDln::T5
+    uGamma::T6
+    tGamma::T7
+    mGamma::T8
+    uDofs::T9
+    tDofs::T10
+    mDofs::T11
+    tK::T12
 end
 
 """

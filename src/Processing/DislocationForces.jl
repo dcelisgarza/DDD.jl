@@ -103,12 +103,6 @@ function calc_σHat(
     elemT = eltype(coord)
     uHat = forceDisplacement.uHat
     
-    # If the node is outside the domain, return zero.
-    if Vector(x0) ∉ mesh.vertices
-        σ = SMatrix{3,3,elemT}(zeros(3, 3))
-        return σ
-    end
-
     # Unroll structure.
     mx = mesh.mx        # num elem in x
     my = mesh.my        # num elem in y
@@ -120,9 +114,9 @@ function calc_σHat(
     x, y, z = x0
 
     # Find element index closest to the coordinate.
-    i::Int = max(ceil(x * wInv), 1)
-    j::Int = max(ceil(y * hInv), 1)
-    k::Int = max(ceil(z * dInv), 1)
+    i::Int = clamp(ceil(x * wInv), 1, mx)
+    j::Int = clamp(ceil(y * hInv), 1, my)
+    k::Int = clamp(ceil(z * dInv), 1, mz)
 
     # Calculate index of the elements.
     idx = i + (k - 1) * mx + (j - 1) * mx * mz

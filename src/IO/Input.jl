@@ -145,7 +145,10 @@ function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
     tDofs = try Int.(dict["tDofs"]); catch err; [] end
 
     typeof(dict["tK"]) <: AbstractArray ? tK = Float64.(dict["tK"]) : tK = nothing
+
+    noExit = Int.(dict["noExit"])
     return Boundaries(; 
+            noExit = noExit,
             uGamma = uGamma,
             tGamma = tGamma,
             mGamma = mGamma,

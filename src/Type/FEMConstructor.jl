@@ -506,7 +506,10 @@ function Boundaries(
 
     C = cholesky(Hermitian(K[tDofs, tDofs]))
 
+    noExit = 5
+
     boundaries = Boundaries(;
+        noExit = noExit,
         uGamma = uGamma,
         tGamma = tGamma,
         mGamma = mGamma,
@@ -529,14 +532,14 @@ end
 
 """
 ```
-Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
+Boundaries(; noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 ```
 Creates [`Boundaries`](@ref).
 """
-function Boundaries(; uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
+function Boundaries(; noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
     uGammaDln = collect(Iterators.flatten(vcat(uGamma.node, mGamma.node)))
     tGammaDln = collect(Iterators.flatten(vcat(tGamma.node, mGamma.node)))
     uDofsDln = copy(reshape(reshape([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln], :, 3)', :))
     tDofsDln = copy(reshape(reshape([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln], :, 3)', :))
-    return Boundaries(uGammaDln, tGammaDln, uDofsDln, tDofsDln, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
+    return Boundaries(noExit, uGammaDln, tGammaDln, uDofsDln, tDofsDln, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 end

@@ -86,7 +86,7 @@ cd(@__DIR__)
     @test isapprox(segForceIdx, network.segForce[:,:,idx])
 
     network2 = deepcopy(network)
-    remeshSurfaceNetwork!(regularCuboidMesh, network2)
+    remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network2)
     getSegmentIdx!(network2)
     @test compStruct(network2, network)
 
@@ -108,14 +108,15 @@ cd(@__DIR__)
 
     network2.nodeVel[:, 1:numNode] .= rand(3, numNode)
 
-    remeshSurfaceNetwork!(regularCuboidMesh,  network2)
+    remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network2)
     getSegmentIdx!(network2)
 
     network2.numNode[1] == numNode + 2
     label = network2.label
     ext = findall(x -> x == 5, label)
-    surf = findall(x -> x == 3, label)
-    @test length(ext) == 5
+    surf = findall(x -> x == 3 || x == 4, label)
+    # The random velocity can make two nodes exit from a corner or edge, depending on how that happens, they can get pinned or projected, resulting in 3 different numbers of external nodes.
+    @test length(ext) == 3 || length(ext) == 4 || length(ext) == 5
     @test length(surf) == 2
     @test compStruct(network2, network) == false
 
@@ -156,7 +157,7 @@ cd(@__DIR__)
     @test isapprox(segForceIdx, network2.segForce[:,:,idx])
 
     network3 = deepcopy(network2)
-    remeshSurfaceNetwork!(regularCuboidMesh,  network3)
+    remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network3)
     getSegmentIdx!(network3)
 
     compStruct(network3, network2)

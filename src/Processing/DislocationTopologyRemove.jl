@@ -396,8 +396,8 @@ function coarsenNetwork!(
         r2 = norm(coordVec2)
         r3 = norm(coordVec3)
 
-        # If coarsening would result in a link whose length is bigger than the maximum allowed we skip ahead to the next node.
-        if r3 >= maxSegLen
+        # If coarsening would result in a link whose length is bigger than the maximum allowed, and there r1 and r2 are bigger than the minimum allowed length, we skip to the next node.
+        if r3 > maxSegLen && r1 > minSegLen && r2 > minSegLen
             i += 1
             continue
         end
