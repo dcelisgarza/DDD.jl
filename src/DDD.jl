@@ -86,7 +86,7 @@ export calcSegForce,
     calc_uTilde!,
     calcDisplacementDislocationTriangle!
 export dlnMobility, dlnMobility!
-export mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!, coarsenVirtualNetwork!
+export findConnectedNode, mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!, coarsenVirtualNetwork!
 export shapeFunction, shapeFunctionDeriv, deriv!
 
 include("./PostProcessing/Plotting.jl")
