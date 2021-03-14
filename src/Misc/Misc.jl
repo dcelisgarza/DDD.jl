@@ -302,7 +302,7 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
                 (y1 - x1) ⋅ (y1 - x1)
             )
         
-        minDist, idx = findmin(dist)
+        missing, idx = findmin(dist)
 
         L1 = floor(idx / 2)
         L2 = mod(idx - 1, 2)
