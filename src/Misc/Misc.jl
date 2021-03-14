@@ -267,20 +267,6 @@ end
 function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
     elemT = eltype(x0)
 
-    A::elemT = 0
-    B::elemT = 0
-    C::elemT = 0
-    D::elemT = 0
-    E::elemT = 0
-    F::elemT = 0
-    G::elemT = 0
-    L1::elemT = 0
-    L2::elemT = 0
-    dist = SVector{4, elemT}(0, 0, 0, 0)
-    minDistSq::elemT = 0
-    distSq::elemT = 0
-    dDistSqDt::elemT = 0
-
     seg1 = x1 - x0
     seg2 = y1 - y0
     vseg1 = vx1 - vx0
@@ -321,8 +307,8 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
         L1 = floor(idx / 2)
         L2 = mod(idx - 1, 2)
     else
-        L2 = (2 * A * D + B * C) / G
         L1 = (C * L2 - B) / A / 2
+        L2 = (2 * A * D + B * C) / G
     end
 
     L1 = clamp(L1, 0, 1)
