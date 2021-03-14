@@ -533,7 +533,6 @@ function calc_uTilde!(
                     end
                 end
                 intersectA = Atmp
-
             end
 
             if isinf(distMinB)
@@ -548,7 +547,6 @@ function calc_uTilde!(
                     end
                 end
                 intersectB = Btmp
-
             end
 
             Aprime = intersectA # Point where A was projected from.
@@ -600,7 +598,6 @@ function calc_uTilde(
     uNodes = boundaries.uGammaDln
     uDofs = 1:length(boundaries.uDofsDln)
     uTilde = zeros(length(uDofs))
-
 
     # Coordinates of the FE nodes with applied displacements.
     uCoord = @view coordFE[:, uNodes]
@@ -691,7 +688,6 @@ function calc_uTilde(
                     end
                 end
                 intersectA = Atmp
-
             end
 
             if isinf(distMinB)
@@ -706,7 +702,6 @@ function calc_uTilde(
                     end
                 end
                 intersectB = Btmp
-
             end
 
             Aprime = intersectA # Point where A was projected from.

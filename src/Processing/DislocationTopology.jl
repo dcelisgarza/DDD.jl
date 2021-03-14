@@ -33,3 +33,4 @@ end
 include("DislocationTopologyRemove.jl")
 include("DislocationTopologyAdd.jl")
 include("DislocationTopologySpecial.jl")
+include("DislocationTopologyCollision.jl")
