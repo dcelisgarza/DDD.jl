@@ -47,29 +47,30 @@ function detectCollision(dlnParams::DislocationParameters, network::DislocationN
                     link2, rowColLink2, connectedNode2, tVecN2, link1, rowColLink1, connectedNode1, tVecN1 = link1, rowColLink1, connectedNode1, tVecN1, link2, rowColLink2, connectedNode2, tVecN2
                 end
 
-                # tVecN1 should now be bigger than tVecN2. i is the hinge node, we want to make sure the first node is not the hinge node so the distance is calculated properly.
-                x1 = SVector{3,elemT}(
+                # tVecN1 should now be bigger than tVecN2. i is the hinge node.
+                x0 = SVector{3,elemT}(
                         coord[1, i],
                         coord[2, i],
                         coord[3, i]
                     )
-                vx1 = SVector{3,elemT}(
+                vx0 = SVector{3,elemT}(
                         nodeVel[1, i],
                         nodeVel[2, i],
                         nodeVel[3, i]
                     )
 
-                x0 = SVector{3,elemT}(
+                x1 = SVector{3,elemT}(
                         coord[1, connectedNode1],
                         coord[2, connectedNode1],
                         coord[3, connectedNode1]
                     )
-                vx0 = SVector{3,elemT}(
+                vx1 = SVector{3,elemT}(
                         nodeVel[1, connectedNode1],
                         nodeVel[2, connectedNode1],
                         nodeVel[3, connectedNode1]
                     )
 
+                # We collapse the other segment into a point.
                 y0 = SVector{3,elemT}(
                         coord[1, connectedNode2],
                         coord[2, connectedNode2],
