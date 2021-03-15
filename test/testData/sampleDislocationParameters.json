@@ -7,6 +7,7 @@
     "maxSegLen": 1572.33,
     "minArea": 49444.25,
     "maxArea": 988884.93,
+    "collisionDist": 157.235,
     "remesh": true,
     "collision": true,
     "separation": true,

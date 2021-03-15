@@ -86,8 +86,11 @@ export calcSegForce,
     calc_uTilde!,
     calcDisplacementDislocationTriangle!
 export dlnMobility, dlnMobility!
-export findConnectedNode, mergeNode!, splitNode!, coarsenNetwork!, refineNetwork!, makeSurfaceNode!, coarsenVirtualNetwork!
+export minimumDistance, findConnectedNode, mergeNode!, splitNode!
+export coarsenNetwork!, refineNetwork!
+export makeSurfaceNode!, coarsenVirtualNetwork!
 export shapeFunction, shapeFunctionDeriv, deriv!
+export detectCollision
 
 include("./PostProcessing/Plotting.jl")
 export plotNodes, plotNodes!, plotFEDomain

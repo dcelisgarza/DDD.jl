@@ -254,7 +254,6 @@ end
 ```
 safeNorm(x)
 ```
-
 Safe normalisation.
 """
 function safeNorm(x)
@@ -264,9 +263,20 @@ function safeNorm(x)
     return xNorm, x
 end
 
-function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
-    elemT = eltype(x0)
+"""
+```
+minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+```
+Calculates the minimum distance between two segments `seg1 = x0 → x1`, `seg2 = y0 → y1`.
 
+# Returns
+
+- `distSq`: minimum distance squared between `L1` and `L2`.
+- `dDistSqDt`: rate of change with respect to time of the minimum distance squared between `L1` and `L2`.
+- `L1`: normalised position on `seg1` that is closest to `seg2`.
+- `L2`: normalised position on `seg2` that is closest to `seg1`.
+"""
+function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
     seg1 = x1 - x0
     seg2 = y1 - y0
     vseg1 = vx1 - vx0
@@ -280,20 +290,27 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
     F = x0 ⋅ x0 + y0 ⋅ y0
     G = C^2 - 4 * A * E
 
+    elemT = typeof(G)
+
+    # seg1 is a point.
     if A < eps(elemT)
         L1 = 0
+        # seg2 is a point.
         if E < eps(elemT)
             L2 = 0
         else
             L2 = -D / E / 2
         end
+    # seg2 is a point.
     elseif E < eps(elemT)
         L2 = 0
+        # seg1 is a point.
         if A < eps(elemT)
             L1 = 0
         else
             L1 = -B / A / 2
         end
+    # seg1 and two are close to each other.
     elseif abs(G) < eps(elemT)
         dist = SVector{4, elemT}(
                 (y0 - x0) ⋅ (y0 - x0),
@@ -306,6 +323,7 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
 
         L1 = floor(idx / 2)
         L2 = mod(idx - 1, 2)
+    # seg1 and seg2 are not points and away from each other.
     else
         L1 = (C * L2 - B) / A / 2
         L2 = (2 * A * D + B * C) / G

@@ -1054,21 +1054,145 @@ dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
         fileDislocationLoop,
     )
 intVars = loadIntegrationTime(fileIntVar)
-# network = DislocationNetwork(dislocationLoop)
-femParams = FEMParameters(
-                    femParams.type, 
-                    femParams.order,
-                    femParams.model,
-                    57.,
-                    43.,
-                    37.,
-                    23,
-                    27,
-                    13
-                )
+network = DislocationNetwork(dislocationLoop)
+# femParams = FEMParameters(
+#                     femParams.type, 
+#                     femParams.order,
+#                     femParams.model,
+#                     57.,
+#                     43.,
+#                     37.,
+#                     23,
+#                     27,
+#                     13
+#                 )
 ##
 regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
+
+dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
+segLen = dx / 5
+prismSquare = DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 8,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 10,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystems,
+    # _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
+    # _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+shearSquare = DislocationLoop(;
+    loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
+    numSides = 8,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 10,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystems,        # Burgers vector of the segments.
+    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+network = DislocationNetwork((shearSquare, prismSquare))
+@enter findCollisions(dlnParams, network)
+
+network = DislocationNetwork(;
+    links = [1 1 2; 2 3 3],
+    slipPlane = Float64[1 1 1;1 1 1;1 1 1],
+    bVec = Float64[1 1 1;1 1 1;1 1 1],
+    coord = Float64[0 0.5 0; 0 0 1; 0 0 0],
+    label = nodeTypeDln[1;1;1],
+    nodeVel = Float64[0 -1 1; 0 1 -1; 0 0 0],
+    nodeForce = zeros(3, 3)
+    )
+makeConnect!(network)
+getSegmentIdx!(network)
+
+@enter detectCollision(dlnParams, network)
+
+@btime detectCollision(dlnParams, network)
+
+plotlyjs()
+fig1 = plotNodes(
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
+
+
+distSq, dDistSqDt, L1, L2 = minimumDistance(
+    [0.,0,0], [1.,0,0],
+    [0.,0,0], [0.,0,0],
+    [0.,0,0], [0.,0,0],
+    [0.,0,0], [0.,0,0]
+)
+
+distSq == 0
+dDistSqDt == 0
+L1 == 0
+L2 == 0
+
+distSq, dDistSqDt, L1, L2 = minimumDistance(
+    [0.,0,0], [0.,0,0],
+    [0.,0,0], [1.,0,0],
+    [0.,0,0], [0.,0,0],
+    [0.,0,0], [0.,0,0]
+)
+
+distSq == 0
+dDistSqDt == 0
+L1 == 0
+L2 == 0
+
+distSq, dDistSqDt, L1, L2 = minimumDistance(
+    [0.,0,0], [1.,0,0],
+    [0.5,0,0], [1.,0,0],
+    [0.,0,0], [0.,0,0],
+    [0.,0,0], [0.,0,0]
+)
+
+distSq == 0
+dDistSqDt == 0
+L1 == 1
+L2 == 1
+
+distSq, dDistSqDt, L1, L2 = minimumDistance(
+    [0.,0,0], [1.,0,0],
+    [0.,0,0], [0.5,0,0],
+    [0.,0,0], [0.,0,0],
+    [0.,0,0], [0.,0,0]
+)
+
+distSq == 0
+dDistSqDt == 0
+L1 == 0
+L2 == 0
+
+
+
+fig1 = plotNodes(
+    regularCuboidMesh, 
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
+
+
 
 calc_uTilde!(forceDisplacement, regularCuboidMesh, cantileverBC, matParams, network)
 
@@ -1155,9 +1279,10 @@ prismSquare = DislocationLoop(;
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 10,  # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystems,
+    # _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
+    # _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
     range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
@@ -1170,9 +1295,8 @@ shearSquare = DislocationLoop(;
     nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
     numLoops = 10,  # Number of loops of this type to generate when making a network.
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
-    slipSystem = 5, # Slip System (assuming slip systems are stored in a file, this is the index).
-    _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
-    _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystems,        # Burgers vector of the segments.
     label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
     range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
@@ -1233,7 +1357,7 @@ matParams = MaterialParameters(;
         μ = 1.0,
         μMag = 1.0,
         ν = 0.28,
-        E = 0.1,
+E = 0.1,
     )
 dlnParams = DislocationParameters(;
         coreRad = a,
@@ -1318,7 +1442,7 @@ matParams = MaterialParameters(;
         μ = 1.0,
         μMag = 1.0,
         ν = 0.28,
-        E = 0.1,
+E = 0.1,
     )
 dlnParams = DislocationParameters(;
         coreRad = a,
@@ -1937,7 +2061,7 @@ P1 = polyhedron(vrep([
     -1.8 0.5
     1.7 0.7
     1.9 -0.3
-    0.9 -1.1
+0.9 -1.1
 ]))
 
 vrep([
@@ -2441,7 +2565,7 @@ fig2 = plotNodes(
 )
 
 function foo(dlnParams, matParams, network)
-    return network = refineNetwork!(dlnParams, matParams, network)
+return network = refineNetwork!(dlnParams, matParams, network)
 end
 function bar(dlnParams, matParams, network)
     return network = coarsenNetwork!(dlnParams, matParams, network)
@@ -2455,7 +2579,7 @@ bar(dlnParams, matParams, network)
 numSeg
 network.numNodeSegConnect[2]
 
-function foo(intParams, intVars, dlnParams, matParams, network)
+    function foo(intParams, intVars, dlnParams, matParams, network)
     network = coarsenNetwork!(dlnParams, matParams, network)
     network = refineNetwork!(dlnParams, matParams, network)
     return integrate!(intParams, intVars, dlnParams, matParams, network)

@@ -147,7 +147,7 @@ end
 
 """
 ```
-struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21}
+struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23}
     mobility::T1
     dragCoeffs::T2
     coreRad::T3
@@ -161,14 +161,16 @@ struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,
     maxArea::T11
     minAreaSq::T12
     maxAreaSq::T13
-    slipStepCritLen::T14
-    slipStepCritArea::T15
-    remesh::T16
-    collision::T17
-    separation::T18
-    virtualRemesh::T19
-    parCPU::T20
-    parGPU::T21
+    collisionDist::T14
+    collisionDistSq::T15
+    slipStepCritLen::T16
+    slipStepCritArea::T17
+    remesh::T18
+    collision::T19
+    separation::T20
+    virtualRemesh::T21
+    parCPU::T22
+    parGPU::T23
 end
 ```
 Stores the dislocation parameters.
@@ -188,6 +190,7 @@ Stores the dislocation parameters.
 - `maxArea`: maximum area
 - `minAreaSq`: square of the minimum area
 - `maxAreaSq`: sqare of the maximum area
+- `collisionDist`: collision distance
 - `slipStepCritLen`: critical length for slip step tracking
 - `slipStepCritArea`: critical area for slip step tracking
 - `remesh`: remeshing flag
@@ -197,7 +200,7 @@ Stores the dislocation parameters.
 - `parCPU`: parallelise over CPU flag
 - `parGPU`: parallelise over GPU flag
 """
-struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21}
+struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23}
     mobility::T1
     dragCoeffs::T2
     coreRad::T3
@@ -211,14 +214,16 @@ struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,
     maxArea::T11
     minAreaSq::T12
     maxAreaSq::T13
-    slipStepCritLen::T14
-    slipStepCritArea::T15
-    remesh::T16
-    collision::T17
-    separation::T18
-    virtualRemesh::T19
-    parCPU::T20
-    parGPU::T21
+    collisionDist::T14
+    collisionDistSq::T15
+    slipStepCritLen::T16
+    slipStepCritArea::T17
+    remesh::T18
+    collision::T19
+    separation::T20
+    virtualRemesh::T21
+    parCPU::T22
+    parGPU::T23
 end
 
 """
