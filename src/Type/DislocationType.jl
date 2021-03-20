@@ -147,7 +147,7 @@ end
 
 """
 ```
-struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23}
+struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24}
     mobility::T1
     dragCoeffs::T2
     coreRad::T3
@@ -155,22 +155,23 @@ struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,
     coreRadMag::T5
     coreEnergy::T6
     minSegLen::T7
-    maxSegLen::T8
-    twoMinSegLen::T9
-    minArea::T10
-    maxArea::T11
-    minAreaSq::T12
-    maxAreaSq::T13
-    collisionDist::T14
-    collisionDistSq::T15
-    slipStepCritLen::T16
-    slipStepCritArea::T17
-    remesh::T18
-    collision::T19
-    separation::T20
-    virtualRemesh::T21
-    parCPU::T22
-    parGPU::T23
+    minSegLenSq::T8
+    maxSegLen::T9
+    twoMinSegLen::T10
+    minArea::T11
+    maxArea::T12
+    minAreaSq::T13
+    maxAreaSq::T14
+    collisionDist::T15
+    collisionDistSq::T16
+    slipStepCritLen::T17
+    slipStepCritArea::T18
+    remesh::T19
+    collision::T20
+    separation::T21
+    virtualRemesh::T22
+    parCPU::T23
+    parGPU::T24
 end
 ```
 Stores the dislocation parameters.
@@ -186,6 +187,7 @@ Stores the dislocation parameters.
 - `minSegLen`: minimum segment length
 - `maxSegLen`: maximum segment length
 - `twoMinSegLen`: two times minimum segment length
+- `minSegLenSq`: square of the minimum segment length
 - `minArea`: minimum area
 - `maxArea`: maximum area
 - `minAreaSq`: square of the minimum area
@@ -200,7 +202,7 @@ Stores the dislocation parameters.
 - `parCPU`: parallelise over CPU flag
 - `parGPU`: parallelise over GPU flag
 """
-struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23}
+struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24}
     mobility::T1
     dragCoeffs::T2
     coreRad::T3
@@ -210,20 +212,21 @@ struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,
     minSegLen::T7
     maxSegLen::T8
     twoMinSegLen::T9
-    minArea::T10
-    maxArea::T11
-    minAreaSq::T12
-    maxAreaSq::T13
-    collisionDist::T14
-    collisionDistSq::T15
-    slipStepCritLen::T16
-    slipStepCritArea::T17
-    remesh::T18
-    collision::T19
-    separation::T20
-    virtualRemesh::T21
-    parCPU::T22
-    parGPU::T23
+    minSegLenSq::T10
+    minArea::T11
+    maxArea::T12
+    minAreaSq::T13
+    maxAreaSq::T14
+    collisionDist::T15
+    collisionDistSq::T16
+    slipStepCritLen::T17
+    slipStepCritArea::T18
+    remesh::T19
+    collision::T20
+    separation::T21
+    virtualRemesh::T22
+    parCPU::T23
+    parGPU::T24
 end
 
 """
