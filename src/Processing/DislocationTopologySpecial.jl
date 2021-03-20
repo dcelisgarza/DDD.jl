@@ -82,17 +82,20 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
     elemT = eltype(coord)
     numNode = network.numNode[1]
     connectivity = network.connectivity
+    intNodes = (intMobDln, intFixDln)
+    srfNodes = (srfMobDln, srfFixDln)
 
     # Find internal nodes that are newly exited and mark them as such.
     for i in 1:numNode
-        label[i] == intMobDln || label[i] == intFixDln ? nothing : continue
-        coord[:, i] ∉ vertices ? label[i] = tmpDln : continue
+        label[i] ∉ intNodes && continue
+        coord[:, i] ∈ vertices && continue
+        label[i] = tmpDln
     end
 
     # Generate surface nodes by finding which internal nodes are connected to newly exited nodes.
     for node1 in 1:numNode
         # Only look for nodes that are internal.
-        label[node1] == intMobDln || label[node1] == intFixDln ? nothing : continue
+        label[node1] ∉ intNodes && continue
         # Find the number of connections to the node.
         numCon = connectivity[1, node1]
         # Loop through all connections of node1 to see if it is connected to a newly exited node.
@@ -100,9 +103,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
             missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
             # If node1 is connected to a newly exited node 2, create surface node.
-            if label[node2] == tmpDln
-                network = makeSurfaceNode!(mesh, network, node1, node2, j)
-            end
+            label[node2] == tmpDln ? network = makeSurfaceNode!(mesh, network, node1, node2, j) : nothing
         end
     end
 
@@ -151,7 +152,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
     connectivity = network.connectivity
     node1 = 1
     while node1 < numNode
-        if !(label[node1] == srfMobDln || label[node1] == srfFixDln)
+        if label[node1] ∉ srfNodes
             node1 += 1
             continue
         end
@@ -164,27 +165,27 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
             missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
             
             # Check if the node connected is a surface node aso we can merge node1 into node2.
-            if label[node2] == srfMobDln || label[node2] == srfFixDln
+            if label[node2] ∈ srfNodes
                 missing, network = mergeNode!(network, node2, node1)
                 links = network.links
                 label = network.label
                 numNode = network.numNode[1]
                 connectivity = network.connectivity
                 node1 = 1
-                check = true
+    check = true
                 break
             end
-        end
+    end
         check ? continue : node1 += 1
     end
 
-        # Find surface nodes that are only connected to virtual nodes and project them to be external too.
+    # Find surface nodes that are only connected to virtual nodes and project them to be external too.
     numNode = network.numNode[1]
     label = network.label
     coord = network.coord
     connectivity = network.connectivity
     for node1 in 1:numNode
-        label[node1] == srfMobDln || label[node1] == srfFixDln ? nothing : continue
+        label[node1] ∉ srfNodes && continue
             
         # Number of external connections.
         numExtCon = 0
@@ -204,7 +205,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
             newNode = SVector{3,elemT}(0, 0, 0)
             for j in 1:numFaces
                 oldDist = distMin
-                distMin, newNodeMin, faceMin = findIntersectVolume(mesh, faceNorm[:, j], l0)
+            distMin, newNodeMin, faceMin = findIntersectVolume(mesh, faceNorm[:, j], l0)
                 distMin = min(distMin, oldDist)
                 if distMin < oldDist
                     face = faceMin
@@ -236,12 +237,12 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
     node1 = 1
     while node1 < numNode
         # Only check surface nodes with more than two connections.
-        if !(label[node1] == srfMobDln || label[node1] == srfFixDln) || connectivity[1, node1] <= 2
+        if label[node1] ∉ srfNodes || connectivity[1, node1] <= 2
             node1 += 1
             continue
         end
 
-            # Go through the connections checking if there is more than one connection to an external node.
+        # Go through the connections checking if there is more than one connection to an external node.
         for j in 1:connectivity[1, node1] - 1
             missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
@@ -281,9 +282,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
             missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
             # If the node2 internal, create a surface node where the segment intersects the mesh.
-            if label[node2] == intMobDln || label[node2] == intFixDln
-                network = makeSurfaceNode!(mesh, network, node1, node2, j)
-            end
+            label[node2] ∈ intNodes ? network = makeSurfaceNode!(mesh, network, node1, node2, j) : nothing
         end    
     end
 
@@ -350,7 +349,7 @@ function coarsenVirtualNetwork!(dlnParams::DislocationParameters, network::Dislo
                 θ = acos(norm(coordVec1 ⋅ coordVec2) / (normVec1 * normVec2))
 
                 # Area formed by the triangle formed by link 1 and link 2.
-                area = 0.5 * normVec1 * normVec2 * sin(θ)
+                    area = 0.5 * normVec1 * normVec2 * sin(θ)
 
                 # If the length of link 1 and the angle change are below the critical size, merge node i to the first connected node.
                 if normVec1 < critLen && area < critArea
