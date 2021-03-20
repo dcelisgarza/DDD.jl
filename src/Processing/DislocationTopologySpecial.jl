@@ -115,7 +115,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
     # Project newly exited nodes out to pseudo-infinity.
     for i in 1:numNode
         # We only want to change nodes flagged as having just exited.
-        label[i] != tmpDln ? continue : nothing
+        label[i] != tmpDln && continue
 
         # Assume nodes moved with linear velocity and crossed the surface. We use this velocity as the vector to move them back onto the surface and project from there.
         vel = SVector{3,elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
@@ -128,7 +128,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
 
         # If there is no intersect, find the nearest plane to project it out of.
         if isinf(distMin)
-            # D = |(x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
+            # D = (x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
             distances = ((l0[1] .+ faceMidPt[1, :]) .* faceNorm[1, :] .+ (l0[2] .+ faceMidPt[2, :]) .* faceNorm[2, :] .+ (l0[3] .+ faceMidPt[3, :]) .* faceNorm[3, :]).^2
             distMin, face = findmin(distances)
             newNode = l0 + faceNorm[:, face] * distMin
@@ -152,13 +152,13 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
     connectivity = network.connectivity
     node1 = 1
     while node1 < numNode
-        if label[node1] ∉ srfNodes
-            node1 += 1
+            if label[node1] ∉ srfNodes
+        node1 += 1
             continue
         end
         
         # Find number of connections to node.
-        check::Bool = false
+        check = false
         numCon = connectivity[1, node1]
         # Loop through the number of connections.
         for j in 1:numCon
@@ -172,10 +172,10 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
                 numNode = network.numNode[1]
                 connectivity = network.connectivity
                 node1 = 1
-    check = true
+                check = true
                 break
             end
-    end
+        end
         check ? continue : node1 += 1
     end
 
@@ -192,7 +192,6 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
         numCon = connectivity[1, node1]
         for j in 1:numCon
             missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
-
             label[node2] == extDln ? numExtCon += 1 : nothing
         end
 
@@ -247,13 +246,13 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
             missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
 
             # If the first connection is not external go to the next iteration.
-            label[node2] != extDln ? continue : nothing
+            label[node2] != extDln && continue
 
             for k in j + 1:connectivity[1, node1]
                 missing, missing, node3 = findConnectedNode(network, node1, k) # k connection.
                 
                 # If the next connection is not external go to the next iteration.
-                label[node3] != extDln ? continue : nothing
+                label[node3] != extDln && continue
 
                 missing, network = mergeNode!(network, node3, node1)
                 links = network.links
@@ -270,17 +269,16 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
         node1 += 1
     end
 
-    # Make surface nodes if necessary.
+    # Make surface nodes if necessary. Only want to check external nodes.
     numNode = network.numNode[1]
     links = network.links
     connectivity = network.connectivity
     for node1 in 1:numNode
-        label[node1] != extDln ? continue : nothing
+        label[node1] != extDln && continue
 
         numCon = connectivity[1, node1]
         for j in 1:numCon
             missing, missing, node2 = findConnectedNode(network, node1, j) # j connection.
-
             # If the node2 internal, create a surface node where the segment intersects the mesh.
             label[node2] ∈ intNodes ? network = makeSurfaceNode!(mesh, network, node1, node2, j) : nothing
         end    
