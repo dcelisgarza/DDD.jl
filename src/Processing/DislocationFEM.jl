@@ -459,6 +459,7 @@ function calc_uTilde!(
     bVec = network.bVec
     coordDln = network.coord
     elemT = eltype(coordDln)
+    srfNode = (srfMobDln, srfFixDln)
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
@@ -473,10 +474,10 @@ function calc_uTilde!(
         link1 = links[1, i]
         link2 = links[2, i]
         # Find external nodes connected to a surface node, stores it and skips the virtual segment.
-        if (label[link1] == srfMobDln || label[link1] == srfFixDln) && label[link2] == extDln
+        if label[link1] ∈ srfNode && label[link2] == extDln
             surfNodeCons[link2] = link1
             continue
-        elseif (label[link2] == srfMobDln || label[link2] == srfFixDln) && label[link1] == extDln
+        elseif label[link2] ∈ srfNode && label[link1] == extDln
             surfNodeCons[link1] = link2
             continue
         end
@@ -609,6 +610,7 @@ function calc_uTilde(
     bVec = network.bVec
     coordDln = network.coord
     elemT = eltype(coordDln)
+    srfNode = (srfMobDln, srfFixDln)
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
@@ -623,10 +625,10 @@ function calc_uTilde(
         link1 = links[1, i]
         link2 = links[2, i]
         # Find external nodes connected to a surface node, stores it and skips the virtual segment.
-        if (label[link1] == srfMobDln || label[link1] == srfFixDln) && label[link2] == extDln
+        if label[link1] ∈ srfNode && label[link2] == extDln
             surfNodeCons[link2] = link1
             continue
-        elseif (label[link2] == srfMobDln || label[link2] == srfFixDln) && label[link1] == extDln
+        elseif label[link2] ∈ srfNode && label[link1] == extDln
             surfNodeCons[link1] = link2
             continue
         end

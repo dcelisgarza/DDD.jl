@@ -13,7 +13,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
     fig = plot()
     for i in 1:numNode
         n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
-        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
+        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
         #= 
@@ -21,7 +21,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...) =#
     end
 
-return fig
+    return fig
 end
 """
 ```
@@ -37,7 +37,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     elemT = eltype(links)
     for i in 1:numNode
         n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
-        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
+        label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.

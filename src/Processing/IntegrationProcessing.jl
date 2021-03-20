@@ -27,7 +27,8 @@ function deriv!(
     numNode = network.numNode[1]
 
     # Fixed nodes do not move, internal fixed, surface fixed, external.
-    idxFixed = findall(x -> x == intFixDln || x == srfFixDln || x == extDln, label)
+    fixedNode = (intFixDln, srfFixDln, extDln)
+    idxFixed = findall(x -> x ∈ fixedNode, label)
     !isnothing(idxFixed) ? nodeVel[:, idxFixed] .= 0 : nothing
 
     # Make surface velocity zero along the surface normal.
@@ -44,7 +45,7 @@ function deriv!(
         # Labels of the nodes connected to node.
         conLabel = label[(nodeOppLink1, nodeOppLink2)]
         # Find only those that are external.
-        extIdx = findall(x -> x == 5, conLabel)
+        extIdx = findall(x -> x == extDln, conLabel)
 
         # Correct only if node is connected to external nodes.
         if !isnothing(extIdx)

@@ -71,7 +71,7 @@ function calcSegForce!(
     calcSelfForce!(dlnParams, matParams, network, idx)
     calcSegSegForce!(dlnParams, matParams, network, idx)
 
-    return nothing
+return nothing
 end
 """
 ```
@@ -314,7 +314,7 @@ function calcPKForce!(
             segForce[j, 1, idxi] += pkForce[j] / 2
             segForce[j, 2, idxi] += pkForce[j] / 2
         end
-    end
+end
 
     return nothing
 end
@@ -354,7 +354,7 @@ function calcSelfForce(
         # If no index is provided, calculate forces for all segments.
         numSeg = network.numSeg[1]
         idx = 1:numSeg
-    else
+        else
         # Else, calculate forces only on idx.
         numSeg = length(idx)
     end
@@ -539,7 +539,7 @@ function calcSegSegForce(
     coord = network.coord
     segIdx = network.segIdx
     elemT = eltype(network.bVec)
-
+    
     # Un normalised segment vectors. Views for speed.
     numSeg = network.numSeg[1]
     idxBvec = @view segIdx[1:numSeg, 1]
@@ -639,7 +639,7 @@ function calcSegSegForce(
             n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
-                i == j ? continue : nothing
+                i == j && continue
                 b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                 n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
                 n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
@@ -700,7 +700,7 @@ function calcSegSegForce!(
     coord = network.coord
     segIdx = network.segIdx
     elemT = eltype(network.bVec)
-
+    
     # Un normalised segment vectors. Views for speed.
     numSeg = network.numSeg[1]
     idxBvec = @view segIdx[1:numSeg, 1]
@@ -799,7 +799,7 @@ function calcSegSegForce!(
             n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
-                i == j ? continue : nothing
+                i == j && continue
                 b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                 n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
                 n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
@@ -817,7 +817,7 @@ function calcSegSegForce!(
                     b2,
                     n21,
                     n22,
-                )
+                    )
 
                 @simd for m in 1:3
                     segForce[m, 1, i] += Fnode1[m]
@@ -841,7 +841,7 @@ function calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n
     c = t1 ⋅ t2
     cSq = c * c
     omcSq = 1 - cSq
-
+        
     if omcSq > sqrt(eps(typeof(omcSq)))
         
         omcSqI = 1 / omcSq
@@ -1137,7 +1137,7 @@ function calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1
     # If c is negative we do a swap of n11 and n12 to keep notation consistent and avoid
     if c < 0
         flip = true
-        n12, n11 = n11, n12
+    n12, n11 = n11, n12
         t1 = -t1
         b1 = -b1
     end
@@ -1176,14 +1176,14 @@ function calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1
     b2ct1 = b2 × t1
     b1ct1 = b1 × t1
     ndct1 = nd × t1
-
+    
     # Cross dot products
     b2ct1db1 = b2ct1 ⋅ b1
     b2ct1dnd = b2ct1 ⋅ nd
 
     # Double cross products
     b2ct1ct1 = t1db2 * t1 - b2
-
+    
     integ = ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y1)
     integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y2)
     integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x2, y1)
@@ -1294,14 +1294,14 @@ function calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1
     b2ct2 = b2 × t2
     b1ct2 = b1 × t2
     ndct2 = nd × t2
-
+    
     # Cross dot producs.
     b1ct2db2 = b1ct2 ⋅ b2
     b1ct2dnd = b1ct2 ⋅ nd
 
     # Double cross products.
     b1ct2ct2 = t2db1 * t2 - b1
-
+    
     integ = ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y1)
     integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x1, y2)
     integ = integ .- ParSegSegInteg(aSq_dSq, aSq_dSqI, x2, y1)
@@ -1380,7 +1380,7 @@ function calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1
     end
 
     return Fnode1, Fnode2, Fnode3, Fnode4
-end
+    end
 
 function ParSegSegInteg(aSq_dSq, aSq_dSqI, x, y)
     xpy = x + y

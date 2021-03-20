@@ -276,11 +276,11 @@ function getSegmentIdx(links, label)
         n1 = links[1, i]
         n2 = links[2, i]
         # Skip external nodes.
-        (label[n1] == extDln || label[n2] == extDln) ? continue : nothing
+        (label[n1] == extDln || label[n2] == extDln) && continue
         numSeg += 1 # Increment index.
         # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
         segIdx[numSeg, :] .= (i, n1, n2)
-    end
+end
     
     return numSeg, segIdx
 end
@@ -307,7 +307,7 @@ function getSegmentIdx!(network::DislocationNetwork)
     @inbounds for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
-        (label[n1] == extDln || label[n2] == extDln) ? continue : nothing
+        (label[n1] == extDln || label[n2] == extDln) && continue
         lNumSeg += 1
         segIdx[lNumSeg, :] .= (i, n1, n2)
     end

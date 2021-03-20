@@ -362,7 +362,7 @@ function refineNetwork!(
                 r1 = norm(t)
 
                 # If the link is smaller than the maximum segment length we skip to the next iteration.
-                r1 < maxSegLen ? continue : nothing
+                r1 < maxSegLen && continue
 
                 midCoord =
                     SVector{3,elemT}(

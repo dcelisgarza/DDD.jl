@@ -70,7 +70,7 @@ function dlnMobility(
             )
             nT = norm(t)
             # If the segment length is zero, skip to the next iteration.
-            nT < eps(elemT) ? continue : nothing
+            nT < eps(elemT) && continue
             tN = 1 / nT
             t *= tN # Normalise t.
 
@@ -125,8 +125,8 @@ function dlnMobility(
             totalDrag += nBnT_2 * (screwDrag * I3 + (lineDrag - screwDrag) * t ⊗ t)
 
             # If dislocation segment is pure screw skip to next iteration.
-            sinSqθ < eps(typeof(tDb)) ? continue : nothing
-
+            sinSqθ < eps(typeof(tDb)) && continue
+            
             # P, Q vectors as new local axes.
             p = b × t / sqrt(sinSqθ)
             q = p × t
@@ -161,7 +161,7 @@ function dlnMobility(
                     iNodeVel = totalDrag \ iNodeForce
 break
                 catch SingularSystem
-                end
+    end
             end
         end =#
 
@@ -201,7 +201,7 @@ function dlnMobility!(
     lineDrag = dlnParams.dragCoeffs[:line]
     dType = typeof(lineDrag)
     I3 = SMatrix{3,3,dType}(I)
-
+    
     links = network.links
     bVec = network.bVec
     coord = network.coord
@@ -212,7 +212,7 @@ function dlnMobility!(
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
 
-    # Do it for all nodes if no list is provided.
+        # Do it for all nodes if no list is provided.
     if isnothing(idx)
         numNode = network.numNode[1]
         idx = 1:numNode
@@ -220,7 +220,7 @@ function dlnMobility!(
         numNode = length(idx)
     end
 
-    # Loop through nodes.
+        # Loop through nodes.
     for node1 in idx
         totalDrag = zeros(SMatrix{3,3,dType})
         iNodeForce = zeros(SVector{3,elemT})
@@ -240,9 +240,9 @@ function dlnMobility!(
             coord[2, node2] - coord[2, node1],
                 coord[3, node2] - coord[3, node1],
             )
-            nT = norm(t)
+        nT = norm(t)
             # If the segment length is zero, skip to the next iteration.
-            nT < eps(elemT) ? continue : nothing
+            nT < eps(elemT) && continue
             tN = 1 / nT
             t *= tN # Normalise t.
 
@@ -297,7 +297,7 @@ function dlnMobility!(
             totalDrag += nBnT_2 * (screwDrag * I3 + (lineDrag - screwDrag) * t ⊗ t)
 
             # If dislocation segment is pure screw skip to next iteration.
-            sinSqθ < eps(typeof(tDb)) ? continue : nothing
+            sinSqθ < eps(typeof(tDb)) && continue
 
             # P, Q vectors as new local axes.
             p = b × t / sqrt(sinSqθ)
