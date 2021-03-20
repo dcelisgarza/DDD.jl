@@ -259,7 +259,12 @@ Safe normalisation.
 function safeNorm(x)
     elemT = eltype(x)
     xNorm = norm(x)
-    xNorm > eps(elemT) ? x = normalize(x) : zeros(typeof(x))
+    if xNorm > eps(elemT)
+        x = normalize(x)
+    else 
+        x = zero(x)
+        xNorm = eps(elemT)
+    end
     return xNorm, x
 end
 

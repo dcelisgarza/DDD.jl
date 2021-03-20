@@ -777,17 +777,17 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
         RCn, RC = safeNorm(RC)  
 
         # Compute fs
-        fAB = (b × AB) * log((RBn / (RAn + eps(elemT))) * (1 + RB ⋅ AB + eps(elemT)) / (1 + RA ⋅ AB + eps(elemT)))
-        fBC = (b × BC) * log((RCn / (RBn + eps(elemT))) * (1 + RC ⋅ BC + eps(elemT)) / (1 + RB ⋅ BC + eps(elemT)))
-        fCA = (b × CA) * log((RAn / (RCn + eps(elemT))) * (1 + RA ⋅ CA + eps(elemT)) / (1 + RC ⋅ CA + eps(elemT)))
+        fAB = (b × AB) * log((RBn / RAn) * (1 + RB ⋅ AB) / (1 + RA ⋅ AB))
+        fBC = (b × BC) * log((RCn / RBn) * (1 + RC ⋅ BC) / (1 + RB ⋅ BC))
+        fCA = (b × CA) * log((RAn / RCn) * (1 + RA ⋅ CA) / (1 + RC ⋅ CA))
 
         # Compute gs
         RAdRB = clamp(RA ⋅ RB, -1, 1)
         RBdRC = clamp(RB ⋅ RC, -1, 1)
         RCdRA = clamp(RC ⋅ RA, -1, 1)
-        gAB = (b ⋅ (RA × RB)) * (RA + RB) / (1 + RAdRB + eps(elemT))
-        gBC = (b ⋅ (RB × RC)) * (RB + RC) / (1 + RBdRC + eps(elemT))
-        gCA = (b ⋅ (RC × RA)) * (RC + RA) / (1 + RCdRA + eps(elemT))
+        gAB = (b ⋅ (RA × RB)) * (RA + RB) / (1 + RAdRB)
+        gBC = (b ⋅ (RB × RC)) * (RB + RC) / (1 + RBdRC)
+        gCA = (b ⋅ (RC × RA)) * (RC + RA) / (1 + RCdRA)
 
         # Compute solid angle
         θa = acos(RAdRB)

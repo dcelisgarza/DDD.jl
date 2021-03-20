@@ -110,5 +110,7 @@ function detectCollision(dlnParams::DislocationParameters, network::DislocationN
         return collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2
     end
 
+    # 
+
     return collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2
 end
