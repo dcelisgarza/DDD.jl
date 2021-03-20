@@ -241,8 +241,8 @@ gausslegendre(n::Integer, a, b)
 Compute Gauss-Legendre quadrature points and weights for the interval `[a, b]`.
 """
 function FastGaussQuadrature.gausslegendre(n::Integer, a, b)
-    bma = (b - a) * 0.5
-    bpa = (b + a) * 0.5
+    bma = (b - a) / 2
+    bpa = (b + a) / 2
     x, w = gausslegendre(n)
     @inbounds @simd for i in 1:n
         x[i] = bma * x[i] + bpa
@@ -301,20 +301,12 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
     if A < eps(elemT)
         L1 = 0
         # seg2 is a point.
-        if E < eps(elemT)
-            L2 = 0
-        else
-            L2 = -D / E / 2
-        end
+        E < eps(elemT) ? L2 = 0 : L2 = -D / E / 2
     # seg2 is a point.
     elseif E < eps(elemT)
         L2 = 0
         # seg1 is a point.
-        if A < eps(elemT)
-            L1 = 0
-        else
-            L1 = -B / A / 2
-        end
+        A < eps(elemT) ? L1 = 0 : L1 = -B / A / 2   
     # seg1 and two are close to each other.
     elseif abs(G) < eps(elemT)
         dist = SVector{4, elemT}(
@@ -330,8 +322,8 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
         L2 = mod(idx - 1, 2)
     # seg1 and seg2 are not points and away from each other.
     else
-        L1 = (C * L2 - B) / A / 2
         L2 = (2 * A * D + B * C) / G
+        L1 = (C * L2 - B) / A / 2
     end
 
     L1 = clamp(L1, 0, 1)

@@ -560,7 +560,7 @@ function calc_uTilde!(
             surfConB != 0 ? Bprime = SVector{3,elemT}(coordDln[1, surfConB], coordDln[2, surfConB], coordDln[3, surfConB]) : nothing
             
             # Closure point for external loop.
-            Cprime = (A + Bprime) * 0.5
+            Cprime = (A + Bprime) / 2
         end
 
         # Use Barnett triangles to calculate displacements using a closure point.
@@ -715,7 +715,7 @@ function calc_uTilde(
             surfConB != 0 ? Bprime = SVector{3,elemT}(coordDln[1, surfConB], coordDln[2, surfConB], coordDln[3, surfConB]) : nothing
             
             # Closure point for external loop.
-            Cprime = (A + Bprime) * 0.5
+            Cprime = (A + Bprime) / 2
         end
 
         # Use Barnett triangles to calculate displacements using a closure point.

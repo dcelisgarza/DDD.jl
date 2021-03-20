@@ -311,8 +311,8 @@ function calcPKForce!(
         σHat = calc_σHat(mesh, forceDisplacement, x0)
         pkForce = (σHat * b) × t
         for j in 1:3
-            segForce[j, 1, idxi] += pkForce[j] * 0.5
-            segForce[j, 2, idxi] += pkForce[j] * 0.5
+            segForce[j, 1, idxi] += pkForce[j] / 2
+            segForce[j, 2, idxi] += pkForce[j] / 2
         end
     end
 

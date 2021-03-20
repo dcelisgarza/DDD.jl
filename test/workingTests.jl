@@ -1066,7 +1066,7 @@ network = DislocationNetwork(dislocationLoop)
 #                     27,
 #                     13
 #                 )
-##
+
 regularCuboidMesh = buildMesh(matParams, femParams)
 cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
 
@@ -1114,6 +1114,11 @@ network = DislocationNetwork(;
     )
 makeConnect!(network)
 getSegmentIdx!(network)
+
+
+
+
+##
 
 @enter detectCollision(dlnParams, network)
 

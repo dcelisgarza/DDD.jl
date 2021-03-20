@@ -78,6 +78,90 @@ cd(@__DIR__)
     raypnt = Float64[0,  0, 6]
     ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
     @test isnothing(ψ)
+
+    x0, x1 = zeros(3), ones(3)
+    y0, y1 = zeros(3), zeros(3)
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 0, 0)
+
+    x0, x1 = zeros(3), ones(3)
+    y0, y1 = ones(3), ones(3)
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 1, 0)
+
+    y0, y1 = zeros(3), ones(3)
+    x0, x1 = zeros(3), zeros(3)
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 0, 0)
+
+    y0, y1 = zeros(3), ones(3)
+    x0, x1 = ones(3), ones(3)
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 0, 1)
+
+    x0, x1 = zeros(3), ones(3)
+    y0, y1 = 0.5 * ones(3), 0.5 * ones(3)
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 0.5, 0)
+
+    y0, y1 = zeros(3), ones(3)
+    x0, x1 = 0.5 * ones(3), 0.5 * ones(3)
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 0, 0.5)
+
+    x0, x1 = zeros(3), ones(3)
+    y0, y1 = zeros(3), ones(3) .+ eps(Float64)^2
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 0, 0)
+
+    x0, x1 = zeros(3), ones(3)
+    y0, y1 = [1, 0, 0], [2, 1, 1]
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (1, 0, 0, 0)
+
+    x1, x0 = zeros(3), ones(3)
+    y0, y1 = [1, 0, 0], [2, 1, 1]
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (6, 0, 1, 1)
+
+    x0, x1 = zeros(3), ones(3)
+    y1, y0 = [1, 0, 0], [2, 1, 1]
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (2, 0, 1, 1)
+
+    x1, x0 = zeros(3), ones(3)
+    y0, y1 = [1, 1, 0], [1.5, 0.5, 0.5]
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 =  minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0.5, 0, 0.25, 0.5)
+
+    x0, x1 = zeros(3), zeros(3)
+    y0, y1 = zeros(3), zeros(3)
+    vx0, vx1 = zeros(3), zeros(3)
+    vy0, vy1 = zeros(3), zeros(3)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    @test (distSq, dDistSqDt, L1, L2) == (0, 0, 0, 0)
 end
 
 @testset "Auxiliary" begin
