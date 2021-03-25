@@ -25,9 +25,7 @@ function detectCollision(
     # Hinge condition.
     for i in 1:numNode
         # Only hinge collisions with mobile nodes.
-        if label[i] ∉ mobileNodes
-            continue
-        end
+        label[i] ∉ mobileNodes && continue
 
         for j in 1:connectivity[1, i]
             # Find connected node.
@@ -52,9 +50,9 @@ function detectCollision(
                 tVecN2 = tVec ⋅ tVec
 
                 # We collapse one of the lines into a point, we want to make sure we collapse the smallest distance so the distance calculation is the actual minimum.
-                if tVecN1 < tVecN2
-                    link2, rowColLink2, connectedNode2, tVecN2, link1, rowColLink1, connectedNode1, tVecN1 = link1, rowColLink1, connectedNode1, tVecN1, link2, rowColLink2, connectedNode2, tVecN2
-                end
+                tVecN1 < tVecN2 ? begin 
+                    link2, rowColLink2, connectedNode2, tVecN2, link1, rowColLink1, connectedNode1, tVecN1 = link1, rowColLink1, connectedNode1, tVecN1, link2, rowColLink2, connectedNode2, tVecN2 
+                end : nothing
 
                 # tVecN1 should now be bigger than tVecN2. i is the hinge node.
                 x0 = SVector{3,elemT}(
@@ -124,9 +122,7 @@ function detectCollision(
         end
     end
 
-    if collision
-        return collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2, L1, L2
-    end
+    collision && return collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2, L1, L2
 
     # Collision of unconnected segments, twoline collision.
     for i in 1:numSeg
@@ -136,9 +132,7 @@ function detectCollision(
         label1 = label[n1s1_i]
         label2 = label[n2s1_i]
 
-        if label1 ∉ mobileNodes || label2 ∉ mobileNodes
-            continue
-        end
+        (label1 ∉ mobileNodes || label2 ∉ mobileNodes) && continue
 
         x0 = SVector{3,elemT}(
                 coord[1, n1s1_i],
@@ -176,10 +170,8 @@ function detectCollision(
             if n1s1_i != n1s2_j && n1s1_i != n2s2_j && n2s1_i != n1s2_j && n2s1_i != n2s2_j
                 label1 = label[n1s2_j]
                 label2 = label[n2s2_j]
-
-                if label1 ∉ mobileNodes || label2 ∉ mobileNodes
-                    continue
-                end
+                
+                (label1 ∉ mobileNodes || label2 ∉ mobileNodes) && continue
             
                 y0 = SVector{3,elemT}(
                     coord[1, n1s2_j],
@@ -210,9 +202,7 @@ function detectCollision(
                 )
 
                 # Stop superdislocations from forming.
-                if ((bi - bj) ⋅ (bi - bj) < eps(elemT) && (x1 - x0) ⋅ (y1 - y0) > eps(elemT)) || ((bi + bj) ⋅ (bi + bj) < eps(elemT) && (x1 - x0) ⋅ (y1 - y0) < eps(elemT))
-                    continue
-                end
+                (((bi - bj) ⋅ (bi - bj) < eps(elemT) && (x1 - x0) ⋅ (y1 - y0) > eps(elemT)) || ((bi + bj) ⋅ (bi + bj) < eps(elemT) && (x1 - x0) ⋅ (y1 - y0) < eps(elemT))) && continue
 
                 skip = false
                 for k = 1:length(skipSegs)
@@ -243,7 +233,6 @@ function detectCollision(
                         s2 = j
                     end
                 end
-                
             end
         end
     end

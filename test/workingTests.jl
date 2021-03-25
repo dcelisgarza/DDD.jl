@@ -1162,7 +1162,40 @@ skipSegs = Vector{Tuple{Int,Int}}()
 @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1)]) == (true, :hinge, 4, 1, 3, 3, 4, 3, 0.0, 0)
 @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3)]) == (true, :twoLine, 1, 2, 3, 4, 1, 3, 1.0, 1)
 @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3)]) == (true, :twoLine, 2, 3, 4, 1, 2, 4, 1.0, 1)
-@test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3), (2, 4)]) == (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
+@btime detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3), (2, 4)]) == (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
+@btime detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1)])
+
+@btime detectCollision(dlnParams, network, skipSegs)
+using ProfileView
+
+for i in 1:1000
+        detectCollision(dlnParams, network, skipSegs)
+    end
+ans = detectCollision(dlnParams, network, skipSegs)
+
+function foo(dlnParams, network, skipSegs)
+    for i in 1:10000
+        ans = detectCollision(dlnParams, network, skipSegs)
+    end
+end
+
+@profview foo(dlnParams, network, skipSegs)
+ProfileView.view()
+function profile_test(n)
+    for i = 1:n
+        A = randn(100, 100, 20)
+        m = maximum(A)
+        Am = mapslices(sum, A; dims = 2)
+        B = A[:,:,5]
+        Bsort = mapslices(sort, B; dims = 1)
+        b = rand(100)
+        C = B .* b
+    end
+end
+
+using ProfileView
+@profview profile_test(1)  # run once to trigger compilation (ignore this one)
+@profview profile_test(10)
 
 
 fig1 = plotNodes(
