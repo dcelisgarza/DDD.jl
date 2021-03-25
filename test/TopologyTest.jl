@@ -2,6 +2,80 @@ using DDD
 using Test, Statistics, SparseArrays
 cd(@__DIR__)
 
+@testset "Collision detection" begin
+    fileDislocationParameters = "./testData/sampleDislocationParameters.json"
+    fileMaterialParameters = "./testData/sampleMaterialParameters.json"
+    fileFEMParameters = "./testData/sampleFEMParameters.json"
+    fileIntegrationParameters = "./testData/sampleIntegrationParameters.json"
+    fileSlipSystem = "./testData/BCC.json"
+    fileDislocationLoop = "./testData/samplePrismShear.json"
+    dlnParams, matParams, femParams, intParams, slipSystems, dislocationLoop =
+        loadParameters(
+            fileDislocationParameters,
+            fileMaterialParameters,
+            fileFEMParameters,
+            fileIntegrationParameters,
+            fileSlipSystem,
+            fileDislocationLoop,
+        )
+    network = DislocationNetwork(;
+    links = [1 1 2; 2 3 3],
+    slipPlane = Float64[1 1 1;1 1 1;1 1 1],
+    bVec = Float64[1 1 1;1 1 1;1 1 1],
+    coord = Float64[0 0.5 0; 0 0 1; 0 0 0],
+    label = nodeTypeDln[1;1;1],
+    nodeVel = Float64[0 -1 1; 0 1 -1; 0 0 0],
+    nodeForce = zeros(3, 3)
+    )
+    makeConnect!(network)
+    getSegmentIdx!(network)
+    skipSegs = Vector{Tuple{Int,Int}}()
+    @test detectCollision(dlnParams, network, skipSegs) == (true, :hinge, 3, 2, 1, 1, 3, 2, 0.8, 0)
+        @test begin
+    detectCollision(dlnParams, network, [(3, 2)]) == 
+        detectCollision(dlnParams, network, [(2, 3)]) == 
+        (true, :hinge, 2, 3, 1, 1, 3, 1, 0.2, 0)
+end
+        @test begin
+    detectCollision(dlnParams, network, [(3, 2), (3, 1)]) == 
+        detectCollision(dlnParams, network, [(2, 3), (3, 1)]) == 
+        detectCollision(dlnParams, network, [(3, 2), (1, 3)]) == 
+        detectCollision(dlnParams, network, [(2, 3), (1, 3)]) == 
+        (true, :hinge, 1, 3, 2, 2, 2, 1, -0.0, 0)
+end
+
+        @test begin
+    detectCollision(dlnParams, network, [(3, 2), (3, 1), (1, 2)]) ==
+        detectCollision(dlnParams, network, [(2, 3), (3, 1), (1, 2)]) ==
+        detectCollision(dlnParams, network, [(3, 2), (1, 3), (1, 2)]) ==
+        detectCollision(dlnParams, network, [(3, 2), (3, 1), (2, 1)]) ==
+        detectCollision(dlnParams, network, [(2, 3), (1, 3), (1, 2)]) ==
+        detectCollision(dlnParams, network, [(2, 3), (3, 1), (2, 1)]) ==
+        detectCollision(dlnParams, network, [(2, 3), (3, 1), (1, 2)]) ==
+        (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
+end
+
+    network = DislocationNetwork(;
+        links = [1 2 3 4; 2 3 4 1],
+        slipPlane = Float64[1 1 1 1;1 1 1 1;1 1 1 1],
+        bVec = Float64[1 1 1 1;1 1 1 1;1 1 1 1],
+        coord = Float64[0 1 1.5 0.5; 0 0 1 1; 0 0 0 0],
+        label = nodeTypeDln[1;1;1;1],
+        nodeVel = Float64[0 -1 -1 0; 0 0 -1 -1; 0 0 0 0],
+        nodeForce = zeros(3, 4)
+        )
+    makeConnect!(network)
+    getSegmentIdx!(network)
+    skipSegs = Vector{Tuple{Int,Int}}()
+    @test detectCollision(dlnParams, network, skipSegs) == (true, :hinge, 1, 4, 2, 2, 4, 1, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1)]) == (true, :hinge, 3, 2, 4, 4, 2, 3, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3)]) == (true, :hinge, 2, 3, 1, 1, 2, 1, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1)]) == (true, :hinge, 4, 1, 3, 3, 4, 3, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3)]) == (true, :twoLine, 1, 2, 3, 4, 1, 3, 1.0, 1)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3)]) == (true, :twoLine, 2, 3, 4, 1, 2, 4, 1.0, 1)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3), (2, 4)]) == (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
+end
+
 @testset "Merge nodes" begin
     fileDislocationParameters = "./testData/sampleDislocationParameters.json"
     fileMaterialParameters = "./testData/sampleMaterialParameters.json"
@@ -113,12 +187,12 @@ cd(@__DIR__)
     factor = rand()
 
     for j = 1:size(network.segForce, 1)
-        for i = 1:size(network.segForce, 3)
-            network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
-            network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
-            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
-        end
+    for i = 1:size(network.segForce, 3)
+        network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
+        network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
+        network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
     end
+end
 
     networkTest = deepcopy(network)
     missing, networkTest = mergeNode!(networkTest, 1, 1)
@@ -1452,12 +1526,12 @@ end
     network.coord[:, 6:end] .+= [10; 10; 10]
     factor = rand()
     for j = 1:size(network.segForce, 1)
-        for i = 1:size(network.segForce, 3)
-            network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
-            network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
-            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
-        end
+    for i = 1:size(network.segForce, 3)
+        network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
+        network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
+        network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
     end
+end
 
     networkTest = deepcopy(network)
     midCoord = vec(mean(networkTest.coord, dims = 2))

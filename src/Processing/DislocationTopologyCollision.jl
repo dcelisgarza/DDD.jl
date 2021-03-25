@@ -90,6 +90,17 @@ function detectCollision(
                         nodeVel[2, connectedNode2],
                         nodeVel[3, connectedNode2]
                     )
+                
+                skip = false
+                for k = 1:length(skipSegs)
+                    s1Tmp, s2Tmp = skipSegs[k]
+                    if link1 == s1Tmp && link2 == s2Tmp || link1 == s2Tmp && link2 == s1Tmp
+                        skip = true
+                        break
+                    end
+                end
+
+                skip && continue
 
                 distSq, dDistSqDt, L1, L2 = minimumDistance(
                     x0, x1, y0, y0, vx0, vx1, vy0, vy0
@@ -205,8 +216,8 @@ function detectCollision(
 
                 skip = false
                 for k = 1:length(skipSegs)
-                    s1, s2 = skipSegs[k]
-                    if i == s1 && j == s2 || i == s2 && j == s1
+                    s1Tmp, s2Tmp = skipSegs[k]
+                    if i == s1Tmp && j == s2Tmp || i == s2Tmp && j == s1Tmp
                         skip = true
                         break
                     end
@@ -227,7 +238,7 @@ function detectCollision(
                         n1s1 = n1s1_i
                         n2s1 = n2s1_i
                         n1s2 = n1s2_j
-                        n2s2 = n1s2_j
+                        n2s2 = n2s2_j
                         s1 = i
                         s2 = j
                     end

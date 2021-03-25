@@ -1101,7 +1101,10 @@ shearSquare = DislocationLoop(;
     dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork((shearSquare, prismSquare))
-@enter findCollisions(dlnParams, network)
+
+dlnParams.collisionDist
+skipSegs = Vector{Tuple{Int,Int}}()
+detectCollision(dlnParams, network, skipSegs)
 
 network = DislocationNetwork(;
     links = [1 1 2; 2 3 3],
@@ -1114,13 +1117,68 @@ network = DislocationNetwork(;
     )
 makeConnect!(network)
 getSegmentIdx!(network)
+skipSegs = Vector{Tuple{Int,Int}}()
+@test detectCollision(dlnParams, network, skipSegs) == (true, :hinge, 3, 2, 1, 1, 3, 2, 0.8, 0)
+    @test begin
+    detectCollision(dlnParams, network, [(3, 2)]) == 
+    detectCollision(dlnParams, network, [(2, 3)]) == 
+    (true, :hinge, 2, 3, 1, 1, 3, 1, 0.2, 0)
+end
+    @test begin
+    detectCollision(dlnParams, network, [(3, 2), (3, 1)]) == 
+    detectCollision(dlnParams, network, [(2, 3), (3, 1)]) == 
+    detectCollision(dlnParams, network, [(3, 2), (1, 3)]) == 
+    detectCollision(dlnParams, network, [(2, 3), (1, 3)]) == 
+    (true, :hinge, 1, 3, 2, 2, 2, 1, -0.0, 0)
+end
+
+    @test begin
+    detectCollision(dlnParams, network, [(3, 2), (3, 1), (1, 2)]) ==
+    detectCollision(dlnParams, network, [(2, 3), (3, 1), (1, 2)]) ==
+    detectCollision(dlnParams, network, [(3, 2), (1, 3), (1, 2)]) ==
+    detectCollision(dlnParams, network, [(3, 2), (3, 1), (2, 1)]) ==
+    detectCollision(dlnParams, network, [(2, 3), (1, 3), (1, 2)]) ==
+    detectCollision(dlnParams, network, [(2, 3), (3, 1), (2, 1)]) ==
+    detectCollision(dlnParams, network, [(2, 3), (3, 1), (1, 2)]) ==
+    (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
+end
 
 
+network = DislocationNetwork(;
+    links = [1 2 3 4; 2 3 4 1],
+    slipPlane = Float64[1 1 1 1;1 1 1 1;1 1 1 1],
+    bVec = Float64[1 1 1 1;1 1 1 1;1 1 1 1],
+    coord = Float64[0 1 1.5 0.5; 0 0 1 1; 0 0 0 0],
+    label = nodeTypeDln[1;1;1;1],
+    nodeVel = Float64[0 -1 -1 0; 0 0 -1 -1; 0 0 0 0],
+    nodeForce = zeros(3, 4)
+    )
+makeConnect!(network)
+getSegmentIdx!(network)
+skipSegs = Vector{Tuple{Int,Int}}()
+@test detectCollision(dlnParams, network, skipSegs) == (true, :hinge, 1, 4, 2, 2, 4, 1, 0.0, 0)
+@test detectCollision(dlnParams, network, [(4, 1)]) == (true, :hinge, 3, 2, 4, 4, 2, 3, 0.0, 0)
+@test detectCollision(dlnParams, network, [(4, 1), (2, 3)]) == (true, :hinge, 2, 3, 1, 1, 2, 1, 0.0, 0)
+@test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1)]) == (true, :hinge, 4, 1, 3, 3, 4, 3, 0.0, 0)
+@test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3)]) == (true, :twoLine, 1, 2, 3, 4, 1, 3, 1.0, 1)
+@test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3)]) == (true, :twoLine, 2, 3, 4, 1, 2, 4, 1.0, 1)
+@test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3), (2, 4)]) == (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
+
+
+fig1 = plotNodes(
+    network,
+    m = 1,
+    l = 3,
+    linecolor = :blue,
+    marker = :circle,
+    markercolor = :blue,
+    legend = false,
+)
 
 
 ##
 
-@enter detectCollision(dlnParams, network)
+
 
 @btime detectCollision(dlnParams, network)
 
