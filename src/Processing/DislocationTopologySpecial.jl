@@ -214,7 +214,7 @@ function remeshSurfaceNetwork!(mesh::AbstractMesh, boundaries::Boundaries, netwo
 
             # If there is no intersect with a surface find the nearest plane to project out of.
             if isinf(distMin)
-                # D = |(x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
+                # D = (x0 + p0) ⋅ n/||n||, where n := plane normal, p0 a point on the plane, p0 ⋅ n = d, from the plane equation ax + by + cz = d, x0 is a point in space.
                 distances = ((l0[1] .+ faceMidPt[1, :]) .* faceNorm[1, :] .+ (l0[2] .+ faceMidPt[2, :]) .* faceNorm[2, :] .+ (l0[3] .+ faceMidPt[3, :]) .* faceNorm[3, :]).^2
                 distMin, face = findmin(distances)
                 # Point where the node intersects with the plane.
