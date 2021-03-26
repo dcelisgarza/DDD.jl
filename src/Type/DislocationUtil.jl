@@ -174,78 +174,79 @@ end
 """
 ```
 makeConnect(links, maxConnect)
+makeConnect!(network::DislocationNetwork)
 ```
 Creates `connectivity` and `linksConnect` matrices for [`DislocationNetwork`](@ref). 
 
 * `connectivity` contains the number of other other nodes each node is connected to, up to `maxConnect` other nodes. Every `(2i, j)` entry contains a node connected to node `j`. Every `(2i+1, j)` coordinate contains whether that node is the first or second node in the link.
 * `linksConnect` relates connections enabled by a link. Analogous to the connectivity of a link.
 """
-function makeConnect(links, maxConnect)
-    lenLinks = size(links, 2)
-
-    # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
-    idx = findfirst(x -> x == 0, @view links[1, :])
-    isnothing(idx) ? idx = lenLinks : idx -= 1
-    
-    connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
-    linksConnect = zeros(Int, 2, lenLinks)
-
-    # Loop through indices.
-    @inbounds @simd for i in 1:idx
-        # Node 1, it is the row of the coord matrix.
-        n1 = links[1, i]
-        n2 = links[2, i]
-
-        # Num of other nodes node n1 is connected to.
-        connectivity[1, n1] += 1
-        connectivity[1, n2] += 1
-
-        # Next column for n1 in connectivity.
-        tmp1 = 2 * connectivity[1, n1]
-        tmp2 = 2 * connectivity[1, n2]
-
-        # i = linkID. 1, 2 are the first and second nodes in link with linkID
-        connectivity[tmp1:(tmp1 + 1), n1] .= (i, 1)
-        connectivity[tmp2:(tmp2 + 1), n2] .= (i, 2)
-
-        # Connectivity of the nodes in link i.
-        linksConnect[1, i] = connectivity[1, n1]
-        linksConnect[2, i] = connectivity[1, n2]
+function genMakeConnect(mutating)
+    if !mutating
+        name = :makeConnect
+        arguments = quote
+            (links, maxConnect)
+        end
+        accumulator = quote
+            links = arguments[1]
+            maxConnect = arguments[2]
+            lenLinks = size(links, 2)
+            connectivity = zeros(Int, 1 + 2 * maxConnect, lenLinks)
+            linksConnect = zeros(Int, 2, lenLinks)
+        end
+        retVal = quote
+            return connectivity, linksConnect
+        end
+    else
+        name = :makeConnect!
+        arguments = quote
+            (network::DislocationNetwork)
+        end
+        accumulator = quote
+            network = arguments[1]
+            links = network.links
+            connectivity = network.connectivity
+            linksConnect = network.linksConnect
+            connectivity .= 0
+            linksConnect .= 0
+            lenLinks = size(links, 2)
+        end
+        retVal = quote
+            return nothing
+        end
     end
-    
-    return connectivity, linksConnect
+
+    ex = quote
+            function $name(arguments...)
+                $accumulator
+                # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
+                idx = findfirst(x -> x == 0, @view links[1, :])
+                isnothing(idx) ? idx = lenLinks : idx -= 1
+                # Loop through indices.
+                @inbounds @simd for i in 1:idx
+                    # Node 1, it is the row of the coord matrix.
+                    n1 = links[1, i]
+                    n2 = links[2, i]
+                    # Num of other nodes node n1 is connected to.
+                    connectivity[1, n1] += 1
+                    connectivity[1, n2] += 1
+                    # Next column for n1 in connectivity.
+                    tmp1 = 2 * connectivity[1, n1]
+                    tmp2 = 2 * connectivity[1, n2]
+                    # i = linkID. 1, 2 are the first and second nodes in link with linkID
+                    connectivity[tmp1:(tmp1 + 1), n1] .= (i, 1)
+                    connectivity[tmp2:(tmp2 + 1), n2] .= (i, 2)
+                    # Connectivity of the nodes in link i.
+                    linksConnect[1, i] = connectivity[1, n1]
+                    linksConnect[2, i] = connectivity[1, n2]
 end
-"""
-```
-makeConnect!(network::DislocationNetwork)
-```
-Mutates the `connectivity` and `linksConnect` matrices of `network`. Works the same as [`makeConnect`](@ref).
-"""
-function makeConnect!(network::DislocationNetwork)
-    # For comments see makeConnect. It is a 1-to-1 translation except that this one modifies the network in-place.
-    links = network.links
-    connectivity = network.connectivity
-    linksConnect = network.linksConnect
-    connectivity .= 0
-    linksConnect .= 0
-    lenLinks = size(links, 2)
-    idx = findfirst(x -> x == 0, @view links[1, :])
-    isnothing(idx) ? idx = lenLinks : idx -= 1
-    @inbounds @simd for i in 1:idx
-        n1 = links[1, i]
-        n2 = links[2, i]
-        connectivity[1, n1] += 1
-        connectivity[1, n2] += 1
-        tmp1 = 2 * connectivity[1, n1]
-        tmp2 = 2 * connectivity[1, n2]
-        connectivity[tmp1:(tmp1 + 1), n1] .= (i, 1)
-        connectivity[tmp2:(tmp2 + 1), n2] .= (i, 2)
-        linksConnect[1, i] = connectivity[1, n1]
-        linksConnect[2, i] = connectivity[1, n2]
-    end
-    
-    return nothing
+                return $retVal
 end
+        end
+    return ex
+end
+eval(genMakeConnect(true))
+eval(genMakeConnect(false))
 
 """
 ```
@@ -268,7 +269,7 @@ function getSegmentIdx(links, label)
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
     
-    numSeg::Int = 0 # Number of segments.
+    numSeg = 0 # Number of segments.
 
     # Loop through indices.
     @inbounds for i in 1:idx
@@ -280,7 +281,7 @@ function getSegmentIdx(links, label)
         numSeg += 1 # Increment index.
         # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
         segIdx[numSeg, :] .= (i, n1, n2)
-end
+    end
     
     return numSeg, segIdx
 end
@@ -302,13 +303,13 @@ function getSegmentIdx!(network::DislocationNetwork)
     
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
-    lNumSeg::Int = 0
+    lNumSeg = 0
     
     @inbounds for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
-        (label[n1] == extDln || label[n2] == extDln) && continue
-        lNumSeg += 1
+    (label[n1] == extDln || label[n2] == extDln) && continue
+    lNumSeg += 1
         segIdx[lNumSeg, :] .= (i, n1, n2)
     end
     
@@ -362,10 +363,10 @@ function checkNetwork(network::DislocationNetwork)
         connectivity[$(i), $(2 * (col + 1)):end] = $(connectivity[i, (2 * (col + 1)):end]))") :
         nothing
 
-        # Burgers vector conservation.
+            # Burgers vector conservation.
         bSum .= 0
         # No repeated links.
-        neighbours = -ones(Int, col)
+            neighbours = -ones(Int, col)
         for j in 1:col
             j2 = 2 * j
             iLink = connectivity[j2, i]     # Link ID.
@@ -375,7 +376,7 @@ function checkNetwork(network::DislocationNetwork)
             bSum .+= (3 - 2 * colLink) * staticBVec # Running total of burgers vectors.
 
             neighbours[j] = links[colOppLink, iLink] # Find neighbouring nodes.
-            push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
+        push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
 
             # Check that node does not appear twice in connectivity.
             @simd for k in (j + 1):col
