@@ -25,7 +25,7 @@ end
 ```
 Stores integration parameters.
 """
-struct IntegrationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10}
+struct IntegrationParameters{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}
     method::T1
     tmin::T2
     tmax::T3
@@ -48,7 +48,7 @@ end
 ```
 Store integration time and steps.
 """
-struct IntegrationTime{T1,T2,T3}
+struct IntegrationTime{T1, T2, T3}
     dt::T1
     time::T2
     step::T3

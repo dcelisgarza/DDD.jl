@@ -13,7 +13,7 @@ Ensures `slipPlane ⟂ bVec`.
 function SlipSystem(;
     crystalStruct::AbstractCrystalStruct,
     slipPlane::AbstractArray,
-    bVec::AbstractArray
+    bVec::AbstractArray,
 )
     if sum(slipPlane .!= 0) != 0 && sum(bVec .!= 0) != 0
         if ndims(slipPlane) == 1
@@ -101,7 +101,7 @@ function DislocationParameters(;
         virtualRemesh,
         parCPU,
         parGPU,
-)
+    )
 end
 
 """
@@ -137,10 +137,10 @@ function DislocationLoop(
     dist,
 )
     nodeTotal::Int = 0
-    links = zeros(MMatrix{2,nodeTotal,Int})
-    coord = zeros(MMatrix{3,nodeTotal})
-    slipPlane = zeros(MMatrix{3,0})
-    bVec = zeros(MMatrix{3,0})
+    links = zeros(MMatrix{2, nodeTotal, Int})
+    coord = zeros(MMatrix{3, nodeTotal})
+    slipPlane = zeros(MMatrix{3, 0})
+    bVec = zeros(MMatrix{3, 0})
 
     return DislocationLoop(
         loopType,
@@ -156,8 +156,8 @@ function DislocationLoop(
         coord,
         buffer,
         range,
-        dist
-)
+        dist,
+    )
 end
 """
 ```
@@ -223,23 +223,23 @@ function DislocationLoop(
     # Pick rotation axis for segments.
     # Shear loops rotate around slip plane vector. They have screw, mixed and edge segments.
     if typeof(loopType) == loopShear
-        rotAxis = SVector{3,elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
+        rotAxis = SVector{3, elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
         # Prismatic loops rotate around Burgers vector. All segments are edge.
     else
-        rotAxis = SVector{3,elemT}(_bVec[1], _bVec[2], _bVec[3])
+        rotAxis = SVector{3, elemT}(_bVec[1], _bVec[2], _bVec[3])
         # Catch all.
     end
 
     # Allocate arrays.
-    links = zeros(MMatrix{2,nodeTotal,Int})
-    coord = zeros(MMatrix{3,nodeTotal})
-    slipPlane = MMatrix{3,nodeTotal}(repeat(_slipPlane, inner = (1, numSegLen)))
-    bVec = MMatrix{3,nodeTotal}(repeat(_bVec, inner = (1, numSegLen)))
-    seg = zeros(MMatrix{3,numSegLen})
+    links = zeros(MMatrix{2, nodeTotal, Int})
+    coord = zeros(MMatrix{3, nodeTotal})
+    slipPlane = MMatrix{3, nodeTotal}(repeat(_slipPlane, inner = (1, numSegLen)))
+    bVec = MMatrix{3, nodeTotal}(repeat(_bVec, inner = (1, numSegLen)))
+    seg = zeros(MMatrix{3, numSegLen})
 
     # Create initial segments.
-    staticSlipPlane = SVector{3,elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
-    staticBVec = SVector{3,elemT}(_bVec[1], _bVec[2], _bVec[3])
+    staticSlipPlane = SVector{3, elemT}(_slipPlane[1], _slipPlane[2], _slipPlane[3])
+    staticBVec = SVector{3, elemT}(_bVec[1], _bVec[2], _bVec[3])
     @inbounds @simd for i in eachindex(segLen)
         seg[:, i] = makeSegment(segEdge(), staticSlipPlane, staticBVec) * segLen[i]
     end
@@ -247,13 +247,13 @@ function DislocationLoop(
     θ = externalAngle(numSides)  # External angle of a regular polygon with numSides.
 
     # Loop over polygon's sides.
-    origin = SVector{3,elemT}(0, 0, 0)
+    origin = SVector{3, elemT}(0, 0, 0)
     @inbounds for i in 1:numSides
         # Index for side i.
         idx = (i - 1) * nodeSide
         # Rotate segments by external angle of polygon to make polygonal loop.
         modIdx = mod(i - 1, numSegLen) + 1
-        staticSeg = SVector{3,elemT}(seg[1, modIdx], seg[2, modIdx], seg[3, modIdx])
+        staticSeg = SVector{3, elemT}(seg[1, modIdx], seg[2, modIdx], seg[3, modIdx])
         rseg = rot3D(staticSeg, rotAxis, origin, θ * (i - 1))
         # DO NOT add @simd, this loop works by adding rseg to the previous coordinate to make the loop. Loop over the nodes per side.
         for j in 1:nodeSide
@@ -294,7 +294,7 @@ function DislocationLoop(
         buffer,
         range,
         dist,
-)
+    )
 end
 """
 ```
@@ -341,7 +341,7 @@ function DislocationLoop(
         buffer,
         range,
         dist,
-)
+    )
 end
 """
 ```
@@ -386,9 +386,8 @@ function DislocationLoop(;
         label,
         buffer,
         range,
-        dist
+        dist,
     )
-
 end
 
 """
@@ -452,7 +451,7 @@ function DislocationNetwork(;
         nodeVel,
         nodeForce,
         segForce,
-)
+    )
 end
 """
 ```
@@ -483,7 +482,7 @@ function DislocationNetwork(
 )
     # Initialisation.
     nodeTotal::Int = 0
-    lims = zeros(MMatrix{3,2})
+    lims = zeros(MMatrix{3, 2})
     # Calculate node total.
     for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
@@ -503,7 +502,7 @@ function DislocationNetwork(
     numNode = nodeTotal
     numSeg = nodeTotal
     segForce = zeros(Float64, 3, 2, nodeBuffer)
-    
+
     initIdx = 1
     # Fill the matrices that will make up the network.
     makeNetwork!(
@@ -544,7 +543,7 @@ function DislocationNetwork(
 
     # Check that the network is generated properly.
     checkConsistency ? checkNetwork(network) : nothing
-    
+
     return network
 end
 """
@@ -569,16 +568,16 @@ function DislocationNetwork!(
     kw...,
 )
     # For comments see DislocationNetwork. It is a 1-to-1 translation except that this one modifies the network in-place.
-    
+
     iszero(network) && return DislocationNetwork(
         sources,
         args...;
         checkConsistency = checkConsistency,
         kw...,
     )
-    
+
     nodeTotal::Int = 0
-    lims = zeros(MMatrix{3,2})
+    lims = zeros(MMatrix{3, 2})
     for i in eachindex(sources)
         nodeTotal += sources[i].numLoops * length(sources[i].label)
     end
@@ -590,13 +589,13 @@ function DislocationNetwork!(
         newEntries = Int(round(nodeTotal * log2(nodeTotal)))
         network = push!(network, newEntries)
     end
-    
+
     links = network.links
     slipPlane = network.slipPlane
     bVec = network.bVec
     coord = network.coord
     label = network.label
-    
+
     # Since the network has already been created, initIdx is the next available index to store new data.
     initIdx::Int = 1
     first = findfirst(x -> x == noneDln, label)
@@ -614,10 +613,10 @@ function DislocationNetwork!(
         kw...,
     )
     network.numNode[1] += numNode
-    
+
     getSegmentIdx!(network)
     makeConnect!(network)
-    
+
     checkConsistency ? checkNetwork(network) : nothing
     return network
 end
@@ -675,7 +674,7 @@ function makeNetwork!(
             coord[:, idxi:idxf] = sources[i].coord[:, 1:nodesLoop]
             label[idxi:idxf] = sources[i].label[1:nodesLoop]
             # Map the normalised displacements to real space using the real limits and translate the nodes' coordinates accordingly.
-            staticDisp = SVector{3,elemT}(disp[1, j], disp[2, j], disp[3, j])
+            staticDisp = SVector{3, elemT}(disp[1, j], disp[2, j], disp[3, j])
             viewCoord = @view coord[:, idxi:idxf]
             translatePoints!(viewCoord, lims, staticDisp)
             nodeTotal += nodesLoop

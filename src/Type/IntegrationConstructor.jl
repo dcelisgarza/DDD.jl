@@ -28,17 +28,17 @@ function IntegrationParameters(;
     maxiter = 10,
 )
     return IntegrationParameters(
-            method,
-            tmin,
-            tmax,
-            dtmin,
-            dtmax,
-            abstol,
-            reltol,
-            maxchange,
-            exponent,
-            maxiter,
-        )
+        method,
+        tmin,
+        tmax,
+        dtmin,
+        dtmax,
+        abstol,
+        reltol,
+        maxchange,
+        exponent,
+        maxiter,
+    )
 end
 
 """

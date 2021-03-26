@@ -45,7 +45,7 @@ cd(@__DIR__)
         range = Float64[-100 100; -100 100; -100 100],
         dist = Zeros(),
     )
-    
+
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
 
     regularCuboidMesh = buildMesh(matParams, femParams)

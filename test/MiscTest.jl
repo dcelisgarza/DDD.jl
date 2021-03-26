@@ -35,47 +35,47 @@ cd(@__DIR__)
     @test compStruct(1, 1.2) == false
 
     planenorm = Float64[0, 0, 1]
-    planepnt  = Float64[0, 0, 5]
+    planepnt = Float64[0, 0, 5]
     raydir = Float64[0, -1, -2]
-    raypnt = Float64[0,  0, 10]
+    raypnt = Float64[0, 0, 10]
 
     ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
-    @test isapprox(ψ,  [0, -2.5, 5.0])
+    @test isapprox(ψ, [0, -2.5, 5.0])
 
     planenorm = Float64[0, 2, 1]
-    planepnt  = Float64[0, 0, 5]
+    planepnt = Float64[0, 0, 5]
     raydir = Float64[0, -1, -2]
-    raypnt = Float64[0,  0, 10]
+    raypnt = Float64[0, 0, 10]
     ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
     @test isapprox(ψ, [0.0, -1.25, 7.5])
 
     planenorm = Float64[0, 0, 1]
-    planepnt  = Float64[0, 0, 5]
+    planepnt = Float64[0, 0, 5]
     raydir = Float64[0, 1, 2]
-    raypnt = Float64[0,  0, 10]
+    raypnt = Float64[0, 0, 10]
 
     ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
-    @test isapprox(ψ,  [0, -2.5, 5.0])
+    @test isapprox(ψ, [0, -2.5, 5.0])
 
     planenorm = Float64[0, 0, 1]
-    planepnt  = Float64[0, 0, 5]
+    planepnt = Float64[0, 0, 5]
     raydir = Float64[0, 1, -2]
-    raypnt = Float64[0,  0, 10]
+    raypnt = Float64[0, 0, 10]
 
     ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
-    @test isapprox(ψ,  [0, 2.5, 5.0])
+    @test isapprox(ψ, [0, 2.5, 5.0])
 
     planenorm = Float64[0, 0, 1]
-    planepnt  = Float64[0, 0, 5]
+    planepnt = Float64[0, 0, 5]
     raydir = Float64[0, 1, 0]
-    raypnt = Float64[0,  0, 5]
+    raypnt = Float64[0, 0, 5]
     ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
     @test isinf(ψ)
 
     planenorm = Float64[0, 0, 1]
-    planepnt  = Float64[0, 0, 5]
+    planepnt = Float64[0, 0, 5]
     raydir = Float64[0, 1, 0]
-    raypnt = Float64[0,  0, 6]
+    raypnt = Float64[0, 0, 6]
     ψ = linePlaneIntersect(planenorm, planepnt, raydir, raypnt)
     @test isnothing(ψ)
 
@@ -153,7 +153,7 @@ cd(@__DIR__)
     y0, y1 = [1, 1, 0], [1.5, 0.5, 0.5]
     vx0, vx1 = zeros(3), zeros(3)
     vy0, vy1 = zeros(3), zeros(3)
-    distSq, dDistSqDt, L1, L2 =  minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
+    distSq, dDistSqDt, L1, L2 = minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
     @test (distSq, dDistSqDt, L1, L2) == (0.5, 0, 0.25, 0.5)
 
     x0, x1 = zeros(3), zeros(3)
@@ -172,7 +172,7 @@ end
         "srfFixDln" => nodeTypeDln(4),
         "extDln" => nodeTypeDln(5),
         "srfMobDln" => nodeTypeDln(3),
-        "tmpDln" => nodeTypeDln(6)
+        "tmpDln" => nodeTypeDln(6),
     )
 
     @test makeInstanceDict(nodeTypeDln) == dict

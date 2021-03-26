@@ -55,22 +55,22 @@ function calc_σTilde(
 
     numPoints = div(length(x0), 3)
     numPoints == 1 ? σ = zeros(6) : σ = zeros(6, numPoints)
-    
+
     # Loop over segments.
     @inbounds @simd for i in eachindex(idx)
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
-        n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        n1 = SVector{3, elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
+        n2 = SVector{3, elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
         t = normalize(n2 - n1)
         # Loop over grid points.
         for j in 1:numPoints
-            x = SVector{3,elemT}(x0[1, j], x0[2, j], x0[3, j])
+            x = SVector{3, elemT}(x0[1, j], x0[2, j], x0[3, j])
 
             R = x - n1
             Rdt = R ⋅ t
             nd = R - Rdt * t
             d2 = nd ⋅ nd
-            
+
             s1 = -Rdt
             s2 = -(x - n2) ⋅ t
             a2_d2 = a2 + d2
@@ -188,12 +188,42 @@ function calc_σTilde(
             I_25yz = common * tmtyz
             I_25xz = common * tmtxz
 
-            σ[1, j] += I_03xx * s_03 + I_13xx * s_13 + I_05xx * s_05 + I_15xx * s_15 + I_25xx * s_25
-            σ[2, j] += I_03yy * s_03 + I_13yy * s_13 + I_05yy * s_05 +  I_15yy * s_15 + I_25yy * s_25
-            σ[3, j] += I_03zz * s_03 + I_13zz * s_13 + I_05zz * s_05 + I_15zz * s_15 + I_25zz * s_25
-            σ[4, j] += I_03xy * s_03 + I_13xy * s_13 + I_05xy * s_05 + I_15xy * s_15 + I_25xy * s_25
-            σ[5, j] += I_03xz * s_03 + I_13xz * s_13 + I_05xz * s_05 + I_15xz * s_15 + I_25xz * s_25      
-            σ[6, j] += I_03yz * s_03 + I_13yz * s_13 + I_05yz * s_05 + I_15yz * s_15 + I_25yz * s_25
+            σ[1, j] +=
+                I_03xx * s_03 +
+                I_13xx * s_13 +
+                I_05xx * s_05 +
+                I_15xx * s_15 +
+                I_25xx * s_25
+            σ[2, j] +=
+                I_03yy * s_03 +
+                I_13yy * s_13 +
+                I_05yy * s_05 +
+                I_15yy * s_15 +
+                I_25yy * s_25
+            σ[3, j] +=
+                I_03zz * s_03 +
+                I_13zz * s_13 +
+                I_05zz * s_05 +
+                I_15zz * s_15 +
+                I_25zz * s_25
+            σ[4, j] +=
+                I_03xy * s_03 +
+                I_13xy * s_13 +
+                I_05xy * s_05 +
+                I_15xy * s_15 +
+                I_25xy * s_25
+            σ[5, j] +=
+                I_03xz * s_03 +
+                I_13xz * s_13 +
+                I_05xz * s_05 +
+                I_15xz * s_15 +
+                I_25xz * s_25
+            σ[6, j] +=
+                I_03yz * s_03 +
+                I_13yz * s_13 +
+                I_05yz * s_05 +
+                I_15yz * s_15 +
+                I_25yz * s_25
         end
     end
     return σ
@@ -239,7 +269,7 @@ function calc_σTilde!(
     νμ4πν = matParams.νμ4πν
     a2 = dlnParams.coreRadSq
     a2μ8π = a2 * μ8π
-    
+
     bVec = network.bVec
     coord = network.coord
     segIdx = network.segIdx
@@ -248,7 +278,7 @@ function calc_σTilde!(
 
     if isnothing(idx)
         numSeg = network.numSeg[1]
-    idx = 1:numSeg
+        idx = 1:numSeg
     end
 
     idxBvec = @view segIdx[idx, 1]
@@ -262,19 +292,19 @@ function calc_σTilde!(
 
     # Loop over segments.
     @inbounds @simd for i in eachindex(idx)
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
-        n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        n1 = SVector{3, elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
+        n2 = SVector{3, elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
         t = normalize(n2 - n1)
         # Loop over grid points.
         for j in 1:numPoints
-            x = SVector{3,elemT}(x0[1, j], x0[2, j], x0[3, j])
+            x = SVector{3, elemT}(x0[1, j], x0[2, j], x0[3, j])
 
             R = x - n1
             Rdt = R ⋅ t
             nd = R - Rdt * t
             d2 = nd ⋅ nd
-            
+
             s1 = -Rdt
             s2 = -(x - n2) ⋅ t
             a2_d2 = a2 + d2
@@ -392,14 +422,44 @@ function calc_σTilde!(
             I_25yz = common * tmtyz
             I_25xz = common * tmtxz
 
-            σ[1, j] += I_03xx * s_03 + I_13xx * s_13 + I_05xx * s_05 + I_15xx * s_15 + I_25xx * s_25
-            σ[2, j] += I_03yy * s_03 + I_13yy * s_13 + I_05yy * s_05 +  I_15yy * s_15 + I_25yy * s_25
-            σ[3, j] += I_03zz * s_03 + I_13zz * s_13 + I_05zz * s_05 + I_15zz * s_15 + I_25zz * s_25
-            σ[4, j] += I_03xy * s_03 + I_13xy * s_13 + I_05xy * s_05 + I_15xy * s_15 + I_25xy * s_25
-            σ[5, j] += I_03xz * s_03 + I_13xz * s_13 + I_05xz * s_05 + I_15xz * s_15 + I_25xz * s_25      
-            σ[6, j] += I_03yz * s_03 + I_13yz * s_13 + I_05yz * s_05 + I_15yz * s_15 + I_25yz * s_25
+            σ[1, j] +=
+                I_03xx * s_03 +
+                I_13xx * s_13 +
+                I_05xx * s_05 +
+                I_15xx * s_15 +
+                I_25xx * s_25
+            σ[2, j] +=
+                I_03yy * s_03 +
+                I_13yy * s_13 +
+                I_05yy * s_05 +
+                I_15yy * s_15 +
+                I_25yy * s_25
+            σ[3, j] +=
+                I_03zz * s_03 +
+                I_13zz * s_13 +
+                I_05zz * s_05 +
+                I_15zz * s_15 +
+                I_25zz * s_25
+            σ[4, j] +=
+                I_03xy * s_03 +
+                I_13xy * s_13 +
+                I_05xy * s_05 +
+                I_15xy * s_15 +
+                I_25xy * s_25
+            σ[5, j] +=
+                I_03xz * s_03 +
+                I_13xz * s_13 +
+                I_05xz * s_05 +
+                I_15xz * s_15 +
+                I_25xz * s_25
+            σ[6, j] +=
+                I_03yz * s_03 +
+                I_13yz * s_13 +
+                I_05yz * s_05 +
+                I_15yz * s_15 +
+                I_25yz * s_25
         end
-end
+    end
     return σ
 end
 
@@ -432,9 +492,8 @@ function calc_uTilde!(
     mesh::AbstractMesh,
     boundaries::Boundaries,
     matParams::MaterialParameters,
-    network::DislocationNetwork
+    network::DislocationNetwork,
 )
-
     uTilde = forceDisplacement.uTilde
     uTilde .= zero(eltype(uTilde))
 
@@ -463,12 +522,12 @@ function calc_uTilde!(
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
-    normals = faceNorm[:, 1:2:5]
+        normals = faceNorm[:, 1:2:5]
     else
         @warn "calc_uTilde! could use fewer normals for mesh of type $(typeof(mesh)), see $(@__LINE__)"
         normals = faceNorm
     end
-    
+
     surfNodeCons = spzeros(Int, numNode)
     @inbounds for i in 1:numSeg
         link1 = links[1, i]
@@ -485,11 +544,11 @@ function calc_uTilde!(
         intSeg::Bool = true
 
         # Coords of first node of the segment.
-        A = SVector{3,elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
+        A = SVector{3, elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
         # Coords of second node of the segment.
-        B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
+        B = SVector{3, elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
         # Segment's burgers vector.
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
 
         # Find external segments.
         if label[link1] == extDln || label[link2] == extDln
@@ -500,11 +559,13 @@ function calc_uTilde!(
             distMinC::elemT = Inf
             distMinTmpA::elemT = 0
             distMinTmpB::elemT = 0
-            intersectA = SVector{3,elemT}(Inf, Inf, Inf)
-            intersectB = SVector{3,elemT}(Inf, Inf, Inf)
+            intersectA = SVector{3, elemT}(Inf, Inf, Inf)
+            intersectB = SVector{3, elemT}(Inf, Inf, Inf)
             for j in 1:size(normals, 2)
-                distMinTmpA, intersectTmpA, missing = findIntersectVolume(mesh, normals[:, j], A)
-                distMinTmpB, intersectTmpB, missing = findIntersectVolume(mesh, normals[:, j], B)
+                distMinTmpA, intersectTmpA, missing =
+                    findIntersectVolume(mesh, normals[:, j], A)
+                distMinTmpB, intersectTmpB, missing =
+                    findIntersectVolume(mesh, normals[:, j], B)
                 if distMinTmpA < distMinA
                     distMinA = distMinTmpA
                     intersectA = intersectTmpA
@@ -557,36 +618,85 @@ function calc_uTilde!(
             surfConA = surfNodeCons[link1]
             surfConB = surfNodeCons[link2]
 
-            surfConA != 0 ? Aprime = SVector{3,elemT}(coordDln[1, surfConA], coordDln[2, surfConA], coordDln[3, surfConA]) : nothing
-            surfConB != 0 ? Bprime = SVector{3,elemT}(coordDln[1, surfConB], coordDln[2, surfConB], coordDln[3, surfConB]) : nothing
-            
+            surfConA != 0 ?
+            Aprime = SVector{3, elemT}(
+                coordDln[1, surfConA],
+                coordDln[2, surfConA],
+                coordDln[3, surfConA],
+            ) : nothing
+            surfConB != 0 ?
+            Bprime = SVector{3, elemT}(
+                coordDln[1, surfConB],
+                coordDln[2, surfConB],
+                coordDln[3, surfConB],
+            ) : nothing
+
             # Closure point for external loop.
             Cprime = (A + Bprime) / 2
         end
 
         # Use Barnett triangles to calculate displacements using a closure point.
         if intSeg
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C, b, uCoord)
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                matParams,
+                A,
+                B,
+                C,
+                b,
+                uCoord,
+            )
         else
             # For external loops close internal loop with a normal closure point and calculate the displacement for the external loop with an auxiliary closure point.
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, Bprime, C, b, uCoord)
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, A, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                Aprime,
+                Bprime,
+                C,
+                b,
+                uCoord,
+            )
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                Aprime,
+                A,
+                Cprime,
+                b,
+                uCoord,
+            )
             calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, Cprime, b, uCoord)
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, B, Bprime, Cprime, b, uCoord)
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, Bprime, Aprime, Cprime, b, uCoord) 
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                B,
+                Bprime,
+                Cprime,
+                b,
+                uCoord,
+            )
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                Bprime,
+                Aprime,
+                Cprime,
+                b,
+                uCoord,
+            )
         end
     end
 
     return nothing
 end
 function calc_uTilde(
-    forceDisplacement::ForceDisplacement,
     mesh::AbstractMesh,
     boundaries::Boundaries,
     matParams::MaterialParameters,
-    network::DislocationNetwork
+    network::DislocationNetwork,
 )
-
     C = mean(mesh.vertices.vertices)
 
     scale = mesh.scale
@@ -614,12 +724,12 @@ function calc_uTilde(
 
     if typeof(mesh) <: AbstractRegularCuboidMesh
         # We only need to check half the normals for a cuboid.
-    normals = faceNorm[:, 1:2:5]
+        normals = faceNorm[:, 1:2:5]
     else
         @warn "calc_uTilde! could use fewer normals for mesh of type $(typeof(mesh)), see $(@__LINE__)"
         normals = faceNorm
     end
-    
+
     surfNodeCons = spzeros(Int, numNode)
     @inbounds for i in 1:numSeg
         link1 = links[1, i]
@@ -636,11 +746,11 @@ function calc_uTilde(
         intSeg::Bool = true
 
         # Coords of first node of the segment.
-        A = SVector{3,elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
+        A = SVector{3, elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
         # Coords of second node of the segment.
-        B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
+        B = SVector{3, elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
         # Segment's burgers vector.
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
 
         # Find external segments.
         faceA = 0
@@ -656,11 +766,13 @@ function calc_uTilde(
             distMinTmpA::elemT = 0
             distMinTmpB::elemT = 0
 
-            intersectA = SVector{3,elemT}(Inf, Inf, Inf)
-            intersectB = SVector{3,elemT}(Inf, Inf, Inf)
+            intersectA = SVector{3, elemT}(Inf, Inf, Inf)
+            intersectB = SVector{3, elemT}(Inf, Inf, Inf)
             for j in 1:size(normals, 2)
-                distMinTmpA, intersectTmpA, faceA = findIntersectVolume(mesh, normals[:, j], A)
-                distMinTmpB, intersectTmpB, faceB = findIntersectVolume(mesh, normals[:, j], B)
+                distMinTmpA, intersectTmpA, faceA =
+                    findIntersectVolume(mesh, normals[:, j], A)
+                distMinTmpB, intersectTmpB, faceB =
+                    findIntersectVolume(mesh, normals[:, j], B)
                 if distMinTmpA < distMinA
                     distMinA = distMinTmpA
                     intersectA = intersectTmpA
@@ -713,23 +825,74 @@ function calc_uTilde(
             surfConA = surfNodeCons[link1]
             surfConB = surfNodeCons[link2]
 
-            surfConA != 0 ? Aprime = SVector{3,elemT}(coordDln[1, surfConA], coordDln[2, surfConA], coordDln[3, surfConA]) : nothing
-            surfConB != 0 ? Bprime = SVector{3,elemT}(coordDln[1, surfConB], coordDln[2, surfConB], coordDln[3, surfConB]) : nothing
-            
+            surfConA != 0 ?
+            Aprime = SVector{3, elemT}(
+                coordDln[1, surfConA],
+                coordDln[2, surfConA],
+                coordDln[3, surfConA],
+            ) : nothing
+            surfConB != 0 ?
+            Bprime = SVector{3, elemT}(
+                coordDln[1, surfConB],
+                coordDln[2, surfConB],
+                coordDln[3, surfConB],
+            ) : nothing
+
             # Closure point for external loop.
             Cprime = (A + Bprime) / 2
         end
 
         # Use Barnett triangles to calculate displacements using a closure point.
         if intSeg
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C, b, uCoord)
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                matParams,
+                A,
+                B,
+                C,
+                b,
+                uCoord,
+            )
         else
             # For external loops close internal loop with a normal closure point and calculate the displacement for the external loop with an auxiliary closure point.
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, Bprime, C, b, uCoord)
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, Aprime, A, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                Aprime,
+                Bprime,
+                C,
+                b,
+                uCoord,
+            )
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                Aprime,
+                A,
+                Cprime,
+                b,
+                uCoord,
+            )
             calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, Cprime, b, uCoord)
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, B, Bprime, Cprime, b, uCoord)
-            calcDisplacementDislocationTriangle!(uTilde, uDofs, Bprime, Aprime, Cprime, b, uCoord)
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                B,
+                Bprime,
+                Cprime,
+                b,
+                uCoord,
+            )
+            calcDisplacementDislocationTriangle!(
+                uTilde,
+                uDofs,
+                Bprime,
+                Aprime,
+                Cprime,
+                b,
+                uCoord,
+            )
         end
     end
     return uTilde
@@ -768,15 +931,15 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
 
     @inbounds @simd for i in 1:size(P, 2)
         # Local R vectors.
-        Pi = SVector{3,elemT}(P[1, i], P[2, i], P[3, i])
-        
+        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
+
         RA = A - Pi
         RB = B - Pi
         RC = C - Pi
 
         RAn, RA = safeNorm(RA)
         RBn, RB = safeNorm(RB)
-        RCn, RC = safeNorm(RC)  
+        RCn, RC = safeNorm(RC)
 
         # Compute fs
         fAB = (b × AB) * log((RBn / RAn) * (1 + RB ⋅ AB) / (1 + RA ⋅ AB))
@@ -797,11 +960,14 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
         θc = acos(RCdRA)
         θ = (θa + θb + θc) / 2
 
-        factor = max(tan(θ / 2) * tan((θ - θa) / 2) * tan((θ - θb) / 2)  * tan((θ - θc) / 2), 0)
+        factor =
+            max(tan(θ / 2) * tan((θ - θa) / 2) * tan((θ - θb) / 2) * tan((θ - θc) / 2), 0)
         ω = 4 * atan(sqrt(factor))
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
-        u = -b * ω / (4 * π) - om2νomνInv8π * (fAB + fBC + fCA) + omνInv8π * (gAB + gBC + gCA)
+        u =
+            -b * ω / (4 * π) - om2νomνInv8π * (fAB + fBC + fCA) +
+            omνInv8π * (gAB + gBC + gCA)
         idx = 3 * i
         uTilde[uDofs[idx - 2]] += u[1]
         uTilde[uDofs[idx - 1]] += u[2]
@@ -821,15 +987,15 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
 
     @inbounds @simd for i in 1:size(P, 2)
         # Local R vectors.
-        Pi = SVector{3,elemT}(P[1, i], P[2, i], P[3, i])
-        
+        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
+
         RA = A - Pi
         RB = B - Pi
         RC = C - Pi
 
         missing, RA = safeNorm(RA)
         missing, RB = safeNorm(RB)
-        missing, RC = safeNorm(RC)  
+        missing, RC = safeNorm(RC)
 
         # Compute gs
         RAdRB = clamp(RA ⋅ RB, -1, 1)
@@ -842,7 +1008,8 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
         θc = acos(RCdRA)
         θ = (θa + θb + θc) / 2
 
-        factor = max(tan(θ / 2) * tan((θ - θa) / 2) * tan((θ - θb) / 2)  * tan((θ - θc) / 2), 0)
+        factor =
+            max(tan(θ / 2) * tan((θ - θa) / 2) * tan((θ - θb) / 2) * tan((θ - θc) / 2), 0)
         ω = 4 * atan(sqrt(factor))
         ω = -sign(RA ⋅ (CA × AB)) * ω
 
@@ -852,8 +1019,7 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
         uTilde[uDofs[idx - 2]] += u[1]
         uTilde[uDofs[idx - 1]] += u[2]
         uTilde[uDofs[idx]] += u[3]
-end
+    end
 
     return nothing
 end
-

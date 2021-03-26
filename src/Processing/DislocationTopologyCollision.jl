@@ -1,9 +1,8 @@
 function detectCollision(
-    dlnParams::DislocationParameters, 
-    network::DislocationNetwork, 
-    skipSegs
+    dlnParams::DislocationParameters,
+    network::DislocationNetwork,
+    skipSegs,
 )
-
     collisionDistSq = dlnParams.collisionDistSq
     label = network.label
     numNode = network.numNode[1]
@@ -31,66 +30,73 @@ function detectCollision(
             # Find connected node.
             link1, rowColLink1, connectedNode1 = findConnectedNode(network, i, j)
             # Make t vector.
-            tVec = SVector{3,elemT}(
+            tVec = SVector{3, elemT}(
                 coord[1, i] - coord[1, connectedNode1],
                 coord[2, i] - coord[2, connectedNode1],
-                coord[3, i] - coord[3, connectedNode1]
+                coord[3, i] - coord[3, connectedNode1],
             )
             # Square of the norm.
             tVecN1 = tVec ⋅ tVec
 
             # Other connections.
-            for k in j + 1:connectivity[1, i]
+            for k in (j + 1):connectivity[1, i]
                 link2, rowColLink2, connectedNode2 = findConnectedNode(network, i, k)
-                tVec = SVector{3,elemT}(
-                        coord[1, i] - coord[1, connectedNode2],
-                        coord[2, i] - coord[2, connectedNode2],
-                        coord[3, i] - coord[3, connectedNode2]
-                    )
+                tVec = SVector{3, elemT}(
+                    coord[1, i] - coord[1, connectedNode2],
+                    coord[2, i] - coord[2, connectedNode2],
+                    coord[3, i] - coord[3, connectedNode2],
+                )
                 tVecN2 = tVec ⋅ tVec
 
                 # We collapse one of the lines into a point, we want to make sure we collapse the smallest distance so the distance calculation is the actual minimum.
-                tVecN1 < tVecN2 ? begin 
-                    link2, rowColLink2, connectedNode2, tVecN2, link1, rowColLink1, connectedNode1, tVecN1 = link1, rowColLink1, connectedNode1, tVecN1, link2, rowColLink2, connectedNode2, tVecN2 
+                tVecN1 < tVecN2 ?
+                begin
+                    link2,
+                    rowColLink2,
+                    connectedNode2,
+                    tVecN2,
+                    link1,
+                    rowColLink1,
+                    connectedNode1,
+                    tVecN1 = link1,
+                    rowColLink1,
+                    connectedNode1,
+                    tVecN1,
+                    link2,
+                    rowColLink2,
+                    connectedNode2,
+                    tVecN2
                 end : nothing
 
                 # tVecN1 should now be bigger than tVecN2. i is the hinge node.
-                x0 = SVector{3,elemT}(
-                        coord[1, i],
-                        coord[2, i],
-                        coord[3, i]
-                    )
-                vx0 = SVector{3,elemT}(
-                        nodeVel[1, i],
-                        nodeVel[2, i],
-                        nodeVel[3, i]
-                    )
+                x0 = SVector{3, elemT}(coord[1, i], coord[2, i], coord[3, i])
+                vx0 = SVector{3, elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
 
-                x1 = SVector{3,elemT}(
-                        coord[1, connectedNode1],
-                        coord[2, connectedNode1],
-                        coord[3, connectedNode1]
-                    )
-                vx1 = SVector{3,elemT}(
-                        nodeVel[1, connectedNode1],
-                        nodeVel[2, connectedNode1],
-                        nodeVel[3, connectedNode1]
-                    )
+                x1 = SVector{3, elemT}(
+                    coord[1, connectedNode1],
+                    coord[2, connectedNode1],
+                    coord[3, connectedNode1],
+                )
+                vx1 = SVector{3, elemT}(
+                    nodeVel[1, connectedNode1],
+                    nodeVel[2, connectedNode1],
+                    nodeVel[3, connectedNode1],
+                )
 
                 # We collapse the other segment into a point.
-                y0 = SVector{3,elemT}(
-                        coord[1, connectedNode2],
-                        coord[2, connectedNode2],
-                        coord[3, connectedNode2]
-                    )
-                vy0 = SVector{3,elemT}(
-                        nodeVel[1, connectedNode2],
-                        nodeVel[2, connectedNode2],
-                        nodeVel[3, connectedNode2]
-                    )
-                
+                y0 = SVector{3, elemT}(
+                    coord[1, connectedNode2],
+                    coord[2, connectedNode2],
+                    coord[3, connectedNode2],
+                )
+                vy0 = SVector{3, elemT}(
+                    nodeVel[1, connectedNode2],
+                    nodeVel[2, connectedNode2],
+                    nodeVel[3, connectedNode2],
+                )
+
                 skip = false
-                for k = 1:length(skipSegs)
+                for k in 1:length(skipSegs)
                     s1Tmp, s2Tmp = skipSegs[k]
                     if link1 == s1Tmp && link2 == s2Tmp || link1 == s2Tmp && link2 == s1Tmp
                         skip = true
@@ -100,9 +106,8 @@ function detectCollision(
 
                 skip && continue
 
-                distSq, dDistSqDt, L1, L2 = minimumDistance(
-                    x0, x1, y0, y0, vx0, vx1, vy0, vy0
-                )
+                distSq, dDistSqDt, L1, L2 =
+                    minimumDistance(x0, x1, y0, y0, vx0, vx1, vy0, vy0)
 
                 if distSq < collisionDistSq && dDistSqDt < -eps(elemT)
                     smallestMinDistTmp = 1 / distSq
@@ -134,35 +139,15 @@ function detectCollision(
 
         (label1 ∉ mobileNodes || label2 ∉ mobileNodes) && continue
 
-        x0 = SVector{3,elemT}(
-                coord[1, n1s1_i],
-                coord[2, n1s1_i],
-                coord[3, n1s1_i]
-            )
-        vx0 = SVector{3,elemT}(
-                nodeVel[1, n1s1_i],
-                nodeVel[2, n1s1_i],
-                nodeVel[3, n1s1_i]
-            )
-                
-        x1 = SVector{3,elemT}(
-                coord[1, n2s1_i],
-                coord[2, n2s1_i],
-                coord[3, n2s1_i]
-            )
-        vx1 = SVector{3,elemT}(
-                nodeVel[1, n2s1_i],
-                nodeVel[2, n2s1_i],
-                nodeVel[3, n2s1_i]
-            )
-        
-        bi = SVector{3,elemT}(
-                bVec[1, i],
-                bVec[2, i],
-                bVec[3, i]
-            )
+        x0 = SVector{3, elemT}(coord[1, n1s1_i], coord[2, n1s1_i], coord[3, n1s1_i])
+        vx0 = SVector{3, elemT}(nodeVel[1, n1s1_i], nodeVel[2, n1s1_i], nodeVel[3, n1s1_i])
 
-        for j in i + 1:numSeg
+        x1 = SVector{3, elemT}(coord[1, n2s1_i], coord[2, n2s1_i], coord[3, n2s1_i])
+        vx1 = SVector{3, elemT}(nodeVel[1, n2s1_i], nodeVel[2, n2s1_i], nodeVel[3, n2s1_i])
+
+        bi = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+
+        for j in (i + 1):numSeg
             n1s2_j = links[1, j]
             n2s2_j = links[2, j]
 
@@ -170,42 +155,38 @@ function detectCollision(
             if n1s1_i != n1s2_j && n1s1_i != n2s2_j && n2s1_i != n1s2_j && n2s1_i != n2s2_j
                 label1 = label[n1s2_j]
                 label2 = label[n2s2_j]
-                
+
                 (label1 ∉ mobileNodes || label2 ∉ mobileNodes) && continue
-            
-                y0 = SVector{3,elemT}(
-                    coord[1, n1s2_j],
-                    coord[2, n1s2_j],
-                    coord[3, n1s2_j]
-                )
-                vy0 = SVector{3,elemT}(
+
+                y0 = SVector{3, elemT}(coord[1, n1s2_j], coord[2, n1s2_j], coord[3, n1s2_j])
+                vy0 = SVector{3, elemT}(
                     nodeVel[1, n1s2_j],
                     nodeVel[2, n1s2_j],
-                    nodeVel[3, n1s2_j]
+                    nodeVel[3, n1s2_j],
                 )
-                    
-                y1 = SVector{3,elemT}(
-                    coord[1, n2s2_j],
-                    coord[2, n2s2_j],
-                    coord[3, n2s2_j]
-                )
-                vy1 = SVector{3,elemT}(
+
+                y1 = SVector{3, elemT}(coord[1, n2s2_j], coord[2, n2s2_j], coord[3, n2s2_j])
+                vy1 = SVector{3, elemT}(
                     nodeVel[1, n2s2_j],
                     nodeVel[2, n2s2_j],
-                    nodeVel[3, n2s2_j]
+                    nodeVel[3, n2s2_j],
                 )
-            
-                bj = SVector{3,elemT}(
-                    bVec[1, j],
-                    bVec[2, j],
-                    bVec[3, j]
-                )
+
+                bj = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
 
                 # Stop superdislocations from forming.
-                (((bi - bj) ⋅ (bi - bj) < eps(elemT) && (x1 - x0) ⋅ (y1 - y0) > eps(elemT)) || ((bi + bj) ⋅ (bi + bj) < eps(elemT) && (x1 - x0) ⋅ (y1 - y0) < eps(elemT))) && continue
+                (
+                    (
+                        (bi - bj) ⋅ (bi - bj) < eps(elemT) &&
+                        (x1 - x0) ⋅ (y1 - y0) > eps(elemT)
+                    ) || (
+                        (bi + bj) ⋅ (bi + bj) < eps(elemT) &&
+                        (x1 - x0) ⋅ (y1 - y0) < eps(elemT)
+                    )
+                ) && continue
 
                 skip = false
-                for k = 1:length(skipSegs)
+                for k in 1:length(skipSegs)
                     s1Tmp, s2Tmp = skipSegs[k]
                     if i == s1Tmp && j == s2Tmp || i == s2Tmp && j == s1Tmp
                         skip = true
@@ -215,9 +196,8 @@ function detectCollision(
 
                 skip && continue
 
-                distSq, dDistSqDt, L1, L2 = minimumDistance(
-                    x0, x1, y0, y1, vx0, vx1, vy0, vy1
-                )
+                distSq, dDistSqDt, L1, L2 =
+                    minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
 
                 if distSq < collisionDistSq && dDistSqDt < -eps(elemT)
                     smallestMinDistTmp = 1 / distSq
@@ -246,7 +226,15 @@ function resolveCollision(
     mesh::AbstractMesh,
     forceDisplacement::ForceDisplacement,
     network::DislocationNetwork,
-    collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2, L1, L2
+    collisionType,
+    n1s1,
+    n2s1,
+    n1s2,
+    n2s2,
+    s1,
+    s2,
+    L1,
+    L2,
 )
     collisionDist = dlnParams.collisionDist
     collisionDistSq = dlnParams.collisionDistSq
@@ -260,7 +248,7 @@ function resolveCollision(
     mergeNode1 = 0
 
     # Identify closeness to node in segment 1 is the same in both collision types.
-    tVec = SVector{3,elemT}(
+    tVec = SVector{3, elemT}(
         coord[1, n2s1] - coord[1, n1s1],
         coord[2, n2s1] - coord[2, n1s1],
         coord[3, n2s1] - coord[3, n1s1],
@@ -285,32 +273,22 @@ function resolveCollision(
                 L1 = 1 - collisionDist / sqrt(tVec)
             end
 
-            midCoord = SVector{3,elemT}(
-                coord[1, n1s1],
-                coord[2, n1s1],
-                coord[3, n1s1],
-            ) * (1 - L1) + SVector{3,elemT}(
-                coord[1, n2s1],
-                coord[2, n2s1],
-                coord[3, n2s1],
-            ) * L1
+            midCoord =
+                SVector{3, elemT}(coord[1, n1s1], coord[2, n1s1], coord[3, n1s1]) *
+                (1 - L1) +
+                SVector{3, elemT}(coord[1, n2s1], coord[2, n2s1], coord[3, n2s1]) * L1
 
-            midVel = SVector{3,elemT}(
-                nodeVel[1, n1s1],
-                nodeVel[2, n1s1],
-                nodeVel[3, n1s1],
-            ) * (1 - L1) + SVector{3,elemT}(
-                nodeVel[1, n2s1],
-                nodeVel[2, n2s1],
-                nodeVel[3, n2s1],
-            ) * L1
+            midVel =
+                SVector{3, elemT}(nodeVel[1, n1s1], nodeVel[2, n1s1], nodeVel[3, n1s1]) *
+                (1 - L1) +
+                SVector{3, elemT}(nodeVel[1, n2s1], nodeVel[2, n2s1], nodeVel[3, n2s1]) * L1
 
             splitNode!(network, splitNode, splitConnect, midCoord, midVel)
             mergeNode1 = network.numNode[1]
         end
 
         # Second node to merge.
-        tVec = SVector{3,elemT}(
+        tVec = SVector{3, elemT}(
             coord[1, n2s2] - coord[1, n1s2],
             coord[2, n2s2] - coord[2, n1s2],
             coord[3, n2s2] - coord[3, n1s2],
@@ -334,25 +312,15 @@ function resolveCollision(
                 L2 = 1 - collisionDist / sqrt(tVec)
             end
 
-            midCoord = SVector{3,elemT}(
-                coord[1, n1s2],
-                coord[2, n1s2],
-                coord[3, n1s2],
-            ) * (1 - L2) + SVector{3,elemT}(
-                coord[1, n2s2],
-                coord[2, n2s2],
-                coord[3, n2s2],
-            ) * L2
+            midCoord =
+                SVector{3, elemT}(coord[1, n1s2], coord[2, n1s2], coord[3, n1s2]) *
+                (1 - L2) +
+                SVector{3, elemT}(coord[1, n2s2], coord[2, n2s2], coord[3, n2s2]) * L2
 
-            midVel = SVector{3,elemT}(
-                nodeVel[1, n1s2],
-                nodeVel[2, n1s2],
-                nodeVel[3, n1s2],
-            ) * (1 - L2) + SVector{3,elemT}(
-                nodeVel[1, n2s2],
-                nodeVel[2, n2s2],
-                nodeVel[3, n2s2],
-            ) * L2
+            midVel =
+                SVector{3, elemT}(nodeVel[1, n1s2], nodeVel[2, n1s2], nodeVel[3, n1s2]) *
+                (1 - L2) +
+                SVector{3, elemT}(nodeVel[1, n2s2], nodeVel[2, n2s2], nodeVel[3, n2s2]) * L2
 
             splitNode!(network, splitNode, splitConnect, midCoord, midVel)
             mergeNode2 = network.numNode[1]
@@ -366,16 +334,16 @@ function resolveCollision(
         for i in 1:c
             link = connectivity[2 * i, mergeNode1]
             pos = connectivity[2 * i + 1, mergeNode1]
-            force += SVector{3,elemT}(
-                    segForce[1, 3 - pos, link],
-                    segForce[2, 3 - pos, link],
-                    segForce[3, 3 - pos, link]
-                )
+            force += SVector{3, elemT}(
+                segForce[1, 3 - pos, link],
+                segForce[2, 3 - pos, link],
+                segForce[3, 3 - pos, link],
+            )
         end
-        nodeVelTmp = SVector{3,elemT}(
+        nodeVelTmp = SVector{3, elemT}(
             nodeVel[1, mergeNode1],
             nodeVel[2, mergeNode1],
-            nodeVel[3, mergeNode1]
+            nodeVel[3, mergeNode1],
         )
         powerPreCollision = 1.05 * nodeVelTmp ⋅ force
 
@@ -385,21 +353,18 @@ function resolveCollision(
         for i in 1:c
             link = connectivity[2 * i, mergeNode2]
             pos = connectivity[2 * i + 1, mergeNode2]
-            force += SVector{3,elemT}(
-                    segForce[1, 3 - pos, link],
-                    segForce[2, 3 - pos, link],
-                    segForce[3, 3 - pos, link]
-                )
+            force += SVector{3, elemT}(
+                segForce[1, 3 - pos, link],
+                segForce[2, 3 - pos, link],
+                segForce[3, 3 - pos, link],
+            )
         end
-        nodeVelTmp = SVector{3,elemT}(
+        nodeVelTmp = SVector{3, elemT}(
             nodeVel[1, mergeNode2],
             nodeVel[2, mergeNode2],
-            nodeVel[3, mergeNode2]
+            nodeVel[3, mergeNode2],
         )
         powerPreCollision += 1.05 * nodeVelTmp ⋅ force
-
-        
-
 
     elseif collisionType == :hinge
     end

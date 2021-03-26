@@ -104,7 +104,7 @@ Stores the finite element parameters.
 - `my`: Elements in y
 - `mz`: Elements in z
 """
-struct FEMParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9}
+struct FEMParameters{T1, T2, T3, T4, T5, T6, T7, T8, T9}
     type::T1
     order::T2
     model::T3
@@ -174,7 +174,32 @@ Stores regular a cuboid mesh.
 - `connectivity`: Node connectivity
 - `K`: Stiffness matrix
 """
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{
+    T1,
+    T2,
+    T3,
+    T4,
+    T5,
+    T6,
+    T7,
+    T8,
+    T9,
+    T10,
+    T11,
+    T12,
+    T13,
+    T14,
+    T15,
+    T16,
+    T17,
+    T18,
+    T19,
+    T20,
+    T21,
+    T22,
+    T23,
+    T24,
+} <: AbstractRegularCuboidMesh
     order::T1
     dx::T2
     dy::T3
@@ -223,7 +248,7 @@ Stores displacements and forces applied on the FE nodes.
 - `fHat`: Corrective forces
 - `f`: Forces
 """
-struct ForceDisplacement{T1,T2,T3,T4,T5,T6}
+struct ForceDisplacement{T1, T2, T3, T4, T5, T6}
     uTilde::T1
     uHat::T2
     u::T3
@@ -250,7 +275,7 @@ Loading and displacement rate. Stores the degrees of freedom on which the loadin
 - `fDotDofs`: degrees of freedom on which a load is applied
 - `fDot`: loading rate
 """
-struct ForceDisplacementDot{T1,T2,T3,T4}
+struct ForceDisplacementDot{T1, T2, T3, T4}
     uDotDofs::T1
     uDot::T2
     fDotDofs::T3
@@ -291,7 +316,7 @@ Stores the nodes and degrees of freedom upon which the different boundary condit
 - `mDofs0`: Degrees of feedom with specified displacements and tractions
 - `tK1`: Stiffness matrix of traction degrees of freedom
 """
-struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12}
+struct Boundaries{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}
     noExit::T1
     uGammaDln::T2
     tGammaDln::T3
@@ -316,7 +341,7 @@ end
 ```
 Stores corresponding type, indices and node number of boundary nodes.
 """
-struct BoundaryNode{T1,T2,T3}
+struct BoundaryNode{T1, T2, T3}
     type::T1
     index::T2
     node::T3

@@ -34,7 +34,7 @@ end
     dNdSall =
         shapeFunctionDeriv(LinearQuadrangle3D(), points[:, 1], points[:, 2], points[:, 3])
     checkSum = sum.(dNdSall, dims = 2)
-    for i = 1:size(points, 1)
+    for i in 1:size(points, 1)
         @test vec(checkSum[i]) == SVector(0.0, 0.0, 0.0)
 
         N = shapeFunction(LinearQuadrangle3D(), points[i, 1], points[i, 2], points[i, 3])
@@ -89,16 +89,21 @@ end
         0 0 0 0 1.000000000000000 0
         0 0 0 0 0 1.000000000000000
     ]
-    vertices = reshape(collect(Iterators.flatten(regularCuboidMesh.vertices.vertices)), 3, 8)
+    vertices =
+        reshape(collect(Iterators.flatten(regularCuboidMesh.vertices.vertices)), 3, 8)
     faces = regularCuboidMesh.faces
     normals = regularCuboidMesh.faceNorm
 
     @test isapprox(vertices', testVertices)
-    
+
     faceCoord = vertices[:, faces]
     p = faceCoord[:, 2, :] - faceCoord[:, 1, :]
     q = faceCoord[:, 3, :] - faceCoord[:, 1, :]
-    n = reshape(collect(Iterators.flatten([normalize(p[:,i] × q[:,i]) for i in 1:size(p, 2)])), 3, 6)
+    n = reshape(
+        collect(Iterators.flatten([normalize(p[:, i] × q[:, i]) for i in 1:size(p, 2)])),
+        3,
+        6,
+    )
     @test isapprox(n, normals)
 
     @test isapprox(regularCuboidMesh.C, testC)
@@ -196,7 +201,6 @@ end
         CartesianIndex(1918, 1275)
     ]
     @test isapprox(K[idxK], KTest)
-
 end
 
 @testset "Boundary conditions" begin
@@ -227,16 +231,28 @@ end
 
     numNode = regularCuboidMesh.numNode
     numNode3 = numNode * 3
-    uGamma = BoundaryNode(type = nodeTypeFE(1),# Type
-                    index = :x0y0z0, # Index
-                    node = cornerNode[:x0y0z0])
-    tGamma = BoundaryNode(type = nodeTypeFE(2),# Type
-                    index = :x_y0z1, # Index
-                    node = edgeNode[:x_y0z1]) 
-    mGamma = BoundaryNode(type = nodeTypeFE(3),# Type
-                    index = :xy_z0, # Index
-                    node = faceNode[:xy_z0])
-    testGamma, testForceDisp = Boundaries(femParams, regularCuboidMesh; uGamma = uGamma, tGamma = tGamma, mGamma = mGamma)
+    uGamma = BoundaryNode(
+        type = nodeTypeFE(1),# Type
+        index = :x0y0z0, # Index
+        node = cornerNode[:x0y0z0],
+    )
+    tGamma = BoundaryNode(
+        type = nodeTypeFE(2),# Type
+        index = :x_y0z1, # Index
+        node = edgeNode[:x_y0z1],
+    )
+    mGamma = BoundaryNode(
+        type = nodeTypeFE(3),# Type
+        index = :xy_z0, # Index
+        node = faceNode[:xy_z0],
+    )
+    testGamma, testForceDisp = Boundaries(
+        femParams,
+        regularCuboidMesh;
+        uGamma = uGamma,
+        tGamma = tGamma,
+        mGamma = mGamma,
+    )
     @test compStruct(uGamma, testGamma.uGamma; verbose = true)
     @test compStruct(tGamma, testGamma.tGamma; verbose = true)
     @test compStruct(mGamma, testGamma.mGamma; verbose = true)

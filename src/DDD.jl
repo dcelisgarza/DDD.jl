@@ -1,7 +1,16 @@
 module DDD
 
 using LinearAlgebra,
-    SparseArrays, SuiteSparse, Plots, Statistics, InteractiveUtils, JSON, StaticArrays, FileIO, LazySets, FastGaussQuadrature
+    SparseArrays,
+    SuiteSparse,
+    Plots,
+    Statistics,
+    InteractiveUtils,
+    JSON,
+    StaticArrays,
+    FileIO,
+    LazySets,
+    FastGaussQuadrature
 
 # Miscelaneous.
 include("./Misc/Misc.jl")
@@ -97,7 +106,11 @@ export plotNodes, plotNodes!, plotFEDomain
 
 include("./IO/IOBase.jl")
 export loadJSON,
-    loadDislocationParameters, loadMaterialParameters, loadIntegrationParameters, loadBoundaries, loadForceDisplacement
+    loadDislocationParameters,
+    loadMaterialParameters,
+    loadIntegrationParameters,
+    loadBoundaries,
+    loadForceDisplacement
 export loadSlipSystem, loadDislocationLoop, loadParameters
 export loadDislocationLoop, loadNetwork, loadIntegrationTime
 export loadFEMParameters

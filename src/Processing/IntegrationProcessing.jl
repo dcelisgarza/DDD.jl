@@ -57,7 +57,7 @@ function deriv!(
                 normalize!(conNodes)
             end
             # Vector rejection to remove velocity in the direction of the surface normal.
-        nodeVel[:, node] -= @views (nodeVel[:, node] ⋅ conNodes) * conNodes
+            nodeVel[:, node] -= @views (nodeVel[:, node] ⋅ conNodes) * conNodes
         end
     end
 
@@ -79,7 +79,11 @@ integrate!(
 Integrates nodal velocities using a time-adaptive Euler-Trapezoid method.
 """
 function integrate!(
-    intParams::IntegrationParameters{T1,T2,T3} where {T1 <: AdaptiveEulerTrapezoid,T2,T3},
+    intParams::IntegrationParameters{
+        T1,
+        T2,
+        T3,
+    } where {T1 <: AdaptiveEulerTrapezoid, T2, T3},
     intVars::IntegrationTime,
     dlnParams::DislocationParameters,
     matParams::MaterialParameters,
@@ -130,33 +134,32 @@ function integrate!(
 
         # Calculate the error with Euler trapezoid method.
         err = @views distance - (nodeVel[:, idx] + initVel) / 2 * dt
-        maxErr = maximum(abs.(err))        
+        maxErr = maximum(abs.(err))
 
         if dt <= dtmin
             counter = maxiter + 1
-        # Check if errors are under the tolerances.
+            # Check if errors are under the tolerances.
         elseif maxDist < abstol && maxErr < reltol
             dtOld = dt
             factor =
-            maxchange *
-            (1 / (1 + (maxchange^exponent - 1) * (maxErr / reltol)))^(1 / exponent)
+                maxchange *
+                (1 / (1 + (maxchange^exponent - 1) * (maxErr / reltol)))^(1 / exponent)
             # If the errors are under the tolerances, increase the time step.
             dtOldGood = true
             dt = min(dt * factor, dtmax)
             counter += 1
-        # If the errors are over the tolerances, check if the previous time step is good.
+            # If the errors are over the tolerances, check if the previous time step is good.
         elseif dtOldGood
             dt = dtOld
             counter = maxiter
-        # If it wasn't, make the timestep smaller.
+            # If it wasn't, make the timestep smaller.
         else
             dt = dt / 2
         end
-        
+
         if counter > maxiter || dt == dtmax
             convergent = true
         end
-
     end
 
     intVars = IntegrationTime(dt, time + dt, step + 1)

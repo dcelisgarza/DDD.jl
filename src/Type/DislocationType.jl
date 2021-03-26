@@ -82,12 +82,12 @@ These types are used to automatically generate dislocation loops for simulation 
 abstract type AbstractDlnStr end
 struct loopPrism <: AbstractDlnStr end
 struct loopShear <: AbstractDlnStr end
-const loopPure = Union{loopPrism,loopShear}
+const loopPure = Union{loopPrism, loopShear}
 struct loopMixed <: AbstractDlnStr end
 struct loopJog <: AbstractDlnStr end
 struct loopKink <: AbstractDlnStr end
-const loopImpure = Union{loopMixed,loopJog,loopKink}
-const loopDefined = Union{loopPure,loopImpure}
+const loopImpure = Union{loopMixed, loopJog, loopKink}
+const loopDefined = Union{loopPure, loopImpure}
 struct loopDln <: AbstractDlnStr end
 
 """
@@ -139,7 +139,7 @@ end
 ```
 Stores slip systems. 
 """
-struct SlipSystem{T1,T2,T3}
+struct SlipSystem{T1, T2, T3}
     crystalStruct::T1
     slipPlane::T2
     bVec::T3
@@ -202,7 +202,32 @@ Stores the dislocation parameters.
 - `parCPU`: parallelise over CPU flag
 - `parGPU`: parallelise over GPU flag
 """
-struct DislocationParameters{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24}
+struct DislocationParameters{
+    T1,
+    T2,
+    T3,
+    T4,
+    T5,
+    T6,
+    T7,
+    T8,
+    T9,
+    T10,
+    T11,
+    T12,
+    T13,
+    T14,
+    T15,
+    T16,
+    T17,
+    T18,
+    T19,
+    T20,
+    T21,
+    T22,
+    T23,
+    T24,
+}
     mobility::T1
     dragCoeffs::T2
     coreRad::T3
@@ -250,7 +275,7 @@ end
 ```
 Stores a dislocation loop.
 """
-struct DislocationLoop{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
+struct DislocationLoop{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}
     loopType::T1
     numSides::T2
     nodeSide::T3
@@ -272,7 +297,8 @@ DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N} where
 ```
 Defines a single, vector, and tuple of [`DislocationLoop`](@ref) types.
 """
-const DislocationLoopCollection = Union{T,AbstractVector{T},NTuple{N,T} where N} where {T <: DislocationLoop}
+const DislocationLoopCollection =
+    Union{T, AbstractVector{T}, NTuple{N, T} where N} where {T <: DislocationLoop}
 
 """
 ```
@@ -295,7 +321,7 @@ end
 ```
 Stores a dislocation network.
 """
-struct DislocationNetwork{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14}
+struct DislocationNetwork{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}
     numNode::T1
     numSeg::T2
     maxConnect::T3

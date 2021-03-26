@@ -74,10 +74,10 @@ function removeConnection!(network::DislocationNetwork, nodeKept, connectGone)
 
     # Change connectivity to reflect that nodeKept has one less connection.
     # Remove the last connection since lastConnect was either replaced by connectGone above, or already was the last connection.
-connectivity[1, nodeKept] -= 1
+    connectivity[1, nodeKept] -= 1
     connectivity[lst:(lst + 1), nodeKept] .= 0
 
-return network
+    return network
 end
 
 """
@@ -106,7 +106,7 @@ function removeLink!(network::DislocationNetwork, linkGone, lastLink = nothing)
     removeConnection!(network, node2, connectGone2)
 
     # Remove link that no longer appears in connectivity and doesn't connect any nodes.
-    checkLink = SVector{2,Int}(linksConnect[1, linkGone], linksConnect[2, linkGone])
+    checkLink = SVector{2, Int}(linksConnect[1, linkGone], linksConnect[2, linkGone])
     @assert checkLink ⋅ checkLink == 0 "removeLink!: link $linkGone still has connections and should not be deleted."
 
     isnothing(lastLink) ? lastLink = maximum((network.numSeg[1], 1)) : nothing
@@ -138,7 +138,7 @@ function removeLink!(network::DislocationNetwork, linkGone, lastLink = nothing)
     links[:, lastLink] .= 0
     slipPlane[:, lastLink] .= 0
     bVec[:, lastLink] .= 0
-segForce[:, :, lastLink] .= 0
+    segForce[:, :, lastLink] .= 0
     network.numSeg[1] -= 1
     linksConnect[:, lastLink] .= 0
 
@@ -241,9 +241,9 @@ function mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
 
         # Same but for the next link.
         j = i + 1
-            while j <= connectivity[1, nodeKept]
+        while j <= connectivity[1, nodeKept]
             link2, colNotLink2, nodeNotLink2 = findConnectedNode(network, nodeKept, j) # i connection.
-            
+
             # Continue to next iteration if no duplicate links are found.
             if nodeNotLink1 != nodeNotLink2
                 j += 1
@@ -265,20 +265,20 @@ function mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
             # WARNING This calculation is odd. Try using the cross product of the adjacent segments.
             # Fix slip plane.
             # Line direction and velocity of the resultant dislocation.
-            t = SVector{3,elemT}(
+            t = SVector{3, elemT}(
                 coord[1, nodeKept] - coord[1, nodeNotLink1],
                 coord[2, nodeKept] - coord[2, nodeNotLink1],
                 coord[3, nodeKept] - coord[3, nodeNotLink1],
             )
 
-            v = SVector{3,elemT}(
+            v = SVector{3, elemT}(
                 nodeVel[1, nodeKept] + nodeVel[1, nodeNotLink1],
                 nodeVel[2, nodeKept] + nodeVel[2, nodeNotLink1],
                 nodeVel[3, nodeKept] + nodeVel[3, nodeNotLink1],
             )
 
             # Burgers vector and potential new slip plane.
-            b = SVector{3,elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
+            b = SVector{3, elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             n1 = t × b  # For non-screw segments.
             n2 = t × v  # For screw segments.
             if n1 ⋅ n1 > eps(elemT) # non-screw
@@ -295,7 +295,7 @@ function mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
             link1 == lastLink ? link1 = link2 : nothing
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
-            b = SVector{3,elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
+            b = SVector{3, elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
             if isapprox(dot(b, b), 0)
                 removeLink!(network, link1)
                 links = network.links
@@ -376,16 +376,16 @@ function coarsenNetwork!(
         end
 
         # Coordinate of node i
-        iCoord = SVector{3,elemT}(coord[1, i], coord[2, i], coord[3, i])
+        iCoord = SVector{3, elemT}(coord[1, i], coord[2, i], coord[3, i])
         # Create a triangle formed by the three nodes involved in coarsening.
         coordVec1 =
-            SVector{3,elemT}(
+            SVector{3, elemT}(
                 coord[1, link1_nodeOppI],
                 coord[2, link1_nodeOppI],
                 coord[3, link1_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
         coordVec2 =
-            SVector{3,elemT}(
+            SVector{3, elemT}(
                 coord[1, link2_nodeOppI],
                 coord[2, link2_nodeOppI],
                 coord[3, link2_nodeOppI],
@@ -408,15 +408,15 @@ function coarsenNetwork!(
         areaSq = r0 * (r0 - r1) * (r0 - r2) * (r0 - r3)
 
         # Node i velocities.
-        iVel = SVector{3,elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
+        iVel = SVector{3, elemT}(nodeVel[1, i], nodeVel[2, i], nodeVel[3, i])
         velVec1 =
-            SVector{3,elemT}(
+            SVector{3, elemT}(
                 nodeVel[1, link1_nodeOppI],
                 nodeVel[2, link1_nodeOppI],
                 nodeVel[3, link1_nodeOppI],
             ) - iVel
         velVec2 =
-            SVector{3,elemT}(
+            SVector{3, elemT}(
                 nodeVel[1, link2_nodeOppI],
                 nodeVel[2, link2_nodeOppI],
                 nodeVel[3, link2_nodeOppI],
@@ -466,9 +466,16 @@ function coarsenNetwork!(
 
             if nodeNotMerged == i || nodeNotMerged == link1_nodeOppI
                 # Calculate segment force for segment linkMerged.
-                calcSegForce!(dlnParams, matParams, mesh, forceDisplacement, network, linkMerged)
+                calcSegForce!(
+                    dlnParams,
+                    matParams,
+                    mesh,
+                    forceDisplacement,
+                    network,
+                    linkMerged,
+                )
                 # Calculate node velocity.
-                nodes = SVector{2,Int}(links[1, linkMerged], links[2, linkMerged])
+                nodes = SVector{2, Int}(links[1, linkMerged], links[2, linkMerged])
                 dlnMobility!(dlnParams, matParams, network, nodes)
                 nodeVel = network.nodeVel
             end

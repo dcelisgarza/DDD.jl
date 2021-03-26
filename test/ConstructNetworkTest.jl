@@ -59,7 +59,8 @@ end
     makeConnect!(network)
 
     idx = rand(1:10)
-    @test network[idx] == (network.links[:, idx],
+    @test network[idx] == (
+        network.links[:, idx],
         network.slipPlane[:, idx],
         network.bVec[:, idx],
         network.coord[:, idx],
@@ -69,10 +70,12 @@ end
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
         network.segIdx[idx, :],
-        network.segForce[:, :, idx],)
+        network.segForce[:, :, idx],
+    )
 
     idx = rand(1:10, 5)
-    @test network[idx] == (network.links[:, idx],
+    @test network[idx] == (
+        network.links[:, idx],
         network.slipPlane[:, idx],
         network.bVec[:, idx],
         network.coord[:, idx],
@@ -82,7 +85,8 @@ end
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
         network.segIdx[idx, :],
-        network.segForce[:, :, idx],)
+        network.segForce[:, :, idx],
+    )
 end
 
 @testset "Loop generation" begin
@@ -193,8 +197,10 @@ end
 
     import DDD: loopKink
     loopType = loopKink
-    @test_logs (:warn,
-        "DislocationLoop: Constructor for $loopType not defined, defaulting to prismatic loop.",) DislocationLoop(;
+    @test_logs (
+        :warn,
+        "DislocationLoop: Constructor for $loopType not defined, defaulting to prismatic loop.",
+    ) DislocationLoop(;
         loopType = loopKink(),
         numSides = 4,
         nodeSide = 1,

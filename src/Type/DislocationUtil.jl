@@ -52,7 +52,10 @@ function Base.push!(network::DislocationNetwork, n)
         numNode = copy(network.numNode),
         numSeg = copy(network.numSeg),
         maxConnect = copy(network.maxConnect),
-        connectivity = hcat(network.connectivity, zeros(Int, size(network.connectivity, 1), n)),
+        connectivity = hcat(
+            network.connectivity,
+            zeros(Int, size(network.connectivity, 1), n),
+        ),
         linksConnect = hcat(network.linksConnect, zeros(Int, 2, n)),
         segIdx = vcat(network.segIdx, zeros(Int, n, 3)),
         segForce = cat(network.segForce, zeros(elemT, 3, 2, n), dims = 3),
@@ -138,7 +141,7 @@ function translatePoints!(coord, lims, disp)
         @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
-end
+    end
     return coord
 end
 
@@ -217,32 +220,32 @@ function genMakeConnect(mutating)
     end
 
     ex = quote
-            function $name(arguments...)
-                $accumulator
-                # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
-                idx = findfirst(x -> x == 0, @view links[1, :])
-                isnothing(idx) ? idx = lenLinks : idx -= 1
-                # Loop through indices.
-                @inbounds @simd for i in 1:idx
-                    # Node 1, it is the row of the coord matrix.
-                    n1 = links[1, i]
-                    n2 = links[2, i]
-                    # Num of other nodes node n1 is connected to.
-                    connectivity[1, n1] += 1
-                    connectivity[1, n2] += 1
-                    # Next column for n1 in connectivity.
-                    tmp1 = 2 * connectivity[1, n1]
-                    tmp2 = 2 * connectivity[1, n2]
-                    # i = linkID. 1, 2 are the first and second nodes in link with linkID
-                    connectivity[tmp1:(tmp1 + 1), n1] .= (i, 1)
-                    connectivity[tmp2:(tmp2 + 1), n2] .= (i, 2)
-                    # Connectivity of the nodes in link i.
-                    linksConnect[1, i] = connectivity[1, n1]
-                    linksConnect[2, i] = connectivity[1, n2]
-end
-                return $retVal
-end
+        function $name(arguments...)
+            $accumulator
+            # Indices of defined links, undefined links are always at the end so we only need to know the first undefined entry.
+            idx = findfirst(x -> x == 0, @view links[1, :])
+            isnothing(idx) ? idx = lenLinks : idx -= 1
+            # Loop through indices.
+            @inbounds @simd for i in 1:idx
+                # Node 1, it is the row of the coord matrix.
+                n1 = links[1, i]
+                n2 = links[2, i]
+                # Num of other nodes node n1 is connected to.
+                connectivity[1, n1] += 1
+                connectivity[1, n2] += 1
+                # Next column for n1 in connectivity.
+                tmp1 = 2 * connectivity[1, n1]
+                tmp2 = 2 * connectivity[1, n2]
+                # i = linkID. 1, 2 are the first and second nodes in link with linkID
+                connectivity[tmp1:(tmp1 + 1), n1] .= (i, 1)
+                connectivity[tmp2:(tmp2 + 1), n2] .= (i, 2)
+                # Connectivity of the nodes in link i.
+                linksConnect[1, i] = connectivity[1, n1]
+                linksConnect[2, i] = connectivity[1, n2]
+            end
+            return $retVal
         end
+    end
     return ex
 end
 eval(genMakeConnect(true))
@@ -268,7 +271,7 @@ function getSegmentIdx(links, label)
     # Find all defined nodes.
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
-    
+
     numSeg = 0 # Number of segments.
 
     # Loop through indices.
@@ -282,7 +285,7 @@ function getSegmentIdx(links, label)
         # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
         segIdx[numSeg, :] .= (i, n1, n2)
     end
-    
+
     return numSeg, segIdx
 end
 """
@@ -296,26 +299,25 @@ function getSegmentIdx!(network::DislocationNetwork)
     label = network.label
     numSeg = network.numSeg
     segIdx = network.segIdx
-    
+
     lenLinks = size(links, 2)
     lenSegIdx = size(segIdx, 1)
     segIdx .= 0
-    
+
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
     lNumSeg = 0
-    
+
     @inbounds for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
-    (label[n1] == extDln || label[n2] == extDln) && continue
-    lNumSeg += 1
+        (label[n1] == extDln || label[n2] == extDln) && continue
+        lNumSeg += 1
         segIdx[lNumSeg, :] .= (i, n1, n2)
     end
-    
+
     numSeg[1] = lNumSeg
     return nothing
-
 end
 
 """
@@ -337,14 +339,16 @@ function checkNetwork(network::DislocationNetwork)
     label = network.label
     connectivity = network.connectivity
     linksConnect = network.linksConnect
-    
+
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = size(links, 2) : idx -= 1
 
     # Max value of connectivity should be the last link.
     maximum(connectivity) == idx ? nothing :
-    error("Non-empty entries of connectivity should be the same as the non-empty entries of links.")
-    
+    error(
+        "Non-empty entries of connectivity should be the same as the non-empty entries of links.",
+    )
+
     bVec = network.bVec
     elemT = eltype(network.bVec)
     bSum = zeros(3)
@@ -353,45 +357,48 @@ function checkNetwork(network::DislocationNetwork)
         col = connectivity[1, i]
 
         # Check for zero Burgers vectors.
-        staticBVec = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        staticBVec = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         norm(staticBVec) < eps(elemT) ? error("Burgers vector must be non-zero.
                                        norm(bVec) = $(norm(bVec[i,:]))") : nothing
 
         # Trailing columns must be zero.
         sum(connectivity[(2 * (col + 1)):end, i]) != 0 ?
-        error("Trailing columns of connectivity must be zero.
-        connectivity[$(i), $(2 * (col + 1)):end] = $(connectivity[i, (2 * (col + 1)):end]))") :
-        nothing
+        error(
+            "Trailing columns of connectivity must be zero.
+      connectivity[$(i), $(2 * (col + 1)):end] = $(connectivity[i, (2 * (col + 1)):end]))",
+        ) : nothing
 
-            # Burgers vector conservation.
+        # Burgers vector conservation.
         bSum .= 0
         # No repeated links.
-            neighbours = -ones(Int, col)
+        neighbours = -ones(Int, col)
         for j in 1:col
             j2 = 2 * j
             iLink = connectivity[j2, i]     # Link ID.
             colLink = connectivity[j2 + 1, i] # Link position in links.
             colOppLink = 3 - connectivity[2 * j + 1, i] # Opposite column in links
-            staticBVec = SVector{3,elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
+            staticBVec = SVector{3, elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
             bSum .+= (3 - 2 * colLink) * staticBVec # Running total of burgers vectors.
 
             neighbours[j] = links[colOppLink, iLink] # Find neighbouring nodes.
-        push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
+            push!(iLinkBuffer, iLink) # Push to link buffer for error printing.
 
             # Check that node does not appear twice in connectivity.
             @simd for k in (j + 1):col
                 connectivity[j2, i] == connectivity[2 * k, i] ?
-                error("Node $(i) cannot appear twice in connectivity, $(connectivity[i, j2])") :
-                nothing
+                error(
+                    "Node $(i) cannot appear twice in connectivity, $(connectivity[i, j2])",
+                ) : nothing
             end
 
             # Check links and connectivity are consistent.
             testNode = links[connectivity[j2 + 1, i], connectivity[j2, i]]
             testNode != i ?
-            error("Connectivity and links are not consistent.
+            error(
+                "Connectivity and links are not consistent.
 connectivity[:, $(i)] = $(connectivity[:, i])
-links[:, $(connectivity[j2, i])] = [$(links[1, connectivity[j2, i]]), $(links[2, connectivity[j2, i]])]") :
-            nothing
+links[:, $(connectivity[j2, i])] = [$(links[1, connectivity[j2, i]]), $(links[2, connectivity[j2, i]])]",
+            ) : nothing
         end
 
         # Check for Burgers vector conservation.
@@ -401,21 +408,24 @@ links[:, $(connectivity[j2, i])] = [$(links[1, connectivity[j2, i]]), $(links[2,
         # Find unique neighbours.
         uniqueNeighbours = unique(neighbours)
         length(uniqueNeighbours) != length(neighbours) ?
-        error("There must be no duplicate links. Each entry in links must correspond to a unique pair of adjacent entries in neighbours.
+        error(
+            "There must be no duplicate links. Each entry in links must correspond to a unique pair of adjacent entries in neighbours.
 links = $(iLinkBuffer[1:end - 1])
 uniqueNeighbours = $(uniqueNeighbours)
-neighbours = $(neighbours)") :
-        nothing
+neighbours = $(neighbours)",
+        ) : nothing
 
         # Check connectivity and linksConnect are consistent.
-        check = (connectivity[2 * linksConnect[1, i], links[1, i]],
-            connectivity[2 * linksConnect[2, i], links[2, i]],)
+        check = (
+            connectivity[2 * linksConnect[1, i], links[1, i]],
+            connectivity[2 * linksConnect[2, i], links[2, i]],
+        )
         i != check[1] | i != check[2] ? error("Inconsistent link.
         links[:, $(i)] = $(links[:, i])
         linksConnect[:, $(i)] = $(linksConnect[:, i])
         connectivity[:, $(links[1, i])] = $(connectivity[:, links[1, i]])
         connectivity[:, $(links[2, i])] = $(connectivity[:, links[2, i]])") : nothing
     end
-    
+
     return true
 end

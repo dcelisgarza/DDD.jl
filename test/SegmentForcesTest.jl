@@ -26,8 +26,7 @@ cd(@__DIR__)
     segLen = dx / 8
 
     f = spzeros(3 * numFEMNode)
-    f[[112, 118, 133, 141, 213, 244, 262, 272, 317]] = 
-    [
+    f[[112, 118, 133, 141, 213, 244, 262, 272, 317]] = [
         0.43048187784858616,
         0.22724536603830137,
         0.4340867899691503,
@@ -39,8 +38,7 @@ cd(@__DIR__)
         0.1642050526375538,
     ]
     fHat = spzeros(3 * numFEMNode)
-    fHat[[32, 48, 55, 88, 138, 148, 191, 230, 253, 335]] = 
-    [
+    fHat[[32, 48, 55, 88, 138, 148, 191, 230, 253, 335]] = [
         0.09706224225842108,
         0.07773687633248638,
         0.13682398802299178,
@@ -53,8 +51,7 @@ cd(@__DIR__)
         0.5523797553266823,
     ]
     u = spzeros(3 * numFEMNode)
-    u[[30, 127, 195, 221, 316, 325, 338, 348, 370]] = 
-    [
+    u[[30, 127, 195, 221, 316, 325, 338, 348, 370]] = [
         0.8792592573507609,
         0.8430664083925272,
         0.4711050560756602,
@@ -66,8 +63,7 @@ cd(@__DIR__)
         0.8865721648558644,
     ]
     uHat = spzeros(3 * numFEMNode)
-    uHat[[91, 126, 130, 195, 217, 226, 229, 256, 281, 293, 309, 342]] = 
-    [
+    uHat[[91, 126, 130, 195, 217, 226, 229, 256, 281, 293, 309, 342]] = [
         0.5231621885339968,
         0.5771429489788034,
         0.7151190318538345,
@@ -81,8 +77,9 @@ cd(@__DIR__)
         0.8489027048214433,
         0.029995302953659708,
     ]
-    forceDisplacement = ForceDisplacement(nothing, uHat * 1000, u * 1000, nothing, fHat * 1000, f * 1000)
-    
+    forceDisplacement =
+        ForceDisplacement(nothing, uHat * 1000, u * 1000, nothing, fHat * 1000, f * 1000)
+
     prismSquare = DislocationLoop(;
         loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
         numSides = 4,   # 5-sided loop.
@@ -91,9 +88,16 @@ cd(@__DIR__)
         segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
         slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
         slipSystem = slipSystems,  # Slip plane of the segments.
-        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
+        range = SMatrix{3, 2, Float64}(
+            0 + segLen,
+            0 + segLen,
+            0 + segLen,
+            dx - segLen,
+            dy - segLen,
+            dz - segLen,
+        ),  # Distribution range
         dist = Rand(),  # Loop distribution.
     )
 
@@ -105,51 +109,60 @@ cd(@__DIR__)
         segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
         slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
         slipSystem = slipSystems,  # Slip plane of the segments.
-        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3,2,Float64}(0 + segLen, 0 + segLen, 0 + segLen, dx - segLen, dy - segLen, dz - segLen),  # Distribution range
+        range = SMatrix{3, 2, Float64}(
+            0 + segLen,
+            0 + segLen,
+            0 + segLen,
+            dx - segLen,
+            dy - segLen,
+            dz - segLen,
+        ),  # Distribution range
         dist = Rand(),  # Loop distribution.
     )
     network = DislocationNetwork([prismSquare, shearSquare])
     numSeg = network.numSeg[1]
     network.coord[:, 1:numSeg] = [
-        1201.5837679702274 1283.233426063 1424.6547823003095 1566.076138537619 1484.4264804448464 1402.7768223520739 1261.3554661147643 1119.9341098774548 304.6214867750916 386.2711448678642 527.6925011051737 669.1138573424832 587.4641992497106 505.81454115693805 364.39318491962854 222.97182868231897 1270.8257124306385 1352.4753705234111 1467.9454243613363 1583.4154781992615 1501.765820106489 1420.1161620137163 1304.6461081757911 1189.176054337866 462.2031932442291 543.8528513370018 659.3229051749269 774.792959012852 693.1433009200794 611.4936428273068 496.02358898938166 380.5535351514565; 696.4782710631935 614.8286129704209 756.2499692077304 897.6713254450399 979.3209835378125 1060.970641630585 919.5492853932756 778.1279291559661 302.5604363129223 220.91077822014972 362.33213445745923 503.75349069476874 585.4031487875413 667.0528068803139 525.6314506430044 384.210094405695 1055.3880794417687 973.7384213489961 858.2683675110709 742.7983136731457 824.4479717659183 906.0976298586909 1021.5676836966161 1137.0377375345413 1195.4446644351433 1113.7950063423707 998.3249525044455 882.8548986665203 964.5045567592929 1046.1542148520655 1161.6242686899907 1277.094322527916; 1219.6759003965913 1382.9752165821365 1382.9752165821365 1382.9752165821365 1219.6759003965913 1056.376584211046 1056.376584211046 1056.376584211046 1604.4473849682922 1767.7467011538374 1767.7467011538374 1767.7467011538374 1604.4473849682922 1441.148068782747 1441.148068782747 1441.148068782747 951.679209138293 1114.9785253238383 999.5084714859131 884.038417647988 720.7391014624428 557.4397852768976 672.9098391148227 788.3798929527478 1431.0547935274708 1594.354109713016 1478.8840558750908 1363.4140020371656 1200.1146858516204 1036.8153696660752 1152.2854235040004 1267.7554773419254
+        1201.5837679702274 1283.233426063 1424.6547823003095 1566.076138537619 1484.4264804448464 1402.7768223520739 1261.3554661147643 1119.9341098774548 304.6214867750916 386.2711448678642 527.6925011051737 669.1138573424832 587.4641992497106 505.81454115693805 364.39318491962854 222.97182868231897 1270.8257124306385 1352.4753705234111 1467.9454243613363 1583.4154781992615 1501.765820106489 1420.1161620137163 1304.6461081757911 1189.176054337866 462.2031932442291 543.8528513370018 659.3229051749269 774.792959012852 693.1433009200794 611.4936428273068 496.02358898938166 380.5535351514565
+        696.4782710631935 614.8286129704209 756.2499692077304 897.6713254450399 979.3209835378125 1060.970641630585 919.5492853932756 778.1279291559661 302.5604363129223 220.91077822014972 362.33213445745923 503.75349069476874 585.4031487875413 667.0528068803139 525.6314506430044 384.210094405695 1055.3880794417687 973.7384213489961 858.2683675110709 742.7983136731457 824.4479717659183 906.0976298586909 1021.5676836966161 1137.0377375345413 1195.4446644351433 1113.7950063423707 998.3249525044455 882.8548986665203 964.5045567592929 1046.1542148520655 1161.6242686899907 1277.094322527916
+        1219.6759003965913 1382.9752165821365 1382.9752165821365 1382.9752165821365 1219.6759003965913 1056.376584211046 1056.376584211046 1056.376584211046 1604.4473849682922 1767.7467011538374 1767.7467011538374 1767.7467011538374 1604.4473849682922 1441.148068782747 1441.148068782747 1441.148068782747 951.679209138293 1114.9785253238383 999.5084714859131 884.038417647988 720.7391014624428 557.4397852768976 672.9098391148227 788.3798929527478 1431.0547935274708 1594.354109713016 1478.8840558750908 1363.4140020371656 1200.1146858516204 1036.8153696660752 1152.2854235040004 1267.7554773419254
     ]
 
-    fPKTest = 1.0e+02 *
-        [
-        0.983568207059471   0.550732784894686  -0.216417711082393
-        -0.074266349477605   0.074266349477605  -0.636911320120312
-        0.155045597251722  -0.155045597251722  -0.044881839670221
-        0.101431295661336  -0.067753859578523  -0.084592577619930
-        0.273213406343103   0.068697355372783  -0.102258025485160
-        -0.071275154999800   0.071275154999800  -0.338908217279899
-        0.022167783169158  -0.022167783169158  -1.136846650257031
-        1.436820246111006   0.473392983022663  -0.481713631544171
-        -0.168015348058644  -0.409635686533833  -0.120810169237595
-                        0                   0                   0
-        -0.127152152429410   0.127152152429410  -0.532135533886545
-        -0.607064449348708  -0.376897289465542   0.115083579941583
-        -1.327884941063532  -0.715166073499301   0.306359433782116
-        0.441147725403124  -0.441147725403124   1.360442463840005
-        0.255278751159306  -0.255278751159306   0.748442624130778
-                        0                   0                   0
-        -0.367714422335496  -0.154013286390333   0.106850567972581
-        0.045819274971325  -0.035698104354998   0.081517379326323
-        -0.066266665225592  -0.050212580764005  -0.016054084461586
-        -0.090887767612372  -0.032124956563013   0.029381405524679
-                        0                   0                   0
-                        0                   0                   0
-                        0                   0                   0
-        -0.095974787977392  -0.060606642986924   0.017684072495234
-        -0.911537345550952  -0.433723676128685   0.238906834711134
-        0.166970234231067  -0.039020251746418   0.205990485977485
-        -0.040569130620300  -0.070322668905174   0.029753538284874
-        -0.080046044506237  -0.059386350692248   0.010329846906995
-        0.000155309763062   0.000275031985160   0.000059861111049
-        0.000064985978620   0.000160977029895  -0.000095991051275
-                        0                   0                   0
-                        0                   0                   0
+    fPKTest =
+        1.0e+02 * [
+            0.983568207059471 0.550732784894686 -0.216417711082393
+            -0.074266349477605 0.074266349477605 -0.636911320120312
+            0.155045597251722 -0.155045597251722 -0.044881839670221
+            0.101431295661336 -0.067753859578523 -0.084592577619930
+            0.273213406343103 0.068697355372783 -0.102258025485160
+            -0.071275154999800 0.071275154999800 -0.338908217279899
+            0.022167783169158 -0.022167783169158 -1.136846650257031
+            1.436820246111006 0.473392983022663 -0.481713631544171
+            -0.168015348058644 -0.409635686533833 -0.120810169237595
+            0 0 0
+            -0.127152152429410 0.127152152429410 -0.532135533886545
+            -0.607064449348708 -0.376897289465542 0.115083579941583
+            -1.327884941063532 -0.715166073499301 0.306359433782116
+            0.441147725403124 -0.441147725403124 1.360442463840005
+            0.255278751159306 -0.255278751159306 0.748442624130778
+            0 0 0
+            -0.367714422335496 -0.154013286390333 0.106850567972581
+            0.045819274971325 -0.035698104354998 0.081517379326323
+            -0.066266665225592 -0.050212580764005 -0.016054084461586
+            -0.090887767612372 -0.032124956563013 0.029381405524679
+            0 0 0
+            0 0 0
+            0 0 0
+            -0.095974787977392 -0.060606642986924 0.017684072495234
+            -0.911537345550952 -0.433723676128685 0.238906834711134
+            0.166970234231067 -0.039020251746418 0.205990485977485
+            -0.040569130620300 -0.070322668905174 0.029753538284874
+            -0.080046044506237 -0.059386350692248 0.010329846906995
+            0.000155309763062 0.000275031985160 0.000059861111049
+            0.000064985978620 0.000160977029895 -0.000095991051275
+            0 0 0
+            0 0 0
         ]
 
     fPK = calcPKForce(regularCuboidMesh, forceDisplacement, network)
@@ -169,10 +182,10 @@ cd(@__DIR__)
     @test isapprox(fPK, network.segForce[:, 1, idx] * 2)
     @test isapprox(network.segForce[:, 1, idx], network.segForce[:, 2, idx])
 
-    idx = [5;10;9;23]
+    idx = [5; 10; 9; 23]
     fPK = calcPKForce(regularCuboidMesh, forceDisplacement, network, idx)
     @test isapprox(fPK', fPKTest[idx, :])
-    
+
     network.segForce .= 0
     calcPKForce!(regularCuboidMesh, forceDisplacement, network, idx)
     @test isapprox(fPK, network.segForce[:, 1, idx] * 2)
@@ -434,13 +447,19 @@ cd(@__DIR__)
     selfForce = calcSelfForce(dlnParams, matParams, network)
     remoteForceSer = calcSegSegForce(dlnParams, matParams, network)
     remoteForcePar = calcSegSegForce(dlnParamsPar, matParams, network)
-    sumForceSer =
-        (selfForce[1] .+ remoteForceSer[:, 1, :] + 0.5 * PKForce, selfForce[2] .+ remoteForceSer[:, 2, :] + 0.5 * PKForce)
-    sumForcePar =
-        (selfForce[1] .+ remoteForcePar[:, 1, :] + 0.5 * PKForce, selfForce[2] .+ remoteForcePar[:, 2, :] + 0.5 * PKForce)
+    sumForceSer = (
+        selfForce[1] .+ remoteForceSer[:, 1, :] + 0.5 * PKForce,
+        selfForce[2] .+ remoteForceSer[:, 2, :] + 0.5 * PKForce,
+    )
+    sumForcePar = (
+        selfForce[1] .+ remoteForcePar[:, 1, :] + 0.5 * PKForce,
+        selfForce[2] .+ remoteForcePar[:, 2, :] + 0.5 * PKForce,
+    )
 
-    totalForceSer = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-    totalForcePar = calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForceSer =
+        calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForcePar =
+        calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
 
     @test isapprox(totalForceSer[:, 1, :], sumForceSer[1])
     @test isapprox(totalForcePar[:, 2, :], sumForcePar[2])
@@ -448,16 +467,34 @@ cd(@__DIR__)
     @test isapprox(totalForceSer[:, 2, :], totalForcePar[:, 2, :])
 
     idx = rand(1:(network.numSeg[1]), Int(network.numSeg[1] / 2))
-    totalForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-    totalForceSer = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-    totalForcePar = calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForceIdx = calcSegForce(
+        dlnParams,
+        matParams,
+        regularCuboidMesh,
+        forceDisplacement,
+        network,
+        idx,
+    )
+    totalForceSer =
+        calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForcePar =
+        calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
     idx = rand(1:(network.numSeg[1]))
-    totalForceIdx = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
-    totalForceSer = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-    totalForcePar = calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForceIdx = calcSegForce(
+        dlnParams,
+        matParams,
+        regularCuboidMesh,
+        forceDisplacement,
+        network,
+        idx,
+    )
+    totalForceSer =
+        calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    totalForcePar =
+        calcSegForce(dlnParamsPar, matParams, regularCuboidMesh, forceDisplacement, network)
     @test isapprox(totalForceSer[:, :, idx], totalForceIdx)
     @test isapprox(totalForcePar[:, :, idx], totalForceIdx)
 
@@ -501,7 +538,14 @@ cd(@__DIR__)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     @test isapprox(tot, network.segForce[:, :, 1:numSeg])
 
-    tot = calcSegForce(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network, idx)
+    tot = calcSegForce(
+        dlnParams,
+        matParams,
+        regularCuboidMesh,
+        forceDisplacement,
+        network,
+        idx,
+    )
     @test isapprox(tot[:, 1, :], self[1][:, idx] + ser[:, 1, idx] + 0.5 * PKForce[:, idx])
     @test isapprox(tot[:, 2, :], self[2][:, idx] + ser[:, 2, idx] + 0.5 * PKForce[:, idx])
     network.segForce .= 0
@@ -535,8 +579,7 @@ end
     numFEMNode = regularCuboidMesh.numNode
 
     f = spzeros(3 * numFEMNode)
-    f[[112, 118, 133, 141, 213, 244, 262, 272, 317]] = 
-    [
+    f[[112, 118, 133, 141, 213, 244, 262, 272, 317]] = [
         0.43048187784858616,
         0.22724536603830137,
         0.4340867899691503,
@@ -548,8 +591,7 @@ end
         0.1642050526375538,
     ]
     fHat = spzeros(3 * numFEMNode)
-    fHat[[32, 48, 55, 88, 138, 148, 191, 230, 253, 335]] = 
-    [
+    fHat[[32, 48, 55, 88, 138, 148, 191, 230, 253, 335]] = [
         0.09706224225842108,
         0.07773687633248638,
         0.13682398802299178,
@@ -562,8 +604,7 @@ end
         0.5523797553266823,
     ]
     u = spzeros(3 * numFEMNode)
-    u[[30, 127, 195, 221, 316, 325, 338, 348, 370]] = 
-    [
+    u[[30, 127, 195, 221, 316, 325, 338, 348, 370]] = [
         0.8792592573507609,
         0.8430664083925272,
         0.4711050560756602,
@@ -575,8 +616,7 @@ end
         0.8865721648558644,
     ]
     uHat = spzeros(3 * numFEMNode)
-    uHat[[91, 126, 130, 195, 217, 226, 229, 256, 281, 293, 309, 342]] = 
-    [
+    uHat[[91, 126, 130, 195, 217, 226, 229, 256, 281, 293, 309, 342]] = [
         0.5231621885339968,
         0.5771429489788034,
         0.7151190318538345,
@@ -591,7 +631,8 @@ end
         0.029995302953659708,
     ]
 
-    forceDisplacement = ForceDisplacement(nothing, uHat * 1000, u * 1000, nothing, fHat * 1000, f * 1000)
+    forceDisplacement =
+        ForceDisplacement(nothing, uHat * 1000, u * 1000, nothing, fHat * 1000, f * 1000)
 
     σHat = calc_σHat(regularCuboidMesh, forceDisplacement, [1575.0, 985.0, 1341.0])
     σHatTest = [

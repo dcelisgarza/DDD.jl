@@ -15,11 +15,11 @@ loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSystem)
 ```
 Constructs [`DislocationLoop`](@ref) out of a dictionary and [`SlipSystem`](@ref) structure.
 """
-function loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSystem)
+function loadDislocationLoop(dict::Dict{T1, T2} where {T1, T2}, slipSystem::SlipSystem)
     dlnTypes = makeTypeDict(AbstractDlnStr)
     distributions = makeTypeDict(AbstractDistribution)
 
-    range = SMatrix{3,2}(convert.(Float64, vcat(dict["range"]...)))
+    range = SMatrix{3, 2}(convert.(Float64, vcat(dict["range"]...)))
 
     numSides = convert(Int, dict["numSides"])
     nodeSide = convert(Int, dict["nodeSide"])
@@ -31,10 +31,10 @@ function loadDislocationLoop(dict::Dict{T1,T2} where {T1,T2}, slipSystem::SlipSy
         numSides = numSides,
         nodeSide = nodeSide,
         numLoops = numLoops,
-        segLen = SVector{length(dict["segLen"]),Float64}(dict["segLen"]),
+        segLen = SVector{length(dict["segLen"]), Float64}(dict["segLen"]),
         slipSystemIdx = convert.(Int, dict["slipSystemIdx"]),
         slipSystem = slipSystem,
-        label = SVector{nodeLoop,nodeTypeDln}(vcat(dict["label"]...)),
+        label = SVector{nodeLoop, nodeTypeDln}(vcat(dict["label"]...)),
         buffer = convert(Float64, dict["buffer"]),
         range = range,
         dist = distributions[dict["dist"]],
@@ -49,7 +49,7 @@ loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
 ```
 Constructs [`MaterialParameters`](@ref) out of a dictionary.
 """
-function loadMaterialParameters(dict::Dict{T1,T2}) where {T1,T2}
+function loadMaterialParameters(dict::Dict{T1, T2}) where {T1, T2}
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     MaterialParams = MaterialParameters(;
@@ -69,7 +69,7 @@ loadFEMParameters(dict::Dict{T1,T2}) where {T1,T2}
 ```
 Constructs [`FEMParameters`](@ref) out of a dictionary.
 """
-function loadFEMParameters(dict::Dict{T1,T2}) where {T1,T2}
+function loadFEMParameters(dict::Dict{T1, T2}) where {T1, T2}
     meshDict = makeTypeDict(AbstractMesh)
     orderDict = makeTypeDict(AbstractElementOrder)
     modelDict = makeTypeDict(AbstractModel)
@@ -97,66 +97,87 @@ Constructs [`Boundaries`](@ref) out of a dictionary.
 !!! note
     `tK` may be null if it was factorised when the variable was saved.
 """
-function loadBoundaries(dict::Dict{T1,T2}) where {T1,T2}
+function loadBoundaries(dict::Dict{T1, T2}) where {T1, T2}
     uGammaDict = dict["uGamma"]
     mGammaDict = dict["mGamma"]
     tGammaDict = dict["tGamma"]
 
-    idxU = try 
+    idxU = try
         Int.(uGammaDict["index"])
     catch err
         Symbol.(uGammaDict["index"])
     end
 
-    uGamma = try BoundaryNode(type = nodeTypeFE.(uGammaDict["type"]),
-                    index = idxU,
-                    node = Int.(uGammaDict["node"]))
+    uGamma = try
+        BoundaryNode(
+            type = nodeTypeFE.(uGammaDict["type"]),
+            index = idxU,
+            node = Int.(uGammaDict["node"]),
+        )
     catch err
         uGamma = []
     end
 
-    idxM = try 
+    idxM = try
         Int.(mGammaDict["index"])
     catch err
         Symbol.(mGammaDict["index"])
     end
 
-    mGamma = try BoundaryNode(type = nodeTypeFE.(mGammaDict["type"]),
-                    index = idxM,
-                    node = Int.(mGammaDict["node"]))
+    mGamma = try
+        BoundaryNode(
+            type = nodeTypeFE.(mGammaDict["type"]),
+            index = idxM,
+            node = Int.(mGammaDict["node"]),
+        )
     catch err
         mGamma = []
     end
 
-    idxT = try 
+    idxT = try
         Int.(tGammaDict["index"])
     catch err
         Symbol.(tGammaDict["index"])
     end
-    tGamma = try BoundaryNode(type = nodeTypeFE.(tGammaDict["type"]),
-                    index = idxT,
-                    node = Int.(tGammaDict["node"]))
+    tGamma = try
+        BoundaryNode(
+            type = nodeTypeFE.(tGammaDict["type"]),
+            index = idxT,
+            node = Int.(tGammaDict["node"]),
+        )
     catch err
         tGamma = []
     end
 
-    uDofs = try Int.(dict["uDofs"]); catch err; [] end
-    mDofs = try Int.(dict["mDofs"]); catch err; [] end
-    tDofs = try Int.(dict["tDofs"]); catch err; [] end
+    uDofs = try
+        Int.(dict["uDofs"])
+    catch err
+        []
+    end
+    mDofs = try
+        Int.(dict["mDofs"])
+    catch err
+        []
+    end
+    tDofs = try
+        Int.(dict["tDofs"])
+    catch err
+        []
+    end
 
     typeof(dict["tK"]) <: AbstractArray ? tK = Float64.(dict["tK"]) : tK = nothing
 
     noExit = Int.(dict["noExit"])
-    return Boundaries(; 
-            noExit = noExit,
-            uGamma = uGamma,
-            tGamma = tGamma,
-            mGamma = mGamma,
-            uDofs = uDofs,
-            tDofs = tDofs,
-            mDofs = mDofs,
-            tK = tK
-        )
+    return Boundaries(;
+        noExit = noExit,
+        uGamma = uGamma,
+        tGamma = tGamma,
+        mGamma = mGamma,
+        uDofs = uDofs,
+        tDofs = tDofs,
+        mDofs = mDofs,
+        tK = tK,
+    )
 end
 
 """
@@ -165,7 +186,7 @@ loadForceDisplacement(dict::Dict{T1,T2}) where {T1,T2}
 ```
 Constructs [`ForceDisplacement`](@ref) out of a dictionary. It makes the arrays sparse and drops zeros under `eps(Float64)`.
 """
-function loadForceDisplacement(dict::Dict{T1,T2}) where {T1,T2}
+function loadForceDisplacement(dict::Dict{T1, T2}) where {T1, T2}
     return ForceDisplacement(;
         uTilde = droptol!(sparse(Float64.(dict["uTilde"])), eps()),
         uHat = droptol!(sparse(Float64.(dict["uHat"])), eps()),
@@ -182,7 +203,7 @@ loadIntegrationParameters(dict::Dict{T1,T2}) where {T1,T2}
 ```
 Constructs [`IntegrationParameters`](@ref) out of a dictionary.
 """
-function loadIntegrationParameters(dict::Dict{T1,T2}) where {T1,T2}
+function loadIntegrationParameters(dict::Dict{T1, T2}) where {T1, T2}
     integDict = makeTypeDict(AbstractIntegrator)
 
     IntegrationParams = IntegrationParameters(;
@@ -207,13 +228,13 @@ loadSlipSystem(dict::Dict{T1,T2}) where {T1,T2}
 ```
 Constructs [`SlipSystem`](@ref) out of a dictionary.
 """
-function loadSlipSystem(dict::Dict{T1,T2}) where {T1,T2}
+function loadSlipSystem(dict::Dict{T1, T2}) where {T1, T2}
     crystalStruct = makeTypeDict(AbstractCrystalStruct)
 
     lenSlipSys = length(dict["slipPlane"])
 
-    slipPlane = SMatrix{3,lenSlipSys}(convert.(Float64, vcat(dict["slipPlane"]...)))
-    bVec = SMatrix{3,lenSlipSys}(convert.(Float64, vcat(dict["bVec"]...)))
+    slipPlane = SMatrix{3, lenSlipSys}(convert.(Float64, vcat(dict["slipPlane"]...)))
+    bVec = SMatrix{3, lenSlipSys}(convert.(Float64, vcat(dict["bVec"]...)))
 
     slipSystem = SlipSystem(;
         crystalStruct = crystalStruct[dict["crystalStruct"]],
@@ -230,11 +251,11 @@ loadDislocationParameters(dict::Dict{T1,T2}) where {T1,T2}
 ```
 Constructs [`DislocationParameters`](@ref) out of a dictionary.
 """
-function loadDislocationParameters(dict::Dict{T1,T2}) where {T1,T2}
+function loadDislocationParameters(dict::Dict{T1, T2}) where {T1, T2}
     mobDict = makeTypeDict(AbstractMobility)
 
     dragCoeffs = dict["dragCoeffs"]
-    
+
     DislocationParams = DislocationParameters(;
         coreRad = convert(Float64, dict["coreRad"]),
         dragCoeffs = namedtuple(dict["dragCoeffs"]),
@@ -276,7 +297,7 @@ loadNetwork(dict::Dict{T1,T2}) where {T1,T2}
 ```
 Constructs [`DislocationNetwork`](@ref) from a dictionary.
 """
-function loadNetwork(dict::Dict{T1,T2}) where {T1,T2}
+function loadNetwork(dict::Dict{T1, T2}) where {T1, T2}
     lenLinks = length(dict["links"])
     lenCoord = length(dict["coord"])
     numNode = [convert(Int, dict["numNode"][1])]
@@ -308,7 +329,7 @@ function loadNetwork(dict::Dict{T1,T2}) where {T1,T2}
         connectivity[:, i] = dict["connectivity"][i]
     end
 
-        for i in 1:3
+    for i in 1:3
         segIdx[:, i] = dict["segIdx"][i]
     end
 
@@ -353,7 +374,7 @@ loadIntegrationTime(dict::Dict{T1,T2}) where {T1,T2}
 ```
 Constructs [`IntegrationTime`](@ref) from a dictionary.
 """
-function loadIntegrationTime(dict::Dict{T1,T2}) where {T1,T2}
+function loadIntegrationTime(dict::Dict{T1, T2}) where {T1, T2}
     integrationTime = IntegrationTime(;
         dt = convert(Float64, dict["dt"]),
         time = convert(Float64, dict["time"]),
@@ -404,8 +425,7 @@ function loadParameters(
     if typeof(dictDislocationLoop) <: AbstractArray
         dislocationLoop = zeros(DislocationLoop, length(dictDislocationLoop))
         for i in eachindex(dislocationLoop)
-            dislocationLoop[i] =
-                loadDislocationLoop(dictDislocationLoop[i], slipSystems)
+            dislocationLoop[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
         end
     else
         dislocationLoop = loadDislocationLoop(dictDislocationLoop, slipSystems)

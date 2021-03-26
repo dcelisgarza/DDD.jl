@@ -19,33 +19,34 @@ cd(@__DIR__)
             fileDislocationLoop,
         )
     network = DislocationNetwork(;
-    links = [1 1 2; 2 3 3],
-    slipPlane = Float64[1 1 1;1 1 1;1 1 1],
-    bVec = Float64[1 1 1;1 1 1;1 1 1],
-    coord = Float64[0 0.5 0; 0 0 1; 0 0 0],
-    label = nodeTypeDln[1;1;1],
-    nodeVel = Float64[0 -1 1; 0 1 -1; 0 0 0],
-    nodeForce = zeros(3, 3)
+        links = [1 1 2; 2 3 3],
+        slipPlane = Float64[1 1 1; 1 1 1; 1 1 1],
+        bVec = Float64[1 1 1; 1 1 1; 1 1 1],
+        coord = Float64[0 0.5 0; 0 0 1; 0 0 0],
+        label = nodeTypeDln[1; 1; 1],
+        nodeVel = Float64[0 -1 1; 0 1 -1; 0 0 0],
+        nodeForce = zeros(3, 3),
     )
     makeConnect!(network)
     getSegmentIdx!(network)
-    skipSegs = Vector{Tuple{Int,Int}}()
-    @test detectCollision(dlnParams, network, skipSegs) == (true, :hinge, 3, 2, 1, 1, 3, 2, 0.8, 0)
-        @test begin
-    detectCollision(dlnParams, network, [(3, 2)]) == 
-        detectCollision(dlnParams, network, [(2, 3)]) == 
+    skipSegs = Vector{Tuple{Int, Int}}()
+    @test detectCollision(dlnParams, network, skipSegs) ==
+          (true, :hinge, 3, 2, 1, 1, 3, 2, 0.8, 0)
+    @test begin
+        detectCollision(dlnParams, network, [(3, 2)]) ==
+        detectCollision(dlnParams, network, [(2, 3)]) ==
         (true, :hinge, 2, 3, 1, 1, 3, 1, 0.2, 0)
-end
-        @test begin
-    detectCollision(dlnParams, network, [(3, 2), (3, 1)]) == 
-        detectCollision(dlnParams, network, [(2, 3), (3, 1)]) == 
-        detectCollision(dlnParams, network, [(3, 2), (1, 3)]) == 
-        detectCollision(dlnParams, network, [(2, 3), (1, 3)]) == 
+    end
+    @test begin
+        detectCollision(dlnParams, network, [(3, 2), (3, 1)]) ==
+        detectCollision(dlnParams, network, [(2, 3), (3, 1)]) ==
+        detectCollision(dlnParams, network, [(3, 2), (1, 3)]) ==
+        detectCollision(dlnParams, network, [(2, 3), (1, 3)]) ==
         (true, :hinge, 1, 3, 2, 2, 2, 1, -0.0, 0)
-end
+    end
 
-        @test begin
-    detectCollision(dlnParams, network, [(3, 2), (3, 1), (1, 2)]) ==
+    @test begin
+        detectCollision(dlnParams, network, [(3, 2), (3, 1), (1, 2)]) ==
         detectCollision(dlnParams, network, [(2, 3), (3, 1), (1, 2)]) ==
         detectCollision(dlnParams, network, [(3, 2), (1, 3), (1, 2)]) ==
         detectCollision(dlnParams, network, [(3, 2), (3, 1), (2, 1)]) ==
@@ -53,27 +54,37 @@ end
         detectCollision(dlnParams, network, [(2, 3), (3, 1), (2, 1)]) ==
         detectCollision(dlnParams, network, [(2, 3), (3, 1), (1, 2)]) ==
         (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
-end
+    end
 
     network = DislocationNetwork(;
         links = [1 2 3 4; 2 3 4 1],
-        slipPlane = Float64[1 1 1 1;1 1 1 1;1 1 1 1],
-        bVec = Float64[1 1 1 1;1 1 1 1;1 1 1 1],
+        slipPlane = Float64[1 1 1 1; 1 1 1 1; 1 1 1 1],
+        bVec = Float64[1 1 1 1; 1 1 1 1; 1 1 1 1],
         coord = Float64[0 1 1.5 0.5; 0 0 1 1; 0 0 0 0],
-        label = nodeTypeDln[1;1;1;1],
+        label = nodeTypeDln[1; 1; 1; 1],
         nodeVel = Float64[0 -1 -1 0; 0 0 -1 -1; 0 0 0 0],
-        nodeForce = zeros(3, 4)
-        )
+        nodeForce = zeros(3, 4),
+    )
     makeConnect!(network)
     getSegmentIdx!(network)
-    skipSegs = Vector{Tuple{Int,Int}}()
-    @test detectCollision(dlnParams, network, skipSegs) == (true, :hinge, 1, 4, 2, 2, 4, 1, 0.0, 0)
-    @test detectCollision(dlnParams, network, [(4, 1)]) == (true, :hinge, 3, 2, 4, 4, 2, 3, 0.0, 0)
-    @test detectCollision(dlnParams, network, [(4, 1), (2, 3)]) == (true, :hinge, 2, 3, 1, 1, 2, 1, 0.0, 0)
-    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1)]) == (true, :hinge, 4, 1, 3, 3, 4, 3, 0.0, 0)
-    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3)]) == (true, :twoLine, 1, 2, 3, 4, 1, 3, 1.0, 1)
-    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3)]) == (true, :twoLine, 2, 3, 4, 1, 2, 4, 1.0, 1)
-    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3), (2, 4)]) == (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
+    skipSegs = Vector{Tuple{Int, Int}}()
+    @test detectCollision(dlnParams, network, skipSegs) ==
+          (true, :hinge, 1, 4, 2, 2, 4, 1, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1)]) ==
+          (true, :hinge, 3, 2, 4, 4, 2, 3, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3)]) ==
+          (true, :hinge, 2, 3, 1, 1, 2, 1, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1)]) ==
+          (true, :hinge, 4, 1, 3, 3, 4, 3, 0.0, 0)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3)]) ==
+          (true, :twoLine, 1, 2, 3, 4, 1, 3, 1.0, 1)
+    @test detectCollision(dlnParams, network, [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3)]) ==
+          (true, :twoLine, 2, 3, 4, 1, 2, 4, 1.0, 1)
+    @test detectCollision(
+        dlnParams,
+        network,
+        [(4, 1), (2, 3), (2, 1), (4, 3), (1, 3), (2, 4)],
+    ) == (false, :null, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
 end
 
 @testset "Merge nodes" begin
@@ -136,7 +147,8 @@ end
     @test network.segForce == zeros(3, 2, 4)
 
     network = DislocationNetwork(square, memBuffer = 1)
-    network = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network =
+        coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     @test network.links == zeros(Int, 2, 4)
     @test network.slipPlane == zeros(3, 4)
     @test network.bVec == zeros(3, 4)
@@ -166,7 +178,13 @@ end
     )
     network = DislocationNetwork(square, memBuffer = 1)
     network2 = deepcopy(network)
-    network2 = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    network2 = coarsenNetwork!(
+        dlnParams,
+        matParams,
+        regularCuboidMesh,
+        forceDisplacement,
+        network2,
+    )
     @test compStruct(network, network2)
 
     pentagon = DislocationLoop(;
@@ -186,13 +204,13 @@ end
     network.coord[:, 6:end] .+= [10; 10; 10]
     factor = rand()
 
-    for j = 1:size(network.segForce, 1)
-    for i = 1:size(network.segForce, 3)
-        network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
-        network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
-        network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
+    for j in 1:size(network.segForce, 1)
+        for i in 1:size(network.segForce, 3)
+            network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
+            network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
+            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
+        end
     end
-end
 
     networkTest = deepcopy(network)
     missing, networkTest = mergeNode!(networkTest, 1, 1)
@@ -1339,7 +1357,6 @@ end
         segLen = Float64[300; 700; 1100; 1500; 1900; 1900; 1500; 1100; 700; 300],
         slipSystemIdx = 4,
         slipSystem = slipSystems,
-        
         label = nodeTypeDln[1; 1; 1; 1; 1; 1; 1; 1; 1; 1],
         buffer = 0.0,
         range = Float64[0 0; 0 0; 0 0],
@@ -1525,13 +1542,13 @@ end
     network = DislocationNetwork(pentagon; memBuffer = 1)
     network.coord[:, 6:end] .+= [10; 10; 10]
     factor = rand()
-    for j = 1:size(network.segForce, 1)
-    for i = 1:size(network.segForce, 3)
-        network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
-        network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
-        network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
+    for j in 1:size(network.segForce, 1)
+        for i in 1:size(network.segForce, 3)
+            network.segForce[j, 1, i] = i + (j - 1) * size(network.segForce, 3)
+            network.segForce[j, 2, i] = network.segForce[j, 1, i] * factor
+            network.nodeVel[j, i] = -i - (j - 1) * size(network.segForce, 3)
+        end
     end
-end
 
     networkTest = deepcopy(network)
     midCoord = vec(mean(networkTest.coord, dims = 2))
@@ -1861,7 +1878,7 @@ end
         numLoops = 1,
         segLen = 10 * ones(6),
         slipSystemIdx = 4,
-        slipSystem = slipSystems,  
+        slipSystem = slipSystems,
         label = nodeTypeDln[1; 2; 1; 2; 1; 1],
         buffer = 0.0,
         range = Float64[-100 100; -100 100; -100 100],
@@ -1879,7 +1896,13 @@ end
 
     network2 = deepcopy(network)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
-    network2 = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    network2 = coarsenNetwork!(
+        dlnParams,
+        matParams,
+        regularCuboidMesh,
+        forceDisplacement,
+        network2,
+    )
     links = [
         6 2
         2 3
@@ -2078,7 +2101,8 @@ end
 
     network = DislocationNetwork([shearHexagon, prismPentagon], memBuffer = 1)
     network2 = deepcopy(network)
-    network2 = refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
+    network2 =
+        refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
     @test compStruct(network, network2)
 end
 
@@ -2120,8 +2144,10 @@ end
     network = DislocationNetwork(shearDecagon, memBuffer = 1)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     dlnMobility(dlnParams, matParams, network)
-    network = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-    network = refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network =
+        coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network =
+        refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     links = [
         11 2
         2 3
@@ -2298,7 +2324,7 @@ end
     @test network.linksConnect[:, 1:numSeg]' == linksConnect
     @test isapprox(network.segForce[:, 1, 1:numSeg]', segForce1)
     @test isapprox(network.segForce[:, 2, 1:numSeg]', segForce2)
-    
+
     shearDecagon = DislocationLoop(;
         loopType = loopShear(),
         numSides = 10,
@@ -2328,8 +2354,10 @@ end
     makeConnect!(network)
     getSegmentIdx!(network)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-    network = coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
-    network = refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network =
+        coarsenNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
+    network =
+        refineNetwork!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
 
     numNode = 18
     numSeg = 21

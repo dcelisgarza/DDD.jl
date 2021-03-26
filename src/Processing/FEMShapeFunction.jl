@@ -14,7 +14,7 @@ function shapeFunction(::LinearQuadrangle3D, x, y, z)
     opz = 1 + z
 
     N =
-        SVector{8,typeof(x)}(
+        SVector{8, typeof(x)}(
             omx * omy * omz,
             opx * omy * omz,
             opx * opy * omz,
@@ -33,12 +33,17 @@ shapeFunction(::LinearQuadrangle3D, x::AbstractVector, y::AbstractVector, z::Abs
 ```
 Computes the linear shape functions `N[1:8][p]` for `(x, y, z)` point `p` on a 3D linear quadrangle.
 """
-function shapeFunction(::LinearQuadrangle3D, x::AbstractVector, y::AbstractVector, z::AbstractVector)
+function shapeFunction(
+    ::LinearQuadrangle3D,
+    x::AbstractVector,
+    y::AbstractVector,
+    z::AbstractVector,
+)
     numPoints = length(x)
     xType = eltype(x)
     @assert numPoints == length(y) == length(z)
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
-    N = Array{SVector{8,xType}}(undef, numPoints)
+    N = Array{SVector{8, xType}}(undef, numPoints)
 
     for i in eachindex(x)
         omx = 1 - x[i]
@@ -49,7 +54,7 @@ function shapeFunction(::LinearQuadrangle3D, x::AbstractVector, y::AbstractVecto
         opz = 1 + z[i]
 
         N[i] =
-            SVector{8,xType}(
+            SVector{8, xType}(
                 omx * omy * omz,
                 opx * omy * omz,
                 opx * opy * omz,
@@ -85,7 +90,7 @@ function shapeFunctionDeriv(::LinearQuadrangle3D, x, y, z)
     opz = 1 + z
 
     dNdS =
-        SMatrix{3,8,typeof(x)}(
+        SMatrix{3, 8, typeof(x)}(
             -omy * omz,
             -omx * omz,
             -omx * omy,
@@ -125,13 +130,18 @@ Computes the derivatives of the linear shape functions `N[1:3, 1:8]` for an `(x,
 dNdS[x, n, p](x,y,z) := x'th derivative of shape function n for point p.
 ```
 """
-function shapeFunctionDeriv(::LinearQuadrangle3D, x::AbstractVector, y::AbstractVector, z::AbstractVector)
+function shapeFunctionDeriv(
+    ::LinearQuadrangle3D,
+    x::AbstractVector,
+    y::AbstractVector,
+    z::AbstractVector,
+)
     numPoints = length(x)
     xType = eltype(x)
     @assert numPoints == length(y) == length(z)
-    
+
     # dNdS[x, n, p](x,y,z) := x'th derivative of shape function n for point p.
-    dNdS = Array{SMatrix{3,8,xType}}(undef, numPoints)
+    dNdS = Array{SMatrix{3, 8, xType}}(undef, numPoints)
 
     for i in eachindex(x)
         omx = 1 - x[i]
@@ -142,7 +152,7 @@ function shapeFunctionDeriv(::LinearQuadrangle3D, x::AbstractVector, y::Abstract
         opz = 1 + z[i]
 
         dNdS[i] =
-            SMatrix{3,8,xType}(
+            SMatrix{3, 8, xType}(
                 -omy * omz,
                 -omx * omz,
                 -omx * omy,

@@ -1,6 +1,6 @@
 dictkeys(d::Dict) = (collect(Symbol.(keys(d)))...,)
 dictvalues(d::Dict) = (collect(values(d))...,)
-namedtuple(d::Dict{T1,T2}) where {T1,T2} = NamedTuple{dictkeys(d)}(dictvalues(d))
+namedtuple(d::Dict{T1, T2}) where {T1, T2} = NamedTuple{dictkeys(d)}(dictvalues(d))
 
 """
 ```
@@ -10,7 +10,7 @@ Make a dictionary of enumerated variable instances. Helps in translating JSON fi
 """
 function makeInstanceDict(valType::DataType)
     insts = instances(valType)
-    dict = Dict{String,valType}()
+    dict = Dict{String, valType}()
     for inst in insts
         push!(dict, string(inst) => inst)
     end
@@ -53,7 +53,7 @@ Dict{String,Any} with 4 entries:
 """
 function makeTypeDict(valType::DataType; cutoff = 1)
     primitive = subTypeTree(valType; cutoff = cutoff)
-    dict = Dict{String,Any}()
+    dict = Dict{String, Any}()
     for (key, val) in primitive
         strSubType = string(key) * "()"
         try
@@ -184,7 +184,7 @@ function rot3D(xyz, uvw, abc, θ)
     sinθ = sin(θ)
     xyzDOTuvw = dot(xyz, uvw)
 
-    return SVector{3,typeof(xyzDOTuvw)}(
+    return SVector{3, typeof(xyzDOTuvw)}(
         (
             abc[1] * (uvw[2] * uvw[2] + uvw[3] * uvw[3]) -
             uvw[1] * (abc[2] * uvw[2] + abc[3] * uvw[3] - xyzDOTuvw)
@@ -212,7 +212,7 @@ end
 ```
 Tensor product.
 """
-⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1,T2} = x * y'
+⊗(x::AbstractVector{T1}, y::AbstractVector{T2}) where {T1, T2} = x * y'
 
 """
 ```
@@ -261,7 +261,7 @@ function safeNorm(x)
     xNorm = norm(x)
     if xNorm > eps(elemT)
         x = normalize(x)
-    else 
+    else
         x = zero(x)
         xNorm = eps(elemT)
     end
@@ -302,25 +302,25 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
         L1 = 0
         # seg2 is a point.
         E < eps(elemT) ? L2 = 0 : L2 = -D / E / 2
-    # seg2 is a point.
+        # seg2 is a point.
     elseif E < eps(elemT)
         L2 = 0
         # seg1 is a point.
-        A < eps(elemT) ? L1 = 0 : L1 = -B / A / 2   
-    # seg1 and two are close to each other.
+        A < eps(elemT) ? L1 = 0 : L1 = -B / A / 2
+        # seg1 and two are close to each other.
     elseif abs(G) < eps(elemT)
         dist = SVector{4, elemT}(
-                (y0 - x0) ⋅ (y0 - x0),
-                (y1 - x0) ⋅ (y1 - x0),
-                (y0 - x1) ⋅ (y0 - x1),
-                (y1 - x1) ⋅ (y1 - x1)
-            )
-        
+            (y0 - x0) ⋅ (y0 - x0),
+            (y1 - x0) ⋅ (y1 - x0),
+            (y0 - x1) ⋅ (y0 - x1),
+            (y1 - x1) ⋅ (y1 - x1),
+        )
+
         missing, idx = findmin(dist)
 
         L1 = floor(idx / 2)
         L2 = mod(idx - 1, 2)
-    # seg1 and seg2 are not points and away from each other.
+        # seg1 and seg2 are not points and away from each other.
     else
         L2 = (2 * A * D + B * C) / G
         L1 = (C * L2 - B) / A / 2
@@ -329,8 +329,9 @@ function minimumDistance(x0, x1, y0, y1, vx0, vx1, vy0, vy1)
     L1 = clamp(L1, 0, 1)
     L2 = clamp(L2, 0, 1)
 
-    distSq = (x0 + seg1 * L1 - y0 - seg2 * L2) ⋅ (x0 + seg1 * L1 - y0 - seg2 * L2) 
-    dDistSqDt = 2 * ((vx0 + vseg1 * L1 - vy0 - vseg2 * L2) ⋅ (x0 + seg1 * L1 - y0 - seg2 * L2))
+    distSq = (x0 + seg1 * L1 - y0 - seg2 * L2) ⋅ (x0 + seg1 * L1 - y0 - seg2 * L2)
+    dDistSqDt =
+        2 * ((vx0 + vseg1 * L1 - vy0 - vseg2 * L2) ⋅ (x0 + seg1 * L1 - y0 - seg2 * L2))
 
     return distSq, dDistSqDt, L1, L2
 end
