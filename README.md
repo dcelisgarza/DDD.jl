@@ -45,6 +45,9 @@ Dislocation dynamics is a complex field with an enormous barrier to entry. The a
     - External segments projected orthongonally to the face they exited from, if they were external to begin with and no intersection with the surfaces is found, project along the normal of the plane of the volume's surfaces whose orthogonal distance to the point is shortest. ![remeshed_proj](examples/remeshed_virtual_proj.png)
     - Cyan nodes are surface nodes, their virtual segments (those things jutting out of the volume) are orthogonal to the face they sit on. ![remeshed](examples/remeshed.png)
   - [ ] Collision.
+    - [x] Collision detection.
+    - [ ] Collision resolution.
+      - [x] Untested.
   - [ ] Separation.
 - [ ] DDD-FEM coupling.
   - [ ] Displacements.

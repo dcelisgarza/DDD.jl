@@ -328,184 +328,153 @@ calcSelfForce(
     idx = nothing,
 )
 ```
-Compute the self-interaction force on dislocation segments.
+Compute the self-interaction force on dislocation segments. `calcSelfForce!` for its mutating form.
 """
-function calcSelfForce(
-    dlnParams::DislocationParameters,
-    matParams::MaterialParameters,
-    network::DislocationNetwork,
-    idx = nothing,
-)
-    μ = matParams.μ
-    ν = matParams.ν
-    omNuInv = matParams.omνInv
-    nuOmNuInv = matParams.νomνInv
-    μ4π = matParams.μ4π
-    a = dlnParams.coreRad
-    aSq = dlnParams.coreRadSq
-    Ec = dlnParams.coreEnergy
-    bVec = network.bVec
-    coord = network.coord
-    segIdx = network.segIdx
-    elemT = eltype(network.bVec)
-
-    # Indices for self force.
-    if isnothing(idx)
-        # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg[1]
-        idx = 1:numSeg
-        else
-        # Else, calculate forces only on idx.
-        numSeg = length(idx)
-    end
-
-    idxBvec = @view segIdx[idx, 1]
-    idxNode1 = @view segIdx[idx, 2]
-    idxNode2 = @view segIdx[idx, 3]
-    # Un normalised segment vectors. Use views for speed.
-    bVec = @view bVec[:, idxBvec]
-    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
-
-    selfForceNode2 = zeros(3, numSeg)
-
-    @inbounds @simd for i in eachindex(idx)
-        # Finding the norm of each line vector.
-        tVecI = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
-        tVecSq = tVecI ⋅ tVecI
-        L = sqrt(tVecSq)
-        Linv = 1 / L
-        tVecI *= Linv
-        # Finding the non-singular norm.
-        La = sqrt(tVecSq + aSq)
-        bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-        # Screw component, scalar projection of bVec onto t.
-        bScrew = tVecI ⋅ bVecI
-        # Edge component, vector rejection of bVec onto t.
-        bEdgeVec = bVecI - bScrew * tVecI
-        # Finding the norm squared of each edge component.
-        bEdgeSq = bEdgeVec ⋅ bEdgeVec
-        #= 
-        A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
-        553?595: gives this expression in appendix A p590
-        f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
-        (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                                                                                                                                                
-        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
-        = tVec * bScrew - bVec
-        = - bEdgeVec =#
-        # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
-        LaMa = La - a
-        # Torsional component of core self interaction.
-        tor =
-            μ4π *
-            bScrew *
-            (nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) - LaMa^2 / (2 * La * L))
-        torCore = 2 * Ec * nuOmNuInv * bScrew
-        torTot = tor + torCore
-        # Longitudinal component of core self interaction.
-        lonCore = (bScrew^2 + bEdgeSq * omNuInv) * Ec
-        # Force calculation.
-        selfForceNode2[:, i] = torTot * bEdgeVec - lonCore * tVecI
-    end
-    selfForceNode1 = -selfForceNode2
-
-    return selfForceNode1, selfForceNode2
-end
-"""
-```
-calcSelfForce!(
-    dlnParams::DislocationParameters,
-    matParams::MaterialParameters,
-    network::DislocationNetwork,
-    idx = nothing,
-)
-```
-In-place computation of the self-interaction force on dislocation segments.
-"""
-function calcSelfForce!(
-    dlnParams::DislocationParameters,
-    matParams::MaterialParameters,
-    network::DislocationNetwork,
-    idx = nothing,
-)
-    μ = matParams.μ
-    ν = matParams.ν
-    omNuInv = matParams.omνInv
-    nuOmNuInv = matParams.νomνInv
-    μ4π = matParams.μ4π
-    a = dlnParams.coreRad
-    aSq = dlnParams.coreRadSq
-    Ec = dlnParams.coreEnergy
-    bVec = network.bVec
-    coord = network.coord
-    segIdx = network.segIdx
-    segForce = network.segForce
-    elemT = eltype(network.bVec)
-
-    # Indices for self force.
-    if isnothing(idx)
-        # If no index is provided, calculate forces for all segments.
-        numSeg = network.numSeg[1]
-        idx = 1:numSeg
-    end
-
-    # Un normalised segment vectors. Use views for speed.
-    idxBvec = @view segIdx[idx, 1]
-    idxNode1 = @view segIdx[idx, 2]
-    idxNode2 = @view segIdx[idx, 3]
-    bVec = @view bVec[:, idxBvec]
-    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
-
-    @inbounds @simd for i in eachindex(idx)
-        idxi = idx[i]
-        # Finding the norm of each line vector.
-        tVecI = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
-        tVecSq = tVecI ⋅ tVecI
-        L = sqrt(tVecSq)
-        Linv = 1 / L
-        tVecI *= Linv
-        # Finding the non-singular norm.
-        La = sqrt(tVecSq + aSq)
-        bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-        # Screw component, scalar projection of bVec onto t.
-        bScrew = tVecI ⋅ bVecI
-        # Edge component, vector rejection of bVec onto t.
-        bEdgeVec = bVecI - bScrew * tVecI
-        # Finding the norm squared of each edge component.
-        bEdgeSq = bEdgeVec ⋅ bEdgeVec
-        #= 
-        A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
-        553?595: gives this expression in appendix A p590
-        f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
-        (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                                                                                                                                                
-        tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
-        = tVec * bScrew - bVec
-        = - bEdgeVec =#
-        # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
-        LaMa = La - a
-        # Torsional component of core self interaction.
-        tor =
-            μ4π *
-            bScrew *
-            (nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) - LaMa^2 / (2 * La * L))
-        torCore = 2 * Ec * nuOmNuInv * bScrew
-        torTot = tor + torCore
-        # Longitudinal component of core self interaction.
-        lonCore = (bScrew^2 + bEdgeSq * omNuInv) * Ec
+function genSelfForce(mutating)
+    if !mutating
+        name = :calcSelfForce
         
-        selfForce = torTot * bEdgeVec - lonCore * tVecI
+        ifIdx = quote
+            if isnothing(idx)
+                # If no index is provided, calculate forces for all segments.
+                numSeg = network.numSeg[1]
+                idx = 1:numSeg
+            else
+                # Else, calculate forces only on idx.
+                numSeg = length(idx)
+            end
+        end
+
+        allocMem = quote
+            selfForceNode2 = zeros(3, numSeg)            
+        end
+
+        accumulate = quote
+            selfForceNode2[:, i] = torTot * bEdgeVec - lonCore * tVecI
+        end
+
+        retVal = quote
+            selfForceNode1 = -selfForceNode2
+            return selfForceNode1, selfForceNode2
+        end
+
+    else 
+            name = :calcSelfForce!
+
+        ifIdx = quote
+            segForce = network.segForce
+            if isnothing(idx)
+                # If no index is provided, calculate forces for all segments.
+                numSeg = network.numSeg[1]
+                idx = 1:numSeg
+            end
+        end
+
+        allocMem = quote
+            nothing
+        end
+
+        accumulate = quote
+            idxi = idx[i]
+            selfForce = torTot * bEdgeVec - lonCore * tVecI
+
+            @inbounds @simd for j in 1:3
+                segForce[j, 1, idxi] -= selfForce[j]
+                segForce[j, 2, idxi] += selfForce[j]
+            end
+        end
         
-        for j in 1:3
-            segForce[j, 1, idxi] -= selfForce[j]
-            segForce[j, 2, idxi] += selfForce[j]
+    retVal = quote
+            return nothing
         end
     end
 
-    return nothing
+    ex = quote
+            function $name(
+                dlnParams::DislocationParameters,
+                matParams::MaterialParameters,
+                network::DislocationNetwork,
+                idx = nothing,
+            )
+                μ = matParams.μ
+                ν = matParams.ν
+                omNuInv = matParams.omνInv
+                nuOmNuInv = matParams.νomνInv
+                μ4π = matParams.μ4π
+                a = dlnParams.coreRad
+                aSq = dlnParams.coreRadSq
+                Ec = dlnParams.coreEnergy
+                bVec = network.bVec
+                coord = network.coord
+                segIdx = network.segIdx
+                elemT = eltype(network.bVec)
+                
+                # Indices
+                $ifIdx
+
+                idxBvec = @view segIdx[idx, 1]
+                idxNode1 = @view segIdx[idx, 2]
+                idxNode2 = @view segIdx[idx, 3]
+                # Un normalised segment vectors. Use views for speed.
+                bVec = @view bVec[:, idxBvec]
+                tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+
+                # Allocate memory if necessary.
+                $allocMem
+
+                @inbounds @simd for i in eachindex(idx)
+                # Finding the norm of each line vector.
+                    tVecI = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+                    tVecSq = tVecI ⋅ tVecI
+                    L = sqrt(tVecSq)
+                    Linv = 1 / L
+                    tVecI *= Linv
+                    # Finding the non-singular norm.
+                    La = sqrt(tVecSq + aSq)
+                    bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+                    # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
+                    # Screw component, scalar projection of bVec onto t.
+                    bScrew = tVecI ⋅ bVecI
+                    # Edge component, vector rejection of bVec onto t.
+                    bEdgeVec = bVecI - bScrew * tVecI
+                    # Finding the norm squared of each edge component.
+                    bEdgeSq = bEdgeVec ⋅ bEdgeVec
+                    #= 
+                    A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
+                    553?595: gives this expression in appendix A p590
+                    f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
+                    (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
+                                                                                                                                                                                                                                                                                                                            
+                    tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
+                    = tVec * bScrew - bVec
+                    = - bEdgeVec =#
+                    # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
+                    LaMa = La - a
+                    # Torsional component of core self interaction.
+                    tor =
+                        μ4π *
+                        bScrew *
+                        (nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) - LaMa^2 / (2 * La * L))
+                    torCore = 2 * Ec * nuOmNuInv * bScrew
+                    torTot = tor + torCore
+                    # Longitudinal component of core self interaction.
+                    lonCore = (bScrew^2 + bEdgeSq * omNuInv) * Ec
+                    # Force calculation.
+                    $accumulate
+                end
+
+                # Return value.
+                $retVal
+            end
+
+        end
+
+    return ex
 end
+# Generate calcSelfForce(dlnParams::DislocationParameters, matParams::MaterialParameters, network::DislocationNetwork, idx = nothing)
+eval(genSelfForce(true))
+# Generate calcSelfForce!(dlnParams::DislocationParameters, matParams::MaterialParameters, network::DislocationNetwork, idx = nothing)
+eval(genSelfForce(false))
 
 """
 ```
@@ -1377,7 +1346,7 @@ function calcParSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1
     # If we flipped the first segment originally, flip the forces round.
     if flip
         Fnode1, Fnode2 = Fnode2, Fnode1
-    end
+end
 
     return Fnode1, Fnode2, Fnode3, Fnode4
     end

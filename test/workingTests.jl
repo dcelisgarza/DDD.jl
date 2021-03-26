@@ -1030,6 +1030,50 @@ norm(uTilde)
 forceDisplacement.uTilde
 
 
+function foo(x)
+    return 2 * x
+end
+function foo!(x)
+    return x .*= 2
+end
+function genFoo(mutating)
+    if mutating
+        name = :wak!
+        retval = :(x .*= 2)
+    else
+        name = :wak
+        retval = :(2 * x)
+    end
+
+    ex = quote
+        function $name(x)
+            if $mutating
+                if length(x) > 10
+                    println("asasdf")
+            end
+            end
+            return $retval
+        end
+    end
+    
+return eval(ex)
+end
+
+test = rand(5)
+@allocated foo(test)
+@allocated foo!(test)
+
+genFoo(true)
+genFoo(false)
+@allocated wak(test)
+@allocated wak!(test)
+
+
+f
+@allocated f(test)
+bar!
+
+
 ##
 using Plots
 # plotlyjs()
