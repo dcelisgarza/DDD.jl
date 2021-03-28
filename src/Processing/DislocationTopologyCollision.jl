@@ -366,8 +366,114 @@ function resolveCollision(
         )
         powerPreCollision += 1.05 * nodeVelTmp ⋅ force
 
+        collisionPoint = findCollisionPoint(network, mergeNode1, mergeNode2)
+
     elseif collisionType == :hinge
     end
 
     # calcSegForce(dlnParams, matParams, mesh, forceDisplacement, network, idx)
+end
+
+function findCollisionPoint(network::DislocationNetwork, node1, node2)
+    bVec = network.bVec
+    label = network.label
+    coord = network.coord
+    nodeVel = network.nodeVel
+    connectivity = network.connectivity
+    elemT = eltype(coord)
+
+    p1 = SVector{3, elemT}(coord[1, node1], coord[2, node1], coord[3, node1])
+    p2 = SVector{3, elemT}(coord[1, node2], coord[2, node2], coord[3, node2])
+    label1 = label[node1]
+    label2 = label[node2]
+
+    if label1 == intFixDln
+        collisionPoint = p1
+        return collisionPoint
+    elseif label2 == intFixDln
+        collisionPoint = p2
+        return collisionPoint
+    end
+
+    N = 0
+    matN = zeros(elemT, MMatrix{3, 3})
+    vecN = zeros(elemT, MVector{3})
+
+    N = findPlaneCondition!(matN, vecN, N, network, node1, p1)
+    N < 3 ? findPlaneCondition!(matN, vecN, N, network, node2, p2) : nothing
+
+    A = SMatrix{6, 6, elemT}([I(3) matN[:, 1:3]'; matN[:, 1:3] zeros(3, 3)])
+    b = [(p1 + p2) / 2; vecN]
+    x = A \ b
+    collisionPoint = x[1:3]
+
+    return collisionPoint
+end
+
+function findPlaneCondition!(matN, vecN, N, network, node, point)
+    bVec = network.bVec
+    coord = network.coord
+    nodeVel = network.nodeVel
+    connectivity = network.connectivity
+    elemT = eltype(coord)
+
+    newPlaneCondition = 0.875
+
+    for i in 1:connectivity[1, node]
+        if N < 3
+            link, missing, connectedNode = findConnectedNode(network, node, i)
+            tVec =
+                point - SVector{3, elemT}(
+                    coord[1, connectedNode],
+                    coord[2, connectedNode],
+                    coord[3, connectedNode],
+                )
+            tVec = normalize(tVec)
+
+            b = SVector{3, elemT}(bVec[1, link], bVec[2, link], bVec[3, link])
+            vel = SVector{3, elemT}(nodeVel[1, node], nodeVel[2, node], nodeVel[3, node])
+
+            n1 = tVec × b
+            n2 = tVec × vel
+
+            n1Sq = n1 ⋅ n1
+            n2Sq = n2 ⋅ n2
+
+            if n1Sq > eps(elemT)
+                plane = normalize(n1)
+            elseif n2Sq > eps(elemT)
+                plane = normalize(n2)
+            end
+
+            if n1Sq > eps(elemT) || n2Sq > eps(elemT)
+                if N == 0
+                    condition = true
+                elseif N == 1
+                    condition = (matN[:, 1] ⋅ plane)^2 < newPlaneCondition^2
+                else
+                    detN = det(
+                        SMatrix{3, 3, elemT}(
+                            matN[1, 1],
+                            matN[2, 1],
+                            matN[3, 1],
+                            matN[1, 2],
+                            matN[2, 2],
+                            matN[3, 2],
+                            plane[1],
+                            plane[2],
+                            plane[3],
+                        ),
+                    )
+                    condition = detN^2 < (1 - newPlaneCondition)^2
+                end
+
+                if condition
+                    N += 1
+                    matN[:, N] = plane
+                    vecN[N] = plane ⋅ point
+                end
+            end
+        end
+    end
+    return N
 end

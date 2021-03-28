@@ -54,17 +54,17 @@ function calc_σTilde(
     coord2 = @view coord[:, idxNode2]
 
     numPoints = div(length(x0), 3)
-numPoints == 1 ? σ = zeros(6) : σ = zeros(6, numPoints)
+    numPoints == 1 ? σ = zeros(6) : σ = zeros(6, numPoints)
 
     # Loop over segments.
     @inbounds @simd for i in eachindex(idx)
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
-        n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        n1 = SVector{3, elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
+        n2 = SVector{3, elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
         t = normalize(n2 - n1)
         # Loop over grid points.
         for j in 1:numPoints
-            x = SVector{3,elemT}(x0[1, j], x0[2, j], x0[3, j])
+            x = SVector{3, elemT}(x0[1, j], x0[2, j], x0[3, j])
 
             R = x - n1
             Rdt = R ⋅ t
@@ -166,7 +166,7 @@ numPoints == 1 ? σ = zeros(6) : σ = zeros(6, numPoints)
             I_13xy = -νμ4πν * tmtxbxy
             I_13yz = -νμ4πν * tmtxbyz
             I_13xz = -νμ4πν * tmtxbxz
-            
+
             I_05xx = common * (a2 + dmdxx) - a2μ8π * tmdxbxx
             I_05yy = common * (a2 + dmdyy) - a2μ8π * tmdxbyy
             I_05zz = common * (a2 + dmdzz) - a2μ8π * tmdxbzz
@@ -292,13 +292,13 @@ function calc_σTilde!(
 
     # Loop over segments.
     @inbounds @simd for i in eachindex(idx)
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-        n1 = SVector{3,elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
-        n2 = SVector{3,elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        n1 = SVector{3, elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
+        n2 = SVector{3, elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
         t = normalize(n2 - n1)
         # Loop over grid points.
         for j in 1:numPoints
-            x = SVector{3,elemT}(x0[1, j], x0[2, j], x0[3, j])
+            x = SVector{3, elemT}(x0[1, j], x0[2, j], x0[3, j])
 
             R = x - n1
             Rdt = R ⋅ t
@@ -544,11 +544,11 @@ function calc_uTilde!(
         intSeg::Bool = true
 
         # Coords of first node of the segment.
-        A = SVector{3,elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
+        A = SVector{3, elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
         # Coords of second node of the segment.
-        B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
+        B = SVector{3, elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
         # Segment's burgers vector.
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
 
         # Find external segments.
         if label[link1] == extDln || label[link2] == extDln
@@ -559,8 +559,8 @@ function calc_uTilde!(
             distMinC::elemT = Inf
             distMinTmpA::elemT = 0
             distMinTmpB::elemT = 0
-            intersectA = SVector{3,elemT}(Inf, Inf, Inf)
-            intersectB = SVector{3,elemT}(Inf, Inf, Inf)
+            intersectA = SVector{3, elemT}(Inf, Inf, Inf)
+            intersectB = SVector{3, elemT}(Inf, Inf, Inf)
             for j in 1:size(normals, 2)
                 distMinTmpA, intersectTmpA, missing =
                     findIntersectVolume(mesh, normals[:, j], A)
@@ -619,13 +619,13 @@ function calc_uTilde!(
             surfConB = surfNodeCons[link2]
 
             surfConA != 0 ?
-            Aprime = SVector{3,elemT}(
+            Aprime = SVector{3, elemT}(
                 coordDln[1, surfConA],
                 coordDln[2, surfConA],
                 coordDln[3, surfConA],
             ) : nothing
             surfConB != 0 ?
-            Bprime = SVector{3,elemT}(
+            Bprime = SVector{3, elemT}(
                 coordDln[1, surfConB],
                 coordDln[2, surfConB],
                 coordDln[3, surfConB],
@@ -690,7 +690,8 @@ function calc_uTilde!(
     end
 
     return nothing
-    end
+end
+
 function calc_uTilde(
     mesh::AbstractMesh,
     boundaries::Boundaries,
@@ -698,7 +699,7 @@ function calc_uTilde(
     network::DislocationNetwork,
 )
     C = mean(mesh.vertices.vertices)
-    
+
     scale = mesh.scale
     faces = mesh.faces
     faceNorm = mesh.faceNorm
@@ -746,11 +747,11 @@ function calc_uTilde(
         intSeg::Bool = true
 
         # Coords of first node of the segment.
-        A = SVector{3,elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
+        A = SVector{3, elemT}(coordDln[1, link1], coordDln[2, link1], coordDln[3, link1])
         # Coords of second node of the segment.
-        B = SVector{3,elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
+        B = SVector{3, elemT}(coordDln[1, link2], coordDln[2, link2], coordDln[3, link2])
         # Segment's burgers vector.
-        b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
 
         # Find external segments.
         faceA = 0
@@ -766,8 +767,8 @@ function calc_uTilde(
             distMinTmpA::elemT = 0
             distMinTmpB::elemT = 0
 
-            intersectA = SVector{3,elemT}(Inf, Inf, Inf)
-            intersectB = SVector{3,elemT}(Inf, Inf, Inf)
+            intersectA = SVector{3, elemT}(Inf, Inf, Inf)
+            intersectB = SVector{3, elemT}(Inf, Inf, Inf)
             for j in 1:size(normals, 2)
                 distMinTmpA, intersectTmpA, faceA =
                     findIntersectVolume(mesh, normals[:, j], A)
@@ -826,13 +827,13 @@ function calc_uTilde(
             surfConB = surfNodeCons[link2]
 
             surfConA != 0 ?
-            Aprime = SVector{3,elemT}(
+            Aprime = SVector{3, elemT}(
                 coordDln[1, surfConA],
                 coordDln[2, surfConA],
                 coordDln[3, surfConA],
             ) : nothing
             surfConB != 0 ?
-            Bprime = SVector{3,elemT}(
+            Bprime = SVector{3, elemT}(
                 coordDln[1, surfConB],
                 coordDln[2, surfConB],
                 coordDln[3, surfConB],
@@ -931,7 +932,7 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, matParams, A, B, C,
 
     @inbounds @simd for i in 1:size(P, 2)
         # Local R vectors.
-        Pi = SVector{3,elemT}(P[1, i], P[2, i], P[3, i])
+        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
 
         RA = A - Pi
         RB = B - Pi
@@ -987,7 +988,7 @@ function calcDisplacementDislocationTriangle!(uTilde, uDofs, A, B, C, b, P)
 
     @inbounds @simd for i in 1:size(P, 2)
         # Local R vectors.
-        Pi = SVector{3,elemT}(P[1, i], P[2, i], P[3, i])
+        Pi = SVector{3, elemT}(P[1, i], P[2, i], P[3, i])
 
         RA = A - Pi
         RB = B - Pi
