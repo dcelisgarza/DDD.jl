@@ -243,7 +243,7 @@ function genMakeConnect(mutating)
                 linksConnect[1, i] = connectivity[1, n1]
                 linksConnect[2, i] = connectivity[1, n2]
             end
-            return $retVal
+            $retVal
         end
     end
     return ex
