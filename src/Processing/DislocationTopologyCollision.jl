@@ -247,131 +247,118 @@ function resolveCollision(
     elemT = eltype(coord)
     mergeNode1 = 0
 
-    # Identify closeness to node in segment 1 is the same in both collision types.
-    tVec = SVector{3, elemT}(
-        coord[1, n2s1] - coord[1, n1s1],
-        coord[2, n2s1] - coord[2, n1s1],
-        coord[3, n2s1] - coord[3, n1s1],
-    )
-    tVecSq = tVec ⋅ tVec
-
-    close_n1s1 = ((L1^2 * tVecSq) < minSegLenSq)
-    close_n2s1 = (((1 - L1)^2 * tVecSq) < minSegLenSq)
-
     if collisionType == :twoLine
-        if close_n1s1 && L1 <= 0.5
-            mergeNode1 = n1s1
-        elseif close_n2s1
-            mergeNode1 = n2s1
-        else
-            splitNode = n1s1
-            splitConnect = linksConnect[1, s1]
-
-            if close_n1s1
-                L1 = collisionDist / sqrt(tVec)
-            else
-                L1 = 1 - collisionDist / sqrt(tVec)
-            end
-
-            midCoord =
-                SVector{3, elemT}(coord[1, n1s1], coord[2, n1s1], coord[3, n1s1]) *
-                (1 - L1) +
-                SVector{3, elemT}(coord[1, n2s1], coord[2, n2s1], coord[3, n2s1]) * L1
-
-            midVel =
-                SVector{3, elemT}(nodeVel[1, n1s1], nodeVel[2, n1s1], nodeVel[3, n1s1]) *
-                (1 - L1) +
-                SVector{3, elemT}(nodeVel[1, n2s1], nodeVel[2, n2s1], nodeVel[3, n2s1]) * L1
-
-            splitNode!(network, splitNode, splitConnect, midCoord, midVel)
-            mergeNode1 = network.numNode[1]
-        end
-
-        # Second node to merge.
-        tVec = SVector{3, elemT}(
-            coord[1, n2s2] - coord[1, n1s2],
-            coord[2, n2s2] - coord[2, n1s2],
-            coord[3, n2s2] - coord[3, n1s2],
-        )
-        tVecSq = tVec ⋅ tVec
-
-        close_n1s2 = ((L2^2 * tVecSq) < minSegLenSq)
-        close_n2s2 = (((1 - L2)^2 * tVecSq) < minSegLenSq)
-
-        if close_n1s2 && L2 <= 0.5
-            mergeNode2 = n1s2
-        elseif close_n2s2
-            mergeNode2 = n2s2
-        else
-            splitNode = n1s2
-            splitConnect = linksConnect[1, s2]
-
-            if close_n1s2
-                L2 = collisionDist / sqrt(tVec)
-            else
-                L2 = 1 - collisionDist / sqrt(tVec)
-            end
-
-            midCoord =
-                SVector{3, elemT}(coord[1, n1s2], coord[2, n1s2], coord[3, n1s2]) *
-                (1 - L2) +
-                SVector{3, elemT}(coord[1, n2s2], coord[2, n2s2], coord[3, n2s2]) * L2
-
-            midVel =
-                SVector{3, elemT}(nodeVel[1, n1s2], nodeVel[2, n1s2], nodeVel[3, n1s2]) *
-                (1 - L2) +
-                SVector{3, elemT}(nodeVel[1, n2s2], nodeVel[2, n2s2], nodeVel[3, n2s2]) * L2
-
-            splitNode!(network, splitNode, splitConnect, midCoord, midVel)
-            mergeNode2 = network.numNode[1]
-        end
+        # Identify closeness to nodes of segments 1 and 2.
+        mergeNode1, missing, network =
+            findSplitNodeLink!(dlnParams, network, n1s1, n2s1, s1, L1)
+        mergeNode2, missing, network =
+            findSplitNodeLink!(dlnParams, network, n1s2, n2s2, s2, L2)
 
         # Power dissipation of unmerged structure.
-
-        # Node 1
-        force = SVector(zeros(elemT, 3))
-        c = connectivity[1, mergeNode1]
-        for i in 1:c
-            link = connectivity[2 * i, mergeNode1]
-            pos = connectivity[2 * i + 1, mergeNode1]
-            force += SVector{3, elemT}(
-                segForce[1, 3 - pos, link],
-                segForce[2, 3 - pos, link],
-                segForce[3, 3 - pos, link],
-            )
-        end
-        nodeVelTmp = SVector{3, elemT}(
-            nodeVel[1, mergeNode1],
-            nodeVel[2, mergeNode1],
-            nodeVel[3, mergeNode1],
-        )
-        powerPreCollision = 1.05 * nodeVelTmp ⋅ force
-
-        # Node 2
-        force = SVector(zeros(elemT, 3))
-        c = connectivity[1, mergeNode2]
-        for i in 1:c
-            link = connectivity[2 * i, mergeNode2]
-            pos = connectivity[2 * i + 1, mergeNode2]
-            force += SVector{3, elemT}(
-                segForce[1, 3 - pos, link],
-                segForce[2, 3 - pos, link],
-                segForce[3, 3 - pos, link],
-            )
-        end
-        nodeVelTmp = SVector{3, elemT}(
-            nodeVel[1, mergeNode2],
-            nodeVel[2, mergeNode2],
-            nodeVel[3, mergeNode2],
-        )
-        powerPreCollision += 1.05 * nodeVelTmp ⋅ force
+        powerPreCollision = calcPowerDissipation(network, mergeNode1)
+        powerPreCollision += calcPowerDissipation(network, mergeNode2)
+        powerPreCollision *= 1.05
 
         collisionPoint = findCollisionPoint(network, mergeNode1, mergeNode2)
+        coord[:, mergeNode1] = collisionPoint
+        nodeVel[:, mergeNode1] .= 0
+
+        nodeKept, network = mergeNode!(network, mergeNode1, mergeNode2)
+
+        # If the node still exists.
+        if nodeKept > 0
+            connectivity = network.connectivity
+            # Calculate mobility of nodes connected to it.
+            links, missing, connectedNodes =
+                findConnectedNode(network, nodeKept, 1:connectivity[1, nodeKept])
+            calcSegForce!(dlnParams, matParams, network, links)
+            dlnMobility!(dlnParams, matParams, network, connectedNodes)
+            # Calculate mobility of the node.
+            dlnMobility!(dlnParams, matParams, network, nodeKept)
+        end
 
     elseif collisionType == :hinge
     end
 
     # calcSegForce(dlnParams, matParams, mesh, forceDisplacement, network, idx)
+end
+
+function findCloseN1orN2(coord, n1, n2, L, minSegLenSq)
+    tVec = SVector{3, eltype(coord)}(
+        coord[1, n2] - coord[1, n1],
+        coord[2, n2] - coord[2, n1],
+        coord[3, n2] - coord[3, n1],
+    )
+    tVecSq = tVec ⋅ tVec
+
+    close_n1 = ((L^2 * tVecSq) < minSegLenSq)
+    close_n2 = (((1 - L)^2 * tVecSq) < minSegLenSq)
+
+    return tVec, close_n1, close_n2
+end
+
+function findSplitNodeLink!(dlnParams, network, n1, n2, s, L)
+    minSegLenSq = dlnParams.minSegLenSq
+    collisionDist = dlnParams.collisionDist
+
+    coord = network.coord
+    nodeVel = network.nodeVel
+    linksConnect = network.linksConnect
+    elemT = eltype(network.coord)
+
+    tVec, close_n1, close_n2 = findCloseN1orN2(coord, n1, n2, L, minSegLenSq)
+
+    if close_n1 && L <= 0.5
+        mergeNode1 = n1
+    elseif close_n2
+        mergeNode1 = n2
+    else
+        splitNode = n1
+        splitConnect = linksConnect[1, s]
+
+        if close_n1
+            L = collisionDist / sqrt(tVec)
+        else
+            L = 1 - collisionDist / sqrt(tVec)
+        end
+
+        midCoord =
+            SVector{3, elemT}(coord[1, n1], coord[2, n1], coord[3, n1]) * (1 - L) +
+            SVector{3, elemT}(coord[1, n2], coord[2, n2], coord[3, n2]) * L
+
+        midVel =
+            SVector{3, elemT}(nodeVel[1, n1], nodeVel[2, n1], nodeVel[3, n1]) * (1 - L) +
+            SVector{3, elemT}(nodeVel[1, n2], nodeVel[2, n2], nodeVel[3, n2]) * L
+
+        network = splitNode!(network, splitNode, splitConnect, midCoord, midVel)
+        mergeNode = network.numNode[1]
+        mergeLink = network.numSeg[1]
+    end
+
+    return mergeNode, mergeLink, network
+end
+
+function calcPowerDissipation(network, node)
+    nodeVel = network.nodeVel
+    segForce = network.segForce
+    connectivity = network.connectivity
+    elemT = eltype(segForce)
+
+    force = SVector(zeros(elemT, 3))
+    c = connectivity[1, node]
+    for i in 1:c
+        link = connectivity[2 * i, node]
+        pos = connectivity[2 * i + 1, node]
+        force += SVector{3, elemT}(
+            segForce[1, 3 - pos, link],
+            segForce[2, 3 - pos, link],
+            segForce[3, 3 - pos, link],
+        )
+    end
+    nodeVelTmp = SVector{3, elemT}(nodeVel[1, node], nodeVel[2, node], nodeVel[3, node])
+    powerDissipation = nodeVelTmp ⋅ force
+
+    return powerDissipation
 end
 
 function findCollisionPoint(network::DislocationNetwork, node1, node2)
