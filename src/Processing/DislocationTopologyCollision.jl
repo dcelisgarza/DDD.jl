@@ -220,11 +220,9 @@ function detectCollision(
     return collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2, L1, L2
 end
 
-function resolveCollision(
+function resolveCollision!(
     dlnParams::DislocationParameters,
     matParams::MaterialParameters,
-    mesh::AbstractMesh,
-    forceDisplacement::ForceDisplacement,
     network::DislocationNetwork,
     collisionType,
     n1s1,
@@ -276,11 +274,35 @@ function resolveCollision(
             # Calculate mobility of the node.
             dlnMobility!(dlnParams, matParams, network, nodeKept)
         end
-
     elseif collisionType == :hinge
+        hingeNode = n1s1
+        mergeNode1 = n1s2
+        mergeNode2 = n2s1
+
+        powerPreCollision = calcPowerDissipation(network, mergeNode1)
+        powerPreCollision += calcPowerDissipation(network, mergeNode2)
+        powerPreCollision *= 1.05
+
+        collisionPoint = findCollisionPoint(network, mergeNode1, mergeNode2)
+        coord[:, mergeNode1] = collisionPoint
+        nodeVel[:, mergeNode1] .= 0
+
+        nodeKept, network = mergeNode!(network, mergeNode1, mergeNode2)
+
+        # If the node still exists.
+        if nodeKept > 0
+            connectivity = network.connectivity
+            # Calculate mobility of nodes connected to it.
+            links, missing, connectedNodes =
+                findConnectedNode(network, nodeKept, 1:connectivity[1, nodeKept])
+            calcSegForce!(dlnParams, matParams, network, links)
+            dlnMobility!(dlnParams, matParams, network, connectedNodes)
+            # Calculate mobility of the node.
+            dlnMobility!(dlnParams, matParams, network, nodeKept)
+        end
     end
 
-    # calcSegForce(dlnParams, matParams, mesh, forceDisplacement, network, idx)
+    return powerPreCollision, network
 end
 
 function findCloseN1orN2(coord, n1, n2, L, minSegLenSq)

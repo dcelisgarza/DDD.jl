@@ -296,7 +296,7 @@ function mergeNode!(network::DislocationNetwork, nodeKept, nodeGone)
 
             # If the burgers vector of the new junction is non-zero, continue to the next iteration. Else remove it.
             b = SVector{3, elemT}(bVec[1, link1], bVec[2, link1], bVec[3, link1])
-            if isapprox(dot(b, b), 0)
+            if b ⋅ b ≈ 0
                 removeLink!(network, link1)
                 links = network.links
                 connectivity = network.connectivity

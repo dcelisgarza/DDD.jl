@@ -264,7 +264,7 @@ function refineNetwork!(
                 equalSlipPlane = let
                     flag = true
                     @inbounds @simd for j in 1:3
-                        flag = flag && isapprox(slipPlane[j, link2], slipPlane[j, link1])
+                        flag = flag && slipPlane[j, link2] ≈ slipPlane[j, link1]
                     end
                     flag
                 end
@@ -323,7 +323,7 @@ function refineNetwork!(
                 equalSlipPlane = let
                     flag = true
                     @inbounds @simd for j in 1:3
-                        flag = flag && isapprox(slipPlane[j, link1], slipPlane[j, link2])
+                        flag = flag && slipPlane[j, link1] ≈ slipPlane[j, link2]
                     end
                     flag
                 end

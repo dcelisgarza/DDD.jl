@@ -20,65 +20,55 @@ calcSegForce!(
 ```
 Compute total force on dislocation segments.
 """
-function genSegForce(mutating)
-    if !mutating
-        name = :calcSegForce
-        body = quote
-            isnothing(idx) ? numSeg = network.numSeg[1] : numSeg = length(idx)
+function calcSegForce(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+    isnothing(idx) ? numSeg = network.numSeg[1] : numSeg = length(idx)
 
-            PKForce = calcPKForce(mesh, forceDisplacement, network, idx)
-            selfForce = calcSelfForce(dlnParams, matParams, network, idx)
-            segForce = calcSegSegForce(dlnParams, matParams, network, idx)
+    PKForce = calcPKForce(mesh, forceDisplacement, network, idx)
+    selfForce = calcSelfForce(dlnParams, matParams, network, idx)
+    segForce = calcSegSegForce(dlnParams, matParams, network, idx)
 
-            @inbounds for i in 1:numSeg
-                for j in 1:2
-                    @simd for k in 1:3
-                        segForce[k, j, i] += selfForce[j][k, i] + 0.5 * PKForce[k, i]
-                    end
-                end
+    @inbounds for i in 1:numSeg
+        for j in 1:2
+            @simd for k in 1:3
+                segForce[k, j, i] += selfForce[j][k, i] + 0.5 * PKForce[k, i]
             end
-
-            return segForce
-        end
-    else
-        name = :calcSegForce!
-        body = quote
-            if isnothing(idx)
-                # If no index is provided, calculate forces for all segments.
-                numSeg = network.numSeg[1]
-                range = 1:numSeg
-            else
-                # Else, calculate forces only on idx.
-                range = idx
-            end
-            network.segForce[:, :, range] .= 0
-
-            calcPKForce!(mesh, forceDisplacement, network, idx)
-            calcSelfForce!(dlnParams, matParams, network, idx)
-            calcSegSegForce!(dlnParams, matParams, network, idx)
-
-            return nothing
         end
     end
 
-    ex = quote
-        function $name(
-            dlnParams::DislocationParameters,
-            matParams::MaterialParameters,
-            mesh::AbstractMesh,
-            forceDisplacement::ForceDisplacement,
-            network::DislocationNetwork,
-            idx = nothing,
-        )
-            return $body
-        end
-    end
-    return ex
+    return segForce
 end
-# Generate calcSegForce!(dlnParams::DislocationParameters, matParams::MaterialParameters, mesh::AbstractMesh, forceDisplacement::ForceDisplacement, network::DislocationNetwork, idx = nothing)
-eval(genSegForce(true))
-# Generate calcSegForce(dlnParams::DislocationParameters, matParams::MaterialParameters, mesh::AbstractMesh, forceDisplacement::ForceDisplacement, network::DislocationNetwork, idx = nothing)
-eval(genSegForce(false))
+
+function calcSegForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg[1]
+        range = 1:numSeg
+    else
+        # Else, calculate forces only on idx.
+        range = idx
+    end
+    network.segForce[:, :, range] .= 0
+
+    calcPKForce!(mesh, forceDisplacement, network, idx)
+    calcSelfForce!(dlnParams, matParams, network, idx)
+    calcSegSegForce!(dlnParams, matParams, network, idx)
+
+    return nothing
+end
 
 """
 ```
@@ -247,106 +237,90 @@ Compute the Peach-Koehler force on segments by using [`calc_σHat`](@ref).
 f = (\\hat{\\mathbb{\\sigma}} \\cdot \\overrightarrow{b}) \\times \\overrightarrow{t}
 ``
 """
-function genPKForce(mutating)
-    if !mutating
-        name = :calcPKForce
+function calcPKForce(
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+    numSeg, segIdx, bVec, coord, elemT = calcPKForceUnroll(network)
 
-        ifIdx = quote
-            if isnothing(idx)
-                # If no index is provided, calculate forces for all segments.
-                numSeg = network.numSeg[1]
-                idx = 1:numSeg
-            else
-                # Else, calculate forces only on idx.
-                numSeg = length(idx)
-            end
-        end
-
-        accumulator = quote
-            PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
-        end
-
-        accumulate = quote
-            @inbounds @simd for j in 1:3
-                PKForce[j, i] = pkForce[j]
-            end
-        end
-
-        retVal = quote
-            return PKForce
-        end
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg[1]
+        idx = 1:numSeg
     else
-        name = :calcPKForce!
-
-        ifIdx = quote
-            # Indices for self force.
-            if isnothing(idx)
-                # If no index is provided, calculate forces for all segments.
-                numSeg = network.numSeg[1]
-                idx = 1:numSeg
-            end
-        end
-
-        accumulator = quote
-            segForce = network.segForce
-        end
-
-        accumulate = quote
-            idxi = idx[i]
-            for j in 1:3
-                segForce[j, 1, idxi] += pkForce[j] / 2
-                segForce[j, 2, idxi] += pkForce[j] / 2
-            end
-        end
-
-        retVal = quote
-            return nothing
-        end
+        # Else, calculate forces only on idx.
+        numSeg = length(idx)
     end
 
-    ex = quote
-        function $name(
-            mesh::AbstractMesh,
-            forceDisplacement::ForceDisplacement,
-            network::DislocationNetwork,
-            idx = nothing,
-        )
-            # Unroll constants.
-            numSeg = network.numSeg[1]
-            segIdx = network.segIdx
-            bVec = network.bVec
-            coord = network.coord
-            elemT = eltype(network.coord)
+    bVec, tVec, midNode = calcPKForceViews(bVec, coord, segIdx, idx)
 
-            $ifIdx
-
-            idxBvec = @view segIdx[idx, 1]
-            idxNode1 = @view segIdx[idx, 2]
-            idxNode2 = @view segIdx[idx, 3]
-            # Un normalised segment vectors. Use views for speed.
-            bVec = @view bVec[:, idxBvec]
-            tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
-            midNode = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
-
-            $accumulator
-            # Loop over segments.
-            @inbounds @simd for i in eachindex(idx)
-                x0 = SVector{3, elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
-                b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-                t = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
-                σHat = calc_σHat(mesh, forceDisplacement, x0)
-                pkForce = (σHat * b) × t
-                $accumulate
-            end
-            $retVal
-        end
+    PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
+    @inbounds @simd for i in eachindex(idx)
+        x0, b, t, σHat, pkForce =
+            _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
+        PKForce[:, i] = pkForce[:]
     end
-    return ex
+
+    return PKForce
 end
-# Generate calcPKForce!(mesh::AbstractMesh, forceDisplacement::ForceDisplacement, network::DislocationNetwork, idx = nothing)
-eval(genPKForce(true))
-# Generate calcPKForce(mesh::AbstractMesh, forceDisplacement::ForceDisplacement, network::DislocationNetwork, idx = nothing)
-eval(genPKForce(false))
+function calcPKForce!(
+    mesh::AbstractMesh,
+    forceDisplacement::ForceDisplacement,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+    numSeg, segIdx, bVec, coord, elemT = calcPKForceUnroll(network)
+
+    # Indices for self force.
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg[1]
+        idx = 1:numSeg
+    end
+
+    bVec, tVec, midNode = calcPKForceViews(bVec, coord, segIdx, idx)
+
+    segForce = network.segForce    # Vector of PK force.
+    @inbounds @simd for i in eachindex(idx)
+        x0, b, t, σHat, pkForce =
+            _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
+        idxi = idx[i]
+        @inbounds @simd for j in 1:3
+            segForce[j, 1, idxi] += pkForce[j] / 2
+            segForce[j, 2, idxi] += pkForce[j] / 2
+        end
+    end
+
+    return nothing
+end
+function calcPKForceUnroll(network)
+    # Unroll constants.
+    return network.numSeg[1],
+    network.segIdx,
+    network.bVec,
+    network.coord,
+    eltype(network.coord)
+end
+function calcPKForceViews(bVec, coord, segIdx, idx)
+    idxBvec = @view segIdx[idx, 1]
+    idxNode1 = @view segIdx[idx, 2]
+    idxNode2 = @view segIdx[idx, 3]
+    bVec = @view bVec[:, idxBvec]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+    midPoint = @views (coord[:, idxNode2] + coord[:, idxNode1]) / 2
+    return bVec, tVec, midPoint
+end
+function _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
+    x0 = SVector{3, elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
+    b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+    t = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+    σHat = calc_σHat(mesh, forceDisplacement, x0)
+    pkForce = (σHat * b) × t
+
+    return x0, b, t, σHat, pkForce
+end
 
 """
 ```
@@ -366,151 +340,139 @@ calcSelfForce!(
 ```
 Compute the self-interaction force on dislocation segments. `calcSelfForce!` for its mutating form.
 """
-function genSelfForce(mutating)
-    if !mutating
-        name = :calcSelfForce
+function calcSelfForce(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+    μ, ν, omNuInv, nuOmNuInv, μ4π, a, aSq, Ec, bVec, coord, segIdx, elemT =
+        calcSelfForceUnroll(dlnParams, matParams, network)
 
-        ifIdx = quote
-            if isnothing(idx)
-                # If no index is provided, calculate forces for all segments.
-                numSeg = network.numSeg[1]
-                idx = 1:numSeg
-            else
-                # Else, calculate forces only on idx.
-                numSeg = length(idx)
-            end
-        end
-
-        accumulator = quote
-            selfForceNode2 = zeros(3, numSeg)
-        end
-
-        accumulate = quote
-            selfForceNode2[:, i] = torTot * bEdgeVec - lonCore * tVecI
-        end
-
-        retVal = quote
-            selfForceNode1 = -selfForceNode2
-            return selfForceNode1, selfForceNode2
-        end
-
+    # Indices
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg[1]
+        idx = 1:numSeg
     else
-        name = :calcSelfForce!
-
-        ifIdx = quote
-            if isnothing(idx)
-                # If no index is provided, calculate forces for all segments.
-                numSeg = network.numSeg[1]
-                idx = 1:numSeg
-            end
-        end
-
-        accumulator = quote
-            segForce = network.segForce
-        end
-
-        accumulate = quote
-            idxi = idx[i]
-            selfForce = torTot * bEdgeVec - lonCore * tVecI
-
-            @inbounds @simd for j in 1:3
-                segForce[j, 1, idxi] -= selfForce[j]
-                segForce[j, 2, idxi] += selfForce[j]
-            end
-        end
-
-        retVal = quote
-            return nothing
-        end
+        # Else, calculate forces only on idx.
+        numSeg = length(idx)
     end
 
-    ex = quote
-        function $name(
-            dlnParams::DislocationParameters,
-            matParams::MaterialParameters,
-            network::DislocationNetwork,
-            idx = nothing,
-        )
-            μ = matParams.μ
-            ν = matParams.ν
-            omNuInv = matParams.omνInv
-            nuOmNuInv = matParams.νomνInv
-            μ4π = matParams.μ4π
-            a = dlnParams.coreRad
-            aSq = dlnParams.coreRadSq
-            Ec = dlnParams.coreEnergy
-            bVec = network.bVec
-            coord = network.coord
-            segIdx = network.segIdx
-            elemT = eltype(network.bVec)
+    bVec, tVec = calcSelfForceViews(segIdx, bVec, coord, idx)
 
-            # Indices
-            $ifIdx
+    # Allocate memory if necessary.
+    selfForceNode2 = zeros(3, numSeg)
 
-            idxBvec = @view segIdx[idx, 1]
-            idxNode1 = @view segIdx[idx, 2]
-            idxNode2 = @view segIdx[idx, 3]
-            # Un normalised segment vectors. Use views for speed.
-            bVec = @view bVec[:, idxBvec]
-            tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
-
-            # Allocate memory if necessary.
-            $accumulator
-
-            @inbounds @simd for i in eachindex(idx)
-                # Finding the norm of each line vector.
-                tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
-                tVecSq = tVecI ⋅ tVecI
-                L = sqrt(tVecSq)
-                Linv = 1 / L
-                tVecI *= Linv
-                # Finding the non-singular norm.
-                La = sqrt(tVecSq + aSq)
-                bVecI = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-                # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
-                # Screw component, scalar projection of bVec onto t.
-                bScrew = tVecI ⋅ bVecI
-                # Edge component, vector rejection of bVec onto t.
-                bEdgeVec = bVecI - bScrew * tVecI
-                # Finding the norm squared of each edge component.
-                bEdgeSq = bEdgeVec ⋅ bEdgeVec
-                #= 
-                A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
-                553?595: gives this expression in appendix A p590
-                f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
-                (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-                tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
-                = tVec * bScrew - bVec
-                = - bEdgeVec =#
-                # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
-                LaMa = La - a
-                # Torsional component of core self interaction.
-                tor =
-                    μ4π *
-                    bScrew *
-                    (
-                        nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) -
-                        LaMa^2 / (2 * La * L)
-                    )
-                torCore = 2 * Ec * nuOmNuInv * bScrew
-                torTot = tor + torCore
-                # Longitudinal component of core self interaction.
-                lonCore = (bScrew^2 + bEdgeSq * omNuInv) * Ec
-                # Force calculation.
-                $accumulate
-            end
-
-            # Return value.
-            return $retVal
-        end
+    @inbounds @simd for i in eachindex(idx)
+        selfForceNode2[:, i] =
+            _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv, i)
     end
-    return ex
+
+    # Return value.
+    selfForceNode1 = -selfForceNode2
+    return selfForceNode1, selfForceNode2
 end
-# Generate calcSelfForce!(dlnParams::DislocationParameters, matParams::MaterialParameters, network::DislocationNetwork, idx = nothing)
-eval(genSelfForce(true))
-# Generate calcSelfForce(dlnParams::DislocationParameters, matParams::MaterialParameters, network::DislocationNetwork, idx = nothing)
-eval(genSelfForce(false))
+function calcSelfForce!(
+    dlnParams::DislocationParameters,
+    matParams::MaterialParameters,
+    network::DislocationNetwork,
+    idx = nothing,
+)
+    μ, ν, omNuInv, nuOmNuInv, μ4π, a, aSq, Ec, bVec, coord, segIdx, elemT =
+        calcSelfForceUnroll(dlnParams, matParams, network)
+
+    # Indices
+    if isnothing(idx)
+        # If no index is provided, calculate forces for all segments.
+        numSeg = network.numSeg[1]
+        idx = 1:numSeg
+    end
+
+    bVec, tVec = calcSelfForceViews(segIdx, bVec, coord, idx)
+
+    # Allocate memory if necessary.
+    segForce = network.segForce
+
+    @inbounds @simd for i in eachindex(idx)
+        selfForce =
+            _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv, i)
+
+        idxi = idx[i]
+        @inbounds @simd for j in 1:3
+            segForce[j, 1, idxi] -= selfForce[j]
+            segForce[j, 2, idxi] += selfForce[j]
+        end
+    end
+
+    return nothing
+end
+function calcSelfForceUnroll(dlnParams, matParams, network)
+    return matParams.μ,
+    matParams.ν,
+    matParams.omνInv,
+    matParams.νomνInv,
+    matParams.μ4π,
+    dlnParams.coreRad,
+    dlnParams.coreRadSq,
+    dlnParams.coreEnergy,
+    network.bVec,
+    network.coord,
+    network.segIdx,
+    eltype(network.bVec)
+end
+function calcSelfForceViews(segIdx, bVec, coord, idx)
+    idxBvec = @view segIdx[idx, 1]
+    idxNode1 = @view segIdx[idx, 2]
+    idxNode2 = @view segIdx[idx, 3]
+    # Un normalised segment vectors. Use views for speed.
+    bVec = @view bVec[:, idxBvec]
+    tVec = @views coord[:, idxNode2] - coord[:, idxNode1]
+
+    return bVec, tVec
+end
+function _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv, i)
+    # Finding the norm of each line vector.
+    tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+    tVecSq = tVecI ⋅ tVecI
+    L = sqrt(tVecSq)
+    Linv = 1 / L
+    tVecI *= Linv
+    # Finding the non-singular norm.
+    La = sqrt(tVecSq + aSq)
+    bVecI = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+    # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
+    # Screw component, scalar projection of bVec onto t.
+    bScrew = tVecI ⋅ bVecI
+    # Edge component, vector rejection of bVec onto t.
+    bEdgeVec = bVecI - bScrew * tVecI
+    # Finding the norm squared of each edge component.
+    bEdgeSq = bEdgeVec ⋅ bEdgeVec
+    #= 
+    A. Arsenlis et al, Modelling Simul. Mater. Sci. Eng. 15 (2007)
+    553?595: gives this expression in appendix A p590
+    f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
+    (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+    tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
+    = tVec * bScrew - bVec
+    = - bEdgeVec =#
+    # Torsional component of the elastic self interaction force. This is the scalar component of the above equation.
+    LaMa = La - a
+    # Torsional component of core self interaction.
+    tor =
+        μ4π *
+        bScrew *
+        (nuOmNuInv * (log((La + L) / a) - 2 * LaMa * Linv) - LaMa^2 / (2 * La * L))
+    torCore = 2 * Ec * nuOmNuInv * bScrew
+    torTot = tor + torCore
+    # Longitudinal component of core self interaction.
+    lonCore = (bScrew^2 + bEdgeSq * omNuInv) * Ec
+
+    selfForceNode2 = torTot * bEdgeVec - lonCore * tVecI
+
+    return selfForceNode2
+end
 
 """
 ```
