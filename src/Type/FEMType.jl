@@ -118,7 +118,7 @@ end
 
 """
 ```
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24,T25} <: AbstractRegularCuboidMesh
     order::T1
     dx::T2
     dy::T3
@@ -137,12 +137,13 @@ struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,
     faces::T16
     faceNorm::T17
     faceMidPt::T18
-    cornerNode::T19
-    edgeNode::T20
-    faceNode::T21
-    coord::T22
-    connectivity::T23
-    K::T24
+    elemFaces::T19
+    cornerNode::T20
+    edgeNode::T21
+    faceNode::T22
+    coord::T23
+    connectivity::T24
+    K::T25
 end
 ```
 Stores regular a cuboid mesh.
@@ -199,6 +200,7 @@ struct RegularCuboidMesh{
     T22,
     T23,
     T24,
+    T25,
 } <: AbstractRegularCuboidMesh
     order::T1
     dx::T2
@@ -218,12 +220,13 @@ struct RegularCuboidMesh{
     faces::T16
     faceNorm::T17
     faceMidPt::T18
-    cornerNode::T19
-    edgeNode::T20
-    faceNode::T21
-    coord::T22
-    connectivity::T23
-    K::T24
+    elemFaces::T19
+    cornerNode::T20
+    edgeNode::T21
+    faceNode::T22
+    coord::T23
+    connectivity::T24
+    K::T25
 end
 
 """
