@@ -1117,9 +1117,9 @@ femParams = FEMParameters(
                     57.,
                     43.,
                     37.,
-                    35,
-                    10,
-                    10
+                    2,
+                    2,
+                    2
                 )
 
 @time regularCuboidMesh = buildMesh(matParams, femParams)
