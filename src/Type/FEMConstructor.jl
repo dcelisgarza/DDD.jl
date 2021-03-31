@@ -653,7 +653,7 @@ function Boundaries(
                 edgeNode[:z_x0y0]
                 edgeNode[:z_x0y1]
                 faceNode[:yz_x0]
-            ],
+            ]
         )
     else
         uGamma = kw[:uGamma]
@@ -702,7 +702,7 @@ function Boundaries(
                     collect(Iterators.flatten(edgeNode))
                     collect(Iterators.flatten(faceNode))
                 ],
-                [uGamma.node; mGamma.node],
+                (uGamma.node; mGamma.node),
             ),
         )
     else
@@ -710,19 +710,14 @@ function Boundaries(
     end
 
     uGammaNode = uGamma.node
+    tGammaNode = tGamma.node
     mGammaNode = mGamma.node
 
     !haskey(kw, "uDofs") ?
-    uDofs = copy(
-        reshape(
-            reshape([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode], :, 3)',
-            :,
-        ),
-    ) : uDofs = kw["uDofs"]
+    uDofs = sort!([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode]) : uDofs = kw["uDofs"]
 
-    !haskey(kw, "tDofs") ? tDofs = setdiff(1:numNode, uDofs) : tDofs = kw["tDofs"]
-
-    !haskey(kw, "mDofs") ? mDofs = [] : mDofs = setdiff(1:numNode, (uDofs, tDofs))
+    !haskey(kw, "tDofs") ?
+    tDofs = sort!([3 * tGammaNode .- 2; 3 * tGammaNode .- 1; 3 * tGammaNode; 3 * mGammaNode .- 2; 3 * mGammaNode .- 1]) : tDofs = kw["tDofs"]
 
     C = cholesky(Hermitian(K[tDofs, tDofs]))
 
@@ -735,7 +730,7 @@ function Boundaries(
         mGamma = mGamma,
         uDofs = uDofs,
         tDofs = tDofs,
-        mDofs = mDofs,
+        mDofs = nothing,
         tK = C,
     )
 
@@ -757,14 +752,10 @@ Boundaries(; noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 Creates [`Boundaries`](@ref).
 """
 function Boundaries(; noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
-    uGammaDln = collect(Iterators.flatten(vcat(uGamma.node, mGamma.node)))
-    tGammaDln = collect(Iterators.flatten(vcat(tGamma.node, mGamma.node)))
-    uDofsDln = copy(
-        reshape(reshape([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln], :, 3)', :),
-    )
-    tDofsDln = copy(
-        reshape(reshape([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln], :, 3)', :),
-    )
+    uGammaDln = sort!([uGamma.node; mGamma.node])
+    tGammaDln = sort!([tGamma.node; mGamma.node])
+    uDofsDln = sort!([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln])
+    tDofsDln = sort!([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln])
     return Boundaries(
         noExit,
         uGammaDln,

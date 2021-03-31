@@ -243,69 +243,51 @@ function resolveCollision!(
     connectivity = network.connectivity
     linksConnect = network.linksConnect
     elemT = eltype(coord)
-    mergeNode1 = 0
 
     if collisionType == :twoLine
         # Identify closeness to nodes of segments 1 and 2.
-        mergeNode1, missing, network =
-            findSplitNodeLink!(dlnParams, network, n1s1, n2s1, s1, L1)
-        mergeNode2, missing, network =
-            findSplitNodeLink!(dlnParams, network, n1s2, n2s2, s2, L2)
-
-        # Power dissipation of unmerged structure.
-        powerPreCollision = calcPowerDissipation(network, mergeNode1)
-        powerPreCollision += calcPowerDissipation(network, mergeNode2)
-        powerPreCollision *= 1.05
-
-        collisionPoint = findCollisionPoint(network, mergeNode1, mergeNode2)
-        coord[:, mergeNode1] = collisionPoint
-        nodeVel[:, mergeNode1] .= 0
-
-        nodeKept, network = mergeNode!(network, mergeNode1, mergeNode2)
-
-        # If the node still exists.
-        if nodeKept > 0
-            connectivity = network.connectivity
-            # Calculate mobility of nodes connected to it.
-            links, missing, connectedNodes =
-                findConnectedNode(network, nodeKept, 1:connectivity[1, nodeKept])
-            calcSegForce!(dlnParams, matParams, network, links)
-            dlnMobility!(dlnParams, matParams, network, connectedNodes)
-            # Calculate mobility of the node.
-            dlnMobility!(dlnParams, matParams, network, nodeKept)
-        end
+        mergeNode1, network = findSplitNode!(dlnParams, network, n1s1, n2s1, s1, L1)
+        mergeNode2, network = findSplitNode!(dlnParams, network, n1s2, n2s2, s2, L2)
     elseif collisionType == :hinge
-        hingeNode = n1s1
+        # The hinge node is n1s1. We merge node n2s1, into node n1s2.
         mergeNode1 = n1s2
         mergeNode2 = n2s1
+    end
 
-        powerPreCollision = calcPowerDissipation(network, mergeNode1)
-        powerPreCollision += calcPowerDissipation(network, mergeNode2)
-        powerPreCollision *= 1.05
+    powerPreCollision = calcPowerDissipation(network, mergeNode1)
+    powerPreCollision += calcPowerDissipation(network, mergeNode2)
+    powerPreCollision *= 1.05
 
-        collisionPoint = findCollisionPoint(network, mergeNode1, mergeNode2)
-        coord[:, mergeNode1] = collisionPoint
-        nodeVel[:, mergeNode1] .= 0
+    collisionPoint = findCollisionPoint(network, mergeNode1, mergeNode2)
+    coord[:, mergeNode1] = collisionPoint
+    nodeVel[:, mergeNode1] .= 0
 
-        nodeKept, network = mergeNode!(network, mergeNode1, mergeNode2)
+    nodeKept, network = mergeNode!(network, mergeNode1, mergeNode2)
 
-        # If the node still exists.
-        if nodeKept > 0
-            connectivity = network.connectivity
-            # Calculate mobility of nodes connected to it.
-            links, missing, connectedNodes =
-                findConnectedNode(network, nodeKept, 1:connectivity[1, nodeKept])
-            calcSegForce!(dlnParams, matParams, network, links)
-            dlnMobility!(dlnParams, matParams, network, connectedNodes)
-            # Calculate mobility of the node.
-            dlnMobility!(dlnParams, matParams, network, nodeKept)
-        end
+    # If the node still exists.
+    if nodeKept > 0
+        connectivity = network.connectivity
+        # Calculate mobility of nodes connected to it.
+        links, missing, connectedNodes =
+            findConnectedNode(network, nodeKept, 1:connectivity[1, nodeKept])
+        calcSegForce!(dlnParams, matParams, network, links)
+        dlnMobility!(dlnParams, matParams, network, connectedNodes)
+        # Calculate mobility of the node.
+        dlnMobility!(dlnParams, matParams, network, nodeKept)
     end
 
     return powerPreCollision, network
 end
 
-function findCloseN1orN2(coord, n1, n2, L, minSegLenSq)
+function findSplitNode!(dlnParams, network, n1, n2, s, L)
+    minSegLenSq = dlnParams.minSegLenSq
+    collisionDist = dlnParams.collisionDist
+
+    coord = network.coord
+    nodeVel = network.nodeVel
+    linksConnect = network.linksConnect
+    elemT = eltype(network.coord)
+
     tVec = SVector{3, eltype(coord)}(
         coord[1, n2] - coord[1, n1],
         coord[2, n2] - coord[2, n1],
@@ -315,20 +297,6 @@ function findCloseN1orN2(coord, n1, n2, L, minSegLenSq)
 
     close_n1 = ((L^2 * tVecSq) < minSegLenSq)
     close_n2 = (((1 - L)^2 * tVecSq) < minSegLenSq)
-
-    return tVec, close_n1, close_n2
-end
-
-function findSplitNodeLink!(dlnParams, network, n1, n2, s, L)
-    minSegLenSq = dlnParams.minSegLenSq
-    collisionDist = dlnParams.collisionDist
-
-    coord = network.coord
-    nodeVel = network.nodeVel
-    linksConnect = network.linksConnect
-    elemT = eltype(network.coord)
-
-    tVec, close_n1, close_n2 = findCloseN1orN2(coord, n1, n2, L, minSegLenSq)
 
     if close_n1 && L <= 0.5
         mergeNode1 = n1
@@ -354,10 +322,9 @@ function findSplitNodeLink!(dlnParams, network, n1, n2, s, L)
 
         network = splitNode!(network, splitNode, splitConnect, midCoord, midVel)
         mergeNode = network.numNode[1]
-        mergeLink = network.numSeg[1]
     end
 
-    return mergeNode, mergeLink, network
+    return mergeNode, network
 end
 
 function calcPowerDissipation(network, node)
