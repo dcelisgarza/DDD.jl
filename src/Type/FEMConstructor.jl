@@ -848,15 +848,7 @@ function Boundaries(
     uDofs = kw["uDofs"]
 
     !haskey(kw, "tDofs") ?
-    tDofs = sort!(
-        [
-            3 * tGammaNode .- 2
-            3 * tGammaNode .- 1
-            3 * tGammaNode
-            3 * mGammaNode .- 2
-            3 * mGammaNode .- 1
-        ],
-    ) : tDofs = kw["tDofs"]
+    tDofs = sort!(setdiff(1:numNode3, uDofs)) : tDofs = kw["tDofs"]
 
     C = cholesky(Hermitian(K[tDofs, tDofs]))
 

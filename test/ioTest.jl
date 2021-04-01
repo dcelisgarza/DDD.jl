@@ -50,12 +50,17 @@ cd(@__DIR__)
         index = :xy_z0, # Index
         node = faceNode[:xy_z0],
     )
-    testGamma, testForceDisp = Boundaries(
+    @test_throws PosDefException testGamma, testForceDisp = Boundaries(
         femParams,
         regularCuboidMesh;
         uGamma = uGamma,
         tGamma = tGamma,
         mGamma = mGamma,
+    )
+
+    testGamma, testForceDisp = Boundaries(
+        femParams,
+        regularCuboidMesh
     )
 
     fileDislocationLoop = "./testData/samplePrismShear.json"
@@ -110,8 +115,8 @@ cd(@__DIR__)
     dislocationLoop2 = zeros(DislocationLoop, length(simulationJSON[6]))
     simulationJSON[6][1]
     for i in eachindex(dislocationLoop2)
-        dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
-    end
+    dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
+end
     testBoundaries2 = loadBoundaries(simulationJSON[8])
     testForceDisp2 = loadForceDisplacement(simulationJSON[9])
     network2 = loadNetwork(networkDumpJSON)
@@ -147,7 +152,7 @@ cd(@__DIR__)
     @test compStruct(integTime, integTime2; verbose = true)
     @test compStruct(testForceDisp, testForceDisp2; verbose = true)
     for i in fieldnames(typeof(testBoundaries2))
-        isnothing(getproperty(testBoundaries2, i)) ? continue : nothing
+    isnothing(getproperty(testBoundaries2, i)) ? continue : nothing
         @test isequal(getproperty(testBoundaries2, i), getproperty(testBoundaries2, i))
     end
 
