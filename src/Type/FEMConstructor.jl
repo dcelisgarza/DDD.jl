@@ -228,104 +228,35 @@ function RegularCuboidMesh(
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
-    #=
-        # TODO #13 Create surface node structure with nodes, areas, norms.
-        surfNodes = (
-            # Corners
-            x0y0z0 = 1,
-            x1y0z0 = mx1,
-            x0y1z0 = 1 + mymx1mz1,
-            x1y1z0 = mx1 + mymx1mz1,
-            x0y0z1 = 1 + mzmx1,
-            x1y0z1 = mx1mz1,
-            x0y1z1 = 1 + mymx1mz1 + mzmx1,
-            x1y1z1 = mx1 + mymx1mz1 + mzmx1,
-            # Edges
-            x_y0z0 = zeros(mxType, mxm1),
-            x_y1z0 = zeros(mxType, mxm1),
-            x_y0z1 = zeros(mxType, mxm1),
-            x_y1z1 = zeros(mxType, mxm1),
-            y_x0z0 = zeros(mxType, mym1),
-            y_x1z0 = zeros(mxType, mym1),
-            y_x0z1 = zeros(mxType, mym1),
-            y_x1z1 = zeros(mxType, mym1),
-            z_x0y0 = zeros(mxType, mzm1),
-            z_x1y0 = zeros(mxType, mzm1),
-            z_x0y1 = zeros(mxType, mzm1),
-            z_x1y1 = zeros(mxType, mzm1),
-            # Faces
-            xy_z0 = zeros(mxType, mxm1 * mym1),
-            xy_z1 = zeros(mxType, mxm1 * mym1),
-            xz_y0 = zeros(mxType, mxm1 * mzm1),
-            xz_y1 = zeros(mxType, mxm1 * mzm1),
-            yz_x0 = zeros(mxType, mym1 * mzm1),
-            yz_x1 = zeros(mxType, mym1 * mzm1),
-        )
-        surfNodeArea = (
-            # Corners
-            x0y0z0 = (h * d + w * d + w * h) / 4,
-            x1y0z0 = (h * d + w * d + w * h) / 4,
-            x0y1z0 = (h * d + w * d + w * h) / 4,
-            x1y1z0 = (h * d + w * d + w * h) / 4,
-            x0y0z1 = (h * d + w * d + w * h) / 4,
-            x1y0z1 = (h * d + w * d + w * h) / 4,
-            x0y1z1 = (h * d + w * d + w * h) / 4,
-            x1y1z1 = (h * d + w * d + w * h) / 4,
-            # Edges
-            x_y0z0 = (h + d) * w / 2,
-            x_y1z0 = (h + d) * w / 2,
-            x_y0z1 = (h + d) * w / 2,
-            x_y1z1 = (h + d) * w / 2,
-            y_x0z0 = (w + d) * h / 2,
-            y_x1z0 = (w + d) * h / 2,
-            y_x0z1 = (w + d) * h / 2,
-            y_x1z1 = (w + d) * h / 2,
-            z_x0y0 = (h + w) * d / 2,
-            z_x1y0 = (h + w) * d / 2,
-            z_x0y1 = (h + w) * d / 2,
-            z_x1y1 = (h + w) * d / 2,
-            # Surfaces
-            xy_z0 = w * h,
-            xy_z1 = w * h,
-            xz_y0 = w * d,
-            xz_y1 = w * d,
-            yz_x0 = h * d,
-            yz_x1 = h * d,
-        )
-        surfNodeNorm = (
-            # Corners
-            x0y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3] + faceNorm[:, 5]),
-            x1y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3] + faceNorm[:, 6]),
-            x0y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4] + faceNorm[:, 5]),
-            x1y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4] + faceNorm[:, 6]),
-            x0y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 5]),
-            x1y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 6]),
-            x0y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4] + faceNorm[:, 5]),
-            x1y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4] + faceNorm[:, 6]),
-            # Edges
-            x_y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3]),
-            x_y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4]),
-            x_y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3]),
-            x_y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4]),
-            y_x0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 5]),
-            y_x1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 6]),
-            y_x0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 5]),
-            y_x1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 6]),
-            z_x0y0 = normalize(faceNorm[:, 3] + faceNorm[:, 5]),
-            z_x1y0 = normalize(faceNorm[:, 3] + faceNorm[:, 6]),
-            z_x0y1 = normalize(faceNorm[:, 4] + faceNorm[:, 5]),
-            z_x1y1 = normalize(faceNorm[:, 4] + faceNorm[:, 6]),
-            # Faces
-            xy_z0 = faceNorm[:, 1],
-            xy_z1 = faceNorm[:, 2],
-            xz_y0 = faceNorm[:, 3],
-            xz_y1 = faceNorm[:, 4],
-            yz_x0 = faceNorm[:, 5],
-            yz_x1 = faceNorm[:, 6],
-        )
-    =#
-    # Nodes corresponding to the vertices.
-    cornerNode = (
+
+    # TODO #13 Create surface node structure with nodes, areas, norms.
+    cornerNode = SVector{8, Symbol}(
+        :x0y0z0,
+        :x1y0z0,
+        :x0y1z0,
+        :x1y1z0,
+        :x0y0z1,
+        :x1y0z1,
+        :x0y1z1,
+        :x1y1z1,
+    )
+    edgeNode = SVector{12, Symbol}(
+        :x_y0z0,
+        :x_y1z0,
+        :x_y0z1,
+        :x_y1z1,
+        :y_x0z0,
+        :y_x1z0,
+        :y_x0z1,
+        :y_x1z1,
+        :z_x0y0,
+        :z_x1y0,
+        :z_x0y1,
+        :z_x1y1,
+    )
+    faceNode = SVector{6, Symbol}(:xy_z0, :xy_z1, :xz_y0, :xz_y1, :yz_x0, :yz_x1)
+    surfNode = (
+        # Corners
         x0y0z0 = 1,
         x1y0z0 = mx1,
         x0y1z0 = 1 + mymx1mz1,
@@ -334,10 +265,7 @@ function RegularCuboidMesh(
         x1y0z1 = mx1mz1,
         x0y1z1 = 1 + mymx1mz1 + mzmx1,
         x1y1z1 = mx1 + mymx1mz1 + mzmx1,
-    )
-
-    # Nodes corresponding to the edges.
-    edgeNode = (
+        # Edges
         x_y0z0 = zeros(mxType, mxm1),
         x_y1z0 = zeros(mxType, mxm1),
         x_y0z1 = zeros(mxType, mxm1),
@@ -350,16 +278,75 @@ function RegularCuboidMesh(
         z_x1y0 = zeros(mxType, mzm1),
         z_x0y1 = zeros(mxType, mzm1),
         z_x1y1 = zeros(mxType, mzm1),
-    )
-
-    # Nodes corresponding to the faces.
-    faceNode = (
+        # Faces
         xy_z0 = zeros(mxType, mxm1 * mym1),
         xy_z1 = zeros(mxType, mxm1 * mym1),
         xz_y0 = zeros(mxType, mxm1 * mzm1),
         xz_y1 = zeros(mxType, mxm1 * mzm1),
         yz_x0 = zeros(mxType, mym1 * mzm1),
         yz_x1 = zeros(mxType, mym1 * mzm1),
+    )
+    surfNodeArea = (
+        # Corners
+        x0y0z0 = (h * d + w * d + w * h) / 4,
+        x1y0z0 = (h * d + w * d + w * h) / 4,
+        x0y1z0 = (h * d + w * d + w * h) / 4,
+        x1y1z0 = (h * d + w * d + w * h) / 4,
+        x0y0z1 = (h * d + w * d + w * h) / 4,
+        x1y0z1 = (h * d + w * d + w * h) / 4,
+        x0y1z1 = (h * d + w * d + w * h) / 4,
+        x1y1z1 = (h * d + w * d + w * h) / 4,
+        # Edges
+        x_y0z0 = (h + d) * w / 2,
+        x_y1z0 = (h + d) * w / 2,
+        x_y0z1 = (h + d) * w / 2,
+        x_y1z1 = (h + d) * w / 2,
+        y_x0z0 = (w + d) * h / 2,
+        y_x1z0 = (w + d) * h / 2,
+        y_x0z1 = (w + d) * h / 2,
+        y_x1z1 = (w + d) * h / 2,
+        z_x0y0 = (h + w) * d / 2,
+        z_x1y0 = (h + w) * d / 2,
+        z_x0y1 = (h + w) * d / 2,
+        z_x1y1 = (h + w) * d / 2,
+        # Surfaces
+        xy_z0 = w * h,
+        xy_z1 = w * h,
+        xz_y0 = w * d,
+        xz_y1 = w * d,
+        yz_x0 = h * d,
+        yz_x1 = h * d,
+    )
+    surfNodeNorm = (
+        # Corners
+        x0y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3] + faceNorm[:, 5]),
+        x1y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3] + faceNorm[:, 6]),
+        x0y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4] + faceNorm[:, 5]),
+        x1y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4] + faceNorm[:, 6]),
+        x0y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 5]),
+        x1y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 6]),
+        x0y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4] + faceNorm[:, 5]),
+        x1y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4] + faceNorm[:, 6]),
+        # Edges
+        x_y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3]),
+        x_y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4]),
+        x_y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3]),
+        x_y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4]),
+        y_x0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 5]),
+        y_x1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 6]),
+        y_x0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 5]),
+        y_x1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 6]),
+        z_x0y0 = normalize(faceNorm[:, 3] + faceNorm[:, 5]),
+        z_x1y0 = normalize(faceNorm[:, 3] + faceNorm[:, 6]),
+        z_x0y1 = normalize(faceNorm[:, 4] + faceNorm[:, 5]),
+        z_x1y1 = normalize(faceNorm[:, 4] + faceNorm[:, 6]),
+        # Faces
+        xy_z0 = faceNorm[:, 1],
+        xy_z1 = faceNorm[:, 2],
+        xz_y0 = faceNorm[:, 3],
+        xz_y1 = faceNorm[:, 4],
+        yz_x0 = faceNorm[:, 5],
+        yz_x1 = faceNorm[:, 6],
     )
 
     localK = zeros(dxType, 24, 24)  # K for an element.
@@ -505,28 +492,28 @@ function RegularCuboidMesh(
     # Edge node along x
     @inbounds @simd for i in 1:mxm1
         ip1 = i + 1
-        edgeNode[:x_y0z0][i] = ip1            # x_y0z0
-        edgeNode[:x_y1z0][i] = ip1 + mymx1mz1 # x_y1z0
-        edgeNode[:x_y0z1][i] = ip1 + mzmx1    # x_y0z1
-        edgeNode[:x_y1z1][i] = ip1 + mzmx1 + mymx1mz1 # x_y1z1
+        surfNode[:x_y0z0][i] = ip1            # x_y0z0
+        surfNode[:x_y1z0][i] = ip1 + mymx1mz1 # x_y1z0
+        surfNode[:x_y0z1][i] = ip1 + mzmx1    # x_y0z1
+        surfNode[:x_y1z1][i] = ip1 + mzmx1 + mymx1mz1 # x_y1z1
     end
     # Edge node along y
     @inbounds @simd for i in 1:mym1
         imx1mz1 = i * mx1mz1
-        edgeNode[:y_x0z0][i] = 1 + imx1mz1    # y_x0z0
-        edgeNode[:y_x1z0][i] = mx1 + imx1mz1  # y_x1z0
-        edgeNode[:y_x0z1][i] = 1 + imx1mz1 + mzmx1    # y_x0z1
-        edgeNode[:y_x1z1][i] = mx1 + imx1mz1 + mzmx1  # y_x1z1
+        surfNode[:y_x0z0][i] = 1 + imx1mz1    # y_x0z0
+        surfNode[:y_x1z0][i] = mx1 + imx1mz1  # y_x1z0
+        surfNode[:y_x0z1][i] = 1 + imx1mz1 + mzmx1    # y_x0z1
+        surfNode[:y_x1z1][i] = mx1 + imx1mz1 + mzmx1  # y_x1z1
     end
     # Edge node along z
     @inbounds @simd for i in 1:mzm1
         ip1 = i + 1
         ip1mx1 = ip1 * mx1
         imx1 = i * mx1
-        edgeNode[:z_x0y0][i] = 1 + imx1 # z_x0y0
-        edgeNode[:z_x1y0][i] = ip1mx1   # z_x1y0
-        edgeNode[:z_x0y1][i] = 1 + mymx1mz1 + imx1   # z_x0y1
-        edgeNode[:z_x1y1][i] = mymx1mz1 + ip1mx1 # z_x1y1
+        surfNode[:z_x0y0][i] = 1 + imx1 # z_x0y0
+        surfNode[:z_x1y0][i] = ip1mx1   # z_x1y0
+        surfNode[:z_x0y1][i] = 1 + mymx1mz1 + imx1   # z_x0y1
+        surfNode[:z_x1y1][i] = mymx1mz1 + ip1mx1 # z_x1y1
     end
     # Face node xy
     @inbounds @simd for j in 1:mym1
@@ -536,8 +523,8 @@ function RegularCuboidMesh(
         jmx1mz1p1 = jmx1mz1 + 1
         for i in 1:mxm1
             ipmxm1jm1 = i + mxm1jm1
-            faceNode[:xy_z0][ipmxm1jm1] = jmx1mz1p1 + i  # xy_z0
-            faceNode[:xy_z1][ipmxm1jm1] = jmx1mz1p1 + i + mzmx1  # xy_z1
+            surfNode[:xy_z0][ipmxm1jm1] = jmx1mz1p1 + i  # xy_z0
+            surfNode[:xy_z1][ipmxm1jm1] = jmx1mz1p1 + i + mzmx1  # xy_z1
         end
     end
     # Face node xz
@@ -548,8 +535,8 @@ function RegularCuboidMesh(
         jmx1p1 = 1 + jmx1
         for i in 1:mxm1
             ipmxm1jm1 = i + mxm1jm1
-            faceNode[:xz_y0][ipmxm1jm1] = jmx1p1 + i # xz_y0
-            faceNode[:xz_y1][ipmxm1jm1] = jmx1p1 + i + mymx1mz1 # xz_y1
+            surfNode[:xz_y0][ipmxm1jm1] = jmx1p1 + i # xz_y0
+            surfNode[:xz_y1][ipmxm1jm1] = jmx1p1 + i + mymx1mz1 # xz_y1
         end
     end
     # Face node yz
@@ -559,8 +546,8 @@ function RegularCuboidMesh(
         for i in 1:mzm1
             imx1 = i * mx1
             jmx1mz1pimx1 = jmx1mz1 + imx1
-            faceNode[:yz_x0][i + jm1 * mzm1] = 1 + jmx1mz1pimx1    # yz_x0
-            faceNode[:yz_x1][i + jm1 * mzm1] = mx1 + jmx1mz1pimx1  # yz_x1
+            surfNode[:yz_x0][i + jm1 * mzm1] = 1 + jmx1mz1pimx1    # yz_x0
+            surfNode[:yz_x1][i + jm1 * mzm1] = mx1 + jmx1mz1pimx1  # yz_x1
         end
     end
 
@@ -701,14 +688,17 @@ function RegularCuboidMesh(
         numElem,
         numNode,
         C,
+        elemFaces,
         vertices,
         faces,
         faceNorm,
         faceMidPt,
-        elemFaces,
         cornerNode,
         edgeNode,
         faceNode,
+        surfNode,
+        surfNodeArea,
+        surfNodeNorm,
         coord,
         connectivity,
         globalK,
@@ -717,12 +707,12 @@ end
 
 """
 ```
-BoundaryNode(; type, index, node)
+BoundaryNode(; index, node)
 ```
 Create [`BoundaryNode`](@ref).
 """
-function BoundaryNode(; type, index, node)
-    return BoundaryNode(type, index, node)
+function BoundaryNode(; index, node)
+    return BoundaryNode(index, node)
 end
 
 """
@@ -743,25 +733,12 @@ function Boundaries(
     numNode = femMesh.numNode
     numNode3 = numNode * 3
     faceNorm = femMesh.faceNorm
-    cornerNode = femMesh.cornerNode
-    edgeNode = femMesh.edgeNode
-    faceNode = femMesh.faceNode
+    surfNode = femMesh.surfNode
     K = femMesh.K
 
     if !haskey(kw, :uGamma)
-        uGamma = BoundaryNode(;
-            type = [
-                cornerFE
-                cornerFE
-                cornerFE
-                cornerFE
-                edgeFE
-                edgeFE
-                edgeFE
-                edgeFE
-                faceFE
-            ],
-            index = [
+        uIndex = SVector{9, Symbol}(
+            [
                 :x0y0z0
                 :x0y1z0
                 :x0y0z1
@@ -772,83 +749,43 @@ function Boundaries(
                 :z_x0y1
                 :yz_x0
             ],
-            node = [
-                cornerNode[:x0y0z0]
-                cornerNode[:x0y1z0]
-                cornerNode[:x0y0z1]
-                cornerNode[:x0y1z1]
-                edgeNode[:y_x0z0]
-                edgeNode[:y_x0z1]
-                edgeNode[:z_x0y0]
-                edgeNode[:z_x0y1]
-                faceNode[:yz_x0]
-            ],
         )
+        uNodes =
+            collect(Iterators.flatten([surfNode[uIndex[i]] for i in 1:length(uIndex)]))
+        uGamma = BoundaryNode(; index = uIndex, node = uNodes)
     else
         uGamma = kw[:uGamma]
     end
 
     if !haskey(kw, :mGamma)
-        mGamma = BoundaryNode(;
-            type = [cornerFE; cornerFE; edgeFE],
-            index = [:x1y0z1; :x1y1z1; :y_x1z1],
-            node = [cornerNode[:x1y0z1]; cornerNode[:x1y1z1]; edgeNode[:y_x1z1]],
-        )
+        mIndex = SVector{3, Symbol}([:x1y0z1; :x1y1z1; :y_x1z1])
+        mNodes =
+            collect(Iterators.flatten([surfNode[mIndex[i]] for i in 1:length(mIndex)]))
+        mGamma = BoundaryNode(; index = mIndex, node = mNodes)
     else
         mGamma = kw[:mGamma]
     end
 
     if !haskey(kw, :tGamma)
-        # Indices
-        uGammaLbl = uGamma.type
-        mGammaLbl = mGamma.type
-        uCorner = findall(x -> x == cornerFE, uGammaLbl)
-        uEdge = findall(x -> x == edgeFE, uGammaLbl)
-        uFace = findall(x -> x == faceFE, uGammaLbl)
-        mCorner = findall(x -> x == cornerFE, mGammaLbl)
-        mEdge = findall(x -> x == edgeFE, mGammaLbl)
-        mFace = findall(x -> x == faceFE, mGammaLbl)
-
-        uGammaIdx = uGamma.index
-        mGammaIdx = mGamma.index
-        muCorner = union(uGamma.index[uCorner], mGamma.index[mCorner])
-        muEdge = union(uGamma.index[uEdge], mGamma.index[mEdge])
-        muFace = union(uGamma.index[uFace], mGamma.index[mFace])
-
-        tCorner = setdiff(keys(cornerNode), muCorner)
-        tEdge = setdiff(keys(edgeNode), muEdge)
-        tFace = setdiff(keys(faceNode), muFace)
-        tGamma = BoundaryNode(;
-            type = [
-                fill(cornerFE, length(tCorner))
-                fill(edgeFE, length(tEdge))
-                fill(faceFE, length(tFace))
-            ],
-            index = [tCorner; tEdge; tFace],
-            node = setdiff(
-                [
-                    cornerNode...
-                    collect(Iterators.flatten(edgeNode))
-                    collect(Iterators.flatten(faceNode))
-                ],
-                (uGamma.node; mGamma.node),
-            ),
+        tIndex = SVector{14, Symbol}(
+            Symbol.(setdiff(string.(keys(surfNode)), string.([uIndex; mIndex]))),
         )
+        tNodes =
+            collect(Iterators.flatten([surfNode[tIndex[i]] for i in 1:length(tIndex)]))
+        tGamma = BoundaryNode(; index = tIndex, node = tNodes)
     else
         tGamma = kw[:tGamma]
     end
 
     uGammaNode = uGamma.node
-    tGammaNode = tGamma.node
     mGammaNode = mGamma.node
+    tGammaNode = tGamma.node
 
     !haskey(kw, "uDofs") ?
-    uDofs =
-        sort!([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode]) :
+    uDofs = sort!([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode]) :
     uDofs = kw["uDofs"]
 
-    !haskey(kw, "tDofs") ?
-    tDofs = sort!(setdiff(1:numNode3, uDofs)) : tDofs = kw["tDofs"]
+    !haskey(kw, "tDofs") ? tDofs = sort!(setdiff(1:numNode3, uDofs)) : tDofs = kw["tDofs"]
 
     C = cholesky(Hermitian(K[tDofs, tDofs]))
 

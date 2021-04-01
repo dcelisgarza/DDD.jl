@@ -118,7 +118,36 @@ end
 
 """
 ```
-struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24,T25} <: AbstractRegularCuboidMesh
+struct RegularCuboidMesh{
+    T1,
+    T2,
+    T3,
+    T4,
+    T5,
+    T6,
+    T7,
+    T8,
+    T9,
+    T10,
+    T11,
+    T12,
+    T13,
+    T14,
+    T15,
+    T16,
+    T17,
+    T18,
+    T19,
+    T20,
+    T21,
+    T22,
+    T23,
+    T24,
+    T25,
+    T26,
+    T27,
+    T28,
+} <: AbstractRegularCuboidMesh
     order::T1
     dx::T2
     dy::T3
@@ -133,17 +162,20 @@ struct RegularCuboidMesh{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,
     numElem::T12
     numNode::T13
     C::T14
-    vertices::T15
-    faces::T16
-    faceNorm::T17
-    faceMidPt::T18
-    elemFaces::T19
+    elemFaces::T15
+    vertices::T16
+    faces::T17
+    faceNorm::T18
+    faceMidPt::T19
     cornerNode::T20
     edgeNode::T21
     faceNode::T22
-    coord::T23
-    connectivity::T24
-    K::T25
+    surfNode::T23
+    surfNodeArea::T24
+    surfNodeNorm::T25
+    coord::T26
+    connectivity::T27
+    K::T28
 end
 ```
 Stores regular a cuboid mesh.
@@ -201,6 +233,9 @@ struct RegularCuboidMesh{
     T23,
     T24,
     T25,
+    T26,
+    T27,
+    T28,
 } <: AbstractRegularCuboidMesh
     order::T1
     dx::T2
@@ -216,17 +251,20 @@ struct RegularCuboidMesh{
     numElem::T12
     numNode::T13
     C::T14
-    vertices::T15
-    faces::T16
-    faceNorm::T17
-    faceMidPt::T18
-    elemFaces::T19
+    elemFaces::T15
+    vertices::T16
+    faces::T17
+    faceNorm::T18
+    faceMidPt::T19
     cornerNode::T20
     edgeNode::T21
     faceNode::T22
-    coord::T23
-    connectivity::T24
-    K::T25
+    surfNode::T23
+    surfNodeArea::T24
+    surfNodeNorm::T25
+    coord::T26
+    connectivity::T27
+    K::T28
 end
 
 """
@@ -336,16 +374,14 @@ end
 
 """
 ```
-struct BoundaryNode{T1,T2,T3}
-    type::T1
-    index::T2
-    node::T3
+struct BoundaryNode{T1,T2}
+    index::T1
+    node::T2
 end
 ```
 Stores corresponding type, indices and node number of boundary nodes.
 """
-struct BoundaryNode{T1, T2, T3}
-    type::T1
-    index::T2
-    node::T3
+struct BoundaryNode{T1, T2}
+    index::T1
+    node::T2
 end

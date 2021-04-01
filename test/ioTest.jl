@@ -32,23 +32,19 @@ cd(@__DIR__)
     @test typeof(dislocationLoop2) <: DislocationLoop
 
     regularCuboidMesh = buildMesh(matParams, femParams)
-    cornerNode = regularCuboidMesh.cornerNode
-    edgeNode = regularCuboidMesh.edgeNode
-    faceNode = regularCuboidMesh.faceNode
+    surfNode = regularCuboidMesh.surfNode
+
     uGamma = BoundaryNode(
-        type = nodeTypeFE(1),# Type
         index = :x0y0z0, # Index
-        node = cornerNode[:x0y0z0],
+        node = surfNode[:x0y0z0],
     )
     tGamma = BoundaryNode(
-        type = nodeTypeFE(2),# Type
         index = :x_y0z1, # Index
-        node = edgeNode[:x_y0z1],
+        node = surfNode[:x_y0z1],
     )
     mGamma = BoundaryNode(
-        type = nodeTypeFE(3),# Type
         index = :xy_z0, # Index
-        node = faceNode[:xy_z0],
+        node = surfNode[:xy_z0],
     )
     @test_throws PosDefException testGamma, testForceDisp = Boundaries(
         femParams,
@@ -58,10 +54,7 @@ cd(@__DIR__)
         mGamma = mGamma,
     )
 
-    testGamma, testForceDisp = Boundaries(
-        femParams,
-        regularCuboidMesh
-    )
+    testGamma, testForceDisp = Boundaries(femParams, regularCuboidMesh)
 
     fileDislocationLoop = "./testData/samplePrismShear.json"
     fileIntegTime = "./testData/sampleIntegrationTime.json"
@@ -115,8 +108,8 @@ cd(@__DIR__)
     dislocationLoop2 = zeros(DislocationLoop, length(simulationJSON[6]))
     simulationJSON[6][1]
     for i in eachindex(dislocationLoop2)
-    dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
-end
+        dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
+    end
     testBoundaries2 = loadBoundaries(simulationJSON[8])
     testForceDisp2 = loadForceDisplacement(simulationJSON[9])
     network2 = loadNetwork(networkDumpJSON)
@@ -152,7 +145,7 @@ end
     @test compStruct(integTime, integTime2; verbose = true)
     @test compStruct(testForceDisp, testForceDisp2; verbose = true)
     for i in fieldnames(typeof(testBoundaries2))
-    isnothing(getproperty(testBoundaries2, i)) ? continue : nothing
+        isnothing(getproperty(testBoundaries2, i)) ? continue : nothing
         @test isequal(getproperty(testBoundaries2, i), getproperty(testBoundaries2, i))
     end
 
