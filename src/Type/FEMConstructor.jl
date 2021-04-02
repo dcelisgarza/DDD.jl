@@ -131,100 +131,40 @@ function RegularCuboidMesh(
 
     # For a regular cuboid mesh this is predefined. Making a volumetric polytope allows us to check if points lie inside the volume simply by doing [x, y, z] ∈ vertices, or checking if they do not belong by doing [x, y, z] ∉ vertices. The symbols are typed as \in and \notin + Tab.
     vtx = SMatrix{3, 8, dxType}(
-        0,
-        0,
-        0,
-        dx,
-        0,
-        0,
-        0,
-        dy,
-        0,
-        dx,
-        dy,
-        0,
-        0,
-        0,
-        dz,
-        dx,
-        0,
-        dz,
-        0,
-        dy,
-        dz,
-        dx,
-        dy,
-        dz,
+        0, 0, 0,
+        dx, 0, 0,
+        dx, dy, 0,
+        0, dy, 0,
+        0, 0, dz,
+        dx, 0, dz,
+        dx, dy, dz,
+        0, dy, dz,
     )
 
     vertices = VPolytope(vtx)
 
     # Faces as defined by the vertices.
     faces = SMatrix{4, 6, mxType}(
-        2,
-        1,
-        4,
-        3, # xy plane @ min z
-        5,
-        6,
-        7,
-        8, # xy plane @ max z
-        1,
-        2,
-        5,
-        6, # xz plane @ min y
-        4,
-        3,
-        8,
-        7, # xz plane @ max y
-        3,
-        1,
-        7,
-        5, # yz plane @ min x
-        2,
-        4,
-        6,
-        8, # yz plane @ max x
+        1, 2, 6, 5, # xz plane @ min y
+        2, 3, 7, 6, # yz plane @ max x
+        3, 4, 8, 7, # xz plane @ max y
+        4, 1, 5, 8, # yz plane @ min x
+        4, 3, 2, 1, # xy plane @ min z
+        5, 6, 7, 8, # xy plane @ max z
     )
 
     faceMidPt = mean(vtx[:, faces], dims = 2)[:, 1, :]
 
     # Face normal of the corresponding face.
     faceNorm =
-        SMatrix{3, 6, dxType}(0, 0, -1, 0, 0, 1, 0, -1, 0, 0, 1, 0, -1, 0, 0, 1, 0, 0)
-
-    elemFaces = SMatrix{4, 6, mxType}(
-        # [0 0 -1] = xy plane @ min z
-        1,
-        2,
-        5,
-        6,
-        # [0 0 1] = xy plane @ max z
-        8,
-        7,
-        4,
-        3,
-        # [0 -1 0] = xz plane @ min y
-        5,
-        6,
-        8,
-        7,
-        # [0 1 0] = xz plane @ max y
-        2,
-        1,
-        3,
-        4,
-        # [-1 0 0] = yz plane @ min x
-        1,
-        5,
-        4,
-        8,
-        # [1 0 0] = yz plane @ max x
-        6,
-        2,
-        7,
-        3,
-    )
+        SMatrix{3, 6, dxType}(
+            0, -1, 0,
+            1, 0, 0,
+            0, 1, 0,
+            -1, 0, 0,
+            0, 0, -1,
+            0, 0, 1,
+        )
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
@@ -232,38 +172,45 @@ function RegularCuboidMesh(
     cornerNode = SVector{8, Symbol}(
         :x0y0z0,
         :x1y0z0,
-        :x0y1z0,
         :x1y1z0,
+        :x0y1z0,
         :x0y0z1,
         :x1y0z1,
-        :x0y1z1,
         :x1y1z1,
+        :x0y1z1,
     )
     edgeNode = SVector{12, Symbol}(
         :x_y0z0,
-        :x_y1z0,
-        :x_y0z1,
-        :x_y1z1,
-        :y_x0z0,
         :y_x1z0,
-        :y_x0z1,
+        :x_y1z0,
+        :y_x0z0,
+        :x_y0z1,
         :y_x1z1,
+        :x_y1z1,
+        :y_x0z1,
         :z_x0y0,
         :z_x1y0,
-        :z_x0y1,
         :z_x1y1,
+        :z_x0y1,
     )
-    faceNode = SVector{6, Symbol}(:xy_z0, :xy_z1, :xz_y0, :xz_y1, :yz_x0, :yz_x1)
+    faceNode = SVector{6, Symbol}(
+        :xz_y0, 
+        :yz_x1,
+        :xz_y1, 
+        :yz_x0, 
+        :xy_z0, 
+        :xy_z1, 
+    )
     surfNode = (
         # Corners
         x0y0z0 = 1,
         x1y0z0 = mx1,
-        x0y1z0 = 1 + mymx1mz1,
-        x1y1z0 = mx1 + mymx1mz1,
-        x0y0z1 = 1 + mzmx1,
-        x1y0z1 = mx1mz1,
-        x0y1z1 = 1 + mymx1mz1 + mzmx1,
-        x1y1z1 = mx1 + mymx1mz1 + mzmx1,
+        x1y1z0 = mx1 * my1,
+        x0y1z0 = mx1 * my + 1,
+        x0y0z1 = 1 + mx1 * my1 * mz,
+        x1y0z1 = mx1 + mx1 * my1 * mz,
+        x0y1z1 = mx1 * my1 + mx1 * my1 * mz,
+        x1y1z1 = mx1 * my + 1 + mx1 * my1 * mz,
         # Edges
         x_y0z0 = zeros(mxType, mxm1),
         x_y1z0 = zeros(mxType, mxm1),
@@ -403,31 +350,16 @@ function RegularCuboidMesh(
 
     # Local nodes Gauss Quadrature. Using 8 nodes per element.
     p = 1 / sqrt(3)
+
     gaussNodes = SMatrix{3, 8, dxType}(
-        -p,
-        -p,
-        -p,
-        p,
-        -p,
-        -p,
-        p,
-        p,
-        -p,
-        -p,
-        p,
-        -p,
-        -p,
-        -p,
-        p,
-        p,
-        -p,
-        p,
-        p,
-        p,
-        p,
-        -p,
-        p,
-        p,
+        -p, -p, -p, # x0y0z0
+        p, -p, -p,  # x1y0z0
+        p, p, -p,   # x1y1z0
+        -p, p, -p,  # x0y1z0
+        -p, -p, p,  # x0y0z1
+        p, -p, p,   # x1y0z1
+        p, p, p,    # x1y1z1
+        -p, p, p,   # x0y1z1
     )
 
     # Shape functions and their derivatives.
@@ -446,36 +378,31 @@ function RegularCuboidMesh(
 
     # Fill node coordinates.
     @inbounds @simd for k in 1:mz1
-        km1 = k - 1
         for j in 1:my1
-            jm1 = j - 1
             for i in 1:mx1
-                globalNode = i + km1 * mx1 + jm1 * mx1mz1
+                globalNode = i + (j - 1) * mx1 + (k - 1) * mx1 * my1
                 coord[1, globalNode] = (i - 1) * w
-                coord[2, globalNode] = jm1 * h
-                coord[3, globalNode] = km1 * d
+                coord[2, globalNode] = (j - 1) * h
+                coord[3, globalNode] = (k - 1) * d
             end
         end
     end
 
+
     # Fill element connectivity.
     @inbounds @simd for k in 1:mz
         km1 = k - 1
-        kmx1 = k * mx1
-        km1mx1 = km1 * mx1
         for j in 1:my
             jm1 = j - 1
-            mx1mz1j = mx1mz1 * j
-            mx1mz1jm1 = mx1mz1 * jm1
             for i in 1:mx
-                globalElem = i + km1 * mx + jm1 * mx * mz
-                connectivity[1, globalElem] = i + km1mx1 + mx1mz1j
+                globalElem = i + jm1 * mx + km1 * mx * my
+                connectivity[1, globalElem] = i + jm1*mx1 + km1*mx1*my1
                 connectivity[2, globalElem] = connectivity[1, globalElem] + 1
-                connectivity[4, globalElem] = i + kmx1 + mx1mz1j
+                connectivity[4, globalElem] = i + j*mx1 + km1*mx1*my1
                 connectivity[3, globalElem] = connectivity[4, globalElem] + 1
-                connectivity[5, globalElem] = i + km1mx1 + mx1mz1jm1
+                connectivity[5, globalElem] = i + jm1*mx1 + k*mx1*my1
                 connectivity[6, globalElem] = connectivity[5, globalElem] + 1
-                connectivity[8, globalElem] = i + kmx1 + mx1mz1jm1
+                connectivity[8, globalElem] = i + j*mx1 + k*mx1*my1
                 connectivity[7, globalElem] = connectivity[8, globalElem] + 1
             end
         end
@@ -483,63 +410,47 @@ function RegularCuboidMesh(
 
     # Edge node along x
     @inbounds @simd for i in 1:mxm1
-        ip1 = i + 1
-        surfNode[:x_y0z0][i] = ip1            # x_y0z0
-        surfNode[:x_y1z0][i] = ip1 + mymx1mz1 # x_y1z0
-        surfNode[:x_y0z1][i] = ip1 + mzmx1    # x_y0z1
-        surfNode[:x_y1z1][i] = ip1 + mzmx1 + mymx1mz1 # x_y1z1
+        surfNode[:x_y0z0][i] = i + 1                              # x_y0z0
+        surfNode[:x_y1z0][i] = i + 1 + mx1 * my                   # x_y1z0
+        surfNode[:x_y0z1][i] = i + 1 + mx1 * my1 * mz             # x_y0z1
+        surfNode[:x_y1z1][i] = i + 1 + mx1 * my1 * mz + mx1 * my  # x_y1z1
     end
     # Edge node along y
     @inbounds @simd for i in 1:mym1
-        imx1mz1 = i * mx1mz1
-        surfNode[:y_x0z0][i] = 1 + imx1mz1    # y_x0z0
-        surfNode[:y_x1z0][i] = mx1 + imx1mz1  # y_x1z0
-        surfNode[:y_x0z1][i] = 1 + imx1mz1 + mzmx1    # y_x0z1
-        surfNode[:y_x1z1][i] = mx1 + imx1mz1 + mzmx1  # y_x1z1
+        surfNode[:y_x0z0][i] = i * mx1 + 1                      # y_x0z0
+        surfNode[:y_x1z0][i] = i * mx1 + mx1                    # y_x1z0
+        surfNode[:y_x0z1][i] = i * mx1 + 1 + mx1 * my1 * mz     # y_x0z1
+        surfNode[:y_x1z1][i] = i * mx1 + mx1 + mx1 * my1 * mz   # y_x1z1
     end
     # Edge node along z
     @inbounds @simd for i in 1:mzm1
-        ip1 = i + 1
-        ip1mx1 = ip1 * mx1
-        imx1 = i * mx1
-        surfNode[:z_x0y0][i] = 1 + imx1 # z_x0y0
-        surfNode[:z_x1y0][i] = ip1mx1   # z_x1y0
-        surfNode[:z_x0y1][i] = 1 + mymx1mz1 + imx1   # z_x0y1
-        surfNode[:z_x1y1][i] = mymx1mz1 + ip1mx1 # z_x1y1
+        surfNode[:z_x0y0][i] = i * mx1 * my1 + 1                # z_x0y0
+        surfNode[:z_x1y0][i] = i * mx1 * my1 + mx1              # z_x1y0
+        surfNode[:z_x0y1][i] = i * mx1 * my1 + 1 + mx1 * my     # z_x0y1
+        surfNode[:z_x1y1][i] = i * mx1 * my1 + mx1 + mx1 * my   # z_x1y1
     end
+
     # Face node xy
     @inbounds @simd for j in 1:mym1
-        jm1 = j - 1
-        jmx1mz1 = j * mx1mz1
-        mxm1jm1 = mxm1 * jm1
-        jmx1mz1p1 = jmx1mz1 + 1
         for i in 1:mxm1
-            ipmxm1jm1 = i + mxm1jm1
-            surfNode[:xy_z0][ipmxm1jm1] = jmx1mz1p1 + i  # xy_z0
-            surfNode[:xy_z1][ipmxm1jm1] = jmx1mz1p1 + i + mzmx1  # xy_z1
+            surfNode[:xy_z0][i + mym1 * (j - 1)] = j * mx1 + 1 + i                  # xy_z0
+            surfNode[:xy_z1][i + mym1 * (j - 1)] = j * mx1 + 1 + i + mx1 * my1 * mz # xy_z1
         end
     end
+
     # Face node xz
     @inbounds @simd for j in 1:mzm1
-        jm1 = j - 1
-        jmx1 = j * mx1
-        mxm1jm1 = mxm1 * jm1
-        jmx1p1 = 1 + jmx1
         for i in 1:mxm1
-            ipmxm1jm1 = i + mxm1jm1
-            surfNode[:xz_y0][ipmxm1jm1] = jmx1p1 + i # xz_y0
-            surfNode[:xz_y1][ipmxm1jm1] = jmx1p1 + i + mymx1mz1 # xz_y1
+            surfNode[:xz_y0][i + mzm1 * (j - 1)] = j * mx1 * my1 + 1 + i            # xz_y0
+            surfNode[:xz_y1][i + mzm1 * (j - 1)] = j * mx1 * my1 + 1 + i + mx1 * my # xz_y1
         end
     end
+    
     # Face node yz
-    @inbounds @simd for j in 1:mym1
-        jm1 = j - 1
-        jmx1mz1 = j * mx1mz1
-        for i in 1:mzm1
-            imx1 = i * mx1
-            jmx1mz1pimx1 = jmx1mz1 + imx1
-            surfNode[:yz_x0][i + jm1 * mzm1] = 1 + jmx1mz1pimx1    # yz_x0
-            surfNode[:yz_x1][i + jm1 * mzm1] = mx1 + jmx1mz1pimx1  # yz_x1
+    @inbounds @simd for j in 1:mzm1
+        for i in 1:mym1
+            surfNode[:yz_x0][i + mym1 * (j - 1)] = j * mx1 * my1 + 1 + i * mx1  # yz_x0
+            surfNode[:yz_x1][i + mym1 * (j - 1)] = j * mx1 * my1 + mx1 + i * mx1  # yz_x0
         end
     end
 
@@ -676,8 +587,8 @@ function RegularCuboidMesh(
     mymz = my * mz
     surfElemNode = zeros(mxType, 2 * (mxmy + mxmz + mymz), 4)
     cntr = 0
-    @inbounds @simd for i in 1:size(elemFaces, 2)
-        label = vec(connectivity[elemFaces[:, i], :]')
+    @inbounds @simd for i in 1:size(faces, 2)
+        label = vec(connectivity[faces[:, i], :]')
 
         if i <= 2
             xyz = 3
@@ -714,7 +625,6 @@ function RegularCuboidMesh(
         numElem,
         numNode,
         C,
-        elemFaces,
         vertices,
         faces,
         faceNorm,
