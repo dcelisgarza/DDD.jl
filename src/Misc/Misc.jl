@@ -250,6 +250,36 @@ function FastGaussQuadrature.gausslegendre(n::Integer, a, b)
     end
     return x, w
 end
+function gausslegendre2D(n)
+    x, w = gausslegendre(n)
+    X = zeros(2, n^2)
+    W = zeros(n^2)
+    @inbounds @simd for i in 1:n
+        idx = n * (i - 1)
+        for j in 1:n
+            X[:, j + idx] .= (x[i], x[j])
+            W[j + idx] = w[j] * w[i]
+        end
+    end
+    return X, W
+end
+function gausslegendre3D(n)
+    x, w = gausslegendre(n)
+    X = zeros(3, n^3)
+    W = zeros(n^3)
+    @inbounds @simd for i in 1:n
+        idx = n^2 * (i - 1)
+        for j in 1:n
+            idx2 = idx + n * (j - 1)
+            for k in 1:n
+                X[:, k + idx2] .= (x[i], x[j], x[k])
+                W[k + idx2] = w[k] * w[j] * w[i]
+            end
+        end
+    end
+    return X, W
+end
+
 """
 ```
 safeNorm(x)

@@ -14,7 +14,7 @@ using LinearAlgebra,
 
 # Miscelaneous.
 include("./Misc/Misc.jl")
-export compStruct, internalAngle, externalAngle, rot3D
+export compStruct, internalAngle, externalAngle, rot3D, gausslegendre2D, gausslegendre3D
 export ⊗, linePlaneIntersect, gausslegendre, safeNorm
 
 include("./Type/TypeBase.jl")
@@ -58,7 +58,8 @@ export AbstractDlnSeg,
     Boundaries,
     AbstractModel,
     AbstractCantileverBend,
-    CantileverLoad
+    CantileverLoad,
+    findSurfaceElemCoord
 export MaterialParameters
 export nodeTypeDln,
     nodeTypeFE,

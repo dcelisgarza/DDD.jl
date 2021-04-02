@@ -236,6 +236,7 @@ struct RegularCuboidMesh{
     T26,
     T27,
     T28,
+    T29,
 } <: AbstractRegularCuboidMesh
     order::T1
     dx::T2
@@ -262,9 +263,10 @@ struct RegularCuboidMesh{
     surfNode::T23
     surfNodeArea::T24
     surfNodeNorm::T25
-    coord::T26
-    connectivity::T27
-    K::T28
+    surfElemNode::T26
+    coord::T27
+    connectivity::T28
+    K::T29
 end
 
 """

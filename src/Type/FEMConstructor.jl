@@ -193,43 +193,42 @@ function RegularCuboidMesh(
     faceNorm =
         SMatrix{3, 6, dxType}(0, 0, -1, 0, 0, 1, 0, -1, 0, 0, 1, 0, -1, 0, 0, 1, 0, 0)
 
-    elemFaces = SMatrix{5, 6, mxType}(
+    elemFaces = SMatrix{4, 6, mxType}(
+        # [0 0 -1] = xy plane @ min z
         1,
         2,
         5,
         6,
-        mx * my,# [0 0 -1] = xy plane @ min z
+        # [0 0 1] = xy plane @ max z
         8,
         7,
         4,
         3,
-        mx * my,# [0 0 1] = xy plane @ max z
+        # [0 -1 0] = xz plane @ min y
         5,
         6,
         8,
         7,
-        mx * mz, # [0 -1 0] = xz plane @ min y
+        # [0 1 0] = xz plane @ max y
         2,
         1,
         3,
         4,
-        mx * mz, # [0 1 0] = xz plane @ max y
+        # [-1 0 0] = yz plane @ min x
         1,
         5,
         4,
         8,
-        my * mz, # [-1 0 0] = yz plane @ min x
+        # [1 0 0] = yz plane @ max x
         6,
         2,
         7,
         3,
-        my * mz, # [1 0 0] = yz plane @ max x
     )
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
 
-    # TODO #13 Create surface node structure with nodes, areas, norms.
     cornerNode = SVector{8, Symbol}(
         :x0y0z0,
         :x1y0z0,
@@ -349,9 +348,6 @@ function RegularCuboidMesh(
         yz_x1 = faceNorm[:, 6],
     )
 
-    localK = zeros(dxType, 24, 24)  # K for an element.
-    B = zeros(dxType, 6, 24, 8)     # Jacobian matrix.
-
     nodeEl = 1:8 # Local node numbers.
     dofLocal = Tuple(
         Iterators.flatten((
@@ -360,10 +356,6 @@ function RegularCuboidMesh(
             3 * (nodeEl .- 1) .+ 3,
         )),
     )
-
-    V1 = zeros(dxType, numElem * 24^2)
-    V2 = zeros(dxType, numElem * 24^2)
-    V3 = zeros(dxType, numElem * 24^2)
 
     E = 2 * μ * (1 + ν)                 # Young's modulus
     Lame = E * νomνInv / (1 - 2 * ν)    # Lamé's relation
@@ -609,6 +601,7 @@ function RegularCuboidMesh(
     detJ = det(J)
     invJ = inv(J)'
 
+    B = zeros(dxType, 6, 24, 8)     # Jacobian matrix.
     # Gauss quadrature nodes.
     @inbounds @simd for q in nodeEl
         nx = invJ * dNdS[q]
@@ -644,12 +637,16 @@ function RegularCuboidMesh(
         end
     end
 
+    localK = zeros(dxType, 24, 24)  # K for an element.
     @inbounds @simd for q in nodeEl
         localK += B[:, :, q]' * C * B[:, :, q]
     end
 
     localK = localK * detJ
     cntr = 0
+    V1 = zeros(dxType, numElem * 24^2)
+    V2 = zeros(dxType, numElem * 24^2)
+    V3 = zeros(dxType, numElem * 24^2)
     @inbounds @simd for p in 1:numElem
         globalNode = connectivity[nodeEl, p] # Global node numbers
         dofGlobal = Tuple(
@@ -672,6 +669,35 @@ function RegularCuboidMesh(
     numNode3 = 3 * numNode
     globalK = sparse(V1, V2, V3, numNode3, numNode3)
     droptol!(globalK, eps(dxType))
+
+    # Surface elements
+    mxmy = mx*my
+    mxmz = mx*mz
+    mymz = my*mz
+    surfElemNode = zeros(mxType, 2*(mxmy + mxmz + mymz), 4)
+    cntr = 0
+    @inbounds @simd for i in 1:size(elemFaces, 2)
+        label = vec(connectivity[elemFaces[:, i], :]')
+
+        if i <= 2
+            xyz = 3
+        elseif 2 < i <= 4
+            xyz = 2
+        else
+            xyz = 1
+        end
+
+        dimCoord = @view coord[xyz, label]
+        mod(i, 2) == 1 ? lim = minimum(dimCoord) : lim = maximum(dimCoord)
+
+        idx = findall(x->x ≈ lim, dimCoord)
+        n = div(length(idx), 4)
+
+        label = label[idx]
+
+        surfElemNode[(1:n) .+ cntr, :] = reshape(label, :, 4)
+        cntr += n
+    end
 
     return RegularCuboidMesh(
         order,
@@ -699,6 +725,7 @@ function RegularCuboidMesh(
         surfNode,
         surfNodeArea,
         surfNodeNorm,
+        surfElemNode,
         coord,
         connectivity,
         globalK,
