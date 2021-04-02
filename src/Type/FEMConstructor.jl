@@ -449,8 +449,8 @@ function RegularCuboidMesh(
     # Face node yz
     @inbounds @simd for j in 1:mzm1
         for i in 1:mym1
-            surfNode[:yz_x0][i + mym1 * (j - 1)] = j * mx1 * my1 + 1 + i * mx1  # yz_x0
-            surfNode[:yz_x1][i + mym1 * (j - 1)] = j * mx1 * my1 + mx1 + i * mx1  # yz_x0
+            surfNode[:yz_x0][i + mzm1 * (j - 1)] = j * mx1 * my1 + 1 + i * mx1  # yz_x0
+            surfNode[:yz_x1][i + mzm1 * (j - 1)] = j * mx1 * my1 + mx1 + i * mx1  # yz_x0
         end
     end
 
