@@ -671,10 +671,10 @@ function RegularCuboidMesh(
     droptol!(globalK, eps(dxType))
 
     # Surface elements
-    mxmy = mx*my
-    mxmz = mx*mz
-    mymz = my*mz
-    surfElemNode = zeros(mxType, 2*(mxmy + mxmz + mymz), 4)
+    mxmy = mx * my
+    mxmz = mx * mz
+    mymz = my * mz
+    surfElemNode = zeros(mxType, 2 * (mxmy + mxmz + mymz), 4)
     cntr = 0
     @inbounds @simd for i in 1:size(elemFaces, 2)
         label = vec(connectivity[elemFaces[:, i], :]')
@@ -690,7 +690,7 @@ function RegularCuboidMesh(
         dimCoord = @view coord[xyz, label]
         mod(i, 2) == 1 ? lim = minimum(dimCoord) : lim = maximum(dimCoord)
 
-        idx = findall(x->x ≈ lim, dimCoord)
+        idx = findall(x -> x ≈ lim, dimCoord)
         n = div(length(idx), 4)
 
         label = label[idx]
@@ -777,8 +777,7 @@ function Boundaries(
                 :yz_x0
             ],
         )
-        uNodes =
-            collect(Iterators.flatten([surfNode[uIndex[i]] for i in 1:length(uIndex)]))
+        uNodes = collect(Iterators.flatten([surfNode[uIndex[i]] for i in 1:length(uIndex)]))
         uGamma = BoundaryNode(; index = uIndex, node = uNodes)
     else
         uGamma = kw[:uGamma]
@@ -786,8 +785,7 @@ function Boundaries(
 
     if !haskey(kw, :mGamma)
         mIndex = SVector{3, Symbol}([:x1y0z1; :x1y1z1; :y_x1z1])
-        mNodes =
-            collect(Iterators.flatten([surfNode[mIndex[i]] for i in 1:length(mIndex)]))
+        mNodes = collect(Iterators.flatten([surfNode[mIndex[i]] for i in 1:length(mIndex)]))
         mGamma = BoundaryNode(; index = mIndex, node = mNodes)
     else
         mGamma = kw[:mGamma]
@@ -797,8 +795,7 @@ function Boundaries(
         tIndex = SVector{14, Symbol}(
             Symbol.(setdiff(string.(keys(surfNode)), string.([uIndex; mIndex]))),
         )
-        tNodes =
-            collect(Iterators.flatten([surfNode[tIndex[i]] for i in 1:length(tIndex)]))
+        tNodes = collect(Iterators.flatten([surfNode[tIndex[i]] for i in 1:length(tIndex)]))
         tGamma = BoundaryNode(; index = tIndex, node = tNodes)
     else
         tGamma = kw[:tGamma]
@@ -809,7 +806,8 @@ function Boundaries(
     tGammaNode = tGamma.node
 
     !haskey(kw, "uDofs") ?
-    uDofs = sort!([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode]) :
+    uDofs =
+        sort!([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode]) :
     uDofs = kw["uDofs"]
 
     !haskey(kw, "tDofs") ? tDofs = sort!(setdiff(1:numNode3, uDofs)) : tDofs = kw["tDofs"]

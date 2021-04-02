@@ -34,25 +34,25 @@ cd(@__DIR__)
     regularCuboidMesh = buildMesh(matParams, femParams)
     surfNode = regularCuboidMesh.surfNode
 
-    uGamma = BoundaryNode(
-        index = :x0y0z0, # Index
-        node = surfNode[:x0y0z0],
-    )
-    tGamma = BoundaryNode(
-        index = :x_y0z1, # Index
-        node = surfNode[:x_y0z1],
-    )
-    mGamma = BoundaryNode(
-        index = :xy_z0, # Index
-        node = surfNode[:xy_z0],
-    )
-    @test_throws PosDefException testGamma, testForceDisp = Boundaries(
-        femParams,
-        regularCuboidMesh;
-        uGamma = uGamma,
-        tGamma = tGamma,
-        mGamma = mGamma,
-    )
+    # uGamma = BoundaryNode(
+    #     index = :x0y0z0, # Index
+    #     node = surfNode[:x0y0z0],
+    # )
+    # tGamma = BoundaryNode(
+    #     index = :x_y0z1, # Index
+    #     node = surfNode[:x_y0z1],
+    # )
+    # mGamma = BoundaryNode(
+    #     index = :xy_z0, # Index
+    #     node = surfNode[:xy_z0],
+    # )
+    # @test_throws PosDefException testGamma, testForceDisp = Boundaries(
+    #     femParams,
+    #     regularCuboidMesh;
+    #     uGamma = uGamma,
+    #     tGamma = tGamma,
+    #     mGamma = mGamma,
+    # )
 
     testGamma, testForceDisp = Boundaries(femParams, regularCuboidMesh)
 
