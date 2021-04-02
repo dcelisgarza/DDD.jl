@@ -1117,12 +1117,15 @@ femParams = FEMParameters(
     57.0,
     43.0,
     37.0,
-    20,
-    20,
-    20,
+    3,
+5,
+    7,
 )
 
 regularCuboidMesh = buildMesh(matParams, femParams)
+regularCuboidMesh.connectivity
+
+fig3 = plotFEDomain(regularCuboidMesh)
 # surfElemLbl[(1:n) .+ cntr, :] = 
 # surfElemCoord[(1:3*n) .+ 3*cntr, :] = 
 coord = regularCuboidMesh.coord
