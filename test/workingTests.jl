@@ -1117,14 +1117,24 @@ femParams = FEMParameters(
     57.0,
     43.0,
     37.0,
-    3,
-5,
-    7,
+    2,
+3,
+    5,
 )
+x, w = gausslegendre3D(1)
+
+N = shapeFunctionDeriv(
+        LinearQuadrangle3D(),
+        x[1, :],
+        x[2, :],
+        x[3, :],
+    )
 
 regularCuboidMesh = buildMesh(matParams, femParams)
 regularCuboidMesh.connectivity
-
+regularCuboidMesh.connectivity
+using Plots
+plotlyjs()
 fig3 = plotFEDomain(regularCuboidMesh)
 # surfElemLbl[(1:n) .+ cntr, :] = 
 # surfElemCoord[(1:3*n) .+ 3*cntr, :] = 
