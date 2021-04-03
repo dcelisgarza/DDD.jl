@@ -31,9 +31,9 @@ cd(@__DIR__)
         segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
         slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
         slipSystem = slipSystem,  # Slip plane of the segments.
-        label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3, 2, Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
+        range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
         dist = Zeros(),  # Loop distribution.
     )
     shearLoop = DislocationLoop(;
@@ -44,9 +44,9 @@ cd(@__DIR__)
         segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
         slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
         slipSystem = slipSystem,  # Slip plane of the segments.
-        label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3, 2, Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
+        range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
         dist = Zeros(),  # Loop distribution.
     )
     network = DislocationNetwork([prismLoop, shearLoop])
@@ -139,9 +139,9 @@ cd(@__DIR__)
         segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
         slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
         slipSystem = slipSystem,  # Slip plane of the segments.
-        label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3, 2, Float64}(
+        range = SMatrix{3,2,Float64}(
             segLen / 2,
             segLen / 2,
             segLen / 2,
@@ -240,8 +240,8 @@ cd(@__DIR__)
     label = network2.label
     ext = findall(x -> x == 5, label)
     surf = findall(x -> x == 3, label)
-    @test length(ext) == 3
-    @test length(surf) == 1
+    @test length(ext) == 4
+    @test length(surf) == 2
     @test compStruct(network2, network) == false
 
     numSeg = network2.numSeg[1]

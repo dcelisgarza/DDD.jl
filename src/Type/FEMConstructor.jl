@@ -84,6 +84,8 @@ y   ^z
 ```
 !!! note
     This is rotated about the `x` axis w.r.t. to the local `(s1, s2, s3)` system. [`calc_σHat`](@ref) uses custom linear shape functions that eliminate the need for a Jacobian, speeding up the calculation. We keep the Jacobian in this function because it's only run at simulation initialisation so it's not performance critical, which lets us use standard shape functions.
+
+    https://www.mcs.anl.gov/uploads/cels/papers/P1573A.pdf
 """
 function RegularCuboidMesh(
     matParams::MaterialParameters,
@@ -158,12 +160,12 @@ function RegularCuboidMesh(
     # Face normal of the corresponding face.
     faceNorm =
         SMatrix{3, 6, dxType}(
-            0, -1, 0,
-            1, 0, 0,
-            0, 1, 0,
-            -1, 0, 0,
-            0, 0, -1,
-            0, 0, 1,
+            0, -1, 0,   # xz plane @ min y
+            1, 0, 0,    # yz plane @ max x
+            0, 1, 0,    # xz plane @ max y
+            -1, 0, 0,   # yz plane @ min x
+            0, 0, -1,   # xy plane @ min z
+            0, 0, 1,    # xy plane @ max z
         )
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
@@ -194,12 +196,12 @@ function RegularCuboidMesh(
         :z_x0y1,
     )
     faceNode = SVector{6, Symbol}(
-        :xz_y0, 
+        :xz_y0,
         :yz_x1,
-        :xz_y1, 
-        :yz_x0, 
-        :xy_z0, 
-        :xy_z1, 
+        :xz_y1,
+        :yz_x0,
+        :xy_z0,
+        :xy_z1,
     )
     surfNode = (
         # Corners
@@ -209,90 +211,91 @@ function RegularCuboidMesh(
         x0y1z0 = mx1 * my + 1,
         x0y0z1 = 1 + mx1 * my1 * mz,
         x1y0z1 = mx1 + mx1 * my1 * mz,
-        x0y1z1 = mx1 * my1 + mx1 * my1 * mz,
-        x1y1z1 = mx1 * my + 1 + mx1 * my1 * mz,
+        x1y1z1 = mx1 * my1 * mz1,
+        x0y1z1 = mx1 * my + 1 + mx1 * my1 * mz,
         # Edges
         x_y0z0 = zeros(mxType, mxm1),
-        x_y1z0 = zeros(mxType, mxm1),
-        x_y0z1 = zeros(mxType, mxm1),
-        x_y1z1 = zeros(mxType, mxm1),
-        y_x0z0 = zeros(mxType, mym1),
         y_x1z0 = zeros(mxType, mym1),
-        y_x0z1 = zeros(mxType, mym1),
+        x_y1z0 = zeros(mxType, mxm1),
+        y_x0z0 = zeros(mxType, mym1),
+        x_y0z1 = zeros(mxType, mxm1),
         y_x1z1 = zeros(mxType, mym1),
+        x_y1z1 = zeros(mxType, mxm1),
+        y_x0z1 = zeros(mxType, mym1),
         z_x0y0 = zeros(mxType, mzm1),
         z_x1y0 = zeros(mxType, mzm1),
-        z_x0y1 = zeros(mxType, mzm1),
         z_x1y1 = zeros(mxType, mzm1),
+        z_x0y1 = zeros(mxType, mzm1),
         # Faces
-        xy_z0 = zeros(mxType, mxm1 * mym1),
-        xy_z1 = zeros(mxType, mxm1 * mym1),
         xz_y0 = zeros(mxType, mxm1 * mzm1),
+        yz_x1 = zeros(mxType, mym1 * mzm1),
         xz_y1 = zeros(mxType, mxm1 * mzm1),
         yz_x0 = zeros(mxType, mym1 * mzm1),
-        yz_x1 = zeros(mxType, mym1 * mzm1),
+        xy_z0 = zeros(mxType, mxm1 * mym1),
+        xy_z1 = zeros(mxType, mxm1 * mym1),
     )
     surfNodeArea = (
         # Corners
         x0y0z0 = (h * d + w * d + w * h) / 4,
         x1y0z0 = (h * d + w * d + w * h) / 4,
-        x0y1z0 = (h * d + w * d + w * h) / 4,
         x1y1z0 = (h * d + w * d + w * h) / 4,
+        x0y1z0 = (h * d + w * d + w * h) / 4,
         x0y0z1 = (h * d + w * d + w * h) / 4,
         x1y0z1 = (h * d + w * d + w * h) / 4,
-        x0y1z1 = (h * d + w * d + w * h) / 4,
         x1y1z1 = (h * d + w * d + w * h) / 4,
+        x0y1z1 = (h * d + w * d + w * h) / 4,
         # Edges
         x_y0z0 = (h + d) * w / 2,
-        x_y1z0 = (h + d) * w / 2,
-        x_y0z1 = (h + d) * w / 2,
-        x_y1z1 = (h + d) * w / 2,
-        y_x0z0 = (w + d) * h / 2,
         y_x1z0 = (w + d) * h / 2,
-        y_x0z1 = (w + d) * h / 2,
+        x_y1z0 = (h + d) * w / 2,
+        y_x0z0 = (w + d) * h / 2,
+        x_y0z1 = (h + d) * w / 2,
         y_x1z1 = (w + d) * h / 2,
+        x_y1z1 = (h + d) * w / 2,
+        y_x0z1 = (w + d) * h / 2,
         z_x0y0 = (h + w) * d / 2,
         z_x1y0 = (h + w) * d / 2,
-        z_x0y1 = (h + w) * d / 2,
         z_x1y1 = (h + w) * d / 2,
+        z_x0y1 = (h + w) * d / 2,
         # Surfaces
-        xy_z0 = w * h,
-        xy_z1 = w * h,
         xz_y0 = w * d,
+        yz_x1 = h * d,
         xz_y1 = w * d,
         yz_x0 = h * d,
-        yz_x1 = h * d,
+        xy_z0 = w * h,
+        xy_z1 = w * h,
     )
+    
     surfNodeNorm = (
         # Corners
-        x0y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3] + faceNorm[:, 5]),
-        x1y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3] + faceNorm[:, 6]),
-        x0y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4] + faceNorm[:, 5]),
-        x1y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4] + faceNorm[:, 6]),
-        x0y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 5]),
-        x1y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 6]),
-        x0y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4] + faceNorm[:, 5]),
-        x1y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4] + faceNorm[:, 6]),
+        x0y0z0 = normalize(faceNorm[:, 4] + faceNorm[:, 1] + faceNorm[:, 5]),
+        x1y0z0 = normalize(faceNorm[:, 2] + faceNorm[:, 1] + faceNorm[:, 5]),
+        x1y1z0 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 5]),
+        x0y1z0 = normalize(faceNorm[:, 4] + faceNorm[:, 3] + faceNorm[:, 5]),
+        x0y0z1 = normalize(faceNorm[:, 4] + faceNorm[:, 1] + faceNorm[:, 6]),
+        x1y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 1] + faceNorm[:, 6]),
+        x1y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3] + faceNorm[:, 6]),
+        x0y1z1 = normalize(faceNorm[:, 4] + faceNorm[:, 3] + faceNorm[:, 6]),
         # Edges
-        x_y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 3]),
-        x_y1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 4]),
-        x_y0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 3]),
-        x_y1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 4]),
-        y_x0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 5]),
-        y_x1z0 = normalize(faceNorm[:, 1] + faceNorm[:, 6]),
-        y_x0z1 = normalize(faceNorm[:, 2] + faceNorm[:, 5]),
+        x_y0z0 = normalize(faceNorm[:, 1] + faceNorm[:, 5]),
+        y_x1z0 = normalize(faceNorm[:, 2] + faceNorm[:, 5]),
+        x_y1z0 = normalize(faceNorm[:, 3] + faceNorm[:, 5]),
+        y_x0z0 = normalize(faceNorm[:, 4] + faceNorm[:, 5]),
+        x_y0z1 = normalize(faceNorm[:, 1] + faceNorm[:, 6]),
         y_x1z1 = normalize(faceNorm[:, 2] + faceNorm[:, 6]),
-        z_x0y0 = normalize(faceNorm[:, 3] + faceNorm[:, 5]),
-        z_x1y0 = normalize(faceNorm[:, 3] + faceNorm[:, 6]),
-        z_x0y1 = normalize(faceNorm[:, 4] + faceNorm[:, 5]),
-        z_x1y1 = normalize(faceNorm[:, 4] + faceNorm[:, 6]),
+        x_y1z1 = normalize(faceNorm[:, 3] + faceNorm[:, 6]),
+        y_x0z1 = normalize(faceNorm[:, 4] + faceNorm[:, 6]),
+        z_x0y0 = normalize(faceNorm[:, 4] + faceNorm[:, 1]),
+        z_x1y0 = normalize(faceNorm[:, 2] + faceNorm[:, 1]),
+        z_x1y1 = normalize(faceNorm[:, 2] + faceNorm[:, 3]),
+        z_x0y1 = normalize(faceNorm[:, 4] + faceNorm[:, 3]),
         # Faces
-        xy_z0 = faceNorm[:, 1],
-        xy_z1 = faceNorm[:, 2],
-        xz_y0 = faceNorm[:, 3],
-        xz_y1 = faceNorm[:, 4],
-        yz_x0 = faceNorm[:, 5],
-        yz_x1 = faceNorm[:, 6],
+        xz_y0 = faceNorm[:, 1],
+        yz_x1 = faceNorm[:, 2],
+        xz_y1 = faceNorm[:, 3],
+        yz_x0 = faceNorm[:, 4],
+        xy_z0 = faceNorm[:, 5],
+        xy_z1 = faceNorm[:, 6],
     )
 
     nodeEl = 1:8 # Local node numbers.
@@ -378,12 +381,14 @@ function RegularCuboidMesh(
 
     # Fill node coordinates.
     @inbounds @simd for k in 1:mz1
+        km1 = k - 1
         for j in 1:my1
+            jm1 = j - 1
             for i in 1:mx1
-                globalNode = i + (j - 1) * mx1 + (k - 1) * mx1 * my1
+                globalNode = i + jm1 * mx1 + km1 * mx1 * my1
                 coord[1, globalNode] = (i - 1) * w
-                coord[2, globalNode] = (j - 1) * h
-                coord[3, globalNode] = (k - 1) * d
+                coord[2, globalNode] = jm1 * h
+                coord[3, globalNode] = km1 * d
             end
         end
     end
@@ -432,25 +437,28 @@ function RegularCuboidMesh(
 
     # Face node xy
     @inbounds @simd for j in 1:mym1
+        jm1 = j - 1
         for i in 1:mxm1
-            surfNode[:xy_z0][i + mym1 * (j - 1)] = j * mx1 + 1 + i                  # xy_z0
-            surfNode[:xy_z1][i + mym1 * (j - 1)] = j * mx1 + 1 + i + mx1 * my1 * mz # xy_z1
+            surfNode[:xy_z0][i + mxm1 * jm1] = j * mx1 + 1 + i                  # xy_z0
+            surfNode[:xy_z1][i + mxm1 * jm1] = j * mx1 + 1 + i + mx1 * my1 * mz # xy_z1
         end
     end
 
     # Face node xz
     @inbounds @simd for j in 1:mzm1
+        jm1 = j - 1
         for i in 1:mxm1
-            surfNode[:xz_y0][i + mzm1 * (j - 1)] = j * mx1 * my1 + 1 + i            # xz_y0
-            surfNode[:xz_y1][i + mzm1 * (j - 1)] = j * mx1 * my1 + 1 + i + mx1 * my # xz_y1
+            surfNode[:xz_y0][i + mxm1 * jm1] = j * mx1 * my1 + 1 + i            # xz_y0
+            surfNode[:xz_y1][i + mxm1 * jm1] = j * mx1 * my1 + 1 + i + mx1 * my # xz_y1
         end
     end
     
     # Face node yz
     @inbounds @simd for j in 1:mzm1
+        jm1 = j - 1
         for i in 1:mym1
-            surfNode[:yz_x0][i + mzm1 * (j - 1)] = j * mx1 * my1 + 1 + i * mx1  # yz_x0
-            surfNode[:yz_x1][i + mzm1 * (j - 1)] = j * mx1 * my1 + mx1 + i * mx1  # yz_x0
+            surfNode[:yz_x0][i + mym1 * jm1] = j * mx1 * my1 + 1 + i * mx1  # yz_x0
+            surfNode[:yz_x1][i + mym1 * jm1] = j * mx1 * my1 + mx1 + i * mx1  # yz_x0
         end
     end
 
@@ -587,19 +595,31 @@ function RegularCuboidMesh(
     mymz = my * mz
     surfElemNode = zeros(mxType, 2 * (mxmy + mxmz + mymz), 4)
     cntr = 0
+    
+    faces = SMatrix{4, 6, mxType}(
+        1, 2, 6, 5, # xz plane @ min y
+        2, 3, 7, 6, # yz plane @ max x
+        3, 4, 8, 7, # xz plane @ max y
+        4, 1, 5, 8, # yz plane @ min x
+        4, 3, 2, 1, # xy plane @ min z
+        5, 6, 7, 8, # xy plane @ max z
+    )
     @inbounds @simd for i in 1:size(faces, 2)
         label = vec(connectivity[faces[:, i], :]')
-
-        if i <= 2
-            xyz = 3
-        elseif 2 < i <= 4
+        
+        if i == 1 || i == 3
             xyz = 2
-        else
+            dimCoord = @view coord[xyz, label]
+            i == 1 ? lim = minimum(dimCoord) : lim = maximum(dimCoord)
+        elseif i == 2 || i == 4
             xyz = 1
+            dimCoord = @view coord[xyz, label]
+            i == 4 ? lim = minimum(dimCoord) : lim = maximum(dimCoord)
+        else
+            xyz = 3
+            dimCoord = @view coord[xyz, label]
+            i == 5 ? lim = minimum(dimCoord) : lim = maximum(dimCoord)
         end
-
-        dimCoord = @view coord[xyz, label]
-        mod(i, 2) == 1 ? lim = minimum(dimCoord) : lim = maximum(dimCoord)
 
         idx = findall(x -> x ≈ lim, dimCoord)
         n = div(length(idx), 4)
@@ -609,6 +629,7 @@ function RegularCuboidMesh(
         surfElemNode[(1:n) .+ cntr, :] = reshape(label, :, 4)
         cntr += n
     end
+    
 
     return RegularCuboidMesh(
         order,

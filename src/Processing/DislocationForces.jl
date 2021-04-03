@@ -90,22 +90,7 @@ Compute the stress, `̂σ`, on a dislocation segment `x0` as a result of body fo
 ```
 """
 function calc_σHat(
-    mesh::RegularCuboidMesh{
-        T1,
-        T2,
-        T3,
-        T4,
-        T5,
-        T6,
-        T7,
-        T8,
-        T9,
-        T10,
-        T11,
-        T12,
-        T13,
-        T14,
-    } where {T1 <: LinearElement, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14},
+    mesh::RegularCuboidMesh{T1} where {T1 <: LinearElement},
     forceDisplacement::ForceDisplacement,
     x0,
 )
@@ -131,7 +116,7 @@ function calc_σHat(
     k::Int = clamp(ceil(z * dInv), 1, mz)
 
     # Calculate index of the elements.
-    idx = i + (k - 1) * mx + (j - 1) * mx * mz
+    idx = i + (j - 1) * mx + (k - 1) * mx * my
 
     # Diametrically opposed points in a cubic element.
     n1 = connectivity[1, idx]
@@ -151,20 +136,11 @@ function calc_σHat(
     s2 = (y - yc) * ds2dy
     s3 = (z - zc) * ds3dz
 
-    pm1 = (-1, 1, 1, -1, -1, 1, 1, -1)
-    pm2 = (1, 1, 1, 1, -1, -1, -1, -1)
-    pm3 = (-1, -1, 1, 1, -1, -1, 1, 1)
-
-    ds1dx /= 8
-    ds2dy /= 8
-    ds3dz /= 8
+    dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), s1, s2, s3)
 
     B = zeros(elemT, 6, 24)
-    U = MVector{24, elemT}(zeros(24))
+    U = MVector{24,elemT}(zeros(24))
     @inbounds @simd for i in 1:8
-        dNdS1 = pm1[i] * (1 + pm2[i] * s2) * (1 + pm3[i] * s3) * ds1dx
-        dNdS2 = (1 + pm1[i] * s1) * pm2[i] * (1 + pm3[i] * s3) * ds2dy
-        dNdS3 = (1 + pm1[i] * s1) * (1 + pm2[i] * s2) * pm3[i] * ds3dz
         # Indices calculated once for performance.
         idx1 = 3 * i
         idx2 = 3 * (i - 1)
@@ -172,9 +148,9 @@ function calc_σHat(
         idx3 = 3 * connectivity[i, idx]
 
         # Constructing the Jacobian for node i.
-        B[1, idx2 + 1] = dNdS1
-        B[2, idx2 + 2] = dNdS2
-        B[3, idx2 + 3] = dNdS3
+        B[1, idx2 + 1] = dNdS[1, i] * ds1dx
+        B[2, idx2 + 2] = dNdS[2, i] * ds2dy
+        B[3, idx2 + 3] = dNdS[3, i] * ds3dz
 
         B[4, idx2 + 1] = B[2, idx2 + 2]
         B[4, idx2 + 2] = B[1, idx2 + 1]
@@ -200,7 +176,7 @@ function calc_σHat(
     # σ_vec[6] = σ_yz = σ_zy
     # B*U transforms U from the nodes of the closest finite element with index i2=idx[i] to the point of interest [s1, s2, s3].
     σ_vec = C * B * U
-    σ = SMatrix{3, 3, elemT}(
+    σ = SMatrix{3,3,elemT}(
         σ_vec[1],
         σ_vec[4],
         σ_vec[5],
@@ -208,7 +184,7 @@ function calc_σHat(
         σ_vec[2],
         σ_vec[6],
         σ_vec[5],
-        σ_vec[6],
+    σ_vec[6],
         σ_vec[3],
     )
 
@@ -313,9 +289,9 @@ function calcPKForceViews(bVec, coord, segIdx, idx)
     return bVec, tVec, midPoint
 end
 function _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
-    x0 = SVector{3, elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
-    b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-    t = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+    x0 = SVector{3,elemT}(midNode[1, i], midNode[2, i], midNode[3, i])
+    b = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+    t = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
     σHat = calc_σHat(mesh, forceDisplacement, x0)
     pkForce = (σHat * b) × t
 
@@ -433,14 +409,14 @@ function calcSelfForceViews(segIdx, bVec, coord, idx)
 end
 function _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv, i)
     # Finding the norm of each line vector.
-    tVecI = SVector{3, elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
+    tVecI = SVector{3,elemT}(tVec[1, i], tVec[2, i], tVec[3, i])
     tVecSq = tVecI ⋅ tVecI
     L = sqrt(tVecSq)
     Linv = 1 / L
     tVecI *= Linv
     # Finding the non-singular norm.
     La = sqrt(tVecSq + aSq)
-    bVecI = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+    bVecI = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
     # Normalised the dislocation network vector, the sum of all the segment vectors has norm 1.
     # Screw component, scalar projection of bVec onto t.
     bScrew = tVecI ⋅ bVecI
@@ -560,18 +536,18 @@ function calcSegSegForce(
                     end
                 end
             end
-            return getproperty.(parSegSegForce, :value)
+        return getproperty.(parSegSegForce, :value)
         else
             segSegForce = zeros(3, 2, numSeg)
             # Serial execution.
             @inbounds for i in 1:numSeg
-                b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-                n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-                n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+                b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+                n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+                n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
                 for j in (i + 1):numSeg
-                    b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                    n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                    n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                    b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                    n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                    n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
@@ -602,14 +578,14 @@ function calcSegSegForce(
         lenIdx = length(idx)
         segSegForce = zeros(3, 2, lenIdx)
         @inbounds for (k, i) in enumerate(idx)
-            b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-            n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-            n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+            b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+            n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+            n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
                 i == j && continue
-                b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                 Fnode1, Fnode2, missing, missing = calcSegSegForce(
                     aSq,
@@ -630,7 +606,7 @@ function calcSegSegForce(
                     segSegForce[m, 2, k] += Fnode2[m]
                 end
             end
-        end
+end
         return segSegForce
     end
 end
@@ -728,13 +704,13 @@ function calcSegSegForce!(
         else
             # Serial execution.
             @inbounds for i in 1:numSeg
-                b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-                n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-                n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+                b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+                n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+                n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
                 for j in (i + 1):numSeg
-                    b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                    n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                    n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                    b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                    n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                    n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                     Fnode1, Fnode2, Fnode3, Fnode4 = calcSegSegForce(
                         aSq,
@@ -762,14 +738,14 @@ function calcSegSegForce!(
         end
     else # Calculate segseg forces only on segments provided
         @inbounds for i in idx
-            b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
-            n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
-            n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
+            b1 = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+            n11 = SVector{3,elemT}(node1[1, i], node1[2, i], node1[3, i])
+            n12 = SVector{3,elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
                 i == j && continue
-                b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
-                n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
-                n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
+                b2 = SVector{3,elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
+                n21 = SVector{3,elemT}(node1[1, j], node1[2, j], node1[3, j])
+                n22 = SVector{3,elemT}(node2[1, j], node2[2, j], node2[3, j])
 
                 Fnode1, Fnode2, missing, missing = calcSegSegForce(
                     aSq,
@@ -859,7 +835,7 @@ function calcSegSegForce(aSq, μ4π, μ8π, μ8πaSq, μ4πν, μ4πνaSq, b1, n
         lim12 = R1 ⋅ t2
         lim21 = R2 ⋅ t1
         lim22 = R2 ⋅ t2
-
+        
         x1 = (lim12 - c * lim11) * omcSqI
         x2 = (lim22 - c * lim21) * omcSqI
         y1 = (lim11 - c * lim12) * omcSqI
@@ -1097,7 +1073,7 @@ function calcParSegSegForce(
     b2,
     n21,
     n22,
-)
+    )
     flip::Bool = false
 
     t2 = n22 - n21
