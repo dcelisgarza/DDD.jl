@@ -36,9 +36,9 @@ for i in 1:12
         segLen = SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
         slipSystemIdx = i, # Slip System index (assuming slip systems are stored in a file, this is the index).
         slipSystem = fccSlipsys,  # Slip system.
-        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3,2,Float64}(0, 0, 0, 0, 0, 0),  # Distribution range
+        range = SMatrix{3, 2, Float64}(0, 0, 0, 0, 0, 0),  # Distribution range
         dist = Zeros(),  # Loop distribution.
     )
 end
@@ -52,9 +52,9 @@ for i in 1:12
         segLen = SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
         slipSystemIdx = i, # Slip System index (assuming slip systems are stored in a file, this is the index).
         slipSystem = fccSlipsys,  # Slip system.
-        label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+        label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
         buffer = 0,   # Buffer to increase the dislocation spread.
-        range = SMatrix{3,2,Float64}(0, 0, 0, 0, 0, 0),  # Distribution range
+        range = SMatrix{3, 2, Float64}(0, 0, 0, 0, 0, 0),  # Distribution range
         dist = Zeros(),  # Loop distribution.
     )
 end
@@ -126,9 +126,9 @@ prismLoop = DislocationLoop(;
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
     slipSystemIdx = 1, # Slip System index (assuming slip systems are stored in a file, this is the index).
     slipSystem = slipSystem,  # Slip system.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
+    range = SMatrix{3, 2, Float64}(dx / 2, dy / 2, dz / 2, dx / 2, dy / 2, dz / 2),  # Distribution range
     dist = Zeros(),  # Loop distribution.
 )
 shearLoop = DislocationLoop(;
@@ -139,9 +139,9 @@ shearLoop = DislocationLoop(;
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
     slipSystemIdx = 1, # Slip System index (assuming slip systems are stored in a file, this is the index).
     slipSystem = slipSystem,  # Slip system.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    range = SMatrix{3, 2, Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork([prismLoop, shearLoop])
@@ -1063,13 +1063,13 @@ function genFoo(mutating)
             if $mutating
                 if length(x) > 10
                     println("asasdf")
-            end
+                end
             end
             return $retval
         end
     end
 
-return eval(ex)
+    return eval(ex)
 end
 
 test = rand(5)
@@ -1117,20 +1117,15 @@ femParams = FEMParameters(
     57.0,
     43.0,
     37.0,
-    2,
-3,
-    5,
+    10,
+    10,
+    10,
 )
 x, w = gausslegendre3D(1)
 
-N = shapeFunctionDeriv(
-        LinearQuadrangle3D(),
-        x[1, :],
-        x[2, :],
-        x[3, :],
-    )
+N = shapeFunctionDeriv(LinearQuadrangle3D(), x[1], x[2], x[3])
 
-regularCuboidMesh = buildMesh(matParams, femParams)
+@time regularCuboidMesh = buildMesh(matParams, femParams)
 regularCuboidMesh.connectivity
 regularCuboidMesh.connectivity
 using Plots
@@ -1169,7 +1164,6 @@ gausslegendre(2)
 @time X, W = gausslegendre2D(2)
 @time X1, W1 = gausslegendre3D(2)
 
-
 xy
 wv
 
@@ -1177,10 +1171,10 @@ wv
 xy
 typeof(xw)
 
-test = Matrix{SVector{3,Float64}}(undef, 2, 2)
-test[1, 1] = SVector{3,Float64}(1, 1, 1)
+test = Matrix{SVector{3, Float64}}(undef, 2, 2)
+test[1, 1] = SVector{3, Float64}(1, 1, 1)
 
-zeros(SVector{3,Float64}, 3, 3)
+zeros(SVector{3, Float64}, 3, 3)
 
 function gausslegendre2D(xp, x1, x2, yp, y1, y2)
     # TODO: Make it good with https://numfactory.upc.edu/web/Calculo2/P2_Integracio/html/Integral2DQuad.html#10
@@ -1216,16 +1210,16 @@ function gausslegendre2D(xp, x1, x2, yp, y1, y2)
 
     missing, idx3 = findmax(vec(all(x -> x == 0, vcat(idx1', idx2'), dims = 1)))
 
-    xy = Matrix{SVector{3,Float64}}(undef, xp, yp)
+    xy = Matrix{SVector{3, Float64}}(undef, xp, yp)
     wv = Matrix{Float64}(undef, xp, yp)
     for i in 1:yp
         for j in 1:xp
             if idx3 == 1
-                coord = SVector{3,Float64}(y1[idx3], x[j], y[i])
+                coord = SVector{3, Float64}(y1[idx3], x[j], y[i])
             elseif idx3 == 2
-                coord = SVector{3,Float64}(x[j], y1[idx3], y[i])
+                coord = SVector{3, Float64}(x[j], y1[idx3], y[i])
             else
-                coord = SVector{3,Float64}(x[j], y[i], y1[idx3])
+                coord = SVector{3, Float64}(x[j], y[i], y1[idx3])
             end
             xy[j, i] = coord
             wv[j, i] = w[j] * v[i]
@@ -1328,9 +1322,9 @@ prismSquare = DislocationLoop(;
     slipSystem = slipSystems,
     # _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
     # _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    range = SMatrix{3, 2, Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 shearSquare = DislocationLoop(;
@@ -1341,15 +1335,15 @@ shearSquare = DislocationLoop(;
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
     slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
     slipSystem = slipSystems,        # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    range = SMatrix{3, 2, Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork((shearSquare, prismSquare))
 
 dlnParams.collisionDist
-skipSegs = Vector{Tuple{Int,Int}}()
+skipSegs = Vector{Tuple{Int, Int}}()
 detectCollision(dlnParams, network, skipSegs)
 
 network = DislocationNetwork(;
@@ -1363,7 +1357,7 @@ network = DislocationNetwork(;
 )
 makeConnect!(network)
 getSegmentIdx!(network)
-skipSegs = Vector{Tuple{Int,Int}}()
+skipSegs = Vector{Tuple{Int, Int}}()
 @test detectCollision(dlnParams, network, skipSegs) ==
       (true, :hinge, 3, 2, 1, 1, 3, 2, 0.8, 0)
 @test begin
@@ -1401,7 +1395,7 @@ network = DislocationNetwork(;
 )
 makeConnect!(network)
 getSegmentIdx!(network)
-skipSegs = Vector{Tuple{Int,Int}}()
+skipSegs = Vector{Tuple{Int, Int}}()
 @test detectCollision(dlnParams, network, skipSegs) ==
       (true, :hinge, 1, 4, 2, 2, 4, 1, 0.0, 0)
 @test detectCollision(dlnParams, network, [(4, 1)]) ==
@@ -1633,9 +1627,9 @@ prismSquare = DislocationLoop(;
     slipSystem = slipSystems,
     # _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
     # _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    range = SMatrix{3, 2, Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -1647,9 +1641,9 @@ shearSquare = DislocationLoop(;
     segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
     slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
     slipSystem = slipSystems,        # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    range = SMatrix{3, 2, Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 network = DislocationNetwork((shearSquare, prismSquare))
@@ -2156,9 +2150,9 @@ prismSquare = DislocationLoop(;
     slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(
+    range = SMatrix{3, 2, Float64}(
         0 + segLen,
         0 + segLen,
         0 + segLen,
@@ -2178,9 +2172,9 @@ shearSquare = DislocationLoop(;
     slipSystem = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
-    label = SVector{8,nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(
+    range = SMatrix{3, 2, Float64}(
         0 + segLen,
         0 + segLen,
         0 + segLen,
@@ -2267,9 +2261,9 @@ prismPentagon = DislocationLoop(;
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5,nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5, nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(
+    range = SMatrix{3, 2, Float64}(
         0 + segLen,
         0 + segLen,
         0 + segLen,
@@ -2288,9 +2282,9 @@ prismHeptagon = DislocationLoop(;
     slipSystem = 1,
     _slipPlane = slipSystems.slipPlane[:, 1],
     _bVec = slipSystems.bVec[:, 1],
-    label = SVector{7,nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
+    label = SVector{7, nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0,
-    range = SMatrix{3,2,Float64}(
+    range = SMatrix{3, 2, Float64}(
         0 + segLen,
         0 + segLen,
         0 + segLen,
@@ -2326,7 +2320,6 @@ plotNodes(
 ##
 
 ##
-nodeEl = 1:8 # Local node numbers.
 dofLocal = Tuple(
     Iterators.flatten((
         3 * (nodeEl .- 1) .+ 1,
@@ -2359,13 +2352,13 @@ figure = scatter(x, y, z)
 
 figure = scatter(mesh[1, :], mesh[2, :], mesh[3, :])
 
-realCoord = Array{SMatrix{3,8}}(undef, 8)
+realCoord = Array{SMatrix{3, 8}}(undef, 8)
 size(N[1])
 size(dNdS[1])
 dNdS[1]
 
 p = 1 / sqrt(3)
-gaussNodes = SMatrix{3,8}(
+gaussNodes = SMatrix{3, 8}(
     -p,
     -p,
     -p,
@@ -2399,7 +2392,7 @@ println("ASDF")
 ##
 
 using Polyhedra
-using GLPK:GLPK
+using GLPK: GLPK
 lib = DefaultLibrary{Float64}(GLPK.Optimizer)
 DefaultLibrary
 
@@ -2500,7 +2493,7 @@ function comparing(a, b, i, j, i2, j2)
 end
 comparing(a, b, i, j, i2, j2)
 function comparing2(a, b, i, j, i2, j2)
-isapprox(a[:, i], b[:, j]) ? a[:, i2] = b[:, j2] : nothing
+    isapprox(a[:, i], b[:, j]) ? a[:, i2] = b[:, j2] : nothing
 end
 comparing2(a, b, i, j, i2, j2)
 function comparing2(a, b, i, j, i2, j2)
@@ -2565,7 +2558,7 @@ end
 
 test = rand(10, 5)
 using StaticArrays, LinearAlgebra
-wat = SVector{3,Float64}(3, 3, 3)
+wat = SVector{3, Float64}(3, 3, 3)
 
 function watanabe(a, b)
     a[3:5, 4] = b / norm(b)
@@ -2584,9 +2577,9 @@ prismPentagon = DislocationLoop(;
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5,nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5, nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -2599,9 +2592,9 @@ prismHeptagon = DislocationLoop(;
     slipSystem = 1,
     _slipPlane = slipSystems.slipPlane[:, 1],
     _bVec = slipSystems.bVec[:, 1],
-    label = SVector{7,nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
+    label = SVector{7, nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
@@ -2644,7 +2637,7 @@ fig2 = plotNodes(
     m = 1,
     l = 3,
     linecolor = :blue,
-marker = :circle,
+    marker = :circle,
     markercolor = :blue,
     legend = false,
 )
@@ -2779,7 +2772,7 @@ fig1 =
 using JSON3, StructTypes, FileIO
 StructTypes.StructType(::Type{<:DislocationNetwork}) = StructTypes.Struct()
 StructTypes.StructType(::Type{nodeTypeDln}) = StructTypes.NumberType()
-    StructTypes.numbertype(::Type{nodeTypeDln}) = Int
+StructTypes.numbertype(::Type{nodeTypeDln}) = Int
 open("test.json3", "w") do io
     return JSON3.write(io, network)
 end
@@ -2838,7 +2831,7 @@ struct Car <: Vehicle
     seatingCapacity::Int
     topSpeed::Float64
 end
-    
+
 struct Truck <: Vehicle
     type::String
     make::String
@@ -3127,9 +3120,9 @@ prismPentagonFast = DislocationLoop(;
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5,nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5, nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 prismHeptagonFast = DislocationLoop(;
@@ -3141,9 +3134,9 @@ prismHeptagonFast = DislocationLoop(;
     slipSystem = 1,
     _slipPlane = slipSystems.slipPlane[:, 1],
     _bVec = slipSystems.bVec[:, 1],
-    label = SVector{7,nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
+    label = SVector{7, nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 
@@ -3156,9 +3149,9 @@ prismHeptagonFast = DislocationLoop(;
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5,nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5, nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -3219,9 +3212,9 @@ sourcesSlow = (prismHeptagonSlow, prismPentagonSlow)
     slipSystem = 2, # Slip System (assuming slip systems are stored in a file, this is the index).
     _slipPlane = slipSystems.slipPlane[:, 2],  # Slip plane of the segments.
     _bVec = slipSystems.bVec[:, 2],            # Burgers vector of the segments.
-    label = SVector{5,nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    label = SVector{5, nodeTypeDln}(1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
     buffer = 0.0,   # Buffer to increase the dislocation spread.
-    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),  # Loop distribution.
 )
 
@@ -3252,9 +3245,9 @@ sourcesSlow = (prismHeptagonSlow, prismPentagonSlow)
     slipSystem = 1,
     _slipPlane = slipSystems.slipPlane[:, 1],
     _bVec = slipSystems.bVec[:, 1],
-    label = SVector{7,nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
+    label = SVector{7, nodeTypeDln}(1, 1, 1, 1, 1, 2, 1),
     buffer = 0.0,
-    range = SMatrix{3,2,Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
+    range = SMatrix{3, 2, Float64}(-5000, -5000, -5000, 5000, 5000, 5000),  # Distribution range
     dist = Rand(),
 )
 

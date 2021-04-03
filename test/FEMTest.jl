@@ -35,20 +35,20 @@ end
         shapeFunctionDeriv(LinearQuadrangle3D(), points[:, 1], points[:, 2], points[:, 3])
     checkSum = sum.(dNdSall, dims = 2)
     for i in 1:size(points, 1)
-    @test vec(checkSum[i]) == SVector(0.0, 0.0, 0.0)
+        @test vec(checkSum[i]) == SVector(0.0, 0.0, 0.0)
 
-    N = shapeFunction(LinearQuadrangle3D(), points[i, 1], points[i, 2], points[i, 3])
-    @test isapprox(Nall[i], N)
+        N = shapeFunction(LinearQuadrangle3D(), points[i, 1], points[i, 2], points[i, 3])
+        @test isapprox(Nall[i], N)
 
-    dNdS = shapeFunctionDeriv(
-                LinearQuadrangle3D(),
-                points[i, 1],
-                points[i, 2],
-                points[i, 3],
-            )
+        dNdS = shapeFunctionDeriv(
+            LinearQuadrangle3D(),
+            points[i, 1],
+            points[i, 2],
+            points[i, 3],
+        )
 
-    @test isapprox(dNdSall[i], dNdS)
-end
+        @test isapprox(dNdSall[i], dNdS)
+    end
 end
 
 @testset "Checking arbitrary points of the mesh and connectivity" begin
@@ -68,7 +68,7 @@ end
     regularCuboidMesh = buildMesh(matParams, femParams)
 
     @test typeof(regularCuboidMesh) <: AbstractRegularCuboidMesh &&
-            typeof(femParams.type) <: AbstractRegularCuboidMesh
+          typeof(femParams.type) <: AbstractRegularCuboidMesh
     @test regularCuboidMesh.order == femParams.order
 
     testVertices = [
@@ -115,11 +115,11 @@ end
     @test regularCuboidMesh.my == femParams.my
     @test regularCuboidMesh.mz == femParams.mz
     @test regularCuboidMesh.numElem ==
-            regularCuboidMesh.mx * regularCuboidMesh.my * regularCuboidMesh.mz
+          regularCuboidMesh.mx * regularCuboidMesh.my * regularCuboidMesh.mz
     @test regularCuboidMesh.numNode ==
-            (regularCuboidMesh.mx + 1) *
-            (regularCuboidMesh.my + 1) *
-            (regularCuboidMesh.mz + 1)
+          (regularCuboidMesh.mx + 1) *
+          (regularCuboidMesh.my + 1) *
+          (regularCuboidMesh.mz + 1)
 
     @test regularCuboidMesh.dx / regularCuboidMesh.mx == regularCuboidMesh.w
     @test regularCuboidMesh.dy / regularCuboidMesh.my == regularCuboidMesh.h
@@ -154,11 +154,13 @@ end
     @test isapprox(coord[:, idx[4, :]]', testCoord4)
     @test isapprox(coord[:, idx[5, :]]', testCoord5)
 
-    testCon = [2508  2519  2352  2339  2507
-    1518  1529  1362  1349  1517
-    2750  2761  2594  2581  2749
-    2750  2761  2594  2581  2749
-    2703  2714  2547  2534  2702]
+    testCon = [
+        2508 2519 2352 2339 2507
+        1518 1529 1362 1349 1517
+        2750 2761 2594 2581 2749
+        2750 2761 2594 2581 2749
+        2703 2714 2547 2534 2702
+    ]
     connectivity = regularCuboidMesh.connectivity
 
     idxCon = [6, 8, 3, 1, 5]

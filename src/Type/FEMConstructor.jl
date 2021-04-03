@@ -558,7 +558,7 @@ function RegularCuboidMesh(
 
     localK = zeros(dxType, 24, 24)  # K for an element.
     @inbounds @simd for q in nodeEl
-        localK += B[:, :, q]' * C * B[:, :, q]
+        localK .+= B[:, :, q]' * C * B[:, :, q]
     end
 
     localK = localK * detJ
@@ -596,14 +596,6 @@ function RegularCuboidMesh(
     surfElemNode = zeros(mxType, 2 * (mxmy + mxmz + mymz), 4)
     cntr = 0
     
-    faces = SMatrix{4, 6, mxType}(
-        1, 2, 6, 5, # xz plane @ min y
-        2, 3, 7, 6, # yz plane @ max x
-        3, 4, 8, 7, # xz plane @ max y
-        4, 1, 5, 8, # yz plane @ min x
-        4, 3, 2, 1, # xy plane @ min z
-        5, 6, 7, 8, # xy plane @ max z
-    )
     @inbounds @simd for i in 1:size(faces, 2)
         label = vec(connectivity[faces[:, i], :]')
         
