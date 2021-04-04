@@ -393,7 +393,6 @@ function RegularCuboidMesh(
         end
     end
 
-
     # Fill element connectivity.
     @inbounds @simd for k in 1:mz
         km1 = k - 1
@@ -531,26 +530,26 @@ function RegularCuboidMesh(
             idx2 = idx + 2
             idx3 = idx + 3
             B[1, idx1, q] = nx[1, a]
-            B[1, idx2, q] = 0
-            B[1, idx3, q] = 0
+            # B[1, idx2, q] = 0
+            # B[1, idx3, q] = 0
 
-            B[2, idx1, q] = 0
+            # B[2, idx1, q] = 0
             B[2, idx2, q] = nx[2, a]
-            B[2, idx3, q] = 0
+            # B[2, idx3, q] = 0
 
-            B[3, idx1, q] = 0
-            B[3, idx2, q] = 0
+            # B[3, idx1, q] = 0
+            # B[3, idx2, q] = 0
             B[3, idx3, q] = nx[3, a]
 
             B[4, idx1, q] = nx[2, a]
             B[4, idx2, q] = nx[1, a]
-            B[4, idx3, q] = 0
+            # B[4, idx3, q] = 0
 
             B[5, idx1, q] = nx[3, a]
-            B[5, idx2, q] = 0
+            # B[5, idx2, q] = 0
             B[5, idx3, q] = nx[1, a]
 
-            B[6, idx1, q] = 0
+            # B[6, idx1, q] = 0
             B[6, idx2, q] = nx[3, a]
             B[6, idx3, q] = nx[2, a]
         end
