@@ -98,13 +98,33 @@ end
 
     faceCoord = vertices[:, faces]
     p = faceCoord[:, 2, :] - faceCoord[:, 1, :]
-    q = faceCoord[:, 3, :] - faceCoord[:, 1, :]
+    q = faceCoord[:, 4, :] - faceCoord[:, 1, :]
     n = reshape(
         collect(Iterators.flatten([normalize(p[:, i] × q[:, i]) for i in 1:size(p, 2)])),
         3,
         6,
     )
     @test isapprox(n, normals)
+
+    mx = regularCuboidMesh.mx
+    my = regularCuboidMesh.my
+    mz = regularCuboidMesh.mz
+    faceNorm = regularCuboidMesh.faceNorm
+    lbl = regularCuboidMesh.surfElemNode
+    coord = regularCuboidMesh.coord
+    for (i, val) in enumerate([
+        1,
+        1 + mx * mz,
+        1 + mx * mz + my * mz,
+        1 + 2 * mx * mz + my * mz,
+        1 + 2 * mx * mz + 2 * my * mz,
+        1 + 2 * mx * mz + 2 * my * mz + mx * my,
+    ])
+        s = coord[:, lbl[val, :]]
+        p = SVector{3, eltype(s)}(s[:, 2] - s[:, 1])
+        q = SVector{3, eltype(s)}(s[:, 4] - s[:, 1])
+        println(normalize(p × q) ≈ faceNorm[:, i])
+    end
 
     @test isapprox(regularCuboidMesh.C, testC)
 

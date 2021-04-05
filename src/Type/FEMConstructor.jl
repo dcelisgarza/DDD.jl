@@ -133,40 +133,85 @@ function RegularCuboidMesh(
 
     # For a regular cuboid mesh this is predefined. Making a volumetric polytope allows us to check if points lie inside the volume simply by doing [x, y, z] ∈ vertices, or checking if they do not belong by doing [x, y, z] ∉ vertices. The symbols are typed as \in and \notin + Tab.
     vtx = SMatrix{3, 8, dxType}(
-        0, 0, 0,
-        dx, 0, 0,
-        dx, dy, 0,
-        0, dy, 0,
-        0, 0, dz,
-        dx, 0, dz,
-        dx, dy, dz,
-        0, dy, dz,
+        0,
+        0,
+        0,
+        dx,
+        0,
+        0,
+        dx,
+        dy,
+        0,
+        0,
+        dy,
+        0,
+        0,
+        0,
+        dz,
+        dx,
+        0,
+        dz,
+        dx,
+        dy,
+        dz,
+        0,
+        dy,
+        dz,
     )
 
     vertices = VPolytope(vtx)
 
     # Faces as defined by the vertices.
     faces = SMatrix{4, 6, mxType}(
-        1, 2, 6, 5, # xz plane @ min y
-        2, 3, 7, 6, # yz plane @ max x
-        3, 4, 8, 7, # xz plane @ max y
-        4, 1, 5, 8, # yz plane @ min x
-        4, 3, 2, 1, # xy plane @ min z
-        5, 6, 7, 8, # xy plane @ max z
+        1,
+        2,
+        6,
+        5, # xz plane @ min y
+        2,
+        3,
+        7,
+        6, # yz plane @ max x
+        3,
+        4,
+        8,
+        7, # xz plane @ max y
+        4,
+        1,
+        5,
+        8, # yz plane @ min x
+        4,
+        3,
+        2,
+        1, # xy plane @ min z
+        5,
+        6,
+        7,
+        8, # xy plane @ max z
     )
 
     faceMidPt = mean(vtx[:, faces], dims = 2)[:, 1, :]
 
     # Face normal of the corresponding face.
-    faceNorm =
-        SMatrix{3, 6, dxType}(
-            0, -1, 0,   # xz plane @ min y
-            1, 0, 0,    # yz plane @ max x
-            0, 1, 0,    # xz plane @ max y
-            -1, 0, 0,   # yz plane @ min x
-            0, 0, -1,   # xy plane @ min z
-            0, 0, 1,    # xy plane @ max z
-        )
+    faceNorm = SMatrix{3, 6, dxType}(
+        0,
+        -1,
+        0,   # xz plane @ min y
+        1,
+        0,
+        0,    # yz plane @ max x
+        0,
+        1,
+        0,    # xz plane @ max y
+        -1,
+        0,
+        0,   # yz plane @ min x
+        0,
+        0,
+        -1,   # xy plane @ min z
+        0,
+        0,
+        1,    # xy plane @ max z
+    )
 
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
@@ -195,14 +240,7 @@ function RegularCuboidMesh(
         :z_x1y1,
         :z_x0y1,
     )
-    faceNode = SVector{6, Symbol}(
-        :xz_y0,
-        :yz_x1,
-        :xz_y1,
-        :yz_x0,
-        :xy_z0,
-        :xy_z1,
-    )
+    faceNode = SVector{6, Symbol}(:xz_y0, :yz_x1, :xz_y1, :yz_x0, :xy_z0, :xy_z1)
     surfNode = (
         # Corners
         x0y0z0 = 1,
@@ -265,7 +303,7 @@ function RegularCuboidMesh(
         xy_z0 = w * h,
         xy_z1 = w * h,
     )
-    
+
     surfNodeNorm = (
         # Corners
         x0y0z0 = normalize(faceNorm[:, 4] + faceNorm[:, 1] + faceNorm[:, 5]),
@@ -355,14 +393,30 @@ function RegularCuboidMesh(
     p = 1 / sqrt(3)
 
     gaussNodes = SMatrix{3, 8, dxType}(
-        -p, -p, -p, # x0y0z0
-        p, -p, -p,  # x1y0z0
-        p, p, -p,   # x1y1z0
-        -p, p, -p,  # x0y1z0
-        -p, -p, p,  # x0y0z1
-        p, -p, p,   # x1y0z1
-        p, p, p,    # x1y1z1
-        -p, p, p,   # x0y1z1
+        -p,
+        -p,
+        -p, # x0y0z0
+        p,
+        -p,
+        -p,  # x1y0z0
+        p,
+        p,
+        -p,   # x1y1z0
+        -p,
+        p,
+        -p,  # x0y1z0
+        -p,
+        -p,
+        p,  # x0y0z1
+        p,
+        -p,
+        p,   # x1y0z1
+        p,
+        p,
+        p,    # x1y1z1
+        -p,
+        p,
+        p,   # x0y1z1
     )
 
     # Shape functions and their derivatives.
@@ -400,13 +454,13 @@ function RegularCuboidMesh(
             jm1 = j - 1
             for i in 1:mx
                 globalElem = i + jm1 * mx + km1 * mx * my
-                connectivity[1, globalElem] = i + jm1*mx1 + km1*mx1*my1
+                connectivity[1, globalElem] = i + jm1 * mx1 + km1 * mx1 * my1
                 connectivity[2, globalElem] = connectivity[1, globalElem] + 1
-                connectivity[4, globalElem] = i + j*mx1 + km1*mx1*my1
+                connectivity[4, globalElem] = i + j * mx1 + km1 * mx1 * my1
                 connectivity[3, globalElem] = connectivity[4, globalElem] + 1
-                connectivity[5, globalElem] = i + jm1*mx1 + k*mx1*my1
+                connectivity[5, globalElem] = i + jm1 * mx1 + k * mx1 * my1
                 connectivity[6, globalElem] = connectivity[5, globalElem] + 1
-                connectivity[8, globalElem] = i + j*mx1 + k*mx1*my1
+                connectivity[8, globalElem] = i + j * mx1 + k * mx1 * my1
                 connectivity[7, globalElem] = connectivity[8, globalElem] + 1
             end
         end
@@ -451,7 +505,7 @@ function RegularCuboidMesh(
             surfNode[:xz_y1][i + mxm1 * jm1] = j * mx1 * my1 + 1 + i + mx1 * my # xz_y1
         end
     end
-    
+
     # Face node yz
     @inbounds @simd for j in 1:mzm1
         jm1 = j - 1
@@ -594,10 +648,10 @@ function RegularCuboidMesh(
     mymz = my * mz
     surfElemNode = zeros(mxType, 2 * (mxmy + mxmz + mymz), 4)
     cntr = 0
-    
+
     @inbounds @simd for i in 1:size(faces, 2)
         label = vec(connectivity[faces[:, i], :]')
-        
+
         if i == 1 || i == 3
             xyz = 2
             dimCoord = @view coord[xyz, label]
@@ -620,7 +674,6 @@ function RegularCuboidMesh(
         surfElemNode[(1:n) .+ cntr, :] = reshape(label, :, 4)
         cntr += n
     end
-    
 
     return RegularCuboidMesh(
         order,
