@@ -1117,9 +1117,9 @@ femParams = FEMParameters(
     57.0,
     43.0,
     37.0,
-    2,
-    2,
-    2,
+    11,
+13,
+    17,
 )
 x, w = gausslegendre3D(1)
 
@@ -1128,28 +1128,28 @@ N = shapeFunctionDeriv(LinearQuadrangle3D(), x[1], x[2], x[3])
 regularCuboidMesh = buildMesh(matParams, femParams)
 
 # We should add tests
+mx = regularCuboidMesh.mx
+my = regularCuboidMesh.my 
+mz = regularCuboidMesh.mz
+faceNorm = regularCuboidMesh.faceNorm
+
 lbl = regularCuboidMesh.surfElemNode
 coord = regularCuboidMesh.coord
-for (i, val) in enumerate(1:4:24)
-    s = coord[:, lbl[val,:]]
-    p = s[:, 2] - s[:, 1]
-    q = s[:, 4] - s[:, 1]
-    println(normalize!(p × q) ≈ regularCuboidMesh.faceNorm[:, i])
+for (i, val) in enumerate([1, 1 + mx * mz, 1 + mx * mz + my * mz, 1 + 2 * mx * mz + my * mz, 1 + 2 * mx * mz + 2 * my * mz, 1 + 2 * mx * mz + 2 * my * mz + mx * my])
+    s = coord[:, lbl[val, :]]
+    p = SVector{3,eltype(s)}(s[:, 2] - s[:, 1])
+    q = SVector{3,eltype(s)}(s[:, 4] - s[:, 1])
+    println(normalize(p × q) ≈ faceNorm[:, i])
 end
 
-
-
-
-s1 = coord[:, lbl[1,:]]
+s1 = coord[:, lbl[1, :]]
 p = s1[:, 2] - s1[:, 1]
 q = s1[:, 4] - s1[:, 1]
 normalize!(p × q) == regularCuboidMesh.faceNorm[:, 1]
-s1 = coord[:, lbl[5,:]]
+s1 = coord[:, lbl[5, :]]
 p = s1[:, 2] - s1[:, 1]
 q = s1[:, 4] - s1[:, 1]
 normalize!(p × q) == regularCuboidMesh.faceNorm[:, 2]
-
-
 
 regularCuboidMesh.connectivity
 using Plots
