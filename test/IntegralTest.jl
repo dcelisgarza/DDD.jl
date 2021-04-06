@@ -240,8 +240,8 @@ cd(@__DIR__)
     label = network2.label
     ext = findall(x -> x == 5, label)
     surf = findall(x -> x == 3, label)
-    @test length(ext) == 3
-    @test length(surf) == 1
+    @test length(ext) == 4
+    @test length(surf) == 2
     @test compStruct(network2, network) == false
 
     numSeg = network2.numSeg[1]

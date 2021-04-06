@@ -90,22 +90,7 @@ Compute the stress, `̂σ`, on a dislocation segment `x0` as a result of body fo
 ```
 """
 function calc_σHat(
-    mesh::RegularCuboidMesh{
-        T1,
-        T2,
-        T3,
-        T4,
-        T5,
-        T6,
-        T7,
-        T8,
-        T9,
-        T10,
-        T11,
-        T12,
-        T13,
-        T14,
-    } where {T1 <: LinearElement, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14},
+    mesh::RegularCuboidMesh{T1} where {T1 <: LinearElement},
     forceDisplacement::ForceDisplacement,
     x0,
 )
@@ -131,7 +116,7 @@ function calc_σHat(
     k::Int = clamp(ceil(z * dInv), 1, mz)
 
     # Calculate index of the elements.
-    idx = i + (k - 1) * mx + (j - 1) * mx * mz
+    idx = i + (j - 1) * mx + (k - 1) * mx * my
 
     # Diametrically opposed points in a cubic element.
     n1 = connectivity[1, idx]
@@ -151,20 +136,11 @@ function calc_σHat(
     s2 = (y - yc) * ds2dy
     s3 = (z - zc) * ds3dz
 
-    pm1 = (-1, 1, 1, -1, -1, 1, 1, -1)
-    pm2 = (1, 1, 1, 1, -1, -1, -1, -1)
-    pm3 = (-1, -1, 1, 1, -1, -1, 1, 1)
-
-    ds1dx /= 8
-    ds2dy /= 8
-    ds3dz /= 8
+    dNdS = shapeFunctionDeriv(LinearQuadrangle3D(), s1, s2, s3)
 
     B = zeros(elemT, 6, 24)
     U = MVector{24, elemT}(zeros(24))
     @inbounds @simd for i in 1:8
-        dNdS1 = pm1[i] * (1 + pm2[i] * s2) * (1 + pm3[i] * s3) * ds1dx
-        dNdS2 = (1 + pm1[i] * s1) * pm2[i] * (1 + pm3[i] * s3) * ds2dy
-        dNdS3 = (1 + pm1[i] * s1) * (1 + pm2[i] * s2) * pm3[i] * ds3dz
         # Indices calculated once for performance.
         idx1 = 3 * i
         idx2 = 3 * (i - 1)
@@ -172,9 +148,9 @@ function calc_σHat(
         idx3 = 3 * connectivity[i, idx]
 
         # Constructing the Jacobian for node i.
-        B[1, idx2 + 1] = dNdS1
-        B[2, idx2 + 2] = dNdS2
-        B[3, idx2 + 3] = dNdS3
+        B[1, idx2 + 1] = dNdS[1, i] * ds1dx
+        B[2, idx2 + 2] = dNdS[2, i] * ds2dy
+        B[3, idx2 + 3] = dNdS[3, i] * ds3dz
 
         B[4, idx2 + 1] = B[2, idx2 + 2]
         B[4, idx2 + 2] = B[1, idx2 + 1]
@@ -453,7 +429,7 @@ function _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv
     553?595: gives this expression in appendix A p590
     f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
     (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
     tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
     = tVec * bScrew - bVec
     = - bEdgeVec =#

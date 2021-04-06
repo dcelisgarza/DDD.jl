@@ -257,7 +257,7 @@ function gausslegendre2D(n)
     @inbounds @simd for i in 1:n
         idx = n * (i - 1)
         for j in 1:n
-            X[:, j + idx] .= (x[i], x[j])
+            X[:, j + idx] .= (x[j], x[i])
             W[j + idx] = w[j] * w[i]
         end
     end
@@ -272,7 +272,7 @@ function gausslegendre3D(n)
         for j in 1:n
             idx2 = idx + n * (j - 1)
             for k in 1:n
-                X[:, k + idx2] .= (x[i], x[j], x[k])
+                X[:, k + idx2] .= (x[k], x[j], x[i])
                 W[k + idx2] = w[k] * w[j] * w[i]
             end
         end

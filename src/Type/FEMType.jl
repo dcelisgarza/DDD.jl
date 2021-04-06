@@ -162,17 +162,17 @@ struct RegularCuboidMesh{
     numElem::T12
     numNode::T13
     C::T14
-    elemFaces::T15
-    vertices::T16
-    faces::T17
-    faceNorm::T18
-    faceMidPt::T19
-    cornerNode::T20
-    edgeNode::T21
-    faceNode::T22
-    surfNode::T23
-    surfNodeArea::T24
-    surfNodeNorm::T25
+    vertices::T15
+    faces::T16
+    faceNorm::T17
+    faceMidPt::T18
+    cornerNode::T19
+    edgeNode::T20
+    faceNode::T21
+    surfNode::T22
+    surfNodeArea::T23
+    surfNodeNorm::T24
+    surfElemNode::T25
     coord::T26
     connectivity::T27
     K::T28
@@ -236,7 +236,6 @@ struct RegularCuboidMesh{
     T26,
     T27,
     T28,
-    T29,
 } <: AbstractRegularCuboidMesh
     order::T1
     dx::T2
@@ -252,21 +251,20 @@ struct RegularCuboidMesh{
     numElem::T12
     numNode::T13
     C::T14
-    elemFaces::T15
-    vertices::T16
-    faces::T17
-    faceNorm::T18
-    faceMidPt::T19
-    cornerNode::T20
-    edgeNode::T21
-    faceNode::T22
-    surfNode::T23
-    surfNodeArea::T24
-    surfNodeNorm::T25
-    surfElemNode::T26
-    coord::T27
-    connectivity::T28
-    K::T29
+    vertices::T15
+    faces::T16
+    faceNorm::T17
+    faceMidPt::T18
+    cornerNode::T19
+    edgeNode::T20
+    faceNode::T21
+    surfNode::T22
+    surfNodeArea::T23
+    surfNodeNorm::T24
+    surfElemNode::T25
+    coord::T26
+    connectivity::T27
+    K::T28
 end
 
 """

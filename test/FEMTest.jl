@@ -74,12 +74,12 @@ end
     testVertices = [
         0 0 0
         1009 0 0
-        0 1013 0
         1009 1013 0
+        0 1013 0
         0 0 1019
         1009 0 1019
-        0 1013 1019
         1009 1013 1019
+        0 1013 1019
     ]
     testC = [
         3.272727272727273 1.272727272727273 1.272727272727273 0 0 0
@@ -98,13 +98,33 @@ end
 
     faceCoord = vertices[:, faces]
     p = faceCoord[:, 2, :] - faceCoord[:, 1, :]
-    q = faceCoord[:, 3, :] - faceCoord[:, 1, :]
+    q = faceCoord[:, 4, :] - faceCoord[:, 1, :]
     n = reshape(
         collect(Iterators.flatten([normalize(p[:, i] × q[:, i]) for i in 1:size(p, 2)])),
         3,
         6,
     )
     @test isapprox(n, normals)
+
+    mx = regularCuboidMesh.mx
+    my = regularCuboidMesh.my
+    mz = regularCuboidMesh.mz
+    faceNorm = regularCuboidMesh.faceNorm
+    lbl = regularCuboidMesh.surfElemNode
+    coord = regularCuboidMesh.coord
+    for (i, val) in enumerate([
+        1,
+        1 + mx * mz,
+        1 + mx * mz + my * mz,
+        1 + 2 * mx * mz + my * mz,
+        1 + 2 * mx * mz + 2 * my * mz,
+        1 + 2 * mx * mz + 2 * my * mz + mx * my,
+    ])
+        s = coord[:, lbl[:, val]]
+        p = SVector{3, eltype(s)}(s[:, 2] - s[:, 1])
+        q = SVector{3, eltype(s)}(s[:, 4] - s[:, 1])
+        @test normalize(p × q) ≈ faceNorm[:, i]
+    end
 
     @test isapprox(regularCuboidMesh.C, testC)
 
@@ -137,18 +157,12 @@ end
         7.338181818181819 0 0
         1.834545454545455 0 0
     ]
-    testCoord2 = 1.0e+02 * [
-        7.338181818181819 0 0
-        4.586363636363637 0 0.599411764705882
-    ]
+    testCoord2 = [733.8181818181819 0.0 0.0; 458.6363636363637 77.92307692307692 0.0]
     testCoord3 = 1.0e+02 * [
         4.586363636363637 0 0
         3.669090909090909 0 0
     ]
-    testCoord4 = 1.0e+02 * [
-        3.669090909090909 0 0
-        6.420909090909091 0 0.599411764705882
-    ]
+    testCoord4 = [366.90909090909093 0.0 0.0; 642.0909090909091 77.92307692307692 0.0]
     testCoord5 = 1.0e+02 * [
         8.255454545454546 0 0
         7.338181818181819 0 0
@@ -161,44 +175,44 @@ end
     @test isapprox(coord[:, idx[5, :]]', testCoord5)
 
     testCon = [
-        1966 1977 2194 2181 1965
-        2795 2806 3023 3010 2794
-        682 693 910 897 681
-        1998 2009 2226 2213 1997
-        1125 1136 1353 1340 1124
+        2508 2519 2352 2339 2507
+        1518 1529 1362 1349 1517
+        2750 2761 2594 2581 2749
+        2750 2761 2594 2581 2749
+        2703 2714 2547 2534 2702
     ]
     connectivity = regularCuboidMesh.connectivity
 
     idxCon = [6, 8, 3, 1, 5]
-    idxNode = [1703, 2430, 592, 1732, 976]
-    connectivity[idxCon, idxNode]' == testCon
+    idxNode = [2002, 1149, 2201, 2201, 2158]
+    @test connectivity[idxCon, idxNode]' == testCon
 
     KTest = [
-        29.516317016317018,
-        -27.845980957491285,
-        -73.225643849016691,
-        -19.731828987678465,
-        -0.284596060433909,
-        32.172011818817367,
-        1.042355371900828,
-        -7.379079254079253,
-        -5.676247771836008,
-        -0.885489510489512,
+        -27.845980957491278
+        -45.099576129125296
+        -64.81800121385578
+        -7.379079254079251
+        3.5419580419580443
+        29.51631701631701
+        5.676247771836005
+        -9.901489001393466
+        -22.704991087344027
+        7.379079254079253
     ]
     K = regularCuboidMesh.K
     droptol!(K, 1e-14)
 
     idxK = [
-        CartesianIndex(3435, 3400)
-        CartesianIndex(1108, 1069)
-        CartesianIndex(8973, 9009)
-        CartesianIndex(3019, 3664)
-        CartesianIndex(6670, 6706)
-        CartesianIndex(5488, 4840)
-        CartesianIndex(675, 29)
-        CartesianIndex(1042, 357)
-        CartesianIndex(5710, 5096)
-        CartesianIndex(1918, 1275)
+        CartesianIndex(2194, 2695)
+        CartesianIndex(8235, 7734)
+        CartesianIndex(5636, 5672)
+        CartesianIndex(7785, 8326)
+        CartesianIndex(7018, 7524)
+        CartesianIndex(3367, 2868)
+        CartesianIndex(6289, 5753)
+        CartesianIndex(8368, 7903)
+        CartesianIndex(724, 764)
+        CartesianIndex(5121, 4654)
     ]
     @test isapprox(K[idxK], KTest)
 end

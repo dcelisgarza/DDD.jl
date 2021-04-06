@@ -1117,12 +1117,157 @@ femParams = FEMParameters(
     57.0,
     43.0,
     37.0,
-    20,
-    20,
-    20,
+    11,
+    13,
+    17,
 )
-
 regularCuboidMesh = buildMesh(matParams, femParams)
+
+dx, dy, dz = regularCuboidMesh.dx, regularCuboidMesh.dy, regularCuboidMesh.dz
+segLen = dx / 5
+prismSquare = DislocationLoop(;
+    loopType = loopPrism(),    # Prismatic loop, all segments are edge segments.
+    numSides = 8,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 10,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystems,
+    # _slipPlane = slipSystems.slipPlane[:, 1],  # Slip plane of the segments.
+    # _bVec = slipSystems.bVec[:, 1],            # Burgers vector of the segments.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3, 2, Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+shearSquare = DislocationLoop(;
+    loopType = loopShear(),    # Prismatic loop, all segments are edge segments.
+    numSides = 8,   # 5-sided loop.
+    nodeSide = 1,   # One node per side, if 1 nodes will be in the corners.
+    numLoops = 10,  # Number of loops of this type to generate when making a network.
+    segLen = segLen * SVector{8}(ones(8)),  # Length of each segment between nodes, equal to the number of nodes.
+    slipSystemIdx = 1, # Slip System (assuming slip systems are stored in a file, this is the index).
+    slipSystem = slipSystems,        # Burgers vector of the segments.
+    label = SVector{8, nodeTypeDln}(1, 1, 1, 1, 1, 1, 1, 1),    # Node labels, has to be equal to the number of nodes.
+    buffer = 0,   # Buffer to increase the dislocation spread.
+    range = SMatrix{3, 2, Float64}(0, 0, 0, dx, dy, dz),  # Distribution range
+    dist = Rand(),  # Loop distribution.
+)
+network = DislocationNetwork((shearSquare, prismSquare))
+cantileverBC, forceDisplacement = Boundaries(femParams, regularCuboidMesh)
+
+points = regularCuboidMesh.coord[:, cantileverBC.tGammaDln]
+σTilde = calc_σTilde(points, dlnParams, matParams, network)
+σxx = @view σTilde[1, :]
+σyy = @view σTilde[2, :]
+σzz = @view σTilde[3, :]
+σxy = @view σTilde[4, :]
+σxz = @view σTilde[5, :]
+σyz = @view σTilde[6, :]
+function getTGammaDlnNormsArea(boundaries::Boundaries, mesh::AbstractMesh)
+    surfNode = mesh.surfNode
+    surfNorm = mesh.surfNodeNorm
+    surfArea = mesh.surfNodeArea
+    tGamma = boundaries.tGamma
+    mGamma = boundaries.mGamma
+    index = [tGamma.index; mGamma.index]
+
+    lenIdx = length(index)
+
+    N = reshape(
+        collect(
+            Iterators.flatten(
+                Iterators.flatten([
+                    Iterators.repeated(surfNorm[index[i]], length(surfNode[index[i]]))
+                    for i in 1:lenIdx
+                ]),
+            ),
+        ),
+        3,
+        :,
+    )
+    A = collect(
+        Iterators.flatten([
+            Iterators.repeated(surfArea[index[i]], length(surfNode[index[i]])) for
+            i in 1:lenIdx
+        ]),
+    )
+    return N, A
+end
+
+@btime N, A = getTGammaDlnNormsArea(cantileverBC, regularCuboidMesh)
+
+function calcNumericTractions(σ, N, A, ::Val{1})
+    numNode = length(A)
+    elemT = eltype(σ)
+    T = zeros(3, numNode)
+    idx = 0
+    @inbounds @simd for i in 1:numNode
+        σi = SMatrix{3, 3, elemT}(
+            σ[1, i],
+            σ[4, i],
+            σ[5, i],
+            σ[4, i],
+            σ[2, i],
+            σ[6, i],
+            σ[5, i],
+            σ[6, i],
+            σ[3, i],
+        )
+        n = SVector{3, elemT}(N[1, i], N[2, i], N[3, i])
+        T[:, i] = A[i] * σi * n
+    end
+    return T
+end
+
+@btime t1 = calcNumericTractions(σTilde, N, A)
+
+N2 = reshape(collect(Iterators.flatten(Iterators.flatten(N))), 3, :)
+A2 = collect(Iterators.flatten(A))
+@btime t2 = calcNumericTractions1(σTilde, N2, A2, Val(1))
+t1 ≈ t2
+
+# We should add tests
+mx = regularCuboidMesh.mx
+my = regularCuboidMesh.my
+mz = regularCuboidMesh.mz
+faceNorm = regularCuboidMesh.faceNorm
+
+surfNode = SVector(regularCuboidMesh.surfNode...)
+
+lbl = regularCuboidMesh.surfElemNode
+
+lbl2 = regularCuboidMesh.surfElemNode
+
+lbl2' == lbl
+coord = regularCuboidMesh.coord
+for (i, val) in enumerate([
+    1,
+    1 + mx * mz,
+    1 + mx * mz + my * mz,
+    1 + 2 * mx * mz + my * mz,
+    1 + 2 * mx * mz + 2 * my * mz,
+    1 + 2 * mx * mz + 2 * my * mz + mx * my,
+])
+    s = coord[:, lbl[:, val]]
+    p = SVector{3, eltype(s)}(s[:, 2] - s[:, 1])
+    q = SVector{3, eltype(s)}(s[:, 4] - s[:, 1])
+    println(normalize(p × q) ≈ faceNorm[:, i])
+end
+
+s1 = coord[:, lbl[1, :]]
+p = s1[:, 2] - s1[:, 1]
+q = s1[:, 4] - s1[:, 1]
+normalize!(p × q) == regularCuboidMesh.faceNorm[:, 1]
+s1 = coord[:, lbl[5, :]]
+p = s1[:, 2] - s1[:, 1]
+q = s1[:, 4] - s1[:, 1]
+normalize!(p × q) == regularCuboidMesh.faceNorm[:, 2]
+
+regularCuboidMesh.connectivity
+using Plots
+plotlyjs()
+fig3 = plotFEDomain(regularCuboidMesh)
 # surfElemLbl[(1:n) .+ cntr, :] = 
 # surfElemCoord[(1:3*n) .+ 3*cntr, :] = 
 coord = regularCuboidMesh.coord
@@ -1155,35 +1300,6 @@ gausslegendre(2)
 
 @time X, W = gausslegendre2D(2)
 @time X1, W1 = gausslegendre3D(2)
-function gausslegendre2D(n)
-    x, w = gausslegendre(n)
-    X = zeros(2, n^2)
-    W = zeros(n^2)
-    @inbounds @simd for i in 1:n
-        idx = n * (i - 1)
-        for j in 1:n
-            X[:, j + idx] .= (x[i], x[j])
-            W[j + idx] = w[j] * w[i]
-        end
-    end
-    return X, W
-end
-function gausslegendre3D(n)
-    x, w = gausslegendre(n)
-    X = zeros(3, n^3)
-    W = zeros(n^3)
-    @inbounds @simd for i in 1:n
-        idx = n^2 * (i - 1)
-        for j in 1:n
-            idx2 = idx + n * (j - 1)
-            for k in 1:n
-                X[:, k + idx2] .= (x[i], x[j], x[k])
-                W[k + idx2] = w[k] * w[j] * w[i]
-            end
-        end
-    end
-    return X, W
-end
 
 xy
 wv
@@ -2341,7 +2457,6 @@ plotNodes(
 ##
 
 ##
-nodeEl = 1:8 # Local node numbers.
 dofLocal = Tuple(
     Iterators.flatten((
         3 * (nodeEl .- 1) .+ 1,
