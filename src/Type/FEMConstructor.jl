@@ -44,13 +44,7 @@ Creates a [`RegularCuboidMesh`](@ref).
 """
 function buildMesh(
     matParams::MaterialParameters,
-    femParams::FEMParameters{
-        F1,
-        F2,
-        F3,
-        F4,
-        F5,
-    } where {F1 <: DispatchRegularCuboidMesh, F2, F3, F4, F5},
+    femParams::FEMParameters{F1,F2,F3,F4,F5,} where {F1 <: DispatchRegularCuboidMesh,F2,F3,F4,F5},
 )
     return RegularCuboidMesh(matParams, femParams)
 end
@@ -62,40 +56,64 @@ RegularCuboidMesh(
     femParams::FEMParameters{F1,F2,F3,F4,F5} where {F1<:DispatchRegularCuboidMesh,F2<:LinearElement,F3,F4,F5}
 )
 ```
-Created by: E. Tarleton `edmund.tarleton@materials.ox.ac.uk`
 
-3D FEM code using linear 8 node element with 8 integration pts (2x2x2) per element.
+FE domain with linear hexahedral elements with `2 × 2 × 2` Gauss nodes. Uses the canonical node, face and edge ordering of [https://www.mcs.anl.gov/uploads/cels/papers/P1573A.pdf](https://www.mcs.anl.gov/uploads/cels/papers/P1573A.pdf).
 
 ```
-   4.-------.3
-   | \\       |\\
-   |  \\      | \\    my
-   1.--\\---- .2 \\
-    \\   \\     \\  \\
-     \\  8.--------.7
-      \\  |      \\ |  mz
-       \\ |       \\|
-         5.--------.6
-             mx
-y   ^z
- ↖  |
-  \\ |
-   \\|---->x
-```
-!!! note
-    This is rotated about the `x` axis w.r.t. to the local `(s1, s2, s3)` system. [`calc_σHat`](@ref) uses custom linear shape functions that eliminate the need for a Jacobian, speeding up the calculation. We keep the Jacobian in this function because it's only run at simulation initialisation so it's not performance critical, which lets us use standard shape functions.
+Corners:
 
-    https://www.mcs.anl.gov/uploads/cels/papers/P1573A.pdf
+      7----------8
+     /|         /|
+    / |        / |
+   /  |       /  |
+  /   4------/---3
+ /   /      /   /
+5----------6   /
+|  /       |  /
+| /        | /
+|/         |/
+1----------2
+
+Edges:
+
+      .----11-----.
+     /|          /|
+    / 8         / 7
+  12  |       10  |
+  /   .-----3-/---.
+ /   /       /   /
+.-----9-----.   /
+|  4        |  2
+5 /         6 /
+|/          |/
+.-----1-----.
+
+Faces:
+
+      .----------.
+     /|         /|
+    / |    3   / |
+   /  | 6     /  |
+  /   .------/---.
+ / 4 /      / 2 /
+.----------.   /
+|  /     5 |  /
+| /  1     | /
+|/         |/
+.----------.
+
+
+Z    
+^   y
+|  ^  
+| / 
+.-----> x
+```
+
 """
 function RegularCuboidMesh(
     matParams::MaterialParameters,
-    femParams::FEMParameters{
-        F1,
-        F2,
-        F3,
-        F4,
-        F5,
-    } where {F1 <: DispatchRegularCuboidMesh, F2 <: LinearElement, F3, F4, F5},
+    femParams::FEMParameters{F1,F2,F3,F4,F5,} where {F1 <: DispatchRegularCuboidMesh,F2 <: LinearElement,F3,F4,F5},
 )
     μ = matParams.μ
     ν = matParams.ν
@@ -129,10 +147,10 @@ function RegularCuboidMesh(
     numNode = mx1 * my1 * mz1
 
     # Length scale.
-    scale = SVector{3, dxType}(dx, dy, dz) * cbrt(dx * dy * dz)
+    scale = SVector{3,dxType}(dx, dy, dz) * cbrt(dx * dy * dz)
 
     # For a regular cuboid mesh this is predefined. Making a volumetric polytope allows us to check if points lie inside the volume simply by doing [x, y, z] ∈ vertices, or checking if they do not belong by doing [x, y, z] ∉ vertices. The symbols are typed as \in and \notin + Tab.
-    vtx = SMatrix{3, 8, dxType}(
+    vtx = SMatrix{3,8,dxType}(
         0,
         0,
         0,
@@ -162,7 +180,7 @@ function RegularCuboidMesh(
     vertices = VPolytope(vtx)
 
     # Faces as defined by the vertices.
-    faces = SMatrix{4, 6, mxType}(
+    faces = SMatrix{4,6,mxType}(
         1,
         2,
         6,
@@ -192,7 +210,7 @@ function RegularCuboidMesh(
     faceMidPt = mean(vtx[:, faces], dims = 2)[:, 1, :]
 
     # Face normal of the corresponding face.
-    faceNorm = SMatrix{3, 6, dxType}(
+    faceNorm = SMatrix{3,6,dxType}(
         0,
         -1,
         0,   # xz plane @ min y
@@ -216,7 +234,7 @@ function RegularCuboidMesh(
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
 
-    cornerNode = SVector{8, Symbol}(
+    cornerNode = SVector{8,Symbol}(
         :x0y0z0,
         :x1y0z0,
         :x1y1z0,
@@ -226,7 +244,7 @@ function RegularCuboidMesh(
         :x1y1z1,
         :x0y1z1,
     )
-    edgeNode = SVector{12, Symbol}(
+    edgeNode = SVector{12,Symbol}(
         :x_y0z0,
         :y_x1z0,
         :x_y1z0,
@@ -240,7 +258,7 @@ function RegularCuboidMesh(
         :z_x1y1,
         :z_x0y1,
     )
-    faceNode = SVector{6, Symbol}(:xz_y0, :yz_x1, :xz_y1, :yz_x0, :xy_z0, :xy_z1)
+    faceNode = SVector{6,Symbol}(:xz_y0, :yz_x1, :xz_y1, :yz_x0, :xy_z0, :xy_z1)
     surfNode = (
         # Corners
         x0y0z0 = 1,
@@ -350,7 +368,7 @@ function RegularCuboidMesh(
     CDiag = Lame + 2 * μ
 
     # Stiffness tensor.
-    C = SMatrix{6, 6, dxType}(
+    C = SMatrix{6,6,dxType}(
         CDiag,
         Lame,
         Lame,
@@ -392,7 +410,7 @@ function RegularCuboidMesh(
     # Local nodes Gauss Quadrature. Using 8 nodes per element.
     p = 1 / sqrt(3)
 
-    gaussNodes = SMatrix{3, 8, dxType}(
+    gaussNodes = SMatrix{3,8,dxType}(
         -p,
         -p,
         -p, # x0y0z0
@@ -515,7 +533,7 @@ function RegularCuboidMesh(
         end
     end
 
-    localCoord = SMatrix{3, 8, dxType}(
+    localCoord = SMatrix{3,8,dxType}(
         coord[1, connectivity[1, 1]],
         coord[2, connectivity[1, 1]],
         coord[3, connectivity[1, 1]],
@@ -542,7 +560,7 @@ function RegularCuboidMesh(
         coord[3, connectivity[8, 1]],
     )
 
-    localdNdS = SMatrix{8, 3, dxType}(
+    localdNdS = SMatrix{8,3,dxType}(
         dNdS[1][1, 1],
         dNdS[1][1, 2],
         dNdS[1][1, 3],
@@ -646,7 +664,7 @@ function RegularCuboidMesh(
     mxmy = mx * my
     mxmz = mx * mz
     mymz = my * mz
-    surfElemNode = zeros(mxType, 2 * (mxmy + mxmz + mymz), 4)
+    surfElemNode = zeros(mxType, 4, 2 * (mxmy + mxmz + mymz))
     cntr = 0
 
     @inbounds @simd for i in 1:size(faces, 2)
@@ -671,7 +689,7 @@ function RegularCuboidMesh(
 
         label = label[idx]
 
-        surfElemNode[(1:n) .+ cntr, :] = reshape(label, :, 4)
+        surfElemNode[:, (1:n) .+ cntr] .= reshape(label, :, 4)'
         cntr += n
     end
 
@@ -728,7 +746,7 @@ Boundaries(
 Creates [`Boundaries`](@ref) for loading a hexahedral cantilever.
 """
 function Boundaries(
-    ::FEMParameters{T1, T2, T3, T4, T5} where {T1, T2, T3 <: CantileverLoad, T4, T5},
+    ::FEMParameters{T1,T2,T3,T4,T5} where {T1,T2,T3 <: CantileverLoad,T4,T5},
     femMesh::RegularCuboidMesh;
     kw...,
 )
@@ -737,9 +755,9 @@ function Boundaries(
     faceNorm = femMesh.faceNorm
     surfNode = femMesh.surfNode
     K = femMesh.K
-
+        
     if !haskey(kw, :uGamma)
-        uIndex = SVector{9, Symbol}(
+        uIndex = SVector{9,Symbol}(
             [
                 :x0y0z0
                 :x0y1z0
@@ -757,17 +775,17 @@ function Boundaries(
     else
         uGamma = kw[:uGamma]
     end
-
+        
     if !haskey(kw, :mGamma)
-        mIndex = SVector{3, Symbol}([:x1y0z1; :x1y1z1; :y_x1z1])
+        mIndex = SVector{3,Symbol}([:x1y0z1; :x1y1z1; :y_x1z1])
         mNodes = collect(Iterators.flatten([surfNode[mIndex[i]] for i in 1:length(mIndex)]))
         mGamma = BoundaryNode(; index = mIndex, node = mNodes)
     else
         mGamma = kw[:mGamma]
     end
-
+        
     if !haskey(kw, :tGamma)
-        tIndex = SVector{14, Symbol}(
+        tIndex = SVector{14,Symbol}(
             Symbol.(setdiff(string.(keys(surfNode)), string.([uIndex; mIndex]))),
         )
         tNodes = collect(Iterators.flatten([surfNode[tIndex[i]] for i in 1:length(tIndex)]))
@@ -781,11 +799,10 @@ function Boundaries(
     tGammaNode = tGamma.node
 
     !haskey(kw, "uDofs") ?
-    uDofs =
-        sort!([3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode]) :
+    uDofs = [3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode] :
     uDofs = kw["uDofs"]
 
-    !haskey(kw, "tDofs") ? tDofs = sort!(setdiff(1:numNode3, uDofs)) : tDofs = kw["tDofs"]
+    !haskey(kw, "tDofs") ? tDofs = setdiff(1:numNode3, uDofs) : tDofs = kw["tDofs"]
 
     C = cholesky(Hermitian(K[tDofs, tDofs]))
 
@@ -820,17 +837,17 @@ Boundaries(; noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
 Creates [`Boundaries`](@ref).
 """
 function Boundaries(; noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
-    uGammaDln = sort!([uGamma.node; mGamma.node])
-    tGammaDln = sort!([tGamma.node; mGamma.node])
-    uDofsDln = sort!([3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln])
-    tDofsDln = sort!([3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln])
+    uGammaDln = [uGamma.node; mGamma.node]
+    tGammaDln = [tGamma.node; mGamma.node]
+    uDofsDln = [3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln]
+    tDofsDln = [3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln]
     return Boundaries(
         noExit,
         uGammaDln,
         tGammaDln,
         uDofsDln,
         tDofsDln,
-        uGamma,
+uGamma,
         tGamma,
         mGamma,
         uDofs,
@@ -838,4 +855,19 @@ function Boundaries(; noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs, tK)
         mDofs,
         tK,
     )
+end
+
+function getTGammaDlnNormsArea(boundaries::Boundaries, mesh::AbstractMesh)
+    surfNode = mesh.surfNode
+    surfNorm = mesh.surfNodeNorm
+    surfArea = mesh.surfNodeArea
+    tGamma = boundaries.tGamma
+    mGamma = boundaries.mGamma
+    index = [tGamma.index; mGamma.index]
+
+    lenIdx = length(index)
+
+    N = reshape(collect(Iterators.flatten(Iterators.flatten([Iterators.repeated(surfNorm[index[i]], length(surfNode[index[i]])) for i in 1:lenIdx]))), 3, :)
+    A = collect(Iterators.flatten([Iterators.repeated(surfArea[index[i]], length(surfNode[index[i]])) for i in 1:lenIdx]))
+    return N, A
 end
