@@ -120,10 +120,10 @@ end
         1 + 2 * mx * mz + 2 * my * mz,
         1 + 2 * mx * mz + 2 * my * mz + mx * my,
     ])
-        s = coord[:, lbl[val, :]]
+        s = coord[:, lbl[:, val]]
         p = SVector{3, eltype(s)}(s[:, 2] - s[:, 1])
         q = SVector{3, eltype(s)}(s[:, 4] - s[:, 1])
-        println(normalize(p × q) ≈ faceNorm[:, i])
+        @test normalize(p × q) ≈ faceNorm[:, i]
     end
 
     @test isapprox(regularCuboidMesh.C, testC)

@@ -463,6 +463,29 @@ function calc_σTilde!(
     return σ
 end
 
+function calcNumericTractions(σ, N, A, ::Val{1})
+    numNode = length(A)
+    elemT = eltype(σ)
+    T = zeros(3, numNode)
+    idx = 0
+    @inbounds @simd for i in 1:numNode
+        σi = SMatrix{3, 3, elemT}(
+            σ[1, i],
+            σ[4, i],
+            σ[5, i],
+            σ[4, i],
+            σ[2, i],
+            σ[6, i],
+            σ[5, i],
+            σ[6, i],
+            σ[3, i],
+        )
+        n = SVector{3, elemT}(N[1, i], N[2, i], N[3, i])
+        T[:, i] = A[i] * σi * n
+    end
+    return T
+end
+
 """
 Calculates displacements from dislocations.
 Bruce Bromage, bruce.bromage@materials.ox.ac.uk
