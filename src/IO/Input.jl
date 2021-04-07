@@ -98,6 +98,7 @@ Constructs [`Boundaries`](@ref) out of a dictionary.
     `tK` may be null if it was factorised when the variable was saved.
 """
 function loadBoundaries(dict::Dict{T1, T2}) where {T1, T2}
+    model = makeTypeDict(AbstractModel)
     uGammaDict = dict["uGamma"]
     mGammaDict = dict["mGamma"]
     tGammaDict = dict["tGamma"]
@@ -157,6 +158,7 @@ function loadBoundaries(dict::Dict{T1, T2}) where {T1, T2}
 
     noExit = Int.(dict["noExit"])
     return Boundaries(;
+        model = model[dict["model"]],
         noExit = noExit,
         uGamma = uGamma,
         tGamma = tGamma,

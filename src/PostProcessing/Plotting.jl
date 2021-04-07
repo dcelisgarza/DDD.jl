@@ -12,7 +12,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
     elemT = eltype(links)
     fig = plot()
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -36,7 +36,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     numNode = network.numNode[1]
     elemT = eltype(links)
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
@@ -61,7 +61,7 @@ function plotNodes(mesh::AbstractMesh, network::DislocationNetwork, args...; kw.
     elemT = eltype(links)
     fig = plot()
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -73,8 +73,8 @@ function plotNodes(mesh::AbstractMesh, network::DislocationNetwork, args...; kw.
     # Plot FEM domain.
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, :)
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, :)
-    face1 = SVector{5, Int}(1, 2, 4, 3, 1)
-    face2 = SVector{5, Int}(5, 6, 8, 7, 5)
+    face1 = [mesh.faces[:, 5]; mesh.faces[1, 5]]
+    face2 = [mesh.faces[:, 6]; mesh.faces[1, 6]]
     surf1 = vertices[:, face1]
     surf2 = vertices[:, face2]
     plot!(fig, surf1[1, :], surf1[2, :], surf1[3, :], linecolor = :black, linewidth = 2)
@@ -123,7 +123,7 @@ function plotNodes!(
     numNode = network.numNode[1]
     elemT = eltype(links)
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -135,8 +135,8 @@ function plotNodes!(
     # Plot FEM domain.
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, :)
     vertices = reshape(collect(Iterators.flatten(mesh.vertices.vertices)), 3, :)
-    face1 = SVector{5, Int}(1, 2, 4, 3, 1)
-    face2 = SVector{5, Int}(5, 6, 8, 7, 5)
+    face1 = [mesh.faces[:, 5]; mesh.faces[1, 5]]
+    face2 = [mesh.faces[:, 6]; mesh.faces[1, 6]]
     surf1 = vertices[:, face1]
     surf2 = vertices[:, face2]
     plot!(fig, surf1[1, :], surf1[2, :], surf1[3, :], linecolor = :black, linewidth = 2)
@@ -171,7 +171,7 @@ function plotNodes(loop::DislocationLoop, args...; kw...)
     elemT = eltype(links)
     fig = plot()
     for i in idx
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -192,7 +192,7 @@ function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     links = loop.links
     elemT = eltype(links)
     for i in idx
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -254,5 +254,17 @@ function plotFEDomain(mesh::AbstractMesh, args...; kw...)
             kw...,
         )
     end
+    return fig
+end
+
+function plotBoundaries(boundaries::Boundaries{T1} where {T1 <: CantileverLoad}, mesh::RegularCuboidMesh)
+    uGamma = boundaries.uGamma.node
+    mGamma = boundaries.mGamma.node
+    tGamma = boundaries.tGamma.node
+    feCoord = mesh.coord
+
+    fig = scatter(feCoord[1, uGamma], feCoord[2, uGamma], feCoord[3, uGamma]; markershape = :square, markercolor = :red, markersize = 3, label = "Fixed End")
+    scatter!(fig, feCoord[1, mGamma], feCoord[2, mGamma], feCoord[3, mGamma]; markershape = :diamond, markercolor = :cyan, markersize = 3, label = "Loaded Edge")
+    scatter!(fig, feCoord[1, tGamma], feCoord[2, tGamma], feCoord[3, tGamma]; markershape = :circle, markercolor = :black, markersize = 3, label = "Traction Surface")
     return fig
 end

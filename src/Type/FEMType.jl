@@ -326,18 +326,19 @@ end
 """
 ```
 struct Boundaries{T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12}
-    noExit::T1
-    uGammaDln::T2
-    tGammaDln::T3
-    uDofsDln::T4
-    tDofsDln::T5
-    uGamma::T6
-    tGamma::T7
-    mGamma::T8
-    uDofs::T9
-    tDofs::T10
-    mDofs::T11
-    tK::T12
+    model::T1
+    noExit::T2
+    uGammaDln::T3
+    tGammaDln::T4
+    uDofsDln::T5
+    tDofsDln::T6
+    uGamma::T7
+    tGamma::T8
+    mGamma::T9
+    uDofs::T10
+    tDofs::T11
+    mDofs::T12
+    tK::T13
 end
 ```
 Stores the nodes and degrees of freedom upon which the different boundary conditions are applied.
@@ -357,19 +358,20 @@ Stores the nodes and degrees of freedom upon which the different boundary condit
 - `mDofs0`: Degrees of feedom with specified displacements and tractions
 - `tK1`: Stiffness matrix of traction degrees of freedom
 """
-struct Boundaries{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}
-    noExit::T1
-    uGammaDln::T2
-    tGammaDln::T3
-    uDofsDln::T4
-    tDofsDln::T5
-    uGamma::T6
-    tGamma::T7
-    mGamma::T8
-    uDofs::T9
-    tDofs::T10
-    mDofs::T11
-    tK::T12
+struct Boundaries{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}
+    model::T1
+    noExit::T2
+    uGammaDln::T3
+    tGammaDln::T4
+    uDofsDln::T5
+    tDofsDln::T6
+    uGamma::T7
+    tGamma::T8
+    mGamma::T9
+    uDofs::T10
+    tDofs::T11
+    mDofs::T12
+    tK::T13
 end
 
 """

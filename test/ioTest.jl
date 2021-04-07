@@ -34,26 +34,6 @@ cd(@__DIR__)
     regularCuboidMesh = buildMesh(matParams, femParams)
     surfNode = regularCuboidMesh.surfNode
 
-    # uGamma = BoundaryNode(
-    #     index = :x0y0z0, # Index
-    #     node = surfNode[:x0y0z0],
-    # )
-    # tGamma = BoundaryNode(
-    #     index = :x_y0z1, # Index
-    #     node = surfNode[:x_y0z1],
-    # )
-    # mGamma = BoundaryNode(
-    #     index = :xy_z0, # Index
-    #     node = surfNode[:xy_z0],
-    # )
-    # @test_throws PosDefException testGamma, testForceDisp = Boundaries(
-    #     femParams,
-    #     regularCuboidMesh;
-    #     uGamma = uGamma,
-    #     tGamma = tGamma,
-    #     mGamma = mGamma,
-    # )
-
     testGamma, testForceDisp = Boundaries(femParams, regularCuboidMesh)
 
     fileDislocationLoop = "./testData/samplePrismShear.json"
@@ -108,8 +88,8 @@ cd(@__DIR__)
     dislocationLoop2 = zeros(DislocationLoop, length(simulationJSON[6]))
     simulationJSON[6][1]
     for i in eachindex(dislocationLoop2)
-        dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
-    end
+    dislocationLoop2[i] = loadDislocationLoop(simulationJSON[6][i], slipSystems2)
+end
     testBoundaries2 = loadBoundaries(simulationJSON[8])
     testForceDisp2 = loadForceDisplacement(simulationJSON[9])
     network2 = loadNetwork(networkDumpJSON)
@@ -145,7 +125,7 @@ cd(@__DIR__)
     @test compStruct(integTime, integTime2; verbose = true)
     @test compStruct(testForceDisp, testForceDisp2; verbose = true)
     for i in fieldnames(typeof(testBoundaries2))
-        isnothing(getproperty(testBoundaries2, i)) ? continue : nothing
+    isnothing(getproperty(testBoundaries2, i)) ? continue : nothing
         @test isequal(getproperty(testBoundaries2, i), getproperty(testBoundaries2, i))
     end
 

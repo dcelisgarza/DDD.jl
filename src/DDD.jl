@@ -103,7 +103,7 @@ export shapeFunction, shapeFunctionDeriv, deriv!
 export detectCollision
 
 include("./PostProcessing/Plotting.jl")
-export plotNodes, plotNodes!, plotFEDomain
+export plotNodes, plotNodes!, plotFEDomain, plotBoundaries
 
 include("./IO/IOBase.jl")
 export loadJSON,

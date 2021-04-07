@@ -469,6 +469,9 @@ function calcNumericTractions(σ, N, A, ::Val{1})
     T = zeros(3, numNode)
     idx = 0
     @inbounds @simd for i in 1:numNode
+        # σi = [σxx σxy σxz;
+        #       σxy σyy σyz;
+        #       σxz σyz σzz]
         σi = SMatrix{3, 3, elemT}(
             σ[1, i],
             σ[4, i],
