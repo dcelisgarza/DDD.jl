@@ -61,7 +61,9 @@ export AbstractDlnSeg,
     CantileverLoad,
     AbstractPillar,
     PillarLoad,
-    findSurfaceElemCoord
+    findSurfaceElemCoord,
+    getTGammaDlnNormsArea,
+    calcNumericTractions
 export MaterialParameters
 export nodeTypeDln,
     nodeTypeFE,

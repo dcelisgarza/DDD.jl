@@ -12,7 +12,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
     elemT = eltype(links)
     fig = plot()
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -37,7 +37,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     numNode = network.numNode[1]
     elemT = eltype(links)
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
@@ -63,7 +63,7 @@ function plotNodes(mesh::AbstractMesh, network::DislocationNetwork, args...; kw.
     elemT = eltype(links)
     fig = plot()
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -126,7 +126,7 @@ function plotNodes!(
     numNode = network.numNode[1]
     elemT = eltype(links)
     for i in 1:numNode
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -175,14 +175,14 @@ function plotNodes(loop::DislocationLoop, args...; kw...)
     elemT = eltype(links)
     fig = plot()
     for i in idx
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.
         lVec = coord[n2, :] - coord[n1, :]
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...) =#
-    end
-    return fig
+end
+return fig
 end
 """
 ```
@@ -196,7 +196,7 @@ function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     links = loop.links
     elemT = eltype(links)
     for i in idx
-        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -230,7 +230,7 @@ function plotFEDomain(mesh::AbstractMesh, args...; kw...)
         markersize = 3,
         label = "Corners",
         args...;
-        kw...,
+    kw...,
     )
 
     @inbounds for i in 1:length(edgeNode)
@@ -263,7 +263,7 @@ function plotFEDomain(mesh::AbstractMesh, args...; kw...)
     return fig
 end
 
-function plotBoundaries(boundaries::Boundaries, mesh::RegularCuboidMesh)
+function plotBoundaries(boundaries::Boundaries, mesh::RegularCuboidMesh, args...; kw...)
     uGamma = boundaries.uGamma.node
     mGamma = boundaries.mGamma.node
     tGamma = boundaries.tGamma.node
@@ -298,6 +298,6 @@ function plotBoundaries(boundaries::Boundaries, mesh::RegularCuboidMesh)
         markersize = 3,
         label = "Traction",
     )
-    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
+    plot!(fig, args...; xlabel = "x", ylabel = "y", zlabel = "z", kw...)
     return fig
 end
