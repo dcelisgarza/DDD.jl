@@ -253,6 +253,32 @@ uTilde = calc_uTilde(meshC, boundaryC, matParams, network)
 calc_uTilde!(forceDispC, meshC, boundaryC, matParams, network)
 uTilde ≈ forceDispC.uTilde[boundaryC.uDofsDln]
 
+
+reshape(uTilde, :, 3)' == forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
+meshC.coord[:, boundaryC.uGammaDln] == meshC.coord[reshape(boundaryC.uDofsDln, :, 3)']
+
+coordDisp = copy(meshC.coord[:, boundaryC.uGammaDln])
+coordDisp = coordDisp + forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
+
+
+
+deformedMesh = deepcopy(meshC)
+deformedMesh.coord[reshape(boundaryC.uDofsDln, :, 3)'] += 20*forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
+plotBoundaries(boundaryC, deformedMesh; camera = (-20, 20))
+savefig("dispBound.svg")
+
+
+
+
+scatter!(coordDisp[1, :], coordDisp[2, :], coordDisp[3, :])
+
+
+meshC.coord[reshape(boundaryC.uDofsDln, :, 3)'] - coordDisp
+meshC.connectivity
+
+
+boundaryC.uGammaDln
+
 # Numeric tractions q = 1
 N, A = getTGammaDlnNormsArea(boundaryC, meshC)
 points = meshC.coord[:, boundaryC.tGammaDln]
