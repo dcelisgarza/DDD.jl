@@ -6,10 +6,15 @@
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/dcelisgarza/DDD.jl?svg=true)](https://ci.appveyor.com/project/dcelisgarza/DDD-jl)
 [![Codecov](https://codecov.io/gh/dcelisgarza/DDD.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/dcelisgarza/DDD.jl)
 [![Coveralls](https://coveralls.io/repos/github/dcelisgarza/DDD.jl/badge.svg?branch=master)](https://coveralls.io/github/dcelisgarza/DDD.jl?branch=master)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dcelisgarza/DDD.jl/HEAD?urlpath=demo.ipynb)
 
-New generation of 3D Discrete Dislocation Dynamics codes.
+## Demo of current capabilities
 
-Dislocation dynamics is a complex field with an enormous barrier to entry. The aim of this project is to create a codebase that is:
+For an interactive demo of its current capabilities click the Binder banner above.
+
+## Aim
+
+The aim is to create a next-gen 3D dislocation dynamic code that is.
 
 - Easy to use.
 - Easy to maintain.

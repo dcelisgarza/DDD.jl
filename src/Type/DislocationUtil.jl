@@ -267,7 +267,6 @@ function getSegmentIdx(links, label, #virtSeg
         segIdx[i, :] .= (i, n1, n2)
         if (label[n1] == extDln || label[n2] == extDln)
             # virtSeg[i] = true
-            continue
         else
             # virtSeg[i] = false
         end
@@ -299,12 +298,10 @@ function getSegmentIdx!(network::DislocationNetwork)
         segIdx[i, :] .= (i, n1, n2)
         if (label[n1] == extDln || label[n2] == extDln)
             # virtSeg[i] = true
-            continue
         else
             # virtSeg[i] = false
         end
-    end
-    
+    end    
 
     return nothing
 end
