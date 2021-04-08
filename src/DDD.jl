@@ -57,8 +57,10 @@ export AbstractDlnSeg,
     BoundaryNode,
     Boundaries,
     AbstractModel,
-    AbstractCantileverBend,
+    AbstractCantilever,
     CantileverLoad,
+    AbstractPillar,
+    PillarLoad,
     findSurfaceElemCoord
 export MaterialParameters
 export nodeTypeDln,

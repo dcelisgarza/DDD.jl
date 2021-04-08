@@ -12,7 +12,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
     elemT = eltype(links)
     fig = plot()
     for i in 1:numNode
-        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -20,6 +20,7 @@ function plotNodes(network::DislocationNetwork, args...; kw...)
         lVec = coord[n2, :] - coord[n1, :]
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...) =#
     end
+    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
 
     return fig
 end
@@ -36,7 +37,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
     numNode = network.numNode[1]
     elemT = eltype(links)
     for i in 1:numNode
-        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln && continue
         plot!(coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
@@ -44,6 +45,7 @@ function plotNodes!(fig, network::DislocationNetwork, args...; kw...)
         lVec = coord[n2, :] - coord[n1, :]
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...) =#
     end
+    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
     return fig
 end
 
@@ -61,7 +63,7 @@ function plotNodes(mesh::AbstractMesh, network::DislocationNetwork, args...; kw.
     elemT = eltype(links)
     fig = plot()
     for i in 1:numNode
-        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -101,6 +103,7 @@ function plotNodes(mesh::AbstractMesh, network::DislocationNetwork, args...; kw.
         maximum(vertices[3, :]) + 0.2 * maximum(vertices[1, :]),
     )
     plot!(fig, xlims = xlims, ylims = ylims, zlims = zlims)
+    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
     return fig
 end
 
@@ -123,7 +126,7 @@ function plotNodes!(
     numNode = network.numNode[1]
     elemT = eltype(links)
     for i in 1:numNode
-        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
         label[n1n2[1]] == extDln || label[n1n2[2]] == extDln ? continue : nothing
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -154,6 +157,7 @@ function plotNodes!(
     ylims = (minimum(vertices[2, :]), maximum(vertices[2, :]))
     zlims = (minimum(vertices[3, :]), maximum(vertices[3, :]))
     plot!(fig, xlims = xlims, ylims = ylims, zlims = zlims)
+    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
 
     return fig
 end
@@ -171,7 +175,7 @@ function plotNodes(loop::DislocationLoop, args...; kw...)
     elemT = eltype(links)
     fig = plot()
     for i in idx
-        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.
@@ -192,13 +196,14 @@ function plotNodes!(fig, loop::DislocationLoop, args...; kw...)
     links = loop.links
     elemT = eltype(links)
     for i in idx
-        n1n2 = SVector{2,elemT}(links[1, i], links[2, i])
+        n1n2 = SVector{2, elemT}(links[1, i], links[2, i])
         plot!(fig, coord[1, n1n2], coord[2, n1n2], coord[3, n1n2], args...; kw...)
         #= 
         # quiver needs to be implemented in Plots.jl but we can use python.
         lVec = coord[n2, :] - coord[n1, :]
         quiver!([coord[n1,1]], [coord[n1,2]], [coord[n1,3]], args...; quiver=([lVec[1]], [lVec[2]], [lVec[3]]), kw...) =#
     end
+    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
     return fig
 end
 
@@ -254,17 +259,45 @@ function plotFEDomain(mesh::AbstractMesh, args...; kw...)
             kw...,
         )
     end
+    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
     return fig
 end
 
-function plotBoundaries(boundaries::Boundaries{T1} where {T1 <: CantileverLoad}, mesh::RegularCuboidMesh)
+function plotBoundaries(boundaries::Boundaries, mesh::RegularCuboidMesh)
     uGamma = boundaries.uGamma.node
     mGamma = boundaries.mGamma.node
     tGamma = boundaries.tGamma.node
     feCoord = mesh.coord
 
-    fig = scatter(feCoord[1, uGamma], feCoord[2, uGamma], feCoord[3, uGamma]; markershape = :square, markercolor = :red, markersize = 3, label = "Fixed End")
-    scatter!(fig, feCoord[1, mGamma], feCoord[2, mGamma], feCoord[3, mGamma]; markershape = :diamond, markercolor = :cyan, markersize = 3, label = "Loaded Edge")
-    scatter!(fig, feCoord[1, tGamma], feCoord[2, tGamma], feCoord[3, tGamma]; markershape = :circle, markercolor = :black, markersize = 3, label = "Traction Surface")
+    fig = scatter(
+        feCoord[1, uGamma],
+        feCoord[2, uGamma],
+        feCoord[3, uGamma];
+        markershape = :square,
+        markercolor = :red,
+        markersize = 3,
+        label = "Fixed",
+    )
+    scatter!(
+        fig,
+        feCoord[1, mGamma],
+        feCoord[2, mGamma],
+        feCoord[3, mGamma];
+        markershape = :diamond,
+        markercolor = :cyan,
+        markersize = 3,
+        label = "Load",
+    )
+    scatter!(
+        fig,
+        feCoord[1, tGamma],
+        feCoord[2, tGamma],
+        feCoord[3, tGamma];
+        markershape = :circle,
+        markercolor = :black,
+        markersize = 3,
+        label = "Traction",
+    )
+    plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
     return fig
 end

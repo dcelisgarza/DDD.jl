@@ -80,6 +80,9 @@ function Base.iszero(network::DislocationNetwork)
     (network.numNode[1] == 0 || network.numSeg[1] == 0) && return true
     return false
 end
+function Base.getindex(slipSystem::SlipSystem, i)
+    return @views slipSystem.slipPlane[:, i], slipSystem.bVec[:, i]
+end
 
 """
 ```
@@ -230,6 +233,7 @@ function _makeConnect!(links, connectivity, linksConnect)
     return nothing
 end
 
+# TODO #15
 """
 ```
 getSegmentIdx(links, label)
@@ -243,13 +247,15 @@ Finds the indices of a link and corresponding nodes.
 * `i` can be used to find the Burgers vector, slip plane and segment forces of segment `i`, eg `bVec[:, i]`. 
 * `node1` and `node2` can be used to find the coordinate and velocity of the nodes, eg `l = coord[:, node2] - coord[:, node1]`.
 """
-function getSegmentIdx(links, label)
+function getSegmentIdx(links, label, #virtSeg
+    )
     lenLinks = size(links, 2)
     segIdx = zeros(Int, lenLinks, 3)  # Indexing matrix.
 
     # Find all defined nodes.
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
+
 
     numSeg = 0 # Number of segments.
 
@@ -258,14 +264,16 @@ function getSegmentIdx(links, label)
         # Nodes.
         n1 = links[1, i]
         n2 = links[2, i]
-        # Skip external nodes.
-        (label[n1] == extDln || label[n2] == extDln) && continue
-        numSeg += 1 # Increment index.
-        # Indexing matrix, segment numSeg is made up of link i which is made up from nodes n1 and n2.
-        segIdx[numSeg, :] .= (i, n1, n2)
+        segIdx[i, :] .= (i, n1, n2)
+        if (label[n1] == extDln || label[n2] == extDln)
+            # virtSeg[i] = true
+            continue
+        else
+            # virtSeg[i] = false
+        end
     end
 
-    return numSeg, segIdx
+    return segIdx
 end
 """
 ```
@@ -276,26 +284,28 @@ Mutates the `segIdx` matrix in `network`. Works the same way as [`getSegmentIdx`
 function getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
-    numSeg = network.numSeg
     segIdx = network.segIdx
-
-    lenLinks = size(links, 2)
-    lenSegIdx = size(segIdx, 1)
+    
     segIdx .= 0
+    lenLinks = size(links, 2)
 
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
-    lNumSeg = 0
 
+    # virtSeg = network.virtSeg
     @inbounds for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
-        (label[n1] == extDln || label[n2] == extDln) && continue
-        lNumSeg += 1
-        segIdx[lNumSeg, :] .= (i, n1, n2)
+        segIdx[i, :] .= (i, n1, n2)
+        if (label[n1] == extDln || label[n2] == extDln)
+            # virtSeg[i] = true
+            continue
+        else
+            # virtSeg[i] = false
+        end
     end
+    
 
-    numSeg[1] = lNumSeg
     return nothing
 end
 

@@ -26,8 +26,6 @@ function dlnMobility(
     screwDrag = dlnParams.dragCoeffs[:screw]
     climbDrag = dlnParams.dragCoeffs[:climb]
     lineDrag = dlnParams.dragCoeffs[:line]
-    dType = typeof(lineDrag)
-    I3 = SMatrix{3, 3, dType}(I)
 
     links = network.links
     bVec = network.bVec
@@ -36,6 +34,7 @@ function dlnMobility(
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
+    I3 = SMatrix{3, 3, elemT}(I)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
@@ -50,7 +49,7 @@ function dlnMobility(
 
     # Loop through nodes.
     for (i, node1) in enumerate(idx)
-        totalDrag = zeros(SMatrix{3, 3, dType})
+        totalDrag = zeros(SMatrix{3, 3, elemT})
         iNodeForce = zeros(SVector{3, elemT})
         iNodeVel = zeros(SVector{3, elemT})
         numConnect = connectivity[1, node1]
@@ -159,11 +158,10 @@ function dlnMobility(
                     totalDrag += I3 * maximum(abs.(origTotalDrag)) * sqrt(eps(dType))
                     iNodeVel = totalDrag \ iNodeForce
         break
-                catch SingularSystem
+        catch SingularSystem
         end
             end
         end =#
-
         nodeForce[:, i] = iNodeForce
         nodeVel[:, i] = iNodeVel
     end
@@ -198,8 +196,6 @@ function dlnMobility!(
     screwDrag = dlnParams.dragCoeffs[:screw]
     climbDrag = dlnParams.dragCoeffs[:climb]
     lineDrag = dlnParams.dragCoeffs[:line]
-    dType = typeof(lineDrag)
-    I3 = SMatrix{3, 3, dType}(I)
 
     links = network.links
     bVec = network.bVec
@@ -210,6 +206,7 @@ function dlnMobility!(
     segForce = network.segForce
     connectivity = network.connectivity
     elemT = eltype(network.bVec)
+    I3 = SMatrix{3, 3, elemT}(I)
 
     # Do it for all nodes if no list is provided.
     if isnothing(idx)
@@ -221,7 +218,7 @@ function dlnMobility!(
 
     # Loop through nodes.
     for node1 in idx
-        totalDrag = zeros(SMatrix{3, 3, dType})
+        totalDrag = zeros(SMatrix{3, 3, elemT})
         iNodeForce = zeros(SVector{3, elemT})
         iNodeVel = zeros(SVector{3, elemT})
         numConnect = connectivity[1, node1]

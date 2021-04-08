@@ -359,7 +359,7 @@ function coarsenNetwork!(
     elemT = eltype(network.coord)
 
     i = 1
-    @inbounds while i <= numNode
+    while i <= numNode
         # We only want to coarsen real internal nodes. Else we skip to the next node.
         if !(connectivity[1, i] == 2 && label[i] == intMobDln)
             i += 1
@@ -384,6 +384,7 @@ function coarsenNetwork!(
                 coord[2, link1_nodeOppI],
                 coord[3, link1_nodeOppI],
             ) - iCoord # Vector between node 1 and the node it's connected to via link 1.
+
         coordVec2 =
             SVector{3, elemT}(
                 coord[1, link2_nodeOppI],
@@ -457,13 +458,12 @@ function coarsenNetwork!(
             continue
         end
 
-        @simd for j in 1:connectivity[1, nodeMerged]
+        for j in 1:connectivity[1, nodeMerged]
             # Find the new link that has been created between nodeMerged and nodeNotMerged.
             linkMerged = connectivity[2 * j, nodeMerged]
             colLinkMerged = connectivity[2 * j + 1, nodeMerged]
             colNotLinkMerged = 3 - colLinkMerged
             nodeNotMerged = links[colNotLinkMerged, linkMerged]
-
             if nodeNotMerged == i || nodeNotMerged == link1_nodeOppI
                 # Calculate segment force for segment linkMerged.
                 calcSegForce!(

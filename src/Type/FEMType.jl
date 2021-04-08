@@ -67,14 +67,16 @@ struct LinearQuadrangle2D <: AbstractShapeFunction2D end
 """
 ```
 abstract type AbstractModel end
-abstract type AbstractCantileverBend <: AbstractModel end
-struct CantileverLoad <: AbstractCantileverBend end
+abstract type AbstractCantilever <: AbstractModel end
+struct CantileverLoad <: AbstractCantilever end
 ```
 Abstract types for dispatching different models.
 """
 abstract type AbstractModel end
-abstract type AbstractCantileverBend <: AbstractModel end
-struct CantileverLoad <: AbstractCantileverBend end
+abstract type AbstractCantilever <: AbstractModel end
+abstract type AbstractPillar <: AbstractModel end
+struct CantileverLoad <: AbstractCantilever end
+struct PillarLoad <: AbstractPillar end
 
 """
 ```

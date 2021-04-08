@@ -158,7 +158,6 @@ function remeshSurfaceNetwork!(
             for j in 1:3
                 coord[j, i] = coord[j, i] + faceNorm[j, face] * scale[j]
             end
-
             label[i] = extDln
         else
             label[i] = srfFixDln
@@ -185,6 +184,7 @@ function remeshSurfaceNetwork!(
             # Check if the node connected is a surface node aso we can merge node1 into node2.
             if label[node2] ∈ srfNodes
                 missing, network = mergeNode!(network, node2, node1)
+                getSegmentIdx!(network)
                 links = network.links
                 label = network.label
                 numNode = network.numNode[1]
@@ -277,7 +277,9 @@ function remeshSurfaceNetwork!(
                 # If the next connection is not external go to the next iteration.
                 label[node3] != extDln && continue
 
-                missing, network = mergeNode!(network, node3, node1)
+                # Merge virtual nodes together.
+                missing, network = mergeNode!(network, node3, node2)
+                getSegmentIdx!(network)
                 links = network.links
                 label = network.label
                 numNode = network.numNode[1]

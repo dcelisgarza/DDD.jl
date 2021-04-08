@@ -37,7 +37,7 @@ DislocationParameters(;
     coreEnergy = 1 / (4 * π) * log(coreRad / 0.1),
     minSegLen = 2 * coreRad,
     maxSegLen = 20 * coreRad,
-    minArea = coreRad^2 / sqrt(2),
+    minArea = minSegLen^2 / sqrt(2),
     maxArea = 100 * minArea,
     collisionDist = minSegLen / 2,
     slipStepCritLen = maxSegLen / 2,
@@ -60,7 +60,7 @@ function DislocationParameters(;
     coreEnergy = 1 / (4 * π) * log(coreRad / 0.1),
     minSegLen = 2 * coreRad,
     maxSegLen = 20 * coreRad,
-    minArea = coreRad^2 / sqrt(2),
+    minArea = minSegLen^2 / sqrt(2),
     maxArea = 100 * minArea,
     collisionDist = minSegLen / 2,
     slipStepCritLen = maxSegLen / 2,
@@ -519,7 +519,7 @@ function DislocationNetwork(
     )
 
     # Calculate number of segments and indexing matrix.
-    numSeg, segIdx = getSegmentIdx(links, label)
+    segIdx = getSegmentIdx(links, label)
     # Generate connectivity and linksConnect matrix.
     connectivity, linksConnect = makeConnect(links, maxConnect)
 
@@ -613,6 +613,7 @@ function DislocationNetwork!(
         kw...,
     )
     network.numNode[1] += numNode
+    network.numSeg[1] += numNode
 
     getSegmentIdx!(network)
     makeConnect!(network)

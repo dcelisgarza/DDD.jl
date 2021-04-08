@@ -1376,6 +1376,7 @@ end
     network2.bVec[:, 11:14] .= network2.bVec[:, 1]
     network2.slipPlane[:, 11:14] .= network2.slipPlane[:, 1]
     makeConnect!(network2)
+    network2.numSeg[1] = 14
     getSegmentIdx!(network2)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network2)
     network3 = deepcopy(network2)
@@ -2352,6 +2353,7 @@ end
     network.bVec[:, 11:14] .= network.bVec[:, 1]
     network.slipPlane[:, 11:14] .= network.slipPlane[:, 1]
     makeConnect!(network)
+    network.numSeg[1] = 14
     getSegmentIdx!(network)
     calcSegForce!(dlnParams, matParams, regularCuboidMesh, forceDisplacement, network)
     network =

@@ -1,7 +1,7 @@
 function detectCollision(
     dlnParams::DislocationParameters,
     network::DislocationNetwork,
-    skipSegs,
+    skipSegs = Vector{Tuple{Int, Int}}(),
 )
     collisionDistSq = dlnParams.collisionDistSq
     label = network.label

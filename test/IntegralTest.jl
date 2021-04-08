@@ -127,7 +127,7 @@ cd(@__DIR__)
     @test isapprox(segForceIdx, network.segForce[:, :, idx])
 
     network2 = deepcopy(network)
-    remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network2)
+    network2 = remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network2)
     getSegmentIdx!(network2)
     @test compStruct(network2, network)
 
@@ -233,15 +233,15 @@ cd(@__DIR__)
         0.0044684000305827976,
     ]
 
-    remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network2)
+    network2 = remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network2)
     getSegmentIdx!(network2)
 
     network2.numNode[1] == numNode + 2
     label = network2.label
     ext = findall(x -> x == 5, label)
     surf = findall(x -> x == 3, label)
-    @test length(ext) == 4
-    @test length(surf) == 2
+    @test length(ext) == 3
+    @test length(surf) == 1
     @test compStruct(network2, network) == false
 
     numSeg = network2.numSeg[1]
@@ -314,7 +314,7 @@ cd(@__DIR__)
     @test isapprox(segForceIdx, network2.segForce[:, :, idx])
 
     network3 = deepcopy(network2)
-    remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network3)
+    network3 = remeshSurfaceNetwork!(regularCuboidMesh, cantileverBC, network3)
     getSegmentIdx!(network3)
 
     compStruct(network3, network2)
