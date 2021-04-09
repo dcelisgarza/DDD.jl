@@ -36,6 +36,7 @@ function Base.zero(::Type{DislocationNetwork})
         maxConnect = 0,
         segForce = zeros(3, 2, 0),
         linksConnect = zeros(Int, 2, 0),
+        extSeg = zeros(Bool, 0),
         segIdx = zeros(Int, 0, 3),
     )
 end
@@ -57,6 +58,7 @@ function Base.push!(network::DislocationNetwork, n)
             zeros(Int, size(network.connectivity, 1), n),
         ),
         linksConnect = hcat(network.linksConnect, zeros(Int, 2, n)),
+        extSeg = vcat(network.extSeg, zeros(Bool, n)),
         segIdx = vcat(network.segIdx, zeros(Int, n, 3)),
         segForce = cat(network.segForce, zeros(elemT, 3, 2, n), dims = 3),
     )
@@ -73,6 +75,7 @@ function Base.getindex(network::DislocationNetwork, i)
     network.nodeForce[:, i],
     network.connectivity[:, i],
     network.linksConnect[:, i],
+    network.extSeg[i],
     network.segIdx[i, :],
     network.segForce[:, :, i]
 end
@@ -144,7 +147,7 @@ function translatePoints!(coord, lims, disp)
         @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
-    end
+end
     return coord
 end
 
@@ -247,9 +250,9 @@ Finds the indices of a link and corresponding nodes.
 * `i` can be used to find the Burgers vector, slip plane and segment forces of segment `i`, eg `bVec[:, i]`. 
 * `node1` and `node2` can be used to find the coordinate and velocity of the nodes, eg `l = coord[:, node2] - coord[:, node1]`.
 """
-function getSegmentIdx(links, label, #virtSeg
-    )
+function getSegmentIdx(links, label)
     lenLinks = size(links, 2)
+    extSeg = zeros(Bool, lenLinks)
     segIdx = zeros(Int, lenLinks, 3)  # Indexing matrix.
 
     # Find all defined nodes.
@@ -265,14 +268,10 @@ function getSegmentIdx(links, label, #virtSeg
         n1 = links[1, i]
         n2 = links[2, i]
         segIdx[i, :] .= (i, n1, n2)
-        if (label[n1] == extDln || label[n2] == extDln)
-            # virtSeg[i] = true
-        else
-            # virtSeg[i] = false
-        end
+        (label[n1] == extDln || label[n2] == extDln) ? extSeg[i] = true : continue
     end
 
-    return segIdx
+    return segIdx, extSeg
 end
 """
 ```
@@ -283,6 +282,7 @@ Mutates the `segIdx` matrix in `network`. Works the same way as [`getSegmentIdx`
 function getSegmentIdx!(network::DislocationNetwork)
     links = network.links
     label = network.label
+    extSeg = network.extSeg
     segIdx = network.segIdx
     
     segIdx .= 0
@@ -291,16 +291,11 @@ function getSegmentIdx!(network::DislocationNetwork)
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
 
-    # virtSeg = network.virtSeg
     @inbounds for i in 1:idx
         n1 = links[1, i]
         n2 = links[2, i]
         segIdx[i, :] .= (i, n1, n2)
-        if (label[n1] == extDln || label[n2] == extDln)
-            # virtSeg[i] = true
-        else
-            # virtSeg[i] = false
-        end
+        (label[n1] == extDln || label[n2] == extDln) ? extSeg[i] = true : continue
     end    
 
     return nothing
@@ -343,7 +338,7 @@ function checkNetwork(network::DislocationNetwork)
         col = connectivity[1, i]
 
         # Check for zero Burgers vectors.
-        staticBVec = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        staticBVec = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         norm(staticBVec) < eps(elemT) ? error("Burgers vector must be non-zero.
                                        norm(bVec) = $(norm(bVec[i,:]))") : nothing
 
@@ -357,13 +352,13 @@ function checkNetwork(network::DislocationNetwork)
         # Burgers vector conservation.
         bSum .= 0
         # No repeated links.
-        neighbours = -ones(Int, col)
+            neighbours = -ones(Int, col)
         for j in 1:col
             j2 = 2 * j
             iLink = connectivity[j2, i]     # Link ID.
             colLink = connectivity[j2 + 1, i] # Link position in links.
             colOppLink = 3 - connectivity[2 * j + 1, i] # Opposite column in links
-            staticBVec = SVector{3, elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
+            staticBVec = SVector{3,elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
             bSum .+= (3 - 2 * colLink) * staticBVec # Running total of burgers vectors.
 
             neighbours[j] = links[colOppLink, iLink] # Find neighbouring nodes.

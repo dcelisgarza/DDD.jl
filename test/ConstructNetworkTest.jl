@@ -2,8 +2,8 @@ using DDD
 using Test
 
 import LinearAlgebra: dot, cross, norm
-import Statistics: mean
-import Random: seed!
+import Statistics:mean
+import Random:seed!
 
 import DDD: segEdge, segEdgeN, segScrew, makeSegment, inclusiveComparison
 cd(@__DIR__)
@@ -69,6 +69,7 @@ end
         network.nodeForce[:, idx],
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
+        network.extSeg[idx],
         network.segIdx[idx, :],
         network.segForce[:, :, idx],
     )
@@ -84,6 +85,7 @@ end
         network.nodeForce[:, idx],
         network.connectivity[:, idx],
         network.linksConnect[:, idx],
+        network.extSeg[idx],
         network.segIdx[idx, :],
         network.segForce[:, :, idx],
     )
@@ -99,18 +101,18 @@ end
     dictDislocationLoop = loadJSON(loopfile)
 
     if typeof(dictDislocationLoop) <: AbstractArray
-        loops = zeros(DislocationLoop, length(dictDislocationLoop))
-        for i in eachindex(loops)
-            loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
-        end
-    else
-        loops = loadDislocationLoop(dictDislocationLoop, slipSystems)
+    loops = zeros(DislocationLoop, length(dictDislocationLoop))
+    for i in eachindex(loops)
+        loops[i] = loadDislocationLoop(dictDislocationLoop[i], slipSystems)
     end
+else
+    loops = loadDislocationLoop(dictDislocationLoop, slipSystems)
+end
 
     # Check that the midpoint of the loops is at (0,0,0)
     for i in eachindex(loops)
-        @test mean(loops[i].coord) < maximum(abs.(loops[i].coord)) * eps(Float64)
-    end
+    @test mean(loops[i].coord) < maximum(abs.(loops[i].coord)) * eps(Float64)
+end
     # Populate a dislocation network with the loops.
     # Test one branch of memory allocation.
     network = zero(DislocationNetwork)
@@ -120,12 +122,12 @@ end
     network = zero(DislocationNetwork)
     network = DislocationNetwork!(network, loops)
     function sumNodes(loops)
-        totalNodes = 0
-        for i in eachindex(loops)
-            totalNodes += loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
-        end
-        return totalNodes
+    totalNodes = 0
+    for i in eachindex(loops)
+        totalNodes += loops[i].numSides * loops[i].nodeSide * loops[i].numLoops
     end
+    return totalNodes
+end
     # Check that the memory was allocated correctly. Only need to check the first and last, they are transfered sequentially so if both pass, the rest have to have been transfered correctly.
     totalNodes = sumNodes(loops)
     @test Int(round(totalNodes * log2(totalNodes))) ==
@@ -195,7 +197,7 @@ end
     network.label[1] = 4
     @test !compStruct(network, network3)
 
-    import DDD: loopKink
+    import DDD:loopKink
     loopType = loopKink
     @test_logs (
         :warn,

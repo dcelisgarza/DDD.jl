@@ -321,7 +321,7 @@ end
 ```
 Stores a dislocation network.
 """
-struct DislocationNetwork{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}
+struct DislocationNetwork{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}
     numNode::T1
     numSeg::T2
     maxConnect::T3
@@ -330,10 +330,11 @@ struct DislocationNetwork{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13
     connectivity::T6
     linksConnect::T7
     slipPlane::T8
-    segIdx::T9
-    bVec::T10
-    coord::T11
-    nodeVel::T12
-    nodeForce::T13
-    segForce::T14
+    extSeg::T9
+    segIdx::T10
+    bVec::T11
+    coord::T12
+    nodeVel::T13
+    nodeForce::T14
+    segForce::T15
 end

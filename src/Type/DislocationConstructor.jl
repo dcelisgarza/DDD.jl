@@ -424,6 +424,7 @@ function DislocationNetwork(;
     maxConnect = 4,
     connectivity::AbstractArray = zeros(Int, 1 + 2 * maxConnect, length(label)),
     linksConnect::AbstractArray = zeros(Int, 2, size(links, 2)),
+    extSeg::AbstractArray = zeros(Bool, size(links, 2)),
     segIdx::AbstractArray = zeros(Int, size(links, 2), 3),
     segForce::AbstractArray = zeros(3, 2, size(links, 2)),
 )
@@ -445,6 +446,7 @@ function DislocationNetwork(;
         connectivity,
         linksConnect,
         slipPlane,
+        extSeg,
         segIdx,
         bVec,
         coord,
@@ -519,7 +521,7 @@ function DislocationNetwork(
     )
 
     # Calculate number of segments and indexing matrix.
-    segIdx = getSegmentIdx(links, label)
+    segIdx, extSeg = getSegmentIdx(links, label)
     # Generate connectivity and linksConnect matrix.
     connectivity, linksConnect = makeConnect(links, maxConnect)
 
@@ -533,6 +535,7 @@ function DislocationNetwork(
         connectivity,
         linksConnect,
         slipPlane,
+        extSeg,
         segIdx,
         bVec,
         coord,
