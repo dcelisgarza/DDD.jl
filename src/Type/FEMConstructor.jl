@@ -44,13 +44,7 @@ Creates a [`RegularCuboidMesh`](@ref).
 """
 function buildMesh(
     matParams::MaterialParameters,
-    femParams::FEMParameters{
-        F1,
-        F2,
-        F3,
-        F4,
-        F5,
-    } where {F1 <: DispatchRegularCuboidMesh, F2, F3, F4, F5},
+    femParams::FEMParameters{F1,F2,F3,F4,F5,} where {F1 <: DispatchRegularCuboidMesh,F2,F3,F4,F5},
 )
     return RegularCuboidMesh(matParams, femParams)
 end
@@ -119,13 +113,7 @@ Z
 """
 function RegularCuboidMesh(
     matParams::MaterialParameters,
-    femParams::FEMParameters{
-        F1,
-        F2,
-        F3,
-        F4,
-        F5,
-    } where {F1 <: DispatchRegularCuboidMesh, F2 <: LinearElement, F3, F4, F5},
+    femParams::FEMParameters{F1,F2,F3,F4,F5,} where {F1 <: DispatchRegularCuboidMesh,F2 <: LinearElement,F3,F4,F5},
 )
     μ = matParams.μ
     ν = matParams.ν
@@ -159,10 +147,10 @@ function RegularCuboidMesh(
     numNode = mx1 * my1 * mz1
 
     # Length scale.
-    scale = SVector{3, dxType}(dx, dy, dz) * cbrt(dx * dy * dz)
+    scale = SVector{3,dxType}(dx, dy, dz) * cbrt(dx * dy * dz)
 
     # For a regular cuboid mesh this is predefined. Making a volumetric polytope allows us to check if points lie inside the volume simply by doing [x, y, z] ∈ vertices, or checking if they do not belong by doing [x, y, z] ∉ vertices. The symbols are typed as \in and \notin + Tab.
-    vtx = SMatrix{3, 8, dxType}(
+    vtx = SMatrix{3,8,dxType}(
         0,
         0,
         0,
@@ -192,7 +180,7 @@ function RegularCuboidMesh(
     vertices = VPolytope(vtx)
 
     # Faces as defined by the vertices.
-    faces = SMatrix{4, 6, mxType}(
+    faces = SMatrix{4,6,mxType}(
         1,
         2,
         6,
@@ -222,7 +210,7 @@ function RegularCuboidMesh(
     faceMidPt = mean(vtx[:, faces], dims = 2)[:, 1, :]
 
     # Face normal of the corresponding face.
-    faceNorm = SMatrix{3, 6, dxType}(
+    faceNorm = SMatrix{3,6,dxType}(
         0,
         -1,
         0,   # xz plane @ min y
@@ -246,7 +234,7 @@ function RegularCuboidMesh(
     coord = zeros(dxType, 3, numNode)           # Node coordinates.
     connectivity = zeros(mxType, 8, numElem)    # Element connectivity.
 
-    cornerNode = SVector{8, Symbol}(
+    cornerNode = SVector{8,Symbol}(
         :x0y0z0,
         :x1y0z0,
         :x1y1z0,
@@ -256,7 +244,7 @@ function RegularCuboidMesh(
         :x1y1z1,
         :x0y1z1,
     )
-    edgeNode = SVector{12, Symbol}(
+    edgeNode = SVector{12,Symbol}(
         :x_y0z0,
         :y_x1z0,
         :x_y1z0,
@@ -270,7 +258,7 @@ function RegularCuboidMesh(
         :z_x1y1,
         :z_x0y1,
     )
-    faceNode = SVector{6, Symbol}(:xz_y0, :yz_x1, :xz_y1, :yz_x0, :xy_z0, :xy_z1)
+    faceNode = SVector{6,Symbol}(:xz_y0, :yz_x1, :xz_y1, :yz_x0, :xy_z0, :xy_z1)
     surfNode = (
         # Corners
         x0y0z0 = 1,
@@ -380,7 +368,7 @@ function RegularCuboidMesh(
     CDiag = Lame + 2 * μ
 
     # Stiffness tensor.
-    C = SMatrix{6, 6, dxType}(
+    C = SMatrix{6,6,dxType}(
         CDiag,
         Lame,
         Lame,
@@ -422,7 +410,7 @@ function RegularCuboidMesh(
     # Local nodes Gauss Quadrature. Using 8 nodes per element.
     p = 1 / sqrt(3)
 
-    gaussNodes = SMatrix{3, 8, dxType}(
+    gaussNodes = SMatrix{3,8,dxType}(
         -p,
         -p,
         -p, # x0y0z0
@@ -545,7 +533,7 @@ function RegularCuboidMesh(
         end
     end
 
-    localCoord = SMatrix{3, 8, dxType}(
+    localCoord = SMatrix{3,8,dxType}(
         coord[1, connectivity[1, 1]],
         coord[2, connectivity[1, 1]],
         coord[3, connectivity[1, 1]],
@@ -572,7 +560,7 @@ function RegularCuboidMesh(
         coord[3, connectivity[8, 1]],
     )
 
-    localdNdS = SMatrix{8, 3, dxType}(
+    localdNdS = SMatrix{8,3,dxType}(
         dNdS[1][1, 1],
         dNdS[1][1, 2],
         dNdS[1][1, 3],
@@ -759,7 +747,7 @@ Boundaries(
 Creates [`Boundaries`](@ref) for loading a hexahedral cantilever.
 """
 function Boundaries(
-    ::FEMParameters{T1, T2, T3, T4, T5} where {T1, T2, T3 <: CantileverLoad, T4, T5},
+    ::FEMParameters{T1,T2,T3,T4,T5} where {T1,T2,T3 <: CantileverLoad,T4,T5},
     femMesh::RegularCuboidMesh;
     kw...,
 )
@@ -768,9 +756,9 @@ function Boundaries(
     faceNorm = femMesh.faceNorm
     surfNode = femMesh.surfNode
     K = femMesh.K
-
+        
     if !haskey(kw, :uGamma)
-        uIndex = SVector{9, Symbol}(
+        uIndex = SVector{9,Symbol}(
             [
                 :x0y0z0
                 :x0y1z0
@@ -788,17 +776,17 @@ function Boundaries(
     else
         uGamma = kw[:uGamma]
     end
-
+        
     if !haskey(kw, :mGamma)
-        mIndex = SVector{3, Symbol}([:x1y0z1; :x1y1z1; :y_x1z1])
+        mIndex = SVector{3,Symbol}([:x1y0z1; :x1y1z1; :y_x1z1])
         mNodes = collect(Iterators.flatten([surfNode[mIndex[i]] for i in 1:length(mIndex)]))
         mGamma = BoundaryNode(; index = mIndex, node = mNodes)
     else
         mGamma = kw[:mGamma]
     end
-
+        
     if !haskey(kw, :tGamma)
-        tIndex = SVector{14, Symbol}(
+        tIndex = SVector{14,Symbol}(
             Symbol.(setdiff(string.(keys(surfNode)), string.([uIndex; mIndex]))),
         )
         tNodes = collect(Iterators.flatten([surfNode[tIndex[i]] for i in 1:length(tIndex)]))
@@ -849,7 +837,7 @@ function Boundaries(
 end
 
 function Boundaries(
-    ::FEMParameters{T1, T2, T3, T4, T5} where {T1, T2, T3 <: PillarLoad, T4, T5},
+    ::FEMParameters{T1,T2,T3,T4,T5} where {T1,T2,T3 <: PillarLoad,T4,T5},
     femMesh::RegularCuboidMesh;
     kw...,
 )
@@ -860,7 +848,7 @@ function Boundaries(
     K = femMesh.K
 
     if !haskey(kw, :uGamma)
-        uIndex = SVector{9, Symbol}(
+        uIndex = SVector{9,Symbol}(
             [
                 :x0y0z0
                 :x0y1z0
@@ -880,7 +868,7 @@ function Boundaries(
     end
 
     if !haskey(kw, :mGamma)
-        mIndex = SVector{9, Symbol}(
+        mIndex = SVector{9,Symbol}(
             [
                 :x1y0z0
                 :x1y1z0
@@ -900,7 +888,7 @@ function Boundaries(
     end
 
     if !haskey(kw, :tGamma)
-        tIndex = SVector{8, Symbol}(
+        tIndex = SVector{8,Symbol}(
             Symbol.(setdiff(string.(keys(surfNode)), string.([uIndex; mIndex]))),
         )
         tNodes = collect(Iterators.flatten([surfNode[tIndex[i]] for i in 1:length(tIndex)]))
@@ -914,13 +902,17 @@ function Boundaries(
     tGammaNode = tGamma.node
 
     !haskey(kw, "uDofs") ?
-    uDofs =
-        [3 * uGammaNode .- 2; 3 * uGammaNode .- 1; 3 * uGammaNode; 3 * mGammaNode .- 2] :
+    uDofs = uDofs = [3 * uGammaNode .- 2; # x-coodinate for the yz plane at x = 0
+        collect(Iterators.flatten([3 * surfNode[:x0y1z0] .- 1; 3 * surfNode[:x0y1z1] .- 1])); # y-coordinate
+        collect(Iterators.flatten(3 * surfNode[:z_x0y1] .- 1)); # y-coordinate
+        collect(Iterators.flatten([3 * surfNode[:x0y0z0]; 3 * surfNode[:x0y1z0]])); # z-coordinate
+        collect(Iterators.flatten(3 * surfNode[:y_x0z0])); # z-coordinate
+        3 * mGammaNode .- 2] :
     uDofs = kw["uDofs"]
 
     !haskey(kw, "tDofs") ? tDofs = setdiff(1:numNode3, uDofs) : tDofs = kw["tDofs"]
 
-    !haskey(kw, "noExit") ? noExit = SVector{2, Int}(2, 4) : noExit = kw["noExit"]
+    !haskey(kw, "noExit") ? noExit = SVector{2,Int}(2, 4) : noExit = kw["noExit"]
 
     C = try
         factorize(K[tDofs, tDofs])
@@ -941,7 +933,7 @@ function Boundaries(
     )
 
     forceDisplacement = ForceDisplacement(;
-        uTilde = spzeros(numNode3),
+uTilde = spzeros(numNode3),
         uHat = spzeros(numNode3),
         u = spzeros(numNode3),
         fTilde = spzeros(numNode3),
@@ -962,7 +954,7 @@ function Boundaries(; model, noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs
     tGammaDln = [tGamma.node; mGamma.node]
     uDofsDln = [3 * uGammaDln .- 2; 3 * uGammaDln .- 1; 3 * uGammaDln]
     tDofsDln = [3 * tGammaDln .- 2; 3 * tGammaDln .- 1; 3 * tGammaDln]
-    return Boundaries(
+return Boundaries(
         model,
         noExit,
         uGammaDln,
@@ -970,14 +962,14 @@ function Boundaries(; model, noExit, uGamma, tGamma, mGamma, uDofs, tDofs, mDofs
         uDofsDln,
         tDofsDln,
         uGamma,
-        tGamma,
+    tGamma,
         mGamma,
-        uDofs,
+    uDofs,
         tDofs,
-        mDofs,
+    mDofs,
         tK,
     )
-end
+    end
 
 function getTGammaDlnNormsArea(boundaries::Boundaries, mesh::AbstractMesh)
     surfNode = mesh.surfNode
@@ -1003,8 +995,7 @@ function getTGammaDlnNormsArea(boundaries::Boundaries, mesh::AbstractMesh)
     )
     A = collect(
         Iterators.flatten([
-            Iterators.repeated(surfArea[index[i]], length(surfNode[index[i]])) for
-            i in 1:lenIdx
+            Iterators.repeated(surfArea[index[i]], length(surfNode[index[i]])) for i in 1:lenIdx
         ]),
     )
     return N, A

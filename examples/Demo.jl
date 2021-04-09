@@ -43,22 +43,22 @@ intTime = IntegrationTime(; dt = 0.0, time = 0.0);
 # See fieldnames
 fieldnames(typeof(matParams))
 
-# Browse docs/get variable info
-?DislocationParameters
+# # Browse docs/get variable info
+# ?DislocationParameters
 
-?femParamsC
+# ?femParamsC
 
 ## Build mesh & boundary conditions
 meshC = buildMesh(matParams, femParamsC)
 # Plot mesh
 figFE = plotFEDomain(meshC; camera = (10, -2))
-savefig(figFE, "mesh.svg")
+# savefig(figFE, "mesh.svg")
 
 # Generate cantilever boundary conditions.
 boundaryC, forceDispC = Boundaries(femParamsC, meshC)
 # Plot boundaries
 figCBC = plotBoundaries(boundaryC, meshC)
-savefig(figCBC, "cantilever.svg")
+# savefig(figCBC, "cantilever.svg")
 
 
 # Pillar loading
@@ -76,7 +76,7 @@ femParamsP = FEMParameters(;
 meshP = buildMesh(matParams, femParamsP);
 boundaryP, forceDispP = Boundaries(femParamsP, meshP);
 figPBC = plotBoundaries(boundaryP, meshP)
-savefig(figPBC, "pillar.svg")
+# savefig(figPBC, "pillar.svg")
 
 
 ## Dislocations generation
@@ -131,7 +131,7 @@ plotNodes!(
     legend = false,
     camera = (10, 20)
 )
-savefig(dlnFig, "loops.svg")
+# savefig(dlnFig, "loops.svg")
 
 
 networkFig = plotNodes(
@@ -155,7 +155,7 @@ networkFEFig = plotNodes(
     legend = false,
     camera = camera = (-15, 25)
 )
-savefig(networkFEFig, "networkPreRem.svg")
+# savefig(networkFEFig, "networkPreRem.svg")
 
 
 # Add more to network
@@ -234,9 +234,9 @@ remFEFig = plotNodes(
 )
 idx = findall(x -> x ∈ (3, 4), network.label)
 scatter!(network.coord[1, idx], network.coord[2, idx], network.coord[3, idx], m = 2, markercolor = :red)
-savefig(remFEFig, "networkPostRem.svg")
+# savefig(remFEFig, "networkPostRem.svg")
 
-#=
+#= 
     collision == true if a collision was found false otherwise.
     collisionType == :null if no collision was found, 
         :hinge if two segments sharing a node collide,
@@ -244,8 +244,7 @@ savefig(remFEFig, "networkPostRem.svg")
     n1s1 == node 1 segment 1, n2s1 == node 2 segment 1
     n1s2 == node 1 segment 2, n2s2 == node 2 segment 2
     s1 == segment 1, s2 == segment 2
-    L1, L2 == normalised position along the segments where collision will occur
-=#
+    L1, L2 == normalised position along the segments where collision will occur =#
 collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2, L1, L2 = detectCollision(dlnParams, network)
 
 # Dislocation displacements on the displacement nodes.
@@ -263,9 +262,9 @@ coordDisp = coordDisp + forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
 
 
 deformedMesh = deepcopy(meshC)
-deformedMesh.coord[reshape(boundaryC.uDofsDln, :, 3)'] += 20*forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
+deformedMesh.coord[reshape(boundaryC.uDofsDln, :, 3)'] += 20 * forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
 plotBoundaries(boundaryC, deformedMesh; camera = (-20, 20))
-savefig("dispBound.svg")
+# savefig("dispBound.svg")
 
 
 
