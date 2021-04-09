@@ -257,7 +257,20 @@ coordDisp = coordDisp + forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
 deformedMesh = deepcopy(meshC)
 deformedMesh.coord[reshape(boundaryC.uDofsDln, :, 3)'] +=
     20 * forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
-plotBoundaries(boundaryC, deformedMesh; camera = (-20, 20))
+figDef = plotBoundaries(boundaryC, deformedMesh; camera = (-20, 20))
+plotNodes!(
+    figDef,
+    meshC,
+    network,
+    m = 2,
+    l = 3,
+    linecolor = :blue,
+    markershape = :circle,
+    markercolor = :blue,
+    legend = false,
+    camera = (-15, 25),
+)
+
 # savefig("dispBound.svg")
 
 scatter!(coordDisp[1, :], coordDisp[2, :], coordDisp[3, :])

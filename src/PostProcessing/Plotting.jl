@@ -153,9 +153,18 @@ function plotNodes!(
     side = vertices[:, [4, 8]]
     plot!(fig, side[1, :], side[2, :], side[3, :], linecolor = :black, linewidth = 2)
 
-    xlims = (minimum(vertices[1, :]), maximum(vertices[1, :]))
-    ylims = (minimum(vertices[2, :]), maximum(vertices[2, :]))
-    zlims = (minimum(vertices[3, :]), maximum(vertices[3, :]))
+    xlims = (
+        minimum(vertices[1, :]) - 0.2 * maximum(vertices[1, :]),
+        maximum(vertices[1, :]) + 0.2 * maximum(vertices[1, :]),
+    )
+    ylims = (
+        minimum(vertices[2, :]) - 0.2 * maximum(vertices[2, :]),
+        maximum(vertices[2, :]) + 0.2 * maximum(vertices[2, :]),
+    )
+    zlims = (
+        minimum(vertices[3, :]) - 0.2 * maximum(vertices[3, :]),
+        maximum(vertices[3, :]) + 0.2 * maximum(vertices[1, :]),
+    )
     plot!(fig, xlims = xlims, ylims = ylims, zlims = zlims)
     plot!(fig; xlabel = "x", ylabel = "y", zlabel = "z")
 
