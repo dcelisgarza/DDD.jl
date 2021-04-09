@@ -60,7 +60,6 @@ boundaryC, forceDispC = Boundaries(femParamsC, meshC)
 figCBC = plotBoundaries(boundaryC, meshC)
 # savefig(figCBC, "cantilever.svg")
 
-
 # Pillar loading
 femParamsP = FEMParameters(;
     type = DispatchRegularCuboidMesh(),
@@ -77,7 +76,6 @@ meshP = buildMesh(matParams, femParamsP);
 boundaryP, forceDispP = Boundaries(femParamsP, meshP);
 figPBC = plotBoundaries(boundaryP, meshP)
 # savefig(figPBC, "pillar.svg")
-
 
 ## Dislocations generation
 dx, dy, dz = femParamsC.dx, femParamsC.dy, femParamsC.dz
@@ -129,10 +127,9 @@ plotNodes!(
     markershape = :square,
     markercolor = :red,
     legend = false,
-    camera = (10, 20)
+    camera = (10, 20),
 )
 # savefig(dlnFig, "loops.svg")
-
 
 networkFig = plotNodes(
     network,
@@ -153,10 +150,9 @@ networkFEFig = plotNodes(
     markershape = :circle,
     markercolor = :blue,
     legend = false,
-    camera = camera = (-15, 25)
+    camera = camera = (-15, 25),
 )
 # savefig(networkFEFig, "networkPreRem.svg")
-
 
 # Add more to network
 network = DislocationNetwork!(network, prismOct);
@@ -188,14 +184,7 @@ rf[:, :, [66, 6]] ≈ rf666
 # Total forces.
 f = calcSegForce(dlnParams, matParams, meshC, forceDispC, network)
 f57 = calcSegForce(dlnParams, matParams, meshC, forceDispC, network, 57)
-f316 = calcSegForce(
-    dlnParams,
-    matParams,
-    meshC,
-    forceDispC,
-    network,
-    [31, 6],
-)
+f316 = calcSegForce(dlnParams, matParams, meshC, forceDispC, network, [31, 6])
 f[:, :, 57] ≈ f57
 f[:, :, [31, 6]] ≈ f316
 
@@ -230,10 +219,16 @@ remFEFig = plotNodes(
     markershape = :circle,
     markercolor = :blue,
     legend = false,
-    camera = (-15, 25)
+    camera = (-15, 25),
 )
 idx = findall(x -> x ∈ (3, 4), network.label)
-scatter!(network.coord[1, idx], network.coord[2, idx], network.coord[3, idx], m = 2, markercolor = :red)
+scatter!(
+    network.coord[1, idx],
+    network.coord[2, idx],
+    network.coord[3, idx],
+    m = 2,
+    markercolor = :red,
+)
 # savefig(remFEFig, "networkPostRem.svg")
 
 #= 
@@ -245,13 +240,13 @@ scatter!(network.coord[1, idx], network.coord[2, idx], network.coord[3, idx], m 
     n1s2 == node 1 segment 2, n2s2 == node 2 segment 2
     s1 == segment 1, s2 == segment 2
     L1, L2 == normalised position along the segments where collision will occur =#
-collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2, L1, L2 = detectCollision(dlnParams, network)
+collision, collisionType, n1s1, n2s1, n1s2, n2s2, s1, s2, L1, L2 =
+    detectCollision(dlnParams, network)
 
 # Dislocation displacements on the displacement nodes.
 uTilde = calc_uTilde(meshC, boundaryC, matParams, network)
 calc_uTilde!(forceDispC, meshC, boundaryC, matParams, network)
 uTilde ≈ forceDispC.uTilde[boundaryC.uDofsDln]
-
 
 reshape(uTilde, :, 3)' == forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
 meshC.coord[:, boundaryC.uGammaDln] == meshC.coord[reshape(boundaryC.uDofsDln, :, 3)']
@@ -259,22 +254,16 @@ meshC.coord[:, boundaryC.uGammaDln] == meshC.coord[reshape(boundaryC.uDofsDln, :
 coordDisp = copy(meshC.coord[:, boundaryC.uGammaDln])
 coordDisp = coordDisp + forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
 
-
-
 deformedMesh = deepcopy(meshC)
-deformedMesh.coord[reshape(boundaryC.uDofsDln, :, 3)'] += 20 * forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
+deformedMesh.coord[reshape(boundaryC.uDofsDln, :, 3)'] +=
+    20 * forceDispC.uTilde[reshape(boundaryC.uDofsDln, :, 3)']
 plotBoundaries(boundaryC, deformedMesh; camera = (-20, 20))
 # savefig("dispBound.svg")
 
-
-
-
 scatter!(coordDisp[1, :], coordDisp[2, :], coordDisp[3, :])
-
 
 meshC.coord[reshape(boundaryC.uDofsDln, :, 3)'] - coordDisp
 meshC.connectivity
-
 
 boundaryC.uGammaDln
 
@@ -401,5 +390,3 @@ figXX = contourf(xrange, yrange, σ[1, :, :], levels = 30)
 figYY = contourf(xrange, yrange, σ[2, :, :], levels = 30)
 figZZ = contourf(xrange, yrange, σ[3, :, :], levels = 30)
 figXY = contourf(xrange, yrange, σ[4, :, :], levels = 30)
-
-

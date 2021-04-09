@@ -147,7 +147,7 @@ function translatePoints!(coord, lims, disp)
         @simd for j in 1:size(coord, 1)
             coord[j, i] += lims[j, 1] + (lims[j, 2] - lims[j, 1]) * disp[j]
         end
-end
+    end
     return coord
 end
 
@@ -259,7 +259,6 @@ function getSegmentIdx(links, label)
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
 
-
     numSeg = 0 # Number of segments.
 
     # Loop through indices.
@@ -284,7 +283,7 @@ function getSegmentIdx!(network::DislocationNetwork)
     label = network.label
     extSeg = network.extSeg
     segIdx = network.segIdx
-    
+
     segIdx .= 0
     lenLinks = size(links, 2)
 
@@ -296,7 +295,7 @@ function getSegmentIdx!(network::DislocationNetwork)
         n2 = links[2, i]
         segIdx[i, :] .= (i, n1, n2)
         (label[n1] == extDln || label[n2] == extDln) ? extSeg[i] = true : continue
-    end    
+    end
 
     return nothing
 end
@@ -338,7 +337,7 @@ function checkNetwork(network::DislocationNetwork)
         col = connectivity[1, i]
 
         # Check for zero Burgers vectors.
-        staticBVec = SVector{3,elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
+        staticBVec = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         norm(staticBVec) < eps(elemT) ? error("Burgers vector must be non-zero.
                                        norm(bVec) = $(norm(bVec[i,:]))") : nothing
 
@@ -352,13 +351,13 @@ function checkNetwork(network::DislocationNetwork)
         # Burgers vector conservation.
         bSum .= 0
         # No repeated links.
-            neighbours = -ones(Int, col)
+        neighbours = -ones(Int, col)
         for j in 1:col
             j2 = 2 * j
             iLink = connectivity[j2, i]     # Link ID.
             colLink = connectivity[j2 + 1, i] # Link position in links.
             colOppLink = 3 - connectivity[2 * j + 1, i] # Opposite column in links
-            staticBVec = SVector{3,elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
+            staticBVec = SVector{3, elemT}(bVec[1, iLink], bVec[2, iLink], bVec[3, iLink])
             bSum .+= (3 - 2 * colLink) * staticBVec # Running total of burgers vectors.
 
             neighbours[j] = links[colOppLink, iLink] # Find neighbouring nodes.

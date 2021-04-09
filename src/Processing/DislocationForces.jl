@@ -219,7 +219,7 @@ function calcPKForce(
     network::DislocationNetwork,
     idx = nothing,
 )
-    numSeg, segIdx, bVec, coord, elemT = calcPKForceUnroll(network)
+    numSeg, extSeg, segIdx, bVec, coord, elemT = calcPKForceUnroll(network)
 
     if isnothing(idx)
         # If no index is provided, calculate forces for all segments.
@@ -233,7 +233,8 @@ function calcPKForce(
     bVec, tVec, midNode = calcPKForceViews(bVec, coord, segIdx, idx)
 
     PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
-    @inbounds @simd for i in eachindex(idx)
+    @inbounds for i in eachindex(idx)
+        extSeg[i] == true && continue
         x0, b, t, σHat, pkForce =
             _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
         PKForce[:, i] = pkForce[:]
@@ -247,7 +248,7 @@ function calcPKForce!(
     network::DislocationNetwork,
     idx = nothing,
 )
-    numSeg, segIdx, bVec, coord, elemT = calcPKForceUnroll(network)
+    numSeg, extSeg, segIdx, bVec, coord, elemT = calcPKForceUnroll(network)
 
     # Indices for self force.
     if isnothing(idx)
@@ -259,7 +260,8 @@ function calcPKForce!(
     bVec, tVec, midNode = calcPKForceViews(bVec, coord, segIdx, idx)
 
     segForce = network.segForce    # Vector of PK force.
-    @inbounds @simd for i in eachindex(idx)
+    @inbounds for i in eachindex(idx)
+        extSeg[i] == true && continue
         x0, b, t, σHat, pkForce =
             _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
         idxi = idx[i]
@@ -274,6 +276,7 @@ end
 function calcPKForceUnroll(network)
     # Unroll constants.
     return network.numSeg[1],
+    network.extSeg,
     network.segIdx,
     network.bVec,
     network.coord,
@@ -322,7 +325,7 @@ function calcSelfForce(
     network::DislocationNetwork,
     idx = nothing,
 )
-    μ, ν, omNuInv, nuOmNuInv, μ4π, a, aSq, Ec, bVec, coord, segIdx, elemT =
+    μ, ν, omNuInv, nuOmNuInv, μ4π, a, aSq, Ec, bVec, coord, extSeg, segIdx, elemT =
         calcSelfForceUnroll(dlnParams, matParams, network)
 
     # Indices
@@ -340,7 +343,8 @@ function calcSelfForce(
     # Allocate memory if necessary.
     selfForceNode2 = zeros(3, numSeg)
 
-    @inbounds @simd for i in eachindex(idx)
+    @inbounds for i in eachindex(idx)
+        extSeg[i] == true && continue
         selfForceNode2[:, i] =
             _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv, i)
     end
@@ -355,7 +359,7 @@ function calcSelfForce!(
     network::DislocationNetwork,
     idx = nothing,
 )
-    μ, ν, omNuInv, nuOmNuInv, μ4π, a, aSq, Ec, bVec, coord, segIdx, elemT =
+    μ, ν, omNuInv, nuOmNuInv, μ4π, a, aSq, Ec, bVec, coord, extSeg, segIdx, elemT =
         calcSelfForceUnroll(dlnParams, matParams, network)
 
     # Indices
@@ -370,7 +374,8 @@ function calcSelfForce!(
     # Allocate memory if necessary.
     segForce = network.segForce
 
-    @inbounds @simd for i in eachindex(idx)
+    @inbounds for i in eachindex(idx)
+        extSeg[i] == true && continue
         selfForce =
             _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv, i)
 
@@ -394,6 +399,7 @@ function calcSelfForceUnroll(dlnParams, matParams, network)
     dlnParams.coreEnergy,
     network.bVec,
     network.coord,
+    network.extSeg,
     network.segIdx,
     eltype(network.bVec)
 end
@@ -429,7 +435,7 @@ function _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv
     553?595: gives this expression in appendix A p590
     f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
     (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
     tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
     = tVec * bScrew - bVec
     = - bEdgeVec =#
@@ -480,6 +486,7 @@ function calcSegSegForce(
 
     bVec = network.bVec
     coord = network.coord
+    extSeg = network.extSeg
     segIdx = network.segIdx
     elemT = eltype(network.bVec)
 
@@ -503,10 +510,12 @@ function calcSegSegForce(
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
                     @inbounds for i in start:stop
+                        extSeg[i] == true && continue
                         b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
                         n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
                         n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
                         for j in (i + 1):numSeg
+                            extSeg[j] == true && continue
                             b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
                             n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
                             n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
@@ -541,10 +550,12 @@ function calcSegSegForce(
             segSegForce = zeros(3, 2, numSeg)
             # Serial execution.
             @inbounds for i in 1:numSeg
+                extSeg[i] == true && continue
                 b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
                 n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
                 n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
                 for j in (i + 1):numSeg
+                    extSeg[j] == true && continue
                     b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                     n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
                     n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
@@ -578,11 +589,12 @@ function calcSegSegForce(
         lenIdx = length(idx)
         segSegForce = zeros(3, 2, lenIdx)
         @inbounds for (k, i) in enumerate(idx)
+            extSeg[i] == true && continue
             b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
             n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
-                i == j && continue
+                (i == j || extSeg[j] == true) && continue
                 b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                 n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
                 n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
@@ -641,6 +653,7 @@ function calcSegSegForce!(
 
     bVec = network.bVec
     coord = network.coord
+    extSeg = network.extSeg
     segIdx = network.segIdx
     elemT = eltype(network.bVec)
 
@@ -666,10 +679,12 @@ function calcSegSegForce!(
                     start = 1 + ((tid - 1) * numSeg) ÷ nthreads
                     stop = (tid * numSeg) ÷ nthreads
                     @inbounds for i in start:stop
+                        extSeg[i] == true && continue
                         b1 = SVector(bVec[1, i], bVec[2, i], bVec[3, i])
                         n11 = SVector(node1[1, i], node1[2, i], node1[3, i])
                         n12 = SVector(node2[1, i], node2[2, i], node2[3, i])
                         for j in (i + 1):numSeg
+                            extSeg[j] == true && continue
                             b2 = SVector(bVec[1, j], bVec[2, j], bVec[3, j])
                             n21 = SVector(node1[1, j], node1[2, j], node1[3, j])
                             n22 = SVector(node2[1, j], node2[2, j], node2[3, j])
@@ -704,10 +719,12 @@ function calcSegSegForce!(
         else
             # Serial execution.
             @inbounds for i in 1:numSeg
+                extSeg[i] == true && continue
                 b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
                 n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
                 n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
                 for j in (i + 1):numSeg
+                    extSeg[j] == true && continue
                     b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                     n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
                     n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
@@ -738,11 +755,12 @@ function calcSegSegForce!(
         end
     else # Calculate segseg forces only on segments provided
         @inbounds for i in idx
+            extSeg[i] == true && continue
             b1 = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
             n11 = SVector{3, elemT}(node1[1, i], node1[2, i], node1[3, i])
             n12 = SVector{3, elemT}(node2[1, i], node2[2, i], node2[3, i])
             for j in 1:numSeg
-                i == j && continue
+                (i == j || extSeg[j] == true) && continue
                 b2 = SVector{3, elemT}(bVec[1, j], bVec[2, j], bVec[3, j])
                 n21 = SVector{3, elemT}(node1[1, j], node1[2, j], node1[3, j])
                 n22 = SVector{3, elemT}(node2[1, j], node2[2, j], node2[3, j])
