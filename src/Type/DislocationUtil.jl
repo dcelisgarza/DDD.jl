@@ -255,20 +255,7 @@ function getSegmentIdx(links, label)
     extSeg = zeros(Bool, lenLinks)
     segIdx = zeros(Int, lenLinks, 3)  # Indexing matrix.
 
-    # Find all defined nodes.
-    idx = findfirst(x -> x == 0, @view links[1, :])
-    isnothing(idx) ? idx = lenLinks : idx -= 1
-
-    numSeg = 0 # Number of segments.
-
-    # Loop through indices.
-    @inbounds for i in 1:idx
-        # Nodes.
-        n1 = links[1, i]
-        n2 = links[2, i]
-        segIdx[i, :] .= (i, n1, n2)
-        (label[n1] == extDln || label[n2] == extDln) ? extSeg[i] = true : continue
-    end
+    _getSegmentIdx!(segIdx, extSeg, lenLinks, links, label)
 
     return segIdx, extSeg
 end
@@ -285,8 +272,15 @@ function getSegmentIdx!(network::DislocationNetwork)
     segIdx = network.segIdx
 
     segIdx .= 0
+    extSeg .= false
     lenLinks = size(links, 2)
 
+    _getSegmentIdx!(segIdx, extSeg, lenLinks, links, label)
+
+    return nothing
+end
+
+function _getSegmentIdx!(segIdx, extSeg, lenLinks, links, label)
     idx = findfirst(x -> x == 0, @view links[1, :])
     isnothing(idx) ? idx = lenLinks : idx -= 1
 

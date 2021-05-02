@@ -656,7 +656,7 @@ function makeNetwork!(
 )
     nodeTotal::Int = 0
     elemT = eltype(coord)
-    @inbounds for i in eachindex(sources)
+    @inbounds @simd for i in eachindex(sources)
         idx = initIdx + nodeTotal
         nodesLoop = length(sources[i].label)
         numLoops = sources[i].numLoops

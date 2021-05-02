@@ -40,12 +40,12 @@ function shapeFunction(
     z::AbstractVector,
 )
     numPoints = length(x)
-    xType = eltype(x)
     @assert numPoints == length(y) == length(z)
+    xType = eltype(x)
     # N[n, p](x_vec,y_vec,z_vec) := shape function n for point p.
     N = Array{SVector{8, xType}}(undef, numPoints)
 
-    for i in eachindex(x)
+    @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
         omz = 1 - z[i]
@@ -137,13 +137,13 @@ function shapeFunctionDeriv(
     z::AbstractVector,
 )
     numPoints = length(x)
-    xType = eltype(x)
     @assert numPoints == length(y) == length(z)
+    xType = eltype(x)
 
     # dNdS[x, n, p](x,y,z) := x'th derivative of shape function n for point p.
     dNdS = Array{SMatrix{3, 8, xType}}(undef, numPoints)
 
-    for i in eachindex(x)
+    @inbounds @simd for i in eachindex(x)
         omx = 1 - x[i]
         omy = 1 - y[i]
         omz = 1 - z[i]
