@@ -235,8 +235,7 @@ function calcPKForce(
     PKForce = zeros(elemT, 3, numSeg)      # Vector of PK force.
     @inbounds for i in eachindex(idx)
         extSeg[i] == true && continue
-        x0, b, t, σHat, pkForce =
-            _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
+        pkForce = _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
         PKForce[:, i] = pkForce[:]
     end
 
@@ -262,8 +261,7 @@ function calcPKForce!(
     segForce = network.segForce    # Vector of PK force.
     @inbounds for i in eachindex(idx)
         extSeg[i] == true && continue
-        x0, b, t, σHat, pkForce =
-            _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
+        pkForce = _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
         idxi = idx[i]
         @inbounds @simd for j in 1:3
             segForce[j, 1, idxi] += pkForce[j] / 2
@@ -298,7 +296,7 @@ function _calcPKForce(mesh, forceDisplacement, midNode, bVec, tVec, i, elemT)
     σHat = calc_σHat(mesh, forceDisplacement, x0)
     pkForce = (σHat * b) × t
 
-    return x0, b, t, σHat, pkForce
+    return pkForce
 end
 
 """
@@ -435,7 +433,7 @@ function _calcSelfForce(elemT, tVec, bVec, a, aSq, μ4π, nuOmNuInv, Ec, omNuInv
     553?595: gives this expression in appendix A p590
     f^{s}_{43} = -(μ/(4π)) [ t × (t × b)](t ⋅ b) { v/(1-v) ( ln[
     (L_a + L)/a] - 2*(L_a - a)/L ) - (L_a - a)^2/(2La*L) }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
     tVec × (tVec × bVec)    = tVec (tVec ⋅ bVec) - bVec (tVec ⋅ tVec)
     = tVec * bScrew - bVec
     = - bEdgeVec =#
