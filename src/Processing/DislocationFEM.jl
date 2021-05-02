@@ -29,7 +29,13 @@ function calc_σTilde(
     idx = nothing,
 )
     elemT = eltype(network.bVec)
-    numPoints = div(length(x0), 3)
+
+    if typeof(x0) <: Base.Iterators.ProductIterator
+        numPoints = prod(size(x0))
+    elseif typeof(x0) <: AbstractArray
+        numPoints = div(length(x0), 3)
+    end
+
     numPoints == 1 ? σ = zeros(elemT, 6) : σ = zeros(elemT, 6, numPoints)
     _calc_σTilde!(σ, x0, dlnParams, matParams, network, idx)
 end
@@ -66,7 +72,13 @@ function calc_σTilde!(
     network::DislocationNetwork,
     idx = nothing,
 )
-    @assert ndims(σ) == ndims(x0) && size(σ, 2) == size(x0, 2) && size(σ, 1) == 6
+
+    @assert ndims(σ) == ndims(x0) && size(σ, 1) == 6
+    if typeof(x0) <: Base.Iterators.ProductIterator
+        @assert size(σ, 2) == prod(size(x0))
+    elseif typeof(x0) <: AbstractArray
+        @assert size(σ, 2) == size(x0, 2)
+    end
     σ .= zero(eltype(network.bVec))
     _calc_σTilde!(σ, x0, dlnParams, matParams, network, idx)
 end
@@ -108,14 +120,24 @@ function _calc_σTilde!(
     numPoints = size(σ, 2)
 
     # Loop over segments.
-    @inbounds @simd for i in eachindex(idx)
+    if typeof(x0) <: Base.Iterators.ProductIterator
+        idx2 = x0
+    elseif typeof(x0) <: AbstractArray
+        idx2 = 1:numPoints
+    end
+    
+    for i in eachindex(idx)
         b = SVector{3, elemT}(bVec[1, i], bVec[2, i], bVec[3, i])
         n1 = SVector{3, elemT}(coord1[1, i], coord1[2, i], coord1[3, i])
         n2 = SVector{3, elemT}(coord2[1, i], coord2[2, i], coord2[3, i])
         t = normalize(n2 - n1)
         # Loop over grid points.
-        for j in 1:numPoints
-            x = SVector{3, elemT}(x0[1, j], x0[2, j], x0[3, j])
+        for (j, val) in enumerate(idx2)
+            if typeof(x0) <: Base.Iterators.ProductIterator
+                x = SVector{3, elemT}(val)
+            elseif typeof(x0) <: AbstractArray
+                x = SVector{3, elemT}(x0[1, j], x0[2, j], x0[3, j])
+            end
 
             R = x - n1
             Rdt = R ⋅ t

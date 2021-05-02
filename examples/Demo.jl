@@ -284,7 +284,7 @@ boundaryC.uGammaDln
 N, A = getTGammaDlnNormsArea(boundaryC, meshC)
 points = meshC.coord[:, boundaryC.tGammaDln]
 σTilde = calc_σTilde(points, dlnParams, matParams, network)
-T = calcNumericTractions(σTilde, N, A)
+T = calcNumericTractions(σTilde, N, A, Val(1))
 
 # Gauss quadrature
 
@@ -299,6 +299,12 @@ X = ones(length(yrange)) .* xrange';
 Y = ones(length(xrange))' .* yrange;
 Z = zeros(length(xrange))' .* zeros(len);
 points = [X[:]'; Y[:]'; Z[:]'];
+
+points2 = Iterators.product(xrange, yrange, 0)
+reshape(collect(Iterators.flatten(collect.(points2)')), 3, :)
+points3 = reshape(collect(Iterators.flatten(collect.(points2)')), 3, :)
+
+points == points3
 X, Y, Z = nothing, nothing, nothing;
 
 a = 5.0
@@ -355,8 +361,8 @@ calc_σTilde!(σ, points, dlnParams, matParams, network)
 
 println("σ ≈ stress : ", σ ≈ stress)
 
-figXY = contourf(xrange, yrange, σ[5, :, :], levels = 30)
-figXZ = contourf(xrange, yrange, σ[6, :, :], levels = 30)
+figXZ = contourf(xrange, yrange, σ[5, :, :], levels = 30)
+figYZ = contourf(xrange, yrange, σ[6, :, :], levels = 30)
 
 # Edge dislocation.
 
